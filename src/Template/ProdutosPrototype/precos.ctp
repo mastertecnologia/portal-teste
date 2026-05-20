@@ -67,7 +67,15 @@ $tipoLbls = ['prod' => __('Produto'), 'serv' => __('Serviço'), 'lic' => __('Lic
 						<td><?= h(\Cake\Utility\Text::truncate((string)$p['descricao'], 70, ['ellipsis' => '…'])) ?></td>
 						<td><span class="badge b-<?= h($badge) ?>" style="font-size:9px;"><?= h($tipoLbl) ?></span></td>
 						<td class="mu"><?= h((string)$p['unidade']) ?></td>
-						<td class="r" style="font-weight:700;color:var(--teal-dark);"><?= h($H->brl((float)$p['venda'])) ?></td>
+						<td class="r">
+							<form method="post" action="<?= h($this->Url->build(['controller' => 'ProdutosPrototype', 'action' => 'precoSave'])) ?>" style="display:flex;gap:4px;align-items:center;justify-content:flex-end;margin:0;">
+								<input type="hidden" name="_csrfToken" value="<?= h($this->request->getAttribute('csrfToken')) ?>">
+								<input type="hidden" name="produto_id" value="<?= (int)$p['id'] ?>">
+								<input type="hidden" name="q" value="<?= h((string)$precosFiltro) ?>">
+								<input type="number" step="0.01" min="0" name="vlunitario" value="<?= h(number_format((float)$p['venda'], 2, '.', '')) ?>" style="width:90px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:right;">
+								<button type="submit" class="btn btn-ghost btn-xs" title="<?= h(__('Salvar')) ?>">💾</button>
+							</form>
+						</td>
 						<td class="r" style="color:var(--text-muted);"><?php if ((float)$p['loc_diaria'] > 0) : ?><?= h($H->brl((float)$p['loc_diaria'])) ?><?php else : ?>—<?php endif; ?></td>
 						<td class="r" style="color:var(--text-muted);"><?php if ((float)$p['loc_semanal'] > 0) : ?><?= h($H->brl((float)$p['loc_semanal'])) ?><?php else : ?>—<?php endif; ?></td>
 						<td class="r" style="color:var(--text-muted);"><?php if ((float)$p['loc_mensal'] > 0) : ?><?= h($H->brl((float)$p['loc_mensal'])) ?><?php else : ?>—<?php endif; ?></td>
@@ -80,5 +88,5 @@ $tipoLbls = ['prod' => __('Produto'), 'serv' => __('Serviço'), 'lic' => __('Lic
 </div>
 
 <div class="alert-box alert-blue" style="margin-top:14px;">
-	<?= h(__('Edição inline de preços ainda usa o módulo clássico. O centro de cálculo (precificação) permite simular margens e descontos.')) ?>
+	<?= h(__('Edite o preço de venda diretamente na coluna acima e clique em 💾 para salvar. Locação ainda usa o módulo clássico. O centro de cálculo permite simular margens e impostos.')) ?>
 </div>

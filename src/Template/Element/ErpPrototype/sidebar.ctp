@@ -75,6 +75,21 @@ $sections = [
 		],
 	],
 	[
+		'title' => __('Indústria · PCP'),
+		'items' => [
+			['key' => 'pcp', 'label' => __('PCP · Visão geral'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'lista']],
+			['key' => 'pcp-dashboard', 'label' => __('Dashboard'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'view', 'dashboard'], 'indent' => true],
+			['key' => 'engenharia', 'label' => __('Engenharia · Fichas'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'view', 'engenharia'], 'indent' => true],
+			['key' => 'bom', 'label' => __('Estrutura BOM'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'view', 'bom'], 'indent' => true],
+			['key' => 'roteiro', 'label' => __('Roteiros'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'view', 'roteiro'], 'indent' => true],
+			['key' => 'mrp', 'label' => __('MRP'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'view', 'mrp'], 'indent' => true],
+			['key' => 'op-lista', 'label' => __('Ordens de Produção'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'view', 'op-lista'], 'indent' => true],
+			['key' => 'apontamento', 'label' => __('Apontamento'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'view', 'apontamento'], 'indent' => true],
+			['key' => 'qualidade-ind', 'label' => __('Qualidade'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'view', 'qualidade-ind'], 'indent' => true],
+			['key' => 'expedicao', 'label' => __('Expedição'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'view', 'expedicao'], 'indent' => true],
+		],
+	],
+	[
 		'title' => __('Financeiro'),
 		'items' => [
 			['key' => 'financeiro', 'label' => __('Financeiro'), 'url' => ['controller' => 'FinanceiroPrototype', 'action' => 'lista']],

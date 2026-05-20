@@ -200,6 +200,13 @@ class ProdutosPrototypeController extends AppController {
 			return $this->render('precos');
 		}
 
+		if ($page === 'precificacao') {
+			$set += $this->buildPrecificacaoPayload();
+			$this->set($set);
+
+			return $this->render('precificacao');
+		}
+
 		if ($page === 'pc-lista' || $page === 'pc-novo') {
 			$this->set($set);
 
@@ -273,6 +280,124 @@ class ProdutosPrototypeController extends AppController {
 			'precosItems' => $rows,
 			'precosKpi' => $kpi,
 			'precosFiltro' => $busca,
+		];
+	}
+
+	/**
+	 * Atualiza preço unitário de um produto (edição inline a partir da tabela de preços).
+	 * Aceita POST com produto_id + vlunitario; faz update direto via ORM.
+	 */
+	public function precoSave() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$id = (int)$this->request->getData('produto_id');
+		$novo = (float)str_replace(',', '.', (string)$this->request->getData('vlunitario'));
+		if ($id <= 0 || $novo < 0) {
+			$this->Flash->error(__('Dados inválidos.'));
+
+			return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos']);
+		}
+		try {
+			$prod = $this->Produtos->find()
+				->where(['Produtos.id' => $id, 'Produtos.idempresa' => $empresa])
+				->first();
+			if ($prod === null) {
+				$this->Flash->error(__('Produto fora do seu escopo.'));
+
+				return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos']);
+			}
+			$prod->set('vlunitario', $novo);
+			if ($this->Produtos->save($prod)) {
+				$this->Flash->success(__('Preço do produto {0} atualizado para {1}.', (string)$prod->get('codigo'), 'R$ ' . number_format($novo, 2, ',', '.')));
+			} else {
+				$this->Flash->error(__('Falha ao salvar.'));
+			}
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro: {0}', $e->getMessage()));
+		}
+
+		$q = trim((string)$this->request->getData('q'));
+
+		return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos', '?' => $q !== '' ? ['q' => $q] : []]);
+	}
+
+	/**
+	 * Centro de Cálculo — simula impacto de margem/desconto a partir de um produto base.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function buildPrecificacaoPayload(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$query = $this->request->getQueryParams();
+		$prodId = (int)($query['produto_id'] ?? 0);
+		$margem = (float)str_replace(',', '.', (string)($query['margem'] ?? '30'));
+		$descontoMax = (float)str_replace(',', '.', (string)($query['desconto'] ?? '10'));
+		$icms = (float)str_replace(',', '.', (string)($query['icms'] ?? '18'));
+		$pisCofins = (float)str_replace(',', '.', (string)($query['pis_cofins'] ?? '9.25'));
+		if ($margem < 0 || $margem > 500) {
+			$margem = 30;
+		}
+		if ($descontoMax < 0 || $descontoMax > 90) {
+			$descontoMax = 10;
+		}
+		if ($icms < 0 || $icms > 35) {
+			$icms = 18;
+		}
+		if ($pisCofins < 0 || $pisCofins > 20) {
+			$pisCofins = 9.25;
+		}
+
+		$produto = null;
+		$opcoes = [];
+		try {
+			foreach ($this->Produtos->find()
+				->where(['Produtos.idempresa' => $empresa, 'Produtos.ativo' => 1, 'Produtos.tipo' => 'prod'])
+				->order(['Produtos.descricao' => 'ASC'])
+				->limit(200)
+				->all() as $p) {
+				$opcoes[(int)$p->get('id')] = trim(sprintf('%s · %s', (string)$p->get('codigo'), (string)$p->get('descricao')));
+				if ($prodId > 0 && (int)$p->get('id') === $prodId) {
+					$produto = [
+						'id' => (int)$p->get('id'),
+						'codigo' => (string)$p->get('codigo'),
+						'descricao' => (string)$p->get('descricao'),
+						'venda' => (float)$p->get('vlunitario'),
+					];
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+
+		$resultado = null;
+		if ($produto !== null) {
+			$custoEstimado = round((float)$produto['venda'] / (1 + ($margem / 100)), 2);
+			$precoSugerido = $custoEstimado * (1 + ($margem / 100));
+			$precoMinDesc = $precoSugerido * (1 - ($descontoMax / 100));
+			$margemLiquida = $custoEstimado > 0
+				? (($precoMinDesc - $custoEstimado) / $precoMinDesc) * 100
+				: 0;
+			$valorImpostos = $precoSugerido * (($icms + $pisCofins) / 100);
+			$resultado = [
+				'custo_estimado' => $custoEstimado,
+				'preco_sugerido' => round($precoSugerido, 2),
+				'preco_minimo_com_desconto' => round($precoMinDesc, 2),
+				'margem_liquida_pct' => round($margemLiquida, 2),
+				'valor_impostos' => round($valorImpostos, 2),
+				'preco_total_com_impostos' => round($precoSugerido + $valorImpostos, 2),
+			];
+		}
+
+		return [
+			'precificOpcoes' => $opcoes,
+			'precificProduto' => $produto,
+			'precificFiltro' => [
+				'produto_id' => $prodId,
+				'margem' => $margem,
+				'desconto' => $descontoMax,
+				'icms' => $icms,
+				'pis_cofins' => $pisCofins,
+			],
+			'precificResultado' => $resultado,
 		];
 	}
 

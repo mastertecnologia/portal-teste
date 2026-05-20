@@ -633,8 +633,26 @@ Router::scope("/", function ($routes) {
         "controller" => "ProdutosPrototype",
         "action" => "estoque",
     ]);
+    $routes->connect("/produtos-prototype/preco-save", [
+        "controller" => "ProdutosPrototype",
+        "action" => "precoSave",
+    ]);
     $routes->connect("/produtos-prototype/:page", [
         "controller" => "ProdutosPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo PCP / Indústria (mockup pg-pcp-dashboard e demais 12 telas) =====
+    $routes->connect("/pcp-prototype", [
+        "controller" => "PcpPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/pcp-prototype/", [
+        "controller" => "PcpPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/pcp-prototype/:page", [
+        "controller" => "PcpPrototype",
         "action" => "view",
     ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
 
