@@ -123,6 +123,91 @@ class OrcamentosPrototypeController extends AppController {
 	}
 
 	/**
+	 * Detalhe de um orçamento (mockup pg-revisao com dados reais).
+	 *
+	 * @param string|int $id
+	 */
+	public function detalhe($id) {
+		$id = (int)$id;
+		if ($id <= 0) {
+			throw new NotFoundException(__('Orçamento inválido.'));
+		}
+		$empresa = (int)$this->Auth->user('idempresa');
+		$orc = null;
+		$itens = [];
+		try {
+			$orc = $this->Orcamentos->find()
+				->contain(['Clientes', 'Users'])
+				->where(['Orcamentos.id' => $id, 'Orcamentos.idempresa' => $empresa])
+				->first();
+		} catch (\Throwable $e) {
+		}
+		if ($orc === null) {
+			throw new NotFoundException(__('Orçamento não encontrado ou fora do seu escopo.'));
+		}
+		try {
+			$tblItens = $this->loadModel('Orcamentositens');
+			$itens = $tblItens->find()
+				->where(['Orcamentositens.idorcamento' => $id])
+				->order(['Orcamentositens.id' => 'ASC'])
+				->all()
+				->toArray();
+		} catch (\Throwable $e) {
+		}
+
+		$totalSub = 0.0;
+		$totalDesc = 0.0;
+		$linhas = [];
+		foreach ($itens as $it) {
+			$qtd = (float)($it->get('quantidade') ?? 1);
+			$vu = (float)($it->get('valorunitario') ?? 0);
+			$desc = (float)($it->get('valordesconto') ?? 0);
+			$subtotal = $qtd * $vu - $desc;
+			$totalSub += $qtd * $vu;
+			$totalDesc += $desc;
+			$linhas[] = [
+				'codigo' => (string)($it->get('codproduto') ?? ''),
+				'descricao' => (string)($it->get('descricao') ?? ''),
+				'unidade' => (string)($it->get('unidade') ?? ''),
+				'qtd' => $qtd,
+				'vlr' => $vu,
+				'desconto' => $desc,
+				'subtotal' => $subtotal,
+			];
+		}
+
+		$cliente = $orc->cliente ?? null;
+		$autor = $orc->user ?? null;
+		$this->set([
+			'title' => __('Orçamento #{0}', $id),
+			'erpNavActive' => 'orc-lista',
+			'erpBreadcrumb' => [
+				['label' => 'PGM ERP'],
+				['label' => __('Comercial')],
+				['label' => __('Orçamentos'), 'url' => ['controller' => 'OrcamentosPrototype', 'action' => 'lista']],
+				['label' => '#' . $id, 'cur' => true],
+			],
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+			'orc' => [
+				'id' => (int)$orc->get('id'),
+				'cliente' => $cliente ? (string)($cliente->get('razaosocial') ?? $cliente->get('nome') ?? '') : '—',
+				'cliente_cnpj' => $cliente ? (string)($cliente->get('cnpj') ?? $cliente->get('cpf') ?? '') : '',
+				'autor' => $autor ? trim((string)($autor->get('name') ?? $autor->get('username'))) : '—',
+				'status' => (int)$orc->get('status'),
+				'created' => $orc->get('created'),
+				'modified' => $orc->get('modified'),
+				'observacao' => (string)($orc->get('observacao') ?? ''),
+				'valortotal' => (float)($orc->get('valortotal') ?? $orc->get('valor') ?? 0),
+			],
+			'orcLinhas' => $linhas,
+			'orcTotalSub' => $totalSub,
+			'orcTotalDesc' => $totalDesc,
+		]);
+
+		return $this->render('detalhe');
+	}
+
+	/**
 	 * Telas wizard (pg-novo|revisao|print|esign|sucesso) e faturamento/cobranca.
 	 *
 	 * @param string $page

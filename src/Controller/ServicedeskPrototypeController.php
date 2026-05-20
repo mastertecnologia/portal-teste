@@ -104,6 +104,93 @@ class ServicedeskPrototypeController extends AppController {
 	}
 
 	/**
+	 * GET /servicedesk-prototype/ci/:id — detalhe de Configuration Item (CMDB).
+	 *
+	 * @param string|int $id
+	 * @return \Cake\Http\Response|null
+	 */
+	public function ci($id) {
+		$id = (int)$id;
+		if ($id <= 0) {
+			throw new NotFoundException(__('CI inválido.'));
+		}
+		$empresa = (int)$this->Auth->user('idempresa');
+		$assets = \Cake\ORM\TableRegistry::getTableLocator()->get('Assets');
+		$asset = null;
+		try {
+			$asset = $assets->find()
+				->contain(['Clientes'])
+				->where(['Assets.id' => $id, 'Assets.idempresa' => $empresa])
+				->first();
+		} catch (\Throwable $e) {
+		}
+		if ($asset === null) {
+			throw new NotFoundException(__('CI não encontrado ou fora do seu escopo.'));
+		}
+
+		$ticketsAtivos = [];
+		try {
+			if (\Cake\ORM\TableRegistry::getTableLocator()->get('Assets')->getConnection()->getSchemaCollection()->listTables() && in_array('ticket_assets', \Cake\ORM\TableRegistry::getTableLocator()->get('Assets')->getConnection()->getSchemaCollection()->listTables(), true)) {
+				$ta = \Cake\ORM\TableRegistry::getTableLocator()->get('TicketAssets');
+				$tids = $ta->find()->select(['ticket_id'])->where(['asset_id' => $id])->extract('ticket_id')->toList();
+				$closed = [];
+				if (defined('C_TicketSituacaoFechado')) {
+					$closed[] = (int)C_TicketSituacaoFechado;
+				}
+				if (defined('C_TicketSituacaoResolvido')) {
+					$closed[] = (int)C_TicketSituacaoResolvido;
+				}
+				if ($tids !== []) {
+					$where = ['Tickets.id IN' => $tids];
+					if ($closed !== []) {
+						$where['Tickets.situacao NOT IN'] = $closed;
+					}
+					$q = $this->Tickets->find()
+						->select(['id', 'solicitacao', 'situacao', 'prioridade'])
+						->where($where)
+						->limit(20);
+					foreach ($q->all() as $t) {
+						$ticketsAtivos[] = [
+							'id' => (int)$t->get('id'),
+							'assunto' => (string)$t->get('solicitacao'),
+							'situacao' => (string)$t->get('situacao'),
+							'prioridade' => (string)$t->get('prioridade'),
+						];
+					}
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+
+		$cliente = $asset->cliente ?? null;
+		$this->set([
+			'title' => __('CI #{0}', $id),
+			'sdpNavActive' => 'cmdb',
+			'ci' => [
+				'id' => (int)$asset->get('id'),
+				'tag' => 'CI-' . str_pad((string)$asset->get('id'), 4, '0', STR_PAD_LEFT),
+				'descricao' => (string)($asset->get('descricao') ?? ''),
+				'tipo' => (string)($asset->get('tipo') ?? $asset->get('categoria') ?? ''),
+				'host' => (string)($asset->get('hostname') ?? $asset->get('identificador') ?? ''),
+				'modelo' => (string)($asset->get('modelo') ?? ''),
+				'fabricante' => (string)($asset->get('fabricante') ?? ''),
+				'serial' => (string)($asset->get('numero_serie') ?? $asset->get('serial') ?? ''),
+				'cliente' => $cliente ? (string)($cliente->get('razaosocial') ?? $cliente->get('nome') ?? '') : '—',
+			],
+			'ciTickets' => $ticketsAtivos,
+		]);
+
+		$screensSvc = new ServicedeskPrototypeScreensService(function (\Cake\ORM\Query $q) {});
+		$this->set('sdpNavBadges', $screensSvc->navBadges([
+			'tickets' => $this->Tickets,
+			'idempresa' => $empresa,
+			'userId' => (int)$this->Auth->user('id'),
+		]));
+
+		return $this->render('display/ci');
+	}
+
+	/**
 	 * @param string $page
 	 * @return \Cake\Http\Response|null
 	 */

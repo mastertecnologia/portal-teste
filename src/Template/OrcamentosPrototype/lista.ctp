@@ -81,7 +81,7 @@ $H = $this->ErpPrototype;
 						<td class="r"><strong><?= h($H->brl((float)$it['valor'])) ?></strong></td>
 						<td class="mu"><?= h($H->dt($it['modified'])) ?></td>
 						<td><?= $H->badge($lbl, str_replace('b-', '', $badge)) ?></td>
-						<td class="r"><?= $this->Html->link(__('Abrir'), ['controller' => 'Orcamentos', 'action' => 'view', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs']) ?></td>
+						<td class="r"><?= $this->Html->link(__('Abrir'), ['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs']) ?></td>
 					</tr>
 				<?php endforeach; endif; ?>
 			</tbody>

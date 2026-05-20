@@ -561,6 +561,10 @@ Router::scope("/", function ($routes) {
         "controller" => "ServicedeskPrototype",
         "action" => "ticket",
     ], ["pass" => ["id"], "id" => "[0-9]+"]);
+    $routes->connect("/servicedesk-prototype/ci/:id", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "ci",
+    ], ["pass" => ["id"], "id" => "[0-9]+"]);
     $routes->connect("/servicedesk-prototype/:page", [
         "controller" => "ServicedeskPrototype",
         "action" => "view",
@@ -575,6 +579,10 @@ Router::scope("/", function ($routes) {
         "controller" => "OrcamentosPrototype",
         "action" => "lista",
     ]);
+    $routes->connect("/orcamentos-prototype/detalhe/:id", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "detalhe",
+    ], ["pass" => ["id"], "id" => "[0-9]+"]);
     $routes->connect("/orcamentos-prototype/:page", [
         "controller" => "OrcamentosPrototype",
         "action" => "view",
@@ -589,6 +597,10 @@ Router::scope("/", function ($routes) {
         "controller" => "OrdensservicoPrototype",
         "action" => "lista",
     ]);
+    $routes->connect("/ordens-prototype/detalhe/:id", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "detalhe",
+    ], ["pass" => ["id"], "id" => "[0-9]+"]);
     $routes->connect("/ordens-prototype/:page", [
         "controller" => "OrdensservicoPrototype",
         "action" => "view",

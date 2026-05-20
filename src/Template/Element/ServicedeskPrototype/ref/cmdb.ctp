@@ -71,9 +71,7 @@ $totalShown = count($items);
 							<td style="font-family:monospace;font-size:11px;"><?= h((string)($it['host'] ?? '—')) ?></td>
 							<td class="r"><?php if ($tickets > 0) : ?><strong style="color:#7A1822;"><?= $tickets ?> <?= h(__('ativos')) ?></strong><?php else : ?>0<?php endif; ?></td>
 							<td class="r">
-								<?php if (!empty($it['link'])) : ?>
-									<?= $this->Html->link(__('Ver'), $it['link'], ['class' => 'btn btn-ghost btn-xs']) ?>
-								<?php endif; ?>
+								<?= $this->Html->link(__('Ver'), ['controller' => 'ServicedeskPrototype', 'action' => 'ci', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs']) ?>
 							</td>
 						</tr>
 					<?php endforeach; endif; ?>

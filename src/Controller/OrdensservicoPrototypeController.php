@@ -108,6 +108,105 @@ class OrdensservicoPrototypeController extends AppController {
 	}
 
 	/**
+	 * Detalhe de uma OS (carrega cliente + itens + horas).
+	 *
+	 * @param string|int $id
+	 */
+	public function detalhe($id) {
+		$id = (int)$id;
+		if ($id <= 0) {
+			throw new NotFoundException(__('OS inválida.'));
+		}
+		$empresa = (int)$this->Auth->user('idempresa');
+		$os = null;
+		try {
+			$os = $this->Ordensservico->find()
+				->contain(['Clientes'])
+				->where(['Ordensservico.id' => $id, 'Ordensservico.idempresa' => $empresa])
+				->first();
+		} catch (\Throwable $e) {
+		}
+		if ($os === null) {
+			throw new NotFoundException(__('OS não encontrada ou fora do seu escopo.'));
+		}
+
+		$itens = [];
+		try {
+			$tblIt = $this->loadModel('Itensordem');
+			$itens = $tblIt->find()
+				->where(['Itensordem.idordempk' => $id])
+				->order(['Itensordem.id' => 'ASC'])
+				->all()
+				->toArray();
+		} catch (\Throwable $e) {
+		}
+
+		$movs = [];
+		try {
+			$tblMov = $this->loadModel('Ordemmovs');
+			$rows = $tblMov->find()
+				->where(['Ordemmovs.idordem' => $id])
+				->order(['Ordemmovs.data' => 'DESC'])
+				->limit(20)
+				->all();
+			foreach ($rows as $m) {
+				$movs[] = [
+					'data' => $m->get('data'),
+					'sitantiga' => (string)($m->get('sitantiga') ?? ''),
+					'sitnova' => (string)($m->get('sitnova') ?? ''),
+					'obs' => (string)($m->get('obs') ?? ''),
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		$linhas = [];
+		$totalItens = 0.0;
+		foreach ($itens as $it) {
+			$qtd = (float)($it->get('quantidade') ?? 1);
+			$vu = (float)($it->get('valorunitario') ?? 0);
+			$desc = (float)($it->get('valordesconto') ?? 0);
+			$subtotal = (float)($it->get('valortotal') ?? ($qtd * $vu - $desc));
+			$totalItens += $subtotal;
+			$linhas[] = [
+				'descricao' => (string)($it->get('descricao') ?? ''),
+				'unidade' => (string)($it->get('unidade') ?? ''),
+				'qtd' => $qtd,
+				'vlr' => $vu,
+				'desconto' => $desc,
+				'subtotal' => $subtotal,
+			];
+		}
+
+		$cliente = $os->cliente ?? null;
+		$this->set([
+			'title' => __('OS #{0}', $id),
+			'erpNavActive' => 'os-lista',
+			'erpBreadcrumb' => [
+				['label' => 'PGM ERP'],
+				['label' => __('Operações')],
+				['label' => __('Ordens de Serviço'), 'url' => ['controller' => 'OrdensservicoPrototype', 'action' => 'lista']],
+				['label' => '#' . $id, 'cur' => true],
+			],
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+			'os' => [
+				'id' => (int)$os->get('id'),
+				'cliente' => $cliente ? (string)($cliente->get('razaosocial') ?? $cliente->get('nome') ?? '') : '—',
+				'cliente_cnpj' => $cliente ? (string)($cliente->get('cnpj') ?? $cliente->get('cpf') ?? '') : '',
+				'descricao' => (string)($os->get('descricao') ?? $os->get('observacao') ?? ''),
+				'situacao' => (string)($os->get('situacao') ?? ''),
+				'valortotal' => (float)($os->get('valortotal') ?? $os->get('valor_total') ?? $totalItens),
+				'abertura' => $os->get('dataabertura') ?? $os->get('created') ?? $os->get('data'),
+			],
+			'osLinhas' => $linhas,
+			'osTotalItens' => $totalItens,
+			'osMovs' => $movs,
+		]);
+
+		return $this->render('detalhe');
+	}
+
+	/**
 	 * Telas do wizard OS (abertura|execucao|aprovacao|conclusao|faturamento|cobranca|sucesso|kanban).
 	 *
 	 * @param string $page
