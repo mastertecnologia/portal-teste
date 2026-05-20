@@ -1,0 +1,16 @@
+# Exemplo de crontab — envio automático de pesquisa CSAT pós-fechamento.
+# Instalar: crontab -e e colar a linha (sem # no início) ajustando o caminho.
+#
+# Pré-requisitos:
+#   - Migration 20260520120000_TicketCsatResponses aplicada
+#   - .env com transporte SMTP configurado (MAIL_*)
+#   - clientes com e-mail cadastrado (clientes.email ou clientes.emailresponsavel)
+#
+# Verificar candidatos (sem enviar):
+#   bin/cake csat_dispatch list
+#
+# Enviar a cada 2 horas para tickets fechados nas últimas 2h sem resposta:
+#0 */2 * * * cd /var/www/portal && php bin/cake csat_dispatch send --hours=2 >> /var/log/portal/csat_dispatch.log 2>&1
+#
+# Versão dry-run para testar sem disparar e-mail (mostra apenas o que seria enviado):
+#0 9 * * 1 cd /var/www/portal && php bin/cake csat_dispatch send --dry --hours=168 >> /var/log/portal/csat_dispatch_dry.log 2>&1

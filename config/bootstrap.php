@@ -136,6 +136,10 @@ if (file_exists(__DIR__ . DS . 'app_local.php')) {
 
 if (file_exists(__DIR__ . DS . 'rbac.php')) {
     Configure::load('rbac', 'default');
+    $erpPrototypeRbacFile = __DIR__ . '/erp_prototype_rbac.php';
+    if (is_file($erpPrototypeRbacFile)) {
+        Configure::write('ErpPrototypeRbac', include $erpPrototypeRbacFile);
+    }
 }
 
 if (file_exists(__DIR__ . DS . 'abac.php')) {

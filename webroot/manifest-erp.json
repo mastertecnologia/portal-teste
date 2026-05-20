@@ -1,0 +1,17 @@
+{
+  "name": "PGM ERP",
+  "short_name": "PGM ERP",
+  "description": "PGM Soluções — ERP Enterprise (protótipo premium)",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a18",
+  "theme_color": "#1D9E75",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

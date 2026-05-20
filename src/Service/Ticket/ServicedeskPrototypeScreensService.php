@@ -755,17 +755,74 @@ class ServicedeskPrototypeScreensService {
 			$fechados = $q->count();
 		}
 
+		$totalRespostas = 0;
+		$csatSoma = 0;
+		$promotores = 0;
+		$detratores = 0;
+		$neutros = 0;
+		$respostasNps = 0;
+		$ultimos = [];
+		if ($this->tableExists('ticket_csat_responses')) {
+			try {
+				$tbl = TableRegistry::getTableLocator()->get('TicketCsatResponses');
+				$rows = $tbl->find()
+					->where(['TicketCsatResponses.idempresa' => $idempresa])
+					->order(['TicketCsatResponses.responded_at' => 'DESC'])
+					->limit(200)
+					->all();
+				foreach ($rows as $r) {
+					$totalRespostas++;
+					$csatSoma += (int)$r->get('csat_score');
+					$nps = $r->get('nps_score');
+					if ($nps !== null && $nps !== '') {
+						$respostasNps++;
+						$n = (int)$nps;
+						if ($n >= 9) {
+							$promotores++;
+						} elseif ($n <= 6) {
+							$detratores++;
+						} else {
+							$neutros++;
+						}
+					}
+					if (count($ultimos) < 8) {
+						$ultimos[] = [
+							'ticket_id' => (int)$r->get('ticket_id'),
+							'csat' => (int)$r->get('csat_score'),
+							'nps' => $nps !== null ? (int)$nps : null,
+							'comentario' => (string)($r->get('comentario') ?? ''),
+							'data' => $r->get('responded_at'),
+						];
+					}
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+
+		$csatMedia = $totalRespostas > 0 ? round($csatSoma / $totalRespostas, 2) : null;
+		$npsScore = $respostasNps > 0
+			? round((($promotores - $detratores) / $respostasNps) * 100)
+			: null;
+
+		$kpis = [
+			['lbl' => __('Tickets fechados'), 'val' => (string)$fechados, 'hint' => __('total empresa')],
+			['lbl' => __('Respostas CSAT'), 'val' => (string)$totalRespostas, 'hint' => __('formulário pós-fechamento')],
+			['lbl' => __('CSAT médio'), 'val' => $csatMedia !== null ? number_format($csatMedia, 2, ',', '.') . ' ⭐' : '—', 'hint' => __('escala 1-5')],
+			['lbl' => __('NPS'), 'val' => $npsScore !== null ? (string)$npsScore : '—', 'hint' => sprintf(__('%d resp.'), $respostasNps)],
+		];
+
 		return [
 			'title' => __('CSAT & NPS'),
-			'subtitle' => __('Não há tabela de pesquisa de satisfação; indicador proxy: tickets fechados'),
-			'kpis' => [
-				['lbl' => __('Tickets fechados'), 'val' => (string)$fechados, 'hint' => __('total empresa')],
-				['lbl' => __('CSAT médio'), 'val' => '—', 'hint' => __('sem dados no BD')],
-			],
+			'subtitle' => $totalRespostas > 0
+				? sprintf(__('%d respostas registradas'), $totalRespostas)
+				: __('Aguardando primeiras respostas (envie o link CSAT após fechar o ticket)'),
+			'kpis' => $kpis,
 			'rows' => [],
 			'items' => [],
 			'mode' => 'info',
-			'empty' => __('Integração CSAT/NPS não configurada neste ambiente.'),
+			'empty' => '',
+			'csat_ultimos' => $ultimos,
+			'csat_breakdown' => ['promotores' => $promotores, 'neutros' => $neutros, 'detratores' => $detratores, 'total_nps' => $respostasNps],
 		];
 	}
 

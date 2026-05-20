@@ -322,6 +322,18 @@ class AppController extends Controller
             }
         }
 
+        $path = (string)$this->request->getPath();
+        if (
+            strpos($path, '-prototype') !== false
+            || strpos($path, '/prototype-history') === 0
+            || $controller === 'PrototypeHistory'
+        ) {
+            $erpLocale = (string)$this->request->getSession()->read('Erp.locale');
+            if (in_array($erpLocale, ['pt_BR', 'en_US', 'es'], true)) {
+                \Cake\I18n\I18n::setLocale($erpLocale);
+            }
+        }
+
         $role = $this->Auth->user("role");
         $iduser = $this->Auth->user("id");
         $admin = $this->Auth->user("admin");

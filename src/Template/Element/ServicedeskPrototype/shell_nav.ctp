@@ -15,11 +15,10 @@ $is = static function (string $a, string $b): string {
 $badges = (array)($sdpNavBadges ?? []);
 $badge = static function (string $key) use ($badges): string {
 	$n = (int)($badges[$key] ?? 0);
-	if ($n <= 0) {
-		return '';
-	}
+	$navKey = $key === 'aprovacoes' ? 'sd-aprovacoes' : $key;
+	$vis = $n <= 0 ? ' style="display:none;"' : '';
 
-	return ' <span class="sdp-nav-badge">' . $n . '</span>';
+	return ' <span class="sdp-nav-badge" data-nav-badge="' . h($navKey) . '"' . $vis . '>' . $n . '</span>';
 };
 ?>
 <a class="<?= h(trim($is($active, 'dashboard'))) ?>" href="<?= h($u(['controller' => 'ServicedeskPrototype', 'action' => 'index'])) ?>"><?= h(__('Dashboard')) ?></a>

@@ -41,4 +41,30 @@ class PortalUrlPath {
 
 		return self::normalizePath($url);
 	}
+
+	/**
+	 * Redirect interno seguro (sem open redirect / protocol-relative).
+	 *
+	 * @param mixed $url
+	 */
+	public static function sanitizeInternalRedirect($url): ?string {
+		if (!is_string($url)) {
+			return null;
+		}
+		$url = trim(rawurldecode($url));
+		if ($url === '') {
+			return null;
+		}
+		if (preg_match('#^[a-z][a-z0-9+.-]*:#i', $url)) {
+			return null;
+		}
+		if (strpos($url, '//') === 0) {
+			return null;
+		}
+		if ($url[0] !== '/') {
+			return null;
+		}
+
+		return self::normalizeRelativeUrl($url);
+	}
 }

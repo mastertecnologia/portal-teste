@@ -561,10 +561,351 @@ Router::scope("/", function ($routes) {
         "controller" => "ServicedeskPrototype",
         "action" => "ticket",
     ], ["pass" => ["id"], "id" => "[0-9]+"]);
+    $routes->connect("/servicedesk-prototype/ci/:id", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "ci",
+    ], ["pass" => ["id"], "id" => "[0-9]+"]);
+    $routes->connect("/servicedesk-prototype/csat-historico", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "csatHistorico",
+    ]);
+    $routes->connect("/servicedesk-prototype/csat-export.csv", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "csatExportCsv",
+    ]);
+    $routes->connect("/servicedesk-prototype/api/badges", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "apiBadges",
+    ]);
+    $routes->connect("/servicedesk-prototype/api/notificacoes", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "apiNotificacoes",
+    ]);
+    $routes->connect("/servicedesk-prototype/aprovacao/:source_type/:source_id/:decisao", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "aprovacao",
+    ], [
+        "pass" => ["source_type", "source_id", "decisao"],
+        "source_type" => "[a-z\-]+",
+        "source_id" => "[0-9]+",
+        "decisao" => "aprovar|reprovar",
+    ]);
+
+    // ===== Web Push =====
+    $routes->connect("/web-push", [
+        "controller" => "WebPush",
+        "action" => "index",
+    ]);
+    $routes->connect("/web-push/vapid", [
+        "controller" => "WebPush",
+        "action" => "vapid",
+    ]);
+    $routes->connect("/web-push/subscribe", [
+        "controller" => "WebPush",
+        "action" => "subscribe",
+    ]);
+    $routes->connect("/web-push/unsubscribe", [
+        "controller" => "WebPush",
+        "action" => "unsubscribe",
+    ]);
+    $routes->connect("/web-push/test", [
+        "controller" => "WebPush",
+        "action" => "test",
+    ]);
+
+    // ===== CSAT público (cliente acessa via token) =====
+    $routes->connect("/csat/:token/ok", [
+        "controller" => "TicketCsat",
+        "action" => "sucesso",
+    ], ["pass" => ["token"], "token" => "csat\-[0-9]+\-[a-f0-9]{16}"]);
+    $routes->connect("/csat/:token", [
+        "controller" => "TicketCsat",
+        "action" => "responder",
+    ], ["pass" => ["token"], "token" => "csat\-[0-9]+\-[a-f0-9]{16}"]);
     $routes->connect("/servicedesk-prototype/:page", [
         "controller" => "ServicedeskPrototype",
         "action" => "view",
     ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Orçamentos (mockup pg-lista, pg-novo, pg-revisao, etc.) =====
+    $routes->connect("/orcamentos-prototype", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/orcamentos-prototype/", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/orcamentos-prototype/detalhe/:id", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "detalhe",
+    ], ["pass" => ["id"], "id" => "[0-9]+"]);
+    $routes->connect("/orcamentos-prototype/salvar-rascunho", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "salvarRascunho",
+    ]);
+    $routes->connect("/orcamentos-prototype/mudar-status", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "mudarStatus",
+    ]);
+    $routes->connect("/orcamentos-prototype/export.csv", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "exportCsv",
+    ]);
+    $routes->connect("/orcamentos-prototype/api/produtos", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "apiProdutos",
+    ]);
+    $routes->connect("/orcamentos-prototype/api/clientes", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "apiClientes",
+    ]);
+    $routes->connect("/orcamentos-prototype/api/adicionar-item", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "apiAdicionarItem",
+    ]);
+    $routes->connect("/orcamentos-prototype/api/excluir-item", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "apiExcluirItem",
+    ]);
+    $routes->connect("/orcamentos-prototype/api/atualizar-item", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "apiAtualizarItem",
+    ]);
+    $routes->connect("/ordens-prototype/api/adicionar-item", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "apiAdicionarItem",
+    ]);
+    $routes->connect("/ordens-prototype/api/excluir-item", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "apiExcluirItem",
+    ]);
+    $routes->connect("/ordens-prototype/api/atualizar-item", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "apiAtualizarItem",
+    ]);
+    $routes->connect("/orcamentos-prototype/:page", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Ordens de Serviço (mockup pg-os-*) =====
+    $routes->connect("/ordens-prototype", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/ordens-prototype/", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/ordens-prototype/detalhe/:id", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "detalhe",
+    ], ["pass" => ["id"], "id" => "[0-9]+"]);
+    $routes->connect("/ordens-prototype/salvar-rascunho", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "salvarRascunho",
+    ]);
+    $routes->connect("/ordens-prototype/avancar-etapa", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "avancarEtapa",
+    ]);
+    $routes->connect("/ordens-prototype/export.csv", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "exportCsv",
+    ]);
+    $routes->connect("/ordens-prototype/:page", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Clientes (mockup pg-clientes, pg-cliente-novo, pg-cliente-360) =====
+    $routes->connect("/clientes-prototype", [
+        "controller" => "ClientesPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/clientes-prototype/", [
+        "controller" => "ClientesPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/clientes-prototype/export.csv", [
+        "controller" => "ClientesPrototype",
+        "action" => "exportCsv",
+    ]);
+    $routes->connect("/clientes-prototype/api/atualizar-contato", [
+        "controller" => "ClientesPrototype",
+        "action" => "apiAtualizarContato",
+    ]);
+    $routes->connect("/clientes-prototype/:page", [
+        "controller" => "ClientesPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Produtos + Estoque (mockup pg-produtos, pg-estoque, pg-precos, etc.) =====
+    $routes->connect("/produtos-prototype", [
+        "controller" => "ProdutosPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/produtos-prototype/", [
+        "controller" => "ProdutosPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/produtos-prototype/estoque", [
+        "controller" => "ProdutosPrototype",
+        "action" => "estoque",
+    ]);
+    $routes->connect("/produtos-prototype/export.csv", [
+        "controller" => "ProdutosPrototype",
+        "action" => "exportCsv",
+    ]);
+    $routes->connect("/produtos-prototype/preco-save", [
+        "controller" => "ProdutosPrototype",
+        "action" => "precoSave",
+    ]);
+    $routes->connect("/produtos-prototype/api/atualizar-campo", [
+        "controller" => "ProdutosPrototype",
+        "action" => "apiAtualizarCampo",
+    ]);
+    $routes->connect("/produtos-prototype/:page", [
+        "controller" => "ProdutosPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo PCP / Indústria (mockup pg-pcp-dashboard e demais 12 telas) =====
+    $routes->connect("/pcp-prototype", [
+        "controller" => "PcpPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/pcp-prototype/", [
+        "controller" => "PcpPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/pcp-prototype/:page", [
+        "controller" => "PcpPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Fornecedores (mockup pg-fornecedores, pg-fornecedor-novo, pg-fornecedor-360) =====
+    $routes->connect("/fornecedores-prototype", [
+        "controller" => "FornecedoresPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/fornecedores-prototype/", [
+        "controller" => "FornecedoresPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/fornecedores-prototype/:page", [
+        "controller" => "FornecedoresPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Financeiro (mockup pg-financeiro, pg-titulos, pg-contas-pagar, etc.) =====
+    $routes->connect("/financeiro-prototype", [
+        "controller" => "FinanceiroPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/financeiro-prototype/", [
+        "controller" => "FinanceiroPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/financeiro-prototype/titulos", [
+        "controller" => "FinanceiroPrototype",
+        "action" => "titulos",
+    ]);
+    $routes->connect("/financeiro-prototype/contas-pagar", [
+        "controller" => "FinanceiroPrototype",
+        "action" => "contasPagar",
+    ]);
+    $routes->connect("/financeiro-prototype/:page", [
+        "controller" => "FinanceiroPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Bancos (mockup pg-bancos, pg-extrato, pg-conciliacao, etc.) =====
+    $routes->connect("/bancos-prototype", [
+        "controller" => "BancosPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/bancos-prototype/", [
+        "controller" => "BancosPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/bancos-prototype/conciliar", [
+        "controller" => "BancosPrototype",
+        "action" => "conciliar",
+    ]);
+    $routes->connect("/bancos-prototype/extrato/export.csv", [
+        "controller" => "BancosPrototype",
+        "action" => "exportExtratoCsv",
+    ]);
+    $routes->connect("/bancos-prototype/rejeitar-match", [
+        "controller" => "BancosPrototype",
+        "action" => "rejeitarMatch",
+    ]);
+    $routes->connect("/bancos-prototype/:page", [
+        "controller" => "BancosPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Empresas (mockup pg-empresas, pg-empresa-nova) =====
+    $routes->connect("/empresas-prototype", [
+        "controller" => "EmpresasPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/empresas-prototype/", [
+        "controller" => "EmpresasPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/empresas-prototype/:page", [
+        "controller" => "EmpresasPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Sistema · RBAC · Auditoria (mockup pg-config, pg-usuarios, pg-acesso-*, pg-auditoria) =====
+    $routes->connect("/sistema-prototype/usuarios", [
+        "controller" => "SistemaPrototype",
+        "action" => "usuarios",
+    ]);
+    $routes->connect("/sistema-prototype/acesso-central", [
+        "controller" => "SistemaPrototype",
+        "action" => "acessoCentral",
+    ]);
+    $routes->connect("/sistema-prototype/acesso-papeis", [
+        "controller" => "SistemaPrototype",
+        "action" => "acessoPapeis",
+    ]);
+    $routes->connect("/sistema-prototype/auditoria", [
+        "controller" => "SistemaPrototype",
+        "action" => "auditoria",
+    ]);
+    $routes->connect("/sistema-prototype/config", [
+        "controller" => "SistemaPrototype",
+        "action" => "config",
+    ]);
+    $routes->connect("/sistema-prototype/view-as", [
+        "controller" => "SistemaPrototype",
+        "action" => "viewAs",
+    ]);
+
+    // Histórico global de transições + troca de idioma (shell premium)
+    $routes->connect("/prototype-history", [
+        "controller" => "PrototypeHistory",
+        "action" => "index",
+    ]);
+    $routes->connect("/prototype-history/", [
+        "controller" => "PrototypeHistory",
+        "action" => "index",
+    ]);
+    $routes->connect("/prototype-history/set-locale/:locale", [
+        "controller" => "PrototypeHistory",
+        "action" => "setLocale",
+    ], ["pass" => ["locale"], "locale" => "[a-z]{2}(_[A-Z]{2})?"]);
+
+    $routes->connect("/sistema-prototype/:page", [
+        "controller" => "SistemaPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
     $routes->connect("/servicedesk/sla-relatorio", [
         "controller" => "Servicedesk",
         "action" => "slaRelatorio",

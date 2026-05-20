@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Traits\ErpPrototypeRbacTrait;
+use App\Controller\Traits\PrototypeApiSecurityTrait;
 use App\Service\Ticket\ServicedeskPrototypeDataService;
 use App\Service\Ticket\ServicedeskPrototypeScreensService;
 use Cake\Event\Event;
@@ -13,6 +15,8 @@ use Cake\Http\Exception\NotFoundException;
  * Dados reais via ORM + ABAC.
  */
 class ServicedeskPrototypeController extends AppController {
+
+	use PrototypeApiSecurityTrait;
 
 	public function initialize() {
 		parent::initialize();
@@ -36,17 +40,8 @@ class ServicedeskPrototypeController extends AppController {
 		$this->viewBuilder()->setLayout('servicedesk_prototype');
 	}
 
-	public function isAuthorized($user) {
-		if (empty($user)) {
-			return false;
-		}
-		if ((int)($user['role'] ?? -1) !== 0) {
-			$this->Flash->error(__('O protótipo Service Desk é só para a equipe técnica. Saia do portal do cliente ou use Acesso PGM / Master.'));
-
-			return false;
-		}
-
-		return parent::isAuthorized($user);
+	protected function _erpPrototypeDenyPortalUser(): void {
+		$this->Flash->error(__('O protótipo Service Desk é só para a equipe técnica. Saia do portal do cliente ou use Acesso PGM / Master.'));
 	}
 
 	public function index() {
@@ -101,6 +96,491 @@ class ServicedeskPrototypeController extends AppController {
 	 */
 	public function view($page = 'dashboard') {
 		return $this->screen($page);
+	}
+
+	/**
+	 * GET /servicedesk-prototype/csat-export.csv — exporta histórico filtrado.
+	 */
+	public function csatExportCsv() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$q = $this->request->getQueryParams();
+		$where = ['TicketCsatResponses.idempresa' => $empresa];
+		if (!empty($q['mes']) && preg_match('/^\d{4}-\d{2}$/', (string)$q['mes'])) {
+			$where['TicketCsatResponses.responded_at >='] = $q['mes'] . '-01 00:00:00';
+			$where['TicketCsatResponses.responded_at <='] = date('Y-m-t 23:59:59', strtotime($q['mes'] . '-01'));
+		}
+		if (!empty($q['min_csat']) && (int)$q['min_csat'] > 0) {
+			$where['TicketCsatResponses.csat_score >='] = (int)$q['min_csat'];
+		}
+		if (!empty($q['nps'])) {
+			$where['TicketCsatResponses.nps_score IS NOT'] = null;
+		}
+		if (!empty($q['q'])) {
+			$where['TicketCsatResponses.comentario ILIKE'] = '%' . $q['q'] . '%';
+		}
+		try {
+			$tbl = \Cake\ORM\TableRegistry::getTableLocator()->get('TicketCsatResponses');
+			$rows = $tbl->find()->contain(['Clientes'])->where($where)->order(['TicketCsatResponses.responded_at' => 'DESC'])->limit(10000)->all();
+		} catch (\Throwable $e) {
+			$rows = [];
+		}
+		$this->autoRender = false;
+		$fname = 'csat-' . date('Ymd-His') . '.csv';
+		$this->response = $this->response
+			->withType('text/csv')
+			->withHeader('Content-Disposition', 'attachment; filename="' . $fname . '"');
+		$out = fopen('php://temp', 'w+');
+		fwrite($out, "\xEF\xBB\xBF");
+		fputcsv($out, ['Quando', 'Ticket', 'Cliente', 'CSAT', 'NPS', 'Comentário'], ';');
+		foreach ($rows as $r) {
+			$cli = $r->cliente ?? null;
+			fputcsv($out, [
+				$r->get('responded_at') instanceof \DateTimeInterface ? $r->get('responded_at')->format('d/m/Y H:i') : '',
+				(int)$r->get('ticket_id'),
+				$cli ? (string)($cli->get('razaosocial') ?? $cli->get('nome') ?? '') : '',
+				(int)$r->get('csat_score'),
+				$r->get('nps_score') !== null ? (int)$r->get('nps_score') : '',
+				(string)($r->get('comentario') ?? ''),
+			], ';');
+		}
+		rewind($out);
+
+		return $this->response->withStringBody(stream_get_contents($out));
+	}
+
+	/**
+	 * GET /servicedesk-prototype/csat-historico — histórico CSAT/NPS com filtros.
+	 */
+	public function csatHistorico() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$query = $this->request->getQueryParams();
+		$mes = trim((string)($query['mes'] ?? '')); // YYYY-MM
+		$minCsat = (int)($query['min_csat'] ?? 0);
+		$apenasNps = (string)($query['nps'] ?? '') === '1';
+		$busca = trim((string)($query['q'] ?? ''));
+
+		$itens = [];
+		$kpi = ['total' => 0, 'csat_media' => 0.0, 'promotores' => 0, 'neutros' => 0, 'detratores' => 0, 'nps' => 0];
+		try {
+			$tbl = \Cake\ORM\TableRegistry::getTableLocator()->get('TicketCsatResponses');
+			$where = ['TicketCsatResponses.idempresa' => $empresa];
+			if ($mes !== '' && preg_match('/^\d{4}-\d{2}$/', $mes)) {
+				$where['TicketCsatResponses.responded_at >='] = $mes . '-01 00:00:00';
+				$where['TicketCsatResponses.responded_at <='] = date('Y-m-t 23:59:59', strtotime($mes . '-01'));
+			}
+			if ($minCsat > 0 && $minCsat <= 5) {
+				$where['TicketCsatResponses.csat_score >='] = $minCsat;
+			}
+			if ($apenasNps) {
+				$where['TicketCsatResponses.nps_score IS NOT'] = null;
+			}
+			if ($busca !== '') {
+				$where['TicketCsatResponses.comentario ILIKE'] = '%' . $busca . '%';
+			}
+			$q = $tbl->find()->contain(['Tickets', 'Clientes'])->where($where)->order(['TicketCsatResponses.responded_at' => 'DESC'])->limit(300);
+			$soma = 0;
+			$npsResps = 0;
+			foreach ($q->all() as $r) {
+				$kpi['total']++;
+				$csat = (int)$r->get('csat_score');
+				$soma += $csat;
+				$nps = $r->get('nps_score');
+				if ($nps !== null && $nps !== '') {
+					$npsResps++;
+					$n = (int)$nps;
+					if ($n >= 9) $kpi['promotores']++;
+					elseif ($n <= 6) $kpi['detratores']++;
+					else $kpi['neutros']++;
+				}
+				$cli = $r->cliente ?? null;
+				$itens[] = [
+					'ticket_id' => (int)$r->get('ticket_id'),
+					'csat' => $csat,
+					'nps' => $nps !== null ? (int)$nps : null,
+					'comentario' => (string)($r->get('comentario') ?? ''),
+					'data' => $r->get('responded_at'),
+					'cliente' => $cli ? (string)($cli->get('razaosocial') ?? $cli->get('nome') ?? '') : '—',
+				];
+			}
+			$kpi['csat_media'] = $kpi['total'] > 0 ? round($soma / $kpi['total'], 2) : 0;
+			$kpi['nps'] = $npsResps > 0 ? (int)round((($kpi['promotores'] - $kpi['detratores']) / $npsResps) * 100) : 0;
+		} catch (\Throwable $e) {
+		}
+
+		$this->set([
+			'title' => __('Histórico CSAT'),
+			'sdpNavActive' => 'csat',
+			'csatItens' => $itens,
+			'csatKpi' => $kpi,
+			'csatFiltros' => ['mes' => $mes, 'min_csat' => $minCsat, 'nps' => $apenasNps, 'q' => $busca],
+		]);
+
+		$screensSvc = new ServicedeskPrototypeScreensService(function (\Cake\ORM\Query $q) {});
+		$this->set('sdpNavBadges', $screensSvc->navBadges([
+			'tickets' => $this->Tickets, 'idempresa' => $empresa, 'userId' => (int)$this->Auth->user('id'),
+		]));
+
+		return $this->render('display/csat_historico');
+	}
+
+	/**
+	 * GET /servicedesk-prototype/api/notificacoes — JSON com últimas mudanças
+	 * relevantes ao usuário (sino do topbar).
+	 */
+	public function apiNotificacoes() {
+		$this->request->allowMethod(['get']);
+		if ($guard = $this->guardApiEquipeGet()) {
+			return $guard;
+		}
+		$this->_trackPrototypeApiHit('ServicedeskPrototype.apiNotificacoes');
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$out = [];
+		try {
+			$tbl = \Cake\ORM\TableRegistry::getTableLocator()->get('PrototypeStatusHistory');
+			$desde = \Cake\I18n\Time::now()->subDays(7);
+			$rows = $tbl->find()
+				->where(['idempresa' => $empresa, 'created >=' => $desde])
+				->order(['created' => 'DESC'])
+				->limit(15)
+				->all();
+			foreach ($rows as $r) {
+				$type = (string)$r->get('source_type');
+				$sid = (int)$r->get('source_id');
+				$url = null;
+				if ($type === 'orcamento') {
+					$url = $this->Url->build(['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', $sid]);
+				} elseif ($type === 'os') {
+					$url = $this->Url->build(['controller' => 'OrdensservicoPrototype', 'action' => 'detalhe', $sid]);
+				} elseif ($type === 'ticket') {
+					$url = $this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'ticket', $sid]);
+				}
+				$out[] = [
+					'icon' => $type === 'orcamento' ? '📋' : ($type === 'os' ? '🛠' : ($type === 'ticket' ? '🎟' : '🔔')),
+					'title' => sprintf('%s #%d', ucfirst($type), $sid),
+					'sub' => (string)($r->get('status_from') ?? '—') . ' → ' . (string)$r->get('status_to'),
+					'by' => (string)($r->get('actor_name') ?? ''),
+					'at' => $r->get('created') instanceof \DateTimeInterface ? $r->get('created')->format('d/m H:i') : '',
+					'url' => $url,
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $this->response->withStringBody(json_encode(['ok' => true, 'items' => $out, 'count' => count($out)], JSON_UNESCAPED_UNICODE));
+	}
+
+	/**
+	 * GET /servicedesk-prototype/api/badges — JSON com contagens para o sidebar.
+	 * Usado pelo long-poll do shell premium (atualiza a cada 30s).
+	 */
+	public function apiBadges() {
+		$this->request->allowMethod(['get']);
+		if ($guard = $this->guardApiEquipeGet()) {
+			return $guard;
+		}
+		$this->_trackPrototypeApiHit('ServicedeskPrototype.apiBadges');
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$userId = (int)$this->Auth->user('id');
+
+		$abac = function (\Cake\ORM\Query $q): void {
+			$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
+		};
+		$svc = new ServicedeskPrototypeScreensService($abac);
+		$badges = $svc->navBadges([
+			'tickets' => $this->Tickets,
+			'idempresa' => $empresa,
+			'userId' => $userId,
+		]);
+
+		// Sidebar do erp_prototype usa chaves como 'sd-aprovacoes' / 'empresas'.
+		$out = [
+			'sd-aprovacoes' => (int)($badges['aprovacoes'] ?? 0),
+		];
+		try {
+			$empresas = $this->loadModel('Empresas');
+			$out['empresas'] = (int)$empresas->find()->count();
+		} catch (\Throwable $e) {
+		}
+
+		return $this->response->withStringBody(json_encode(['ok' => true, 'badges' => $out, 'ts' => time()], JSON_UNESCAPED_UNICODE));
+	}
+
+	/**
+	 * POST /servicedesk-prototype/aprovacao/:source_type/:source_id/:decisao
+	 * Aplica decisão (aprovar/reprovar) na pendência da fila SD.
+	 *
+	 * @param string|null $sourceType ex.: rbac, orcamento, ren, tkt-res
+	 * @param string|null $sourceId   id do registro de origem
+	 * @param string|null $decisao    aprovar | reprovar
+	 */
+	public function aprovacao($sourceType = null, $sourceId = null, $decisao = null) {
+		$this->request->allowMethod(['post']);
+		$sourceType = (string)$sourceType;
+		$sourceId = (int)$sourceId;
+		$decisao = (string)$decisao;
+		if ($sourceId <= 0 || !in_array($decisao, ['aprovar', 'reprovar'], true)) {
+			$this->Flash->error(__('Decisão inválida.'));
+
+			return $this->redirect(['controller' => 'ServicedeskPrototype', 'action' => 'view', 'aprovacoes']);
+		}
+		$nota = trim((string)$this->request->getData('nota'));
+		$user = (array)$this->Auth->user();
+		try {
+			switch ($sourceType) {
+				case 'rbac':
+					$this->aprovacaoRbac($sourceId, $decisao === 'aprovar', $nota, $user);
+					break;
+				case 'orc':
+					$this->aprovacaoOrcamento($sourceId, $decisao === 'aprovar', $user);
+					break;
+				case 'ren':
+					$this->aprovacaoRenovacao($sourceId, $decisao === 'aprovar', $nota, $user);
+					break;
+				case 'tkt-res':
+					$this->aprovacaoTicketFechamento($sourceId, $decisao === 'aprovar', $user);
+					break;
+				default:
+					$this->Flash->error(__('Tipo de aprovação não suportado nesta tela.'));
+
+					return $this->redirect(['controller' => 'ServicedeskPrototype', 'action' => 'view', 'aprovacoes']);
+			}
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro ao decidir: {0}', $e->getMessage()));
+		}
+
+		return $this->redirect(['controller' => 'ServicedeskPrototype', 'action' => 'view', 'aprovacoes']);
+	}
+
+	protected function aprovacaoRbac(int $id, bool $aprovar, string $nota, array $user): void {
+		$tbl = \Cake\ORM\TableRegistry::getTableLocator()->get('RbacAccessRequests');
+		$row = $tbl->find()->where(['id' => $id])->first();
+		if ($row === null) {
+			$this->Flash->error(__('Pedido RBAC não encontrado.'));
+
+			return;
+		}
+		$status = (string)$row->get('status');
+		$isAdminStage = in_array($status, ['pending_admin', 'manager_approved'], true);
+		$isAdmin = !empty($user['admin']);
+		$wf = new \App\Service\RbacApprovalWorkflowService();
+
+		if ($isAdminStage) {
+			if (!$isAdmin) {
+				$this->Flash->error(__('Pedido em fila admin: apenas administradores podem decidir.'));
+
+				return;
+			}
+			if ($aprovar) {
+				$wf->approveAdmin($row, $user, $nota);
+			} else {
+				$wf->rejectAdmin($row, $user, $nota);
+			}
+			$msg = $aprovar
+				? __('Admin aprovou o pedido (etapa final). Acesso liberado.')
+				: __('Admin recusou o pedido.');
+		} else {
+			if (!$wf->managerCanReview($user, (int)$row->get('user_id'))) {
+				$this->Flash->error(__('Você não pode revisar este pedido (não está na equipe do solicitante).'));
+
+				return;
+			}
+			if ($aprovar) {
+				$wf->approveManager($row, $user, $nota);
+			} else {
+				$wf->rejectManager($row, $user, $nota);
+			}
+			$msg = $aprovar
+				? __('Manager aprovou. Pedido encaminhado à fila admin.')
+				: __('Manager recusou o pedido.');
+		}
+		if ($tbl->save($row)) {
+			// Avança para fila admin automaticamente após manager aprovar
+			if (!$isAdminStage && $aprovar) {
+				$wf->enqueueForAdmin($row);
+				$tbl->save($row);
+			}
+			(new \App\Service\RbacAccessRequestService())->syncApprovalInbox($row);
+			$this->Flash->success($msg);
+			// Hook: notifica solicitante via push (assíncrono via send service; falha silenciosa)
+			try {
+				(new \App\Service\WebPushSenderService())->sendToUser(
+					(int)$row->get('user_id'),
+					[
+						'title' => $aprovar ? '✓ ' . __('Pedido de acesso aprovado') : '✗ ' . __('Pedido de acesso recusado'),
+						'body' => $isAdminStage
+							? ($aprovar ? __('Admin liberou seu acesso.') : __('Admin recusou.'))
+							: ($aprovar ? __('Manager aprovou. Aguardando admin.') : __('Manager recusou.')),
+						'url' => $this->Url->build(['controller' => 'RbacAccessRequests', 'action' => 'visualizarPedidoAcesso', (int)$row->get('id')]),
+						'tag' => 'rbac-' . (int)$row->get('id'),
+					]
+				);
+			} catch (\Throwable $e) {
+			}
+		}
+	}
+
+	protected function aprovacaoOrcamento(int $id, bool $aprovar, array $user): void {
+		$orcs = \Cake\ORM\TableRegistry::getTableLocator()->get('Orcamentos');
+		$row = $orcs->find()->where(['id' => $id, 'idempresa' => (int)($user['idempresa'] ?? 0)])->first();
+		if ($row === null) {
+			$this->Flash->error(__('Orçamento fora do escopo.'));
+
+			return;
+		}
+		$row->set('status', $aprovar
+			? (defined('C_OrcamentoStatusAprovado') ? (int)C_OrcamentoStatusAprovado : 2)
+			: (defined('C_OrcamentoStatusRecusado') ? (int)C_OrcamentoStatusRecusado : 3));
+		if ($orcs->save($row)) {
+			$this->Flash->success(__('Orçamento #{0} {1}.', (int)$row->get('id'), $aprovar ? __('aprovado') : __('recusado')));
+		}
+	}
+
+	protected function aprovacaoRenovacao(int $id, bool $aprovar, string $nota, array $user): void {
+		$tbl = \Cake\ORM\TableRegistry::getTableLocator()->get('ContractRenewals');
+		$row = $tbl->find()->where(['id' => $id])->first();
+		if ($row === null) {
+			$this->Flash->error(__('Renovação não encontrada.'));
+
+			return;
+		}
+		$row->set('status', $aprovar ? 'aprovada' : 'recusada');
+		$row->set('aprovado_em', date('Y-m-d H:i:s'));
+		$row->set('aprovado_por', (int)($user['id'] ?? 0));
+		if ($nota !== '') {
+			$row->set('observacoes', $nota);
+		}
+		if ($tbl->save($row)) {
+			$this->Flash->success(__('Renovação {0}.', $aprovar ? __('aprovada') : __('recusada')));
+		}
+	}
+
+	protected function aprovacaoTicketFechamento(int $id, bool $aprovar, array $user): void {
+		$row = $this->Tickets->find()->where(['id' => $id, 'idempresa' => (int)($user['idempresa'] ?? 0)])->first();
+		if ($row === null) {
+			$this->Flash->error(__('Ticket fora do escopo.'));
+
+			return;
+		}
+		if (!$aprovar) {
+			if (defined('C_TicketSituacaoEmandamento')) {
+				$row->set('situacao', (int)C_TicketSituacaoEmandamento);
+				$this->Tickets->save($row);
+			}
+			$this->Flash->info(__('Ticket #{0} retornado para execução.', $id));
+
+			return;
+		}
+		if (defined('C_TicketSituacaoFechado')) {
+			$row->set('situacao', (int)C_TicketSituacaoFechado);
+			$row->set('data_fechamento', date('Y-m-d H:i:s'));
+			if ($this->Tickets->save($row)) {
+				$this->Flash->success(__('Ticket #{0} fechado.', $id));
+				// Hook: notifica owner/idtecnico do ticket via push
+				try {
+					$tecnico = (int)($row->get('owner_id') ?? $row->get('idtecnico_responsavel') ?? 0);
+					if ($tecnico > 0) {
+						(new \App\Service\WebPushSenderService())->sendToUser($tecnico, [
+							'title' => '✓ ' . __('Ticket #{0} fechado', $id),
+							'body' => __('Aprovação concluída. Ticket arquivado.'),
+							'url' => $this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'ticket', $id]),
+							'tag' => 'ticket-' . $id,
+						]);
+					}
+				} catch (\Throwable $e) {
+				}
+			}
+		}
+	}
+
+	/**
+	 * GET /servicedesk-prototype/ci/:id — detalhe de Configuration Item (CMDB).
+	 *
+	 * @param string|int $id
+	 * @return \Cake\Http\Response|null
+	 */
+	public function ci($id) {
+		$id = (int)$id;
+		if ($id <= 0) {
+			throw new NotFoundException(__('CI inválido.'));
+		}
+		$empresa = (int)$this->Auth->user('idempresa');
+		$assets = \Cake\ORM\TableRegistry::getTableLocator()->get('Assets');
+		$asset = null;
+		try {
+			$asset = $assets->find()
+				->contain(['Clientes'])
+				->where(['Assets.id' => $id, 'Assets.idempresa' => $empresa])
+				->first();
+		} catch (\Throwable $e) {
+		}
+		if ($asset === null) {
+			throw new NotFoundException(__('CI não encontrado ou fora do seu escopo.'));
+		}
+
+		$ticketsAtivos = [];
+		try {
+			if (\Cake\ORM\TableRegistry::getTableLocator()->get('Assets')->getConnection()->getSchemaCollection()->listTables() && in_array('ticket_assets', \Cake\ORM\TableRegistry::getTableLocator()->get('Assets')->getConnection()->getSchemaCollection()->listTables(), true)) {
+				$ta = \Cake\ORM\TableRegistry::getTableLocator()->get('TicketAssets');
+				$tids = $ta->find()->select(['ticket_id'])->where(['asset_id' => $id])->extract('ticket_id')->toList();
+				$closed = [];
+				if (defined('C_TicketSituacaoFechado')) {
+					$closed[] = (int)C_TicketSituacaoFechado;
+				}
+				if (defined('C_TicketSituacaoResolvido')) {
+					$closed[] = (int)C_TicketSituacaoResolvido;
+				}
+				if ($tids !== []) {
+					$where = ['Tickets.id IN' => $tids];
+					if ($closed !== []) {
+						$where['Tickets.situacao NOT IN'] = $closed;
+					}
+					$q = $this->Tickets->find()
+						->select(['id', 'solicitacao', 'situacao', 'prioridade'])
+						->where($where)
+						->limit(20);
+					foreach ($q->all() as $t) {
+						$ticketsAtivos[] = [
+							'id' => (int)$t->get('id'),
+							'assunto' => (string)$t->get('solicitacao'),
+							'situacao' => (string)$t->get('situacao'),
+							'prioridade' => (string)$t->get('prioridade'),
+						];
+					}
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+
+		$cliente = $asset->cliente ?? null;
+		$this->set([
+			'title' => __('CI #{0}', $id),
+			'sdpNavActive' => 'cmdb',
+			'ci' => [
+				'id' => (int)$asset->get('id'),
+				'tag' => 'CI-' . str_pad((string)$asset->get('id'), 4, '0', STR_PAD_LEFT),
+				'descricao' => (string)($asset->get('descricao') ?? ''),
+				'tipo' => (string)($asset->get('tipo') ?? $asset->get('categoria') ?? ''),
+				'host' => (string)($asset->get('hostname') ?? $asset->get('identificador') ?? ''),
+				'modelo' => (string)($asset->get('modelo') ?? ''),
+				'fabricante' => (string)($asset->get('fabricante') ?? ''),
+				'serial' => (string)($asset->get('numero_serie') ?? $asset->get('serial') ?? ''),
+				'cliente' => $cliente ? (string)($cliente->get('razaosocial') ?? $cliente->get('nome') ?? '') : '—',
+			],
+			'ciTickets' => $ticketsAtivos,
+		]);
+
+		$screensSvc = new ServicedeskPrototypeScreensService(function (\Cake\ORM\Query $q) {});
+		$this->set('sdpNavBadges', $screensSvc->navBadges([
+			'tickets' => $this->Tickets,
+			'idempresa' => $empresa,
+			'userId' => (int)$this->Auth->user('id'),
+		]));
+
+		return $this->render('display/ci');
 	}
 
 	/**

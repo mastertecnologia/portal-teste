@@ -2908,6 +2908,9 @@ class ServicedeskPrototypeDataService {
 				$code = (string)($r->get('support_code') ?? $r->get('id'));
 
 				if (in_array($status, ['pending_manager', 'pending_admin', 'manager_approved'], true)) {
+					$stageLabel = $status === 'pending_manager'
+						? __('Etapa: aguarda manager (1/2)')
+						: __('Etapa: aguarda admin (2/2)');
 					$pending[] = $this->aprovacaoItem([
 						'id' => 'rbac-' . (int)$r->get('id'),
 						'type' => 'acesso',
@@ -2915,13 +2918,17 @@ class ServicedeskPrototypeDataService {
 						'tag_style' => 'red',
 						'title' => __('Permissão RBAC') . ' · ' . $code,
 						'meta' => sprintf(
-							__('Solicitado por %s · %s'),
+							__('Solicitado por %s · %s · %s'),
 							$requester,
-							$this->aprovacaoRelTime($created)
+							$this->aprovacaoRelTime($created),
+							$stageLabel
 						),
 						'due_badge' => $this->aprovacaoDueBadge($created),
 						'body_mode' => 'text',
 						'body_text' => $perms !== '' ? '"' . $perms . '"' : __('Sem justificativa informada.'),
+						'rbac_stage' => $status,
+						'rbac_manager_at' => $r->get('manager_reviewed_at'),
+						'rbac_manager_response' => (string)($r->get('manager_response') ?? ''),
 						'actions' => [
 							$this->aprovacaoAction(__('Ver pedido'), ['controller' => 'RbacAccessRequests', 'action' => 'visualizarPedidoAcesso', (int)$r->get('id')], 'btn btn-ghost btn-sm'),
 							$this->aprovacaoAction('✗ ' . __('Reprovar'), ['controller' => 'RbacAccessRequests', 'action' => 'pedidosAcessoManager'], 'btn btn-red btn-sm'),

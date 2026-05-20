@@ -276,7 +276,7 @@ return [
         "name" => "Empresas — listar",
         "module" => "Empresas",
         "controller" => "Empresas",
-        "action" => "index",
+        "action" => "index,lista",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" => "Listagem de empresas do grupo.",
@@ -593,7 +593,7 @@ return [
         "module" => "Clientes",
         "controller" => "Clientes",
         "action" =>
-            "index,view,search,eventos,contrato,clientebyid,cliente_by_id,solicitantes,solicitante,cliemail,solemail",
+            "index,view,search,eventos,contrato,clientebyid,cliente_by_id,solicitantes,solicitante,cliemail,solemail,lista,exportcsv",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
@@ -619,7 +619,7 @@ return [
         "module" => "Clientes",
         "controller" => "Clientes",
         "action" =>
-            "edit,consultacnpj,consulta_cnpj,consultaIe,consulta_ie,cidadesestado,cidades_estado,sincronizacliente,sincroniza_cliente",
+            "edit,consultacnpj,consulta_cnpj,consultaIe,consulta_ie,cidadesestado,cidades_estado,sincronizacliente,sincroniza_cliente,apiatualizarcontato",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
@@ -1260,7 +1260,7 @@ return [
         "name" => "Produtos — listar e consultar",
         "module" => "Produtos",
         "controller" => "Produtos",
-        "action" => "index,produto,produtostipo,pesquisar",
+        "action" => "index,produto,produtostipo,pesquisar,lista,estoque,exportcsv,dashboard",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" => "Catálogo e busca.",
@@ -1282,7 +1282,7 @@ return [
         "name" => "Produtos — editar",
         "module" => "Produtos",
         "controller" => "Produtos",
-        "action" => "edit",
+        "action" => "edit,apiatualizarcampo",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" => "Alterar cadastro do produto.",
@@ -1304,7 +1304,7 @@ return [
         "name" => "Produtos — precificação",
         "module" => "Produtos",
         "controller" => "Produtos",
-        "action" => "precificacao,salvarPrecos,salvar_precos",
+        "action" => "precificacao,salvarPrecos,salvar_precos,precosave",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
@@ -1317,7 +1317,7 @@ return [
         "module" => "Produtos",
         "controller" => "Produtos",
         "action" =>
-            "qtdestoque,qtde_estoque,estoquesLote,estoques_lote,serialnumberproduto,serial_number_produto,estoque,estoquePdf,estoque_pdf",
+            "qtdestoque,qtde_estoque,estoquesLote,estoques_lote,serialnumberproduto,serial_number_produto,estoque,estoquePdf,estoque_pdf,dashboard",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
@@ -1329,7 +1329,7 @@ return [
         "name" => "Ordens de serviço — listar",
         "module" => "Menu principal",
         "controller" => "Ordensservico",
-        "action" => "index",
+        "action" => "index,lista,exportcsv,detalhe",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" => "Listagem de OS.",
@@ -1377,7 +1377,7 @@ return [
         "module" => "Ordens de serviço",
         "controller" => "Ordensservico",
         "action" =>
-            "edit,cadhoras,carrinho,carrinhoadd,carrinho_add,carrinhoedititem,carrinho_edit_item,carrinhodelitem,carrinho_del_item,valortotal,valor_total,pausar,cancelar,liberar,finalizar,emexec,em_exec,locacao",
+            "edit,cadhoras,carrinho,carrinhoadd,carrinho_add,carrinhoedititem,carrinho_edit_item,carrinhodelitem,carrinho_del_item,valortotal,valor_total,pausar,cancelar,liberar,finalizar,emexec,em_exec,locacao,avancaretapa,apiatualizaritem,apiexcluiritem,apiadicionaritem,salvarrascunho",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
@@ -1426,7 +1426,7 @@ return [
         "module" => "Tickets",
         "controller" => "Servicedesk",
         "action" =>
-            "index,operacional,slaRelatorio,slarelatorio,view,fila,ticket,downloadAnexo,downloadFile,download_anexo,download_file",
+            "index,operacional,slaRelatorio,slarelatorio,view,fila,ticket,downloadAnexo,downloadFile,download_anexo,download_file,csatexportcsv,csathistorico,apinotificacoes,apibadges",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
@@ -1449,7 +1449,7 @@ return [
         "name" => "Service Desk — editar",
         "module" => "Tickets",
         "controller" => "Servicedesk",
-        "action" => "edit",
+        "action" => "edit,aprovacao",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" => "Editar ticket pela UI Service Desk.",
@@ -1617,7 +1617,7 @@ return [
         "module" => "Orçamentos",
         "controller" => "Orcamentos",
         "action" =>
-            "index,view,viewhash,seguroProposta,seguro_proposta,imprimir,imprimirPdf,imprimir_pdf,pdf,catalogo,catalogosugestoes,catalogoSugestoes",
+            "index,view,viewhash,seguroProposta,seguro_proposta,imprimir,imprimirPdf,imprimir_pdf,pdf,catalogo,catalogosugestoes,catalogoSugestoes,lista,detalhe,exportcsv,apiprodutos,apiclientes",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
@@ -1643,7 +1643,7 @@ return [
         "module" => "Orçamentos",
         "controller" => "Orcamentos",
         "action" =>
-            "edit,alterarsituacao,alterar_situacao,arquivar,enviar,envioassinatura,envio_assinatura,email,criarMov,criar_mov",
+            "edit,alterarsituacao,alterar_situacao,arquivar,enviar,envioassinatura,envio_assinatura,email,criarMov,criar_mov,mudarstatus,apiatualizaritem,apiexcluiritem,apiadicionaritem,salvarrascunho",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
@@ -2337,7 +2337,7 @@ return [
         "module" => "Financeiro",
         "controller" => "Financeiro",
         "action" =>
-            "index,contasReceber,contas_receber,fatura,exportarFatura,exportar_fatura,exportarFaturaPdf,exportar_fatura_pdf,baixarAnexoFatura,baixar_anexo_fatura",
+            "index,contasReceber,contas_receber,fatura,exportarFatura,exportar_fatura,exportarFaturaPdf,exportar_fatura_pdf,baixarAnexoFatura,baixar_anexo_fatura,lista,titulos,contaspagar",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
@@ -2374,7 +2374,7 @@ return [
         "module" => "Financeiro",
         "controller" => "FinanceiroBancos",
         "action" =>
-            "index,cadastrar,add,edit,delete,buscarCatalogo,buscar_catalogo,bootstrapBancoPorCodigo,bootstrap_banco_por_codigo,remessa,remessaMultiempresas,remessa_multiempresas,detalheRemessa,detalhe_remessa,retorno,relatorios,relacaoBancos,relacao_bancos,relacaoRemessas,relacao_remessas,downloadRemessa,download_remessa,historicoRetorno,historico_retorno,detalheRetorno,detalhe_retorno,downloadRetorno,download_retorno,previsaoRecebimentosPorBanco,previsao_recebimentos_por_banco,previsaoPorBancos,previsao_por_bancos",
+            "index,cadastrar,add,edit,delete,buscarCatalogo,buscar_catalogo,bootstrapBancoPorCodigo,bootstrap_banco_por_codigo,remessa,remessaMultiempresas,remessa_multiempresas,detalheRemessa,detalhe_remessa,retorno,relatorios,relacaoBancos,relacao_bancos,relacaoRemessas,relacao_remessas,downloadRemessa,download_remessa,historicoRetorno,historico_retorno,detalheRetorno,detalhe_retorno,downloadRetorno,download_retorno,previsaoRecebimentosPorBanco,previsao_recebimentos_por_banco,previsaoPorBancos,previsao_por_bancos,lista,exportextratocsv,rejeitarmatch,conciliar",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
@@ -2884,6 +2884,19 @@ return [
         "perm_type" => "rbac",
         "abac_scope" => null,
         "description" => "Somente leitura + CSV.",
+        "sort_order" => $n(),
+    ],
+
+    // —— ERP prototype (shell *-prototype; aliases em erp_prototype_rbac.php) ——
+    [
+        "code" => "erp.prototype.history",
+        "name" => "Protótipo ERP — histórico de transições",
+        "module" => "ERP Prototype",
+        "controller" => "PrototypeHistory",
+        "action" => "index",
+        "perm_type" => "rbac",
+        "abac_scope" => null,
+        "description" => "Auditoria de transições do protótipo; restrito a administradores na UI.",
         "sort_order" => $n(),
     ],
 
