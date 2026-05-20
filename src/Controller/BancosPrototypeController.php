@@ -135,9 +135,177 @@ class BancosPrototypeController extends AppController {
 			return $this->render('conciliacao');
 		}
 
+		if ($page === 'extrato') {
+			$set += $this->buildExtratoPayload();
+			$this->set($set);
+
+			return $this->render('extrato');
+		}
+
+		if ($page === 'transferencias') {
+			$set += $this->buildTransferenciasPayload();
+			$this->set($set);
+
+			return $this->render('transferencias');
+		}
+
 		$this->set($set);
 
 		return $this->render('placeholder');
+	}
+
+	/**
+	 * Extrato bancário com filtros (período, conta, tipo).
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function buildExtratoPayload(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$query = $this->request->getQueryParams();
+		$filtroTipo = (string)($query['tipo'] ?? '');
+		$filtroConta = trim((string)($query['conta'] ?? ''));
+		$diasFiltro = (int)($query['dias'] ?? 30);
+		if ($diasFiltro <= 0 || $diasFiltro > 365) {
+			$diasFiltro = 30;
+		}
+
+		$items = [];
+		$kpi = ['entradas' => 0.0, 'saidas' => 0.0, 'pendentes' => 0, 'total_mov' => 0];
+		$contas = [];
+
+		$schema = null;
+		try {
+			$schema = \Cake\ORM\TableRegistry::getTableLocator()->get('Empresas')->getConnection()->getSchemaCollection()->listTables();
+		} catch (\Throwable $e) {
+		}
+
+		if ($schema !== null && in_array('financeiro_extrato_bancario', $schema, true)) {
+			try {
+				$ext = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroExtratoBancario');
+				$desde = \Cake\I18n\Time::now()->subDays($diasFiltro);
+				$where = [
+					'FinanceiroExtratoBancario.idempresa' => $empresa,
+					'FinanceiroExtratoBancario.data >=' => $desde,
+				];
+				if ($filtroConta !== '') {
+					$where['FinanceiroExtratoBancario.conta_bancaria'] = $filtroConta;
+				}
+				if (in_array($filtroTipo, ['c', 'd'], true)) {
+					$where['FinanceiroExtratoBancario.tipo'] = $filtroTipo === 'c' ? 'C' : 'D';
+				}
+				$rows = $ext->find()
+					->where($where)
+					->order(['FinanceiroExtratoBancario.data' => 'DESC'])
+					->limit(150)
+					->all();
+				foreach ($rows as $r) {
+					$valor = (float)$r->get('valor');
+					$tipo = strtolower((string)$r->get('tipo'));
+					$isEntrada = $tipo === 'c' || $tipo === 'credito' || $tipo === 'cr';
+					if ($isEntrada) {
+						$kpi['entradas'] += abs($valor);
+					} else {
+						$kpi['saidas'] += abs($valor);
+					}
+					if ((int)$r->get('conciliado') === 0 && (int)$r->get('financeiro_lancamento_id') === 0) {
+						$kpi['pendentes']++;
+					}
+					$kpi['total_mov']++;
+					$items[] = [
+						'id' => (int)$r->get('id'),
+						'data' => $r->get('data'),
+						'descricao' => (string)$r->get('descricao'),
+						'tipo' => $tipo,
+						'is_entrada' => $isEntrada,
+						'valor' => abs($valor),
+						'conta' => (string)$r->get('conta_bancaria'),
+						'origem' => (string)$r->get('origem'),
+						'fitid' => (string)$r->get('fitid'),
+						'conciliado' => (int)$r->get('conciliado') === 1 || (int)$r->get('financeiro_lancamento_id') > 0,
+					];
+				}
+
+				$rowsContas = $ext->find()
+					->select(['conta_bancaria'])
+					->where(['FinanceiroExtratoBancario.idempresa' => $empresa])
+					->group(['conta_bancaria'])
+					->extract('conta_bancaria')
+					->toList();
+				foreach ($rowsContas as $c) {
+					$c = (string)$c;
+					if ($c !== '') {
+						$contas[] = $c;
+					}
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+
+		return [
+			'extKpi' => $kpi,
+			'extItems' => $items,
+			'extContas' => $contas,
+			'extFiltros' => [
+				'tipo' => $filtroTipo,
+				'conta' => $filtroConta,
+				'dias' => $diasFiltro,
+			],
+		];
+	}
+
+	/**
+	 * Remessas bancárias (CNAB) — usado como base para PIX/transferências.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function buildTransferenciasPayload(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$items = [];
+		$kpi = ['geradas' => 0, 'enviadas' => 0, 'processadas' => 0, 'valor_total' => 0.0];
+
+		$schema = null;
+		try {
+			$schema = \Cake\ORM\TableRegistry::getTableLocator()->get('Empresas')->getConnection()->getSchemaCollection()->listTables();
+		} catch (\Throwable $e) {
+		}
+
+		if ($schema !== null && in_array('financeiro_remessas', $schema, true)) {
+			try {
+				$rem = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroRemessas');
+				foreach ($rem->find()
+					->where(['FinanceiroRemessas.idempresa' => $empresa])
+					->order(['FinanceiroRemessas.data_geracao' => 'DESC'])
+					->limit(40)
+					->all() as $r) {
+					$v = (float)$r->get('valor_total');
+					$kpi['valor_total'] += $v;
+					$st = strtolower((string)$r->get('status'));
+					if (strpos($st, 'process') !== false || strpos($st, 'retorn') !== false) {
+						$kpi['processadas']++;
+					} elseif (strpos($st, 'enviad') !== false) {
+						$kpi['enviadas']++;
+					} else {
+						$kpi['geradas']++;
+					}
+					$items[] = [
+						'id' => (int)$r->get('id'),
+						'numero' => (int)$r->get('numero_remessa'),
+						'cnab' => (string)$r->get('cnab_layout'),
+						'arquivo' => (string)$r->get('nome_arquivo'),
+						'data' => $r->get('data_geracao'),
+						'titulos' => (int)$r->get('quantidade_titulos'),
+						'valor' => $v,
+						'status' => (string)$r->get('status'),
+					];
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+
+		return [
+			'tfKpi' => $kpi,
+			'tfItems' => $items,
+		];
 	}
 
 	/**

@@ -137,6 +137,9 @@ class ClientesPrototypeController extends AppController {
 		if ($page === '360') {
 			return $this->visao360();
 		}
+		if ($page === 'import') {
+			return $this->render('import');
+		}
 
 		return $this->render('placeholder');
 	}

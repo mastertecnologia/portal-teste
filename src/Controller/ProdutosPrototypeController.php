@@ -180,7 +180,7 @@ class ProdutosPrototypeController extends AppController {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));
 		}
 
-		$this->set([
+		$set = [
 			'title' => __('Produtos · {0}', ucfirst((string)$page)),
 			'erpNavActive' => $page === 'precos' ? 'precos' : ($page === 'historico-precos' ? 'historico-precos' : 'produtos'),
 			'erpBreadcrumb' => [
@@ -191,9 +191,89 @@ class ProdutosPrototypeController extends AppController {
 			],
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
 			'page' => $page,
-		]);
+		];
+
+		if ($page === 'precos') {
+			$set += $this->buildPrecosPayload();
+			$this->set($set);
+
+			return $this->render('precos');
+		}
+
+		if ($page === 'pc-lista' || $page === 'pc-novo') {
+			$this->set($set);
+
+			return $this->render('pc_placeholder');
+		}
+
+		if ($page === 'inventario' || $page === 'inv-historico') {
+			$this->set($set);
+
+			return $this->render('inv_placeholder');
+		}
+
+		if ($page === 'import') {
+			$this->set($set);
+
+			return $this->render('import');
+		}
+
+		$this->set($set);
 
 		return $this->render('placeholder');
+	}
+
+	/**
+	 * Tabela de preços agrupada por tipo, com margem (custo via vllocdiario apenas como referência).
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function buildPrecosPayload(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$busca = trim((string)$this->request->getQuery('q', ''));
+		$rows = [];
+		try {
+			$q = $this->Produtos->find()
+				->where(['Produtos.idempresa' => $empresa, 'Produtos.ativo' => 1])
+				->order(['Produtos.tipo' => 'ASC', 'Produtos.descricao' => 'ASC'])
+				->limit(200);
+			if ($busca !== '') {
+				$q->where(['OR' => [
+					'Produtos.descricao ILIKE' => '%' . $busca . '%',
+					'Produtos.codigo ILIKE' => '%' . $busca . '%',
+				]]);
+			}
+			foreach ($q->all() as $p) {
+				$rows[] = [
+					'id' => (int)$p->get('id'),
+					'codigo' => (string)$p->get('codigo'),
+					'descricao' => (string)$p->get('descricao'),
+					'tipo' => (string)$p->get('tipo'),
+					'unidade' => (string)$p->get('unidade'),
+					'venda' => (float)$p->get('vlunitario'),
+					'loc_diaria' => (float)$p->get('vllocdiario'),
+					'loc_semanal' => (float)$p->get('vllocsemanal'),
+					'loc_mensal' => (float)$p->get('vllocmensal'),
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		$kpi = ['total' => count($rows), 'media' => 0.0, 'min' => 0.0, 'max' => 0.0];
+		if ($rows !== []) {
+			$valores = array_filter(array_column($rows, 'venda'), static function ($v) { return $v > 0; });
+			if ($valores !== []) {
+				$kpi['media'] = array_sum($valores) / count($valores);
+				$kpi['min'] = min($valores);
+				$kpi['max'] = max($valores);
+			}
+		}
+
+		return [
+			'precosItems' => $rows,
+			'precosKpi' => $kpi,
+			'precosFiltro' => $busca,
+		];
 	}
 
 	/**
