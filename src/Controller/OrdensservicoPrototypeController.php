@@ -21,6 +21,30 @@ class OrdensservicoPrototypeController extends AppController {
 		$this->loadModel('Users');
 	}
 
+	/**
+	 * Carrega catálogo de clientes ativos para o wizard de OS.
+	 *
+	 * @return array<int,string>
+	 */
+	protected function buildClientesOptions(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$out = [];
+		try {
+			foreach ($this->Clientes->find()
+				->where(['Clientes.idempresa' => $empresa, 'Clientes.inativo' => 0])
+				->order(['Clientes.nome' => 'ASC'])
+				->limit(200)
+				->all() as $c) {
+				$out[(int)$c->get('id')] = (int)$c->get('tipo') === 2
+					? (string)($c->get('razaosocial') ?? $c->get('nome'))
+					: (string)$c->get('nome');
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $out;
+	}
+
 	public function beforeFilter(Event $event) {
 		$redirect = $this->request->getRequestTarget();
 		$staffLogin = [
@@ -51,12 +75,31 @@ class OrdensservicoPrototypeController extends AppController {
 	 */
 	public function lista() {
 		$empresa = (int)$this->Auth->user('idempresa');
+		$query = $this->request->getQueryParams();
+		$filtroSit = $query['situacao'] ?? '';
+		$filtroCliente = trim((string)($query['cliente'] ?? ''));
+		$filtroDe = trim((string)($query['de'] ?? ''));
+		$filtroAte = trim((string)($query['ate'] ?? ''));
+
+		$where = ['Ordensservico.idempresa' => $empresa];
+		if ($filtroSit !== '' && is_numeric($filtroSit)) {
+			$where['Ordensservico.situacao'] = (int)$filtroSit;
+		}
+		if ($filtroCliente !== '') {
+			$where['Ordensservico.idcliente'] = (int)$filtroCliente;
+		}
+		if ($filtroDe !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $filtroDe)) {
+			$where['Ordensservico.dataabertura >='] = $filtroDe;
+		}
+		if ($filtroAte !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $filtroAte)) {
+			$where['Ordensservico.dataabertura <='] = $filtroAte;
+		}
 
 		$rows = [];
 		try {
 			$q = $this->Ordensservico->find()
 				->contain(['Clientes'])
-				->where(['Ordensservico.idempresa' => $empresa])
+				->where($where)
 				->order(['Ordensservico.id' => 'DESC'])
 				->limit(100);
 			$rows = $q->all()->toArray();
@@ -104,7 +147,64 @@ class OrdensservicoPrototypeController extends AppController {
 			'osCounts' => $counts,
 			'osTotalValor' => $totalValor,
 			'osItems' => $items,
+			'osClientesOptions' => $this->buildClientesOptions(),
+			'osFiltros' => [
+				'situacao' => $filtroSit,
+				'cliente' => $filtroCliente,
+				'de' => $filtroDe,
+				'ate' => $filtroAte,
+			],
 		]);
+	}
+
+	/**
+	 * Salva OS rascunho a partir do wizard premium (pg-os-abertura).
+	 */
+	public function salvarRascunho() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$autor = (int)$this->Auth->user('id');
+		$idcliente = (int)$this->request->getData('idcliente');
+		$relato = trim((string)$this->request->getData('relato'));
+		$prio = (int)$this->request->getData('prioridade');
+		if ($idcliente <= 0) {
+			$this->Flash->error(__('Selecione um cliente para abrir a OS.'));
+
+			return $this->redirect(['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'abertura']);
+		}
+		try {
+			$Clientes = $this->loadModel('Clientes');
+			$cli = $Clientes->find()->where(['Clientes.id' => $idcliente, 'Clientes.idempresa' => $empresa])->first();
+			if ($cli === null) {
+				$this->Flash->error(__('Cliente fora do seu escopo.'));
+
+				return $this->redirect(['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'abertura']);
+			}
+			$entity = $this->Ordensservico->newEntity([
+				'idempresa' => $empresa,
+				'idcliente' => $idcliente,
+				'iduser' => $autor,
+				'dataabertura' => date('Y-m-d'),
+				'relato' => $relato !== '' ? $relato : __('OS aberta via wizard premium'),
+				'situacao' => 0,
+				'prioridade' => in_array($prio, [1, 2, 3], true) ? $prio : 2,
+				'contrato' => 0,
+				'locacao' => 0,
+			], ['validate' => false]);
+			$saved = $this->Ordensservico->save($entity);
+			if ($saved === false) {
+				$this->Flash->error(__('Falha ao gravar a OS.'));
+
+				return $this->redirect(['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'abertura']);
+			}
+			$this->Flash->success(__('OS {0} aberta com sucesso.', sprintf('OS-%05d', (int)$entity->get('id'))));
+
+			return $this->redirect(['controller' => 'OrdensservicoPrototype', 'action' => 'detalhe', (int)$entity->get('id')]);
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro ao gravar: {0}', $e->getMessage()));
+
+			return $this->redirect(['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'abertura']);
+		}
 	}
 
 	/**
@@ -253,6 +353,10 @@ class OrdensservicoPrototypeController extends AppController {
 
 		$dedicated = ['abertura', 'execucao', 'aprovacao', 'conclusao', 'sucesso'];
 		if (in_array($page, $dedicated, true)) {
+			if ($page === 'abertura') {
+				$this->set('osClientesOptions', $this->buildClientesOptions());
+			}
+
 			return $this->render('wizard_' . $page);
 		}
 

@@ -565,6 +565,29 @@ Router::scope("/", function ($routes) {
         "controller" => "ServicedeskPrototype",
         "action" => "ci",
     ], ["pass" => ["id"], "id" => "[0-9]+"]);
+    $routes->connect("/servicedesk-prototype/api/badges", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "apiBadges",
+    ]);
+    $routes->connect("/servicedesk-prototype/aprovacao/:source_type/:source_id/:decisao", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "aprovacao",
+    ], [
+        "pass" => ["source_type", "source_id", "decisao"],
+        "source_type" => "[a-z\-]+",
+        "source_id" => "[0-9]+",
+        "decisao" => "aprovar|reprovar",
+    ]);
+
+    // ===== CSAT público (cliente acessa via token) =====
+    $routes->connect("/csat/:token/ok", [
+        "controller" => "TicketCsat",
+        "action" => "sucesso",
+    ], ["pass" => ["token"], "token" => "csat\-[0-9]+\-[a-f0-9]{16}"]);
+    $routes->connect("/csat/:token", [
+        "controller" => "TicketCsat",
+        "action" => "responder",
+    ], ["pass" => ["token"], "token" => "csat\-[0-9]+\-[a-f0-9]{16}"]);
     $routes->connect("/servicedesk-prototype/:page", [
         "controller" => "ServicedeskPrototype",
         "action" => "view",
@@ -583,6 +606,18 @@ Router::scope("/", function ($routes) {
         "controller" => "OrcamentosPrototype",
         "action" => "detalhe",
     ], ["pass" => ["id"], "id" => "[0-9]+"]);
+    $routes->connect("/orcamentos-prototype/salvar-rascunho", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "salvarRascunho",
+    ]);
+    $routes->connect("/orcamentos-prototype/api/produtos", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "apiProdutos",
+    ]);
+    $routes->connect("/orcamentos-prototype/api/clientes", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "apiClientes",
+    ]);
     $routes->connect("/orcamentos-prototype/:page", [
         "controller" => "OrcamentosPrototype",
         "action" => "view",
@@ -601,6 +636,10 @@ Router::scope("/", function ($routes) {
         "controller" => "OrdensservicoPrototype",
         "action" => "detalhe",
     ], ["pass" => ["id"], "id" => "[0-9]+"]);
+    $routes->connect("/ordens-prototype/salvar-rascunho", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "salvarRascunho",
+    ]);
     $routes->connect("/ordens-prototype/:page", [
         "controller" => "OrdensservicoPrototype",
         "action" => "view",

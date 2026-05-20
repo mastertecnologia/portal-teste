@@ -105,6 +105,14 @@ $dueClass = static function (array $due): string {
 					$finance = (array)($it['finance'] ?? []);
 					$bullets = (array)($it['bullets'] ?? []);
 					$actions = (array)($it['actions'] ?? []);
+					$itId = (string)($it['id'] ?? '');
+					$inlineSrc = null;
+					$inlineRid = 0;
+					if (preg_match('/^(rbac|orc|ren|tkt-res)-([0-9]+)$/', $itId, $mm)) {
+						$inlineSrc = (string)$mm[1];
+						$inlineRid = (int)$mm[2];
+					}
+					$csrf = (string)$this->request->getAttribute('csrfToken');
 					?>
 					<div class="sdp-ap-card">
 						<div class="sdp-ap-card-head">
@@ -143,6 +151,23 @@ $dueClass = static function (array $due): string {
 									<div class="sdp-ap-body-label"><?= h(__('Justificativa')) ?></div>
 								<?php endif; ?>
 								<div class="sdp-ap-body-text"><?= h((string)$it['body_text']) ?></div>
+							</div>
+						<?php endif; ?>
+
+						<?php if ($tab === 'pendentes' && $inlineSrc !== null && $inlineRid > 0) :
+							$urlAprov = $this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'aprovacao', $inlineSrc, $inlineRid, 'aprovar']);
+							$urlReprov = $this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'aprovacao', $inlineSrc, $inlineRid, 'reprovar']);
+						?>
+							<div class="sdp-ap-actions" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px;">
+								<form method="post" action="<?= h($urlAprov) ?>" style="margin:0;display:inline;">
+									<input type="hidden" name="_csrfToken" value="<?= h($csrf) ?>">
+									<button type="submit" class="btn btn-primary btn-xs" onclick="return confirm('<?= h(__('Aprovar este item?')) ?>')">✓ <?= h(__('Aprovar')) ?></button>
+								</form>
+								<form method="post" action="<?= h($urlReprov) ?>" style="margin:0;display:inline;">
+									<input type="hidden" name="_csrfToken" value="<?= h($csrf) ?>">
+									<input type="text" name="nota" placeholder="<?= h(__('Motivo (opcional)')) ?>" style="padding:3px 8px;border:1px solid var(--border,#e5e4e0);border-radius:4px;font-size:11px;width:200px;">
+									<button type="submit" class="btn btn-red btn-xs" onclick="return confirm('<?= h(__('Reprovar este item?')) ?>')">✗ <?= h(__('Reprovar')) ?></button>
+								</form>
 							</div>
 						<?php endif; ?>
 

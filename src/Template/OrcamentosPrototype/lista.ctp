@@ -7,8 +7,12 @@
  * @var float $orcTotalValor
  * @var array<int,array<string,mixed>> $orcItems
  * @var array<int,string> $orcStatusLabels
+ * @var array<int,string> $orcClientesOptions
+ * @var array{status:string,cliente:string,de:string,ate:string} $orcFiltros
  */
 $H = $this->ErpPrototype;
+$f = (array)($orcFiltros ?? ['status' => '', 'cliente' => '', 'de' => '', 'ate' => '']);
+$clientesOptions = (array)($orcClientesOptions ?? []);
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
 	<div>
@@ -33,17 +37,32 @@ $H = $this->ErpPrototype;
 </div>
 
 <div class="card" style="padding:0;overflow:hidden;">
-	<div style="padding:12px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border-light);">
-		<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-			<input type="text" placeholder="🔍 <?= h(__('Buscar cliente, número, autor...')) ?>" style="flex:1;min-width:240px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;"/>
-			<select style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:#fff;">
-				<option><?= h(__('Todos status')) ?></option>
-				<?php foreach ($orcStatusLabels as $st => $lbl) : ?>
-					<option><?= h($lbl) ?></option>
-				<?php endforeach; ?>
-			</select>
+	<form method="get" style="padding:12px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border-light);">
+		<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+			<div class="field" style="flex:1;min-width:180px;">
+				<label><?= h(__('Cliente')) ?></label>
+				<select name="cliente">
+					<option value=""><?= h(__('Todos')) ?></option>
+					<?php foreach ($clientesOptions as $cid => $cnome) : ?>
+						<option value="<?= (int)$cid ?>"<?= (string)$f['cliente'] === (string)$cid ? ' selected' : '' ?>><?= h(\Cake\Utility\Text::truncate((string)$cnome, 40, ['ellipsis' => '…'])) ?></option>
+					<?php endforeach; ?>
+				</select>
+			</div>
+			<div class="field" style="flex:0 0 160px;">
+				<label><?= h(__('Status')) ?></label>
+				<select name="status">
+					<option value=""><?= h(__('Todos')) ?></option>
+					<?php foreach ($orcStatusLabels as $st => $lbl) : ?>
+						<option value="<?= (int)$st ?>"<?= (string)$f['status'] === (string)$st ? ' selected' : '' ?>><?= h($lbl) ?></option>
+					<?php endforeach; ?>
+				</select>
+			</div>
+			<div class="field" style="flex:0 0 140px;"><label><?= h(__('Criado de')) ?></label><input type="date" name="de" value="<?= h((string)$f['de']) ?>"></div>
+			<div class="field" style="flex:0 0 140px;"><label><?= h(__('Até')) ?></label><input type="date" name="ate" value="<?= h((string)$f['ate']) ?>"></div>
+			<button type="submit" class="btn btn-primary btn-sm">🔍 <?= h(__('Filtrar')) ?></button>
+			<?= $this->Html->link(__('Limpar'), ['controller' => 'OrcamentosPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		</div>
-	</div>
+	</form>
 	<div style="overflow-x:auto;">
 		<table class="tbl" style="margin:0;">
 			<thead>

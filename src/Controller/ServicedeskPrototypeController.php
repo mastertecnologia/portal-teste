@@ -104,6 +104,171 @@ class ServicedeskPrototypeController extends AppController {
 	}
 
 	/**
+	 * GET /servicedesk-prototype/api/badges — JSON com contagens para o sidebar.
+	 * Usado pelo long-poll do shell premium (atualiza a cada 30s).
+	 */
+	public function apiBadges() {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$userId = (int)$this->Auth->user('id');
+
+		$abac = function (\Cake\ORM\Query $q): void {
+			$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
+		};
+		$svc = new ServicedeskPrototypeScreensService($abac);
+		$badges = $svc->navBadges([
+			'tickets' => $this->Tickets,
+			'idempresa' => $empresa,
+			'userId' => $userId,
+		]);
+
+		// Sidebar do erp_prototype usa chaves como 'sd-aprovacoes' / 'empresas'.
+		$out = [
+			'sd-aprovacoes' => (int)($badges['aprovacoes'] ?? 0),
+		];
+		try {
+			$empresas = $this->loadModel('Empresas');
+			$out['empresas'] = (int)$empresas->find()->count();
+		} catch (\Throwable $e) {
+		}
+
+		return $this->response->withStringBody(json_encode(['ok' => true, 'badges' => $out, 'ts' => time()], JSON_UNESCAPED_UNICODE));
+	}
+
+	/**
+	 * POST /servicedesk-prototype/aprovacao/:source_type/:source_id/:decisao
+	 * Aplica decisão (aprovar/reprovar) na pendência da fila SD.
+	 *
+	 * @param string|null $sourceType ex.: rbac, orcamento, ren, tkt-res
+	 * @param string|null $sourceId   id do registro de origem
+	 * @param string|null $decisao    aprovar | reprovar
+	 */
+	public function aprovacao($sourceType = null, $sourceId = null, $decisao = null) {
+		$this->request->allowMethod(['post']);
+		$sourceType = (string)$sourceType;
+		$sourceId = (int)$sourceId;
+		$decisao = (string)$decisao;
+		if ($sourceId <= 0 || !in_array($decisao, ['aprovar', 'reprovar'], true)) {
+			$this->Flash->error(__('Decisão inválida.'));
+
+			return $this->redirect(['controller' => 'ServicedeskPrototype', 'action' => 'view', 'aprovacoes']);
+		}
+		$nota = trim((string)$this->request->getData('nota'));
+		$user = (array)$this->Auth->user();
+		try {
+			switch ($sourceType) {
+				case 'rbac':
+					$this->aprovacaoRbac($sourceId, $decisao === 'aprovar', $nota, $user);
+					break;
+				case 'orc':
+					$this->aprovacaoOrcamento($sourceId, $decisao === 'aprovar', $user);
+					break;
+				case 'ren':
+					$this->aprovacaoRenovacao($sourceId, $decisao === 'aprovar', $nota, $user);
+					break;
+				case 'tkt-res':
+					$this->aprovacaoTicketFechamento($sourceId, $decisao === 'aprovar', $user);
+					break;
+				default:
+					$this->Flash->error(__('Tipo de aprovação não suportado nesta tela.'));
+
+					return $this->redirect(['controller' => 'ServicedeskPrototype', 'action' => 'view', 'aprovacoes']);
+			}
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro ao decidir: {0}', $e->getMessage()));
+		}
+
+		return $this->redirect(['controller' => 'ServicedeskPrototype', 'action' => 'view', 'aprovacoes']);
+	}
+
+	protected function aprovacaoRbac(int $id, bool $aprovar, string $nota, array $user): void {
+		$tbl = \Cake\ORM\TableRegistry::getTableLocator()->get('RbacAccessRequests');
+		$row = $tbl->find()->where(['id' => $id])->first();
+		if ($row === null) {
+			$this->Flash->error(__('Pedido RBAC não encontrado.'));
+
+			return;
+		}
+		$wf = new \App\Service\RbacApprovalWorkflowService();
+		if (!$wf->managerCanReview($user, (int)$row->get('user_id'))) {
+			$this->Flash->error(__('Você não pode revisar este pedido.'));
+
+			return;
+		}
+		if ($aprovar) {
+			$wf->approveManager($row, $user, $nota);
+		} else {
+			$wf->rejectManager($row, $user, $nota);
+		}
+		if ($tbl->save($row)) {
+			(new \App\Service\RbacAccessRequestService())->syncApprovalInbox($row);
+			$this->Flash->success(__('Pedido RBAC {0}.', $aprovar ? __('aprovado') : __('reprovado')));
+		}
+	}
+
+	protected function aprovacaoOrcamento(int $id, bool $aprovar, array $user): void {
+		$orcs = \Cake\ORM\TableRegistry::getTableLocator()->get('Orcamentos');
+		$row = $orcs->find()->where(['id' => $id, 'idempresa' => (int)($user['idempresa'] ?? 0)])->first();
+		if ($row === null) {
+			$this->Flash->error(__('Orçamento fora do escopo.'));
+
+			return;
+		}
+		$row->set('status', $aprovar
+			? (defined('C_OrcamentoStatusAprovado') ? (int)C_OrcamentoStatusAprovado : 2)
+			: (defined('C_OrcamentoStatusRecusado') ? (int)C_OrcamentoStatusRecusado : 3));
+		if ($orcs->save($row)) {
+			$this->Flash->success(__('Orçamento #{0} {1}.', (int)$row->get('id'), $aprovar ? __('aprovado') : __('recusado')));
+		}
+	}
+
+	protected function aprovacaoRenovacao(int $id, bool $aprovar, string $nota, array $user): void {
+		$tbl = \Cake\ORM\TableRegistry::getTableLocator()->get('ContractRenewals');
+		$row = $tbl->find()->where(['id' => $id])->first();
+		if ($row === null) {
+			$this->Flash->error(__('Renovação não encontrada.'));
+
+			return;
+		}
+		$row->set('status', $aprovar ? 'aprovada' : 'recusada');
+		$row->set('aprovado_em', date('Y-m-d H:i:s'));
+		$row->set('aprovado_por', (int)($user['id'] ?? 0));
+		if ($nota !== '') {
+			$row->set('observacoes', $nota);
+		}
+		if ($tbl->save($row)) {
+			$this->Flash->success(__('Renovação {0}.', $aprovar ? __('aprovada') : __('recusada')));
+		}
+	}
+
+	protected function aprovacaoTicketFechamento(int $id, bool $aprovar, array $user): void {
+		$row = $this->Tickets->find()->where(['id' => $id, 'idempresa' => (int)($user['idempresa'] ?? 0)])->first();
+		if ($row === null) {
+			$this->Flash->error(__('Ticket fora do escopo.'));
+
+			return;
+		}
+		if (!$aprovar) {
+			if (defined('C_TicketSituacaoEmandamento')) {
+				$row->set('situacao', (int)C_TicketSituacaoEmandamento);
+				$this->Tickets->save($row);
+			}
+			$this->Flash->info(__('Ticket #{0} retornado para execução.', $id));
+
+			return;
+		}
+		if (defined('C_TicketSituacaoFechado')) {
+			$row->set('situacao', (int)C_TicketSituacaoFechado);
+			$row->set('data_fechamento', date('Y-m-d H:i:s'));
+			if ($this->Tickets->save($row)) {
+				$this->Flash->success(__('Ticket #{0} fechado.', $id));
+			}
+		}
+	}
+
+	/**
 	 * GET /servicedesk-prototype/ci/:id — detalhe de Configuration Item (CMDB).
 	 *
 	 * @param string|int $id

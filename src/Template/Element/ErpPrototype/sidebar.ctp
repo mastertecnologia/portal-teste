@@ -19,12 +19,11 @@ $cls = static function (string $key) use ($active): string {
 };
 $badge = static function (string $key, string $style = '') use ($badges): string {
 	$n = (int)($badges[$key] ?? 0);
-	if ($n <= 0) {
-		return '';
-	}
 	$extra = $style !== '' ? ' ' . h($style) : '';
+	$visClass = $n <= 0 ? ' nav-badge-hidden' : '';
+	$dataAttrs = ' data-nav-badge="' . h($key) . '"';
 
-	return ' <span class="nav-badge' . $extra . '">' . (int)$n . '</span>';
+	return ' <span class="nav-badge' . $extra . $visClass . '"' . $dataAttrs . ' style="' . ($n <= 0 ? 'display:none;' : '') . '">' . (int)$n . '</span>';
 };
 
 /**

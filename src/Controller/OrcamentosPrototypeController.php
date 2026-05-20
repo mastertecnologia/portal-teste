@@ -53,11 +53,30 @@ class OrcamentosPrototypeController extends AppController {
 	 */
 	public function lista() {
 		$empresa = (int)$this->Auth->user('idempresa');
+		$query = $this->request->getQueryParams();
+		$filtroStatus = $query['status'] ?? '';
+		$filtroCliente = trim((string)($query['cliente'] ?? ''));
+		$filtroDe = trim((string)($query['de'] ?? ''));
+		$filtroAte = trim((string)($query['ate'] ?? ''));
+
+		$where = ['Orcamentos.idempresa' => $empresa];
+		if ($filtroStatus !== '' && is_numeric($filtroStatus)) {
+			$where['Orcamentos.status'] = (int)$filtroStatus;
+		}
+		if ($filtroCliente !== '') {
+			$where['Orcamentos.idcliente'] = (int)$filtroCliente;
+		}
+		if ($filtroDe !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $filtroDe)) {
+			$where['Orcamentos.created >='] = $filtroDe . ' 00:00:00';
+		}
+		if ($filtroAte !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $filtroAte)) {
+			$where['Orcamentos.created <='] = $filtroAte . ' 23:59:59';
+		}
 
 		$base = $this->Orcamentos->find()
 			->contain(['Clientes', 'Users'])
-			->where(['Orcamentos.idempresa' => $empresa])
-			->order(['Orcamentos.modified' => 'DESC'])
+			->where($where)
+			->order(['Orcamentos.created' => 'DESC'])
 			->limit(100);
 
 		$rows = [];
@@ -119,6 +138,13 @@ class OrcamentosPrototypeController extends AppController {
 				$stEnv => __('Enviado'),
 				$stApr => __('Aprovado'),
 				$stRec => __('Recusado'),
+			],
+			'orcClientesOptions' => $this->buildClientesOptions(),
+			'orcFiltros' => [
+				'status' => $filtroStatus,
+				'cliente' => $filtroCliente,
+				'de' => $filtroDe,
+				'ate' => $filtroAte,
 			],
 		]);
 	}
@@ -325,6 +351,136 @@ class OrcamentosPrototypeController extends AppController {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Endpoint AJAX/JSON: busca produtos ativos por texto (código ou descrição).
+	 * GET /orcamentos-prototype/api/produtos?q=ryzen&tipo=prod
+	 */
+	public function apiProdutos() {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$q = trim((string)$this->request->getQuery('q', ''));
+		$tipo = trim((string)$this->request->getQuery('tipo', ''));
+		$produtos = $this->loadModel('Produtos');
+		$conds = ['Produtos.idempresa' => $empresa, 'Produtos.ativo' => 1];
+		if ($tipo !== '' && in_array($tipo, ['prod', 'serv', 'lic', 'loc'], true)) {
+			$conds['Produtos.tipo'] = $tipo;
+		}
+		$query = $produtos->find()->where($conds)->order(['Produtos.descricao' => 'ASC'])->limit(20);
+		if ($q !== '') {
+			$query->where(['OR' => [
+				'Produtos.descricao ILIKE' => '%' . $q . '%',
+				'Produtos.codigo ILIKE' => '%' . $q . '%',
+			]]);
+		}
+		$out = [];
+		foreach ($query->all() as $p) {
+			$out[] = [
+				'id' => (int)$p->get('id'),
+				'codigo' => (string)$p->get('codigo'),
+				'descricao' => (string)$p->get('descricao'),
+				'tipo' => (string)$p->get('tipo'),
+				'unidade' => (string)$p->get('unidade'),
+				'preco' => round((float)$p->get('vlunitario'), 2),
+				'estoque' => round((float)$p->get('estoque_atual'), 2),
+			];
+		}
+
+		return $this->response->withStringBody(json_encode(['ok' => true, 'q' => $q, 'count' => count($out), 'items' => $out], JSON_UNESCAPED_UNICODE));
+	}
+
+	/**
+	 * Endpoint AJAX/JSON: busca clientes ativos por texto (nome, fantasia, CNPJ).
+	 * GET /orcamentos-prototype/api/clientes?q=mobles
+	 */
+	public function apiClientes() {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$q = trim((string)$this->request->getQuery('q', ''));
+		$query = $this->Clientes->find()
+			->where(['Clientes.idempresa' => $empresa, 'Clientes.inativo' => 0])
+			->order(['Clientes.nome' => 'ASC'])
+			->limit(20);
+		if ($q !== '') {
+			$query->where(['OR' => [
+				'Clientes.nome ILIKE' => '%' . $q . '%',
+				'Clientes.razaosocial ILIKE' => '%' . $q . '%',
+				'Clientes.nomefantasia ILIKE' => '%' . $q . '%',
+				'Clientes.cnpj ILIKE' => '%' . $q . '%',
+			]]);
+		}
+		$out = [];
+		foreach ($query->all() as $c) {
+			$nome = (int)$c->get('tipo') === 2
+				? (string)($c->get('razaosocial') ?? $c->get('nome'))
+				: (string)$c->get('nome');
+			$out[] = [
+				'id' => (int)$c->get('id'),
+				'nome' => $nome,
+				'fantasia' => (string)($c->get('nomefantasia') ?? ''),
+				'cnpj' => (string)($c->get('cnpj') ?? $c->get('cpf') ?? ''),
+			];
+		}
+
+		return $this->response->withStringBody(json_encode(['ok' => true, 'q' => $q, 'count' => count($out), 'items' => $out], JSON_UNESCAPED_UNICODE));
+	}
+
+	/**
+	 * Salva orçamento rascunho a partir do wizard premium (pg-novo).
+	 * Cria registro em orcamentosnovosdes status=Pendente e redireciona ao detalhe.
+	 */
+	public function salvarRascunho() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$autor = (int)$this->Auth->user('id');
+		$idcliente = (int)$this->request->getData('idcliente');
+		$solicitacao = trim((string)$this->request->getData('solicitacao'));
+		$validade = (int)$this->request->getData('validade_dias');
+		if ($validade <= 0 || $validade > 365) {
+			$validade = 30;
+		}
+		if ($idcliente <= 0) {
+			$this->Flash->error(__('Selecione um cliente para iniciar o orçamento.'));
+
+			return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo']);
+		}
+		try {
+			$cli = $this->Clientes->find()
+				->where(['Clientes.id' => $idcliente, 'Clientes.idempresa' => $empresa])
+				->first();
+			if ($cli === null) {
+				$this->Flash->error(__('Cliente fora do seu escopo.'));
+
+				return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo']);
+			}
+			$entity = $this->Orcamentos->newEntity([
+				'idempresa' => $empresa,
+				'idcliente' => $idcliente,
+				'idautor' => $autor,
+				'status' => defined('C_OrcamentoStatusPendente') ? (int)C_OrcamentoStatusPendente : 0,
+				'solicitacao' => $solicitacao !== '' ? $solicitacao : __('Orçamento iniciado via wizard premium'),
+				'created' => date('Y-m-d H:i:s'),
+				'validoate' => date('Y-m-d', strtotime('+' . $validade . ' days')),
+			], ['validate' => false]);
+			$saved = $this->Orcamentos->save($entity);
+			if ($saved === false) {
+				$this->Flash->error(__('Falha ao gravar o orçamento.'));
+
+				return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo']);
+			}
+			$this->Flash->success(__('Orçamento {0} criado em rascunho.', sprintf('ORC-%04d', (int)$entity->get('id'))));
+
+			return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', (int)$entity->get('id')]);
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro ao gravar: {0}', $e->getMessage()));
+
+			return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo']);
+		}
 	}
 
 	/**

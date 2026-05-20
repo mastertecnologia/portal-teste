@@ -72,6 +72,29 @@ if (!$csrf && method_exists($this->getRequest(), 'getParam')) {
 		</div>
 	</div>
 </div>
-<?= $this->fetch('script') ?>
+	<?= $this->fetch('script') ?>
+<script>
+(function () {
+	var url = <?= json_encode($this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'apiBadges'])) ?>;
+	function refreshBadges () {
+		fetch(url, {credentials: 'same-origin'})
+			.then(function (r) { return r.ok ? r.json() : null; })
+			.then(function (data) {
+				if (!data || !data.ok || !data.badges) return;
+				Object.keys(data.badges).forEach(function (k) {
+					var n = parseInt(data.badges[k], 10) || 0;
+					document.querySelectorAll('[data-nav-badge="' + k + '"]').forEach(function (el) {
+						el.textContent = String(n);
+						el.style.display = n > 0 ? '' : 'none';
+					});
+				});
+			})
+			.catch(function () {});
+	}
+	// primeiro poll após 5s (deixa página carregar) e depois a cada 30s
+	setTimeout(refreshBadges, 5000);
+	setInterval(refreshBadges, 30000);
+})();
+</script>
 </body>
 </html>
