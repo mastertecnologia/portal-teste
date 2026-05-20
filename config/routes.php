@@ -565,6 +565,157 @@ Router::scope("/", function ($routes) {
         "controller" => "ServicedeskPrototype",
         "action" => "view",
     ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Orçamentos (mockup pg-lista, pg-novo, pg-revisao, etc.) =====
+    $routes->connect("/orcamentos-prototype", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/orcamentos-prototype/", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/orcamentos-prototype/:page", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Ordens de Serviço (mockup pg-os-*) =====
+    $routes->connect("/ordens-prototype", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/ordens-prototype/", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/ordens-prototype/:page", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Clientes (mockup pg-clientes, pg-cliente-novo, pg-cliente-360) =====
+    $routes->connect("/clientes-prototype", [
+        "controller" => "ClientesPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/clientes-prototype/", [
+        "controller" => "ClientesPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/clientes-prototype/:page", [
+        "controller" => "ClientesPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Produtos + Estoque (mockup pg-produtos, pg-estoque, pg-precos, etc.) =====
+    $routes->connect("/produtos-prototype", [
+        "controller" => "ProdutosPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/produtos-prototype/", [
+        "controller" => "ProdutosPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/produtos-prototype/estoque", [
+        "controller" => "ProdutosPrototype",
+        "action" => "estoque",
+    ]);
+    $routes->connect("/produtos-prototype/:page", [
+        "controller" => "ProdutosPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Fornecedores (mockup pg-fornecedores, pg-fornecedor-novo, pg-fornecedor-360) =====
+    $routes->connect("/fornecedores-prototype", [
+        "controller" => "FornecedoresPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/fornecedores-prototype/", [
+        "controller" => "FornecedoresPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/fornecedores-prototype/:page", [
+        "controller" => "FornecedoresPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Financeiro (mockup pg-financeiro, pg-titulos, pg-contas-pagar, etc.) =====
+    $routes->connect("/financeiro-prototype", [
+        "controller" => "FinanceiroPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/financeiro-prototype/", [
+        "controller" => "FinanceiroPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/financeiro-prototype/titulos", [
+        "controller" => "FinanceiroPrototype",
+        "action" => "titulos",
+    ]);
+    $routes->connect("/financeiro-prototype/contas-pagar", [
+        "controller" => "FinanceiroPrototype",
+        "action" => "contasPagar",
+    ]);
+    $routes->connect("/financeiro-prototype/:page", [
+        "controller" => "FinanceiroPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Bancos (mockup pg-bancos, pg-extrato, pg-conciliacao, etc.) =====
+    $routes->connect("/bancos-prototype", [
+        "controller" => "BancosPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/bancos-prototype/", [
+        "controller" => "BancosPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/bancos-prototype/:page", [
+        "controller" => "BancosPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Empresas (mockup pg-empresas, pg-empresa-nova) =====
+    $routes->connect("/empresas-prototype", [
+        "controller" => "EmpresasPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/empresas-prototype/", [
+        "controller" => "EmpresasPrototype",
+        "action" => "lista",
+    ]);
+    $routes->connect("/empresas-prototype/:page", [
+        "controller" => "EmpresasPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // ===== Protótipo Sistema · RBAC · Auditoria (mockup pg-config, pg-usuarios, pg-acesso-*, pg-auditoria) =====
+    $routes->connect("/sistema-prototype/usuarios", [
+        "controller" => "SistemaPrototype",
+        "action" => "usuarios",
+    ]);
+    $routes->connect("/sistema-prototype/acesso-central", [
+        "controller" => "SistemaPrototype",
+        "action" => "acessoCentral",
+    ]);
+    $routes->connect("/sistema-prototype/acesso-papeis", [
+        "controller" => "SistemaPrototype",
+        "action" => "acessoPapeis",
+    ]);
+    $routes->connect("/sistema-prototype/auditoria", [
+        "controller" => "SistemaPrototype",
+        "action" => "auditoria",
+    ]);
+    $routes->connect("/sistema-prototype/config", [
+        "controller" => "SistemaPrototype",
+        "action" => "config",
+    ]);
+    $routes->connect("/sistema-prototype/:page", [
+        "controller" => "SistemaPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
     $routes->connect("/servicedesk/sla-relatorio", [
         "controller" => "Servicedesk",
         "action" => "slaRelatorio",
