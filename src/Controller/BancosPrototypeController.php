@@ -128,9 +128,103 @@ class BancosPrototypeController extends AppController {
 			return $this->render('fluxo_caixa');
 		}
 
+		if ($page === 'conciliacao') {
+			$set += $this->buildConciliacaoPayload();
+			$this->set($set);
+
+			return $this->render('conciliacao');
+		}
+
 		$this->set($set);
 
 		return $this->render('placeholder');
+	}
+
+	/**
+	 * Conciliação simplificada: lê extrato bancário, mostra status (conciliado/pendente)
+	 * e tenta sugerir matching por valor + data (±3 dias) com financeiro_lancamentos.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function buildConciliacaoPayload(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$kpi = ['conciliados' => 0, 'pendentes' => 0, 'divergentes' => 0, 'total_extrato' => 0, 'total_lancamentos' => 0];
+		$items = [];
+
+		$schema = null;
+		try {
+			$schema = \Cake\ORM\TableRegistry::getTableLocator()->get('Empresas')->getConnection()->getSchemaCollection()->listTables();
+		} catch (\Throwable $e) {
+		}
+
+		if ($schema !== null && in_array('financeiro_extrato_bancario', $schema, true)) {
+			try {
+				$ext = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroExtratoBancario');
+				$lan = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroLancamentos');
+
+				$rows = $ext->find()
+					->where(['FinanceiroExtratoBancario.idempresa' => $empresa])
+					->order(['FinanceiroExtratoBancario.data' => 'DESC'])
+					->limit(80)
+					->all();
+
+				$kpi['total_extrato'] = (int)$ext->find()->where(['FinanceiroExtratoBancario.idempresa' => $empresa])->count();
+				$kpi['total_lancamentos'] = (int)$lan->find()->where(['FinanceiroLancamentos.idempresa' => $empresa])->count();
+
+				foreach ($rows as $e) {
+					$valor = (float)$e->get('valor');
+					$data = $e->get('data');
+					$conciliado = (int)$e->get('conciliado') === 1 || (int)$e->get('financeiro_lancamento_id') > 0;
+					$matchSuggest = null;
+					if (!$conciliado && $data instanceof \DateTimeInterface) {
+						$ini = $data->copy()->subDays(3);
+						$fim = $data->copy()->addDays(3);
+						$try = $lan->find()
+							->where([
+								'FinanceiroLancamentos.idempresa' => $empresa,
+								'FinanceiroLancamentos.valor' => $valor,
+								'FinanceiroLancamentos.data_lancamento >=' => $ini,
+								'FinanceiroLancamentos.data_lancamento <=' => $fim,
+							])
+							->limit(1)
+							->first();
+						if ($try !== null) {
+							$matchSuggest = [
+								'id' => (int)$try->get('id'),
+								'descricao' => (string)$try->get('descricao'),
+								'data' => $try->get('data_lancamento'),
+							];
+						}
+					}
+					if ($conciliado) {
+						$kpi['conciliados']++;
+						$status = 'conciliado';
+					} elseif ($matchSuggest !== null) {
+						$kpi['divergentes']++;
+						$status = 'sugerido';
+					} else {
+						$kpi['pendentes']++;
+						$status = 'pendente';
+					}
+					$items[] = [
+						'id' => (int)$e->get('id'),
+						'data' => $data,
+						'descricao' => (string)$e->get('descricao'),
+						'tipo' => strtolower((string)$e->get('tipo')),
+						'valor' => $valor,
+						'conta' => (string)$e->get('conta_bancaria'),
+						'status' => $status,
+						'match' => $matchSuggest,
+					];
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+
+		return [
+			'concKpi' => $kpi,
+			'concItems' => $items,
+		];
 	}
 
 	/**

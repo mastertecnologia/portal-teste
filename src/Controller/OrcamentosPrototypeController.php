@@ -20,6 +20,7 @@ class OrcamentosPrototypeController extends AppController {
 		$this->loadModel('Orcamentos');
 		$this->loadModel('Clientes');
 		$this->loadModel('Users');
+		$this->loadModel('Produtos');
 	}
 
 	public function beforeFilter(Event $event) {
@@ -254,10 +255,76 @@ class OrcamentosPrototypeController extends AppController {
 
 		$dedicated = ['novo', 'revisao', 'print', 'esign', 'sucesso'];
 		if (in_array($page, $dedicated, true)) {
+			if ($page === 'novo' || $page === 'revisao') {
+				$this->set('orcCatalogo', $this->buildCatalogoProdutos());
+				$this->set('orcClientesOptions', $this->buildClientesOptions());
+			}
+
 			return $this->render('wizard_' . $page);
 		}
 
 		return $this->render('placeholder');
+	}
+
+	/**
+	 * Catálogo (até 40 produtos ativos) para o wizard de orçamento.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function buildCatalogoProdutos(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$busca = trim((string)$this->request->getQuery('q', ''));
+		$out = [];
+		try {
+			$q = $this->Produtos->find()
+				->where(['Produtos.idempresa' => $empresa, 'Produtos.ativo' => 1])
+				->order(['Produtos.descricao' => 'ASC'])
+				->limit(40);
+			if ($busca !== '') {
+				$q->where(['OR' => [
+					'Produtos.descricao ILIKE' => '%' . $busca . '%',
+					'Produtos.codigo ILIKE' => '%' . $busca . '%',
+				]]);
+			}
+			foreach ($q->all() as $p) {
+				$out[] = [
+					'id' => (int)$p->get('id'),
+					'codigo' => (string)$p->get('codigo'),
+					'descricao' => (string)$p->get('descricao'),
+					'tipo' => (string)$p->get('tipo'),
+					'unidade' => (string)$p->get('unidade'),
+					'preco' => (float)$p->get('vlunitario'),
+					'estoque' => (float)$p->get('estoque_atual'),
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @return array<int,string> id => nome
+	 */
+	protected function buildClientesOptions(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$out = [];
+		try {
+			$rows = $this->Clientes->find()
+				->where(['Clientes.idempresa' => $empresa, 'Clientes.inativo' => 0])
+				->order(['Clientes.nome' => 'ASC'])
+				->limit(200)
+				->all();
+			foreach ($rows as $c) {
+				$nome = (int)$c->get('tipo') === 2
+					? (string)($c->get('razaosocial') ?? $c->get('nome'))
+					: (string)$c->get('nome');
+				$out[(int)$c->get('id')] = $nome;
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $out;
 	}
 
 	/**

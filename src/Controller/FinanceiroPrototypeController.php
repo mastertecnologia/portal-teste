@@ -289,9 +289,66 @@ class FinanceiroPrototypeController extends AppController {
 			return $this->render('dre');
 		}
 
+		if ($page === 'nfe') {
+			$set += $this->buildNfePayload();
+			$this->set($set);
+
+			return $this->render('nfe');
+		}
+
 		$this->set($set);
 
 		return $this->render('placeholder');
+	}
+
+	/**
+	 * NF-e/NFS-e — KPIs por status + tabela das últimas notas (fiscal_notas).
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function buildNfePayload(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$kpi = ['emitidas' => 0, 'autorizadas' => 0, 'rejeitadas' => 0, 'canceladas' => 0, 'valor_total' => 0.0];
+		$items = [];
+		try {
+			$tbl = \Cake\ORM\TableRegistry::getTableLocator()->get('FiscalNotas');
+			$rows = $tbl->find()
+				->where(['FiscalNotas.idempresa' => $empresa])
+				->order(['FiscalNotas.data_emissao' => 'DESC'])
+				->limit(80)
+				->all();
+			foreach ($rows as $n) {
+				$kpi['emitidas']++;
+				$st = strtolower((string)$n->get('status'));
+				if (strpos($st, 'autoriz') !== false) {
+					$kpi['autorizadas']++;
+				} elseif (strpos($st, 'rejeit') !== false) {
+					$kpi['rejeitadas']++;
+				} elseif (strpos($st, 'cancel') !== false) {
+					$kpi['canceladas']++;
+				}
+				$v = (float)$n->get('valor_total');
+				$kpi['valor_total'] += $v;
+				$items[] = [
+					'id' => (int)$n->get('id'),
+					'numero' => (string)$n->get('numero'),
+					'serie' => (string)$n->get('serie'),
+					'modelo' => (string)$n->get('modelo'),
+					'emissao' => $n->get('data_emissao'),
+					'destinatario_id' => (int)$n->get('idcliente'),
+					'valor' => $v,
+					'status' => (string)$n->get('status'),
+					'chave' => (string)$n->get('chave_acesso'),
+					'motivo_rejeicao' => (string)$n->get('motivo_rejeicao'),
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return [
+			'nfeKpi' => $kpi,
+			'nfeItems' => $items,
+		];
 	}
 
 	/**

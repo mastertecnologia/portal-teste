@@ -37,6 +37,7 @@
 	<div class="sec-title"><?= h(__('Atalhos')) ?></div>
 	<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
 		<?= $this->Html->link('🛡 ' . __('Papéis RBAC'), ['controller' => 'SistemaPrototype', 'action' => 'acessoPapeis'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('🎭 ' . __('Simular acesso'), ['controller' => 'SistemaPrototype', 'action' => 'viewAs'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('📨 ' . __('Pedidos de acesso'), ['controller' => 'RbacAccessRequests', 'action' => 'pedidosAcessoManager'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('📑 ' . __('Auditoria de mudanças'), ['controller' => 'SistemaPrototype', 'action' => 'auditoria'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('🏢 ' . __('Empresas & Filiais'), ['controller' => 'EmpresasPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>

@@ -723,6 +723,10 @@ Router::scope("/", function ($routes) {
         "controller" => "SistemaPrototype",
         "action" => "config",
     ]);
+    $routes->connect("/sistema-prototype/view-as", [
+        "controller" => "SistemaPrototype",
+        "action" => "viewAs",
+    ]);
     $routes->connect("/sistema-prototype/:page", [
         "controller" => "SistemaPrototype",
         "action" => "view",

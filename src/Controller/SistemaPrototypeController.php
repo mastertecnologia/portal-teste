@@ -211,6 +211,101 @@ class SistemaPrototypeController extends AppController {
 	}
 
 	/**
+	 * Simulador View-As-User — mostra papéis efetivos e permissões expandidas.
+	 */
+	public function viewAs() {
+		$uid = (int)$this->request->getQuery('user_id', 0);
+		$selecionado = null;
+		$papeis = [];
+		$permissoes = [];
+
+		try {
+			$users = $this->Users->find()
+				->select(['Users.id', 'Users.name', 'Users.username', 'Users.email', 'Users.role', 'Users.admin'])
+				->order(['Users.name' => 'ASC'])
+				->limit(200)
+				->all();
+			$candidatos = [];
+			foreach ($users as $u) {
+				$nome = trim((string)($u->get('name') ?? $u->get('username')));
+				$candidatos[] = [
+					'id' => (int)$u->get('id'),
+					'nome' => $nome,
+					'email' => (string)($u->get('email') ?? $u->get('username') ?? ''),
+					'admin' => (int)$u->get('admin') === 1,
+				];
+				if ($uid > 0 && (int)$u->get('id') === $uid) {
+					$selecionado = [
+						'id' => $uid,
+						'nome' => $nome,
+						'email' => (string)($u->get('email') ?? $u->get('username') ?? ''),
+						'role' => (int)$u->get('role'),
+						'admin' => (int)$u->get('admin') === 1,
+					];
+				}
+			}
+		} catch (\Throwable $e) {
+			$candidatos = [];
+		}
+
+		if ($selecionado !== null) {
+			try {
+				if ($this->tableExists('rbac_users_roles') && $this->tableExists('rbac_roles')) {
+					$ur = TableRegistry::getTableLocator()->get('RbacUsersRoles');
+					$roles = TableRegistry::getTableLocator()->get('RbacRoles');
+					$roleIds = $ur->find()->select(['role_id'])->where(['user_id' => $uid])->extract('role_id')->toList();
+					if ($roleIds !== []) {
+						foreach ($roles->find()->where(['id IN' => $roleIds])->all() as $r) {
+							$papeis[(int)$r->get('id')] = [
+								'id' => (int)$r->get('id'),
+								'name' => (string)$r->get('name'),
+								'slug' => (string)$r->get('slug'),
+							];
+						}
+					}
+					if ($papeis !== [] && $this->tableExists('rbac_roles_permissions') && $this->tableExists('rbac_permissions')) {
+						$rp = TableRegistry::getTableLocator()->get('RbacRolesPermissions');
+						$perm = TableRegistry::getTableLocator()->get('RbacPermissions');
+						$permIds = $rp->find()
+							->select(['permission_id'])
+							->where(['role_id IN' => array_keys($papeis)])
+							->group(['permission_id'])
+							->extract('permission_id')
+							->toList();
+						if ($permIds !== []) {
+							foreach ($perm->find()->where(['id IN' => $permIds])->order(['code' => 'ASC'])->all() as $p) {
+								$permissoes[] = [
+									'code' => (string)$p->get('code'),
+									'description' => (string)($p->get('description') ?? ''),
+								];
+							}
+						}
+					}
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+
+		$this->set([
+			'title' => __('Simular acesso'),
+			'erpNavActive' => 'acesso-central',
+			'erpBreadcrumb' => [
+				['label' => 'PGM ERP'],
+				['label' => __('Sistema')],
+				['label' => __('Controle de Acesso'), 'url' => ['controller' => 'SistemaPrototype', 'action' => 'acessoCentral']],
+				['label' => __('Simular acesso'), 'cur' => true],
+			],
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+			'viewAsCandidatos' => $candidatos,
+			'viewAsSelecionado' => $selecionado,
+			'viewAsPapeis' => array_values($papeis),
+			'viewAsPermissoes' => $permissoes,
+		]);
+
+		return $this->render('view_as');
+	}
+
+	/**
 	 * pg-acesso-usuario — ficha de acesso de um usuário (papéis RBAC + dados).
 	 */
 	public function acessoUsuario() {
@@ -341,6 +436,8 @@ class SistemaPrototypeController extends AppController {
 				return $this->auditoria();
 			case 'acesso-usuario':
 				return $this->acessoUsuario();
+			case 'view-as':
+				return $this->viewAs();
 			case 'empresa':
 			case 'acesso-auditoria':
 			case 'acesso-filiais':
