@@ -36,7 +36,16 @@ class WebPushController extends AppController {
 	}
 
 	public function isAuthorized($user) {
-		return !empty($user);
+		if (empty($user) || (int)($user['id'] ?? 0) <= 0) {
+			return false;
+		}
+
+		// Cliente do portal não recebe notificações por enquanto (apenas equipe)
+		if ((int)($user['role'] ?? -1) !== 0) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public function index() {

@@ -309,6 +309,43 @@ class BancosPrototypeController extends AppController {
 	}
 
 	/**
+	 * POST /bancos-prototype/rejeitar-match — registra rejeição (não vincula).
+	 * Mantém o movimento como pendente e adiciona log no campo descricao
+	 * (sufixo "[NO-MATCH:lid=X]") para próximos ciclos pularem aquela sugestão.
+	 */
+	public function rejeitarMatch() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$eid = (int)$this->request->getData('extrato_id');
+		$lid = (int)$this->request->getData('lancamento_id');
+		if ($eid <= 0 || $lid <= 0) {
+			$this->Flash->error(__('Dados inválidos.'));
+
+			return $this->redirect(['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']);
+		}
+		try {
+			$ext = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroExtratoBancario');
+			$row = $ext->find()->where(['id' => $eid, 'idempresa' => $empresa])->first();
+			if ($row === null) {
+				$this->Flash->error(__('Movimento fora do escopo.'));
+
+				return $this->redirect(['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']);
+			}
+			$desc = (string)$row->get('descricao');
+			$marker = '[NO-MATCH:lid=' . $lid . ']';
+			if (strpos($desc, $marker) === false) {
+				$row->set('descricao', trim($desc . ' ' . $marker));
+				$ext->save($row);
+			}
+			$this->Flash->info(__('Match #{0} marcado como não correspondente; o sistema não vai sugerir de novo.', $lid));
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro: {0}', $e->getMessage()));
+		}
+
+		return $this->redirect(['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']);
+	}
+
+	/**
 	 * POST /bancos-prototype/conciliar — aceita match sugerido.
 	 * Recebe extrato_id + lancamento_id; vincula e marca como conciliado.
 	 */
@@ -397,8 +434,12 @@ class BancosPrototypeController extends AppController {
 					if (!$conciliado && $data instanceof \DateTimeInterface) {
 						$ini = $data->copy()->subDays(5);
 						$fim = $data->copy()->addDays(5);
-						// Fuzzy: tolerância de R$ 1 OU 1%
 						$tol = max(1.0, $valorAbs * 0.01);
+						// IDs já rejeitados manualmente (marker no descritivo: [NO-MATCH:lid=X])
+						$rejeitados = [];
+						if (preg_match_all('/\[NO-MATCH:lid=(\d+)\]/', $descExt, $mm)) {
+							$rejeitados = array_map('intval', $mm[1]);
+						}
 						$candidatos = $lan->find()
 							->where([
 								'FinanceiroLancamentos.idempresa' => $empresa,
@@ -408,6 +449,10 @@ class BancosPrototypeController extends AppController {
 							->all();
 						$bestScore = 0.0;
 						foreach ($candidatos as $c) {
+							$cid = (int)$c->get('id');
+							if (in_array($cid, $rejeitados, true)) {
+								continue;
+							}
 							$vc = abs((float)$c->get('valor'));
 							$diff = abs($vc - $valorAbs);
 							if ($diff > $tol) {

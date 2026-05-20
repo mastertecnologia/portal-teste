@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Traits\PrototypeApiSecurityTrait;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 
@@ -13,6 +14,8 @@ use Cake\Http\Exception\NotFoundException;
  * Somente leitura nesta fase 2.
  */
 class OrdensservicoPrototypeController extends AppController {
+
+	use PrototypeApiSecurityTrait;
 
 	public function initialize() {
 		parent::initialize();
@@ -158,11 +161,45 @@ class OrdensservicoPrototypeController extends AppController {
 	}
 
 	/**
+	 * POST /ordens-prototype/api/excluir-item — remove item da OS.
+	 */
+	public function apiExcluirItem() {
+		$this->request->allowMethod(['post']);
+		if ($guard = $this->guardApiEquipe()) {
+			return $guard;
+		}
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$itemId = (int)$this->request->getData('item_id');
+		if ($itemId <= 0) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('ID inválido.')]));
+		}
+		try {
+			$itens = $this->loadModel('Itensordem');
+			$row = $itens->find()->where(['Itensordem.id' => $itemId, 'Itensordem.idempresa' => $empresa])->first();
+			if ($row === null) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Item fora do escopo.')]));
+			}
+			if (!$itens->delete($row)) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Falha ao excluir.')]));
+			}
+
+			return $this->response->withStringBody(json_encode(['ok' => true]));
+		} catch (\Throwable $e) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => $e->getMessage()]));
+		}
+	}
+
+	/**
 	 * POST /ordens-prototype/api/adicionar-item — adiciona item à OS.
 	 * Aceita ordem_id + descricao + quantidade + valor_unitario; cria itensordem.
 	 */
 	public function apiAdicionarItem() {
 		$this->request->allowMethod(['post']);
+		if ($guard = $this->guardApiEquipe()) {
+			return $guard;
+		}
 		$this->autoRender = false;
 		$this->response = $this->response->withType('application/json');
 		$empresa = (int)$this->Auth->user('idempresa');
@@ -325,6 +362,7 @@ class OrdensservicoPrototypeController extends AppController {
 			$subtotal = (float)($it->get('valortotal') ?? ($qtd * $vu - $desc));
 			$totalItens += $subtotal;
 			$linhas[] = [
+				'id' => (int)$it->get('id'),
 				'descricao' => (string)($it->get('descricao') ?? ''),
 				'unidade' => (string)($it->get('unidade') ?? ''),
 				'qtd' => $qtd,

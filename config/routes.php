@@ -565,6 +565,10 @@ Router::scope("/", function ($routes) {
         "controller" => "ServicedeskPrototype",
         "action" => "ci",
     ], ["pass" => ["id"], "id" => "[0-9]+"]);
+    $routes->connect("/servicedesk-prototype/csat-historico", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "csatHistorico",
+    ]);
     $routes->connect("/servicedesk-prototype/api/badges", [
         "controller" => "ServicedeskPrototype",
         "action" => "apiBadges",
@@ -644,9 +648,17 @@ Router::scope("/", function ($routes) {
         "controller" => "OrcamentosPrototype",
         "action" => "apiAdicionarItem",
     ]);
+    $routes->connect("/orcamentos-prototype/api/excluir-item", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "apiExcluirItem",
+    ]);
     $routes->connect("/ordens-prototype/api/adicionar-item", [
         "controller" => "OrdensservicoPrototype",
         "action" => "apiAdicionarItem",
+    ]);
+    $routes->connect("/ordens-prototype/api/excluir-item", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "apiExcluirItem",
     ]);
     $routes->connect("/orcamentos-prototype/:page", [
         "controller" => "OrcamentosPrototype",
@@ -773,6 +785,10 @@ Router::scope("/", function ($routes) {
     $routes->connect("/bancos-prototype/conciliar", [
         "controller" => "BancosPrototype",
         "action" => "conciliar",
+    ]);
+    $routes->connect("/bancos-prototype/rejeitar-match", [
+        "controller" => "BancosPrototype",
+        "action" => "rejeitarMatch",
     ]);
     $routes->connect("/bancos-prototype/:page", [
         "controller" => "BancosPrototype",

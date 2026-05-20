@@ -87,11 +87,12 @@ if (strpos($st, 'concl') !== false || strpos($st, 'fech') !== false) {
 					<th class="r"><?= h(__('Qtd')) ?></th>
 					<th class="r"><?= h(__('Unit.')) ?></th>
 					<th class="r"><?= h(__('Subtotal')) ?></th>
+					<th></th>
 				</tr>
 			</thead>
 			<tbody>
 				<?php if ($osLinhas === []) : ?>
-					<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--text-muted);"><?= h(__('Sem itens neste OS.')) ?></td></tr>
+					<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text-muted);"><?= h(__('Sem itens neste OS.')) ?></td></tr>
 				<?php else : foreach ($osLinhas as $l) : ?>
 					<tr>
 						<td><?= h(\Cake\Utility\Text::truncate((string)$l['descricao'], 80, ['ellipsis' => '…'])) ?></td>
@@ -99,6 +100,11 @@ if (strpos($st, 'concl') !== false || strpos($st, 'fech') !== false) {
 						<td class="r"><?= number_format((float)$l['qtd'], 2, ',', '.') ?></td>
 						<td class="r"><?= h($H->brl((float)$l['vlr'])) ?></td>
 						<td class="r"><strong><?= h($H->brl((float)$l['subtotal'])) ?></strong></td>
+						<td class="r">
+							<?php if (!empty($l['id'])) : ?>
+								<button type="button" class="btn btn-ghost btn-xs" data-os-del="<?= (int)$l['id'] ?>" title="<?= h(__('Excluir item')) ?>">🗑</button>
+							<?php endif; ?>
+						</td>
 					</tr>
 				<?php endforeach; endif; ?>
 			</tbody>
@@ -121,6 +127,24 @@ if (strpos($st, 'concl') !== false || strpos($st, 'fech') !== false) {
 	var csrf = <?= json_encode((string)$this->request->getAttribute('csrfToken')) ?>;
 	var btn = document.getElementById('osItemBtn');
 	var msg = document.getElementById('osItemMsg');
+	// Excluir item via AJAX
+	var urlDel = <?= json_encode($this->Url->build(['controller' => 'OrdensservicoPrototype', 'action' => 'apiExcluirItem'])) ?>;
+	document.querySelectorAll('[data-os-del]').forEach(function (el) {
+		el.addEventListener('click', function () {
+			var id = this.getAttribute('data-os-del');
+			if (!id || !confirm('Excluir item #' + id + '?')) return;
+			var fd = new FormData();
+			fd.append('_csrfToken', csrf);
+			fd.append('item_id', id);
+			fetch(urlDel, {method: 'POST', body: fd, credentials: 'same-origin', headers: {'X-CSRF-Token': csrf}})
+				.then(function (r) { return r.json(); })
+				.then(function (data) {
+					if (!data.ok) { alert('Falha: ' + (data.error || '?')); return; }
+					window.location.reload();
+				});
+		});
+	});
+
 	btn && btn.addEventListener('click', function () {
 		var d = document.getElementById('osItemDesc').value.trim();
 		var un = document.getElementById('osItemUn').value.trim() || 'un';

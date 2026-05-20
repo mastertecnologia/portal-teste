@@ -104,6 +104,81 @@ class ServicedeskPrototypeController extends AppController {
 	}
 
 	/**
+	 * GET /servicedesk-prototype/csat-historico — histórico CSAT/NPS com filtros.
+	 */
+	public function csatHistorico() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$query = $this->request->getQueryParams();
+		$mes = trim((string)($query['mes'] ?? '')); // YYYY-MM
+		$minCsat = (int)($query['min_csat'] ?? 0);
+		$apenasNps = (string)($query['nps'] ?? '') === '1';
+		$busca = trim((string)($query['q'] ?? ''));
+
+		$itens = [];
+		$kpi = ['total' => 0, 'csat_media' => 0.0, 'promotores' => 0, 'neutros' => 0, 'detratores' => 0, 'nps' => 0];
+		try {
+			$tbl = \Cake\ORM\TableRegistry::getTableLocator()->get('TicketCsatResponses');
+			$where = ['TicketCsatResponses.idempresa' => $empresa];
+			if ($mes !== '' && preg_match('/^\d{4}-\d{2}$/', $mes)) {
+				$where['TicketCsatResponses.responded_at >='] = $mes . '-01 00:00:00';
+				$where['TicketCsatResponses.responded_at <='] = date('Y-m-t 23:59:59', strtotime($mes . '-01'));
+			}
+			if ($minCsat > 0 && $minCsat <= 5) {
+				$where['TicketCsatResponses.csat_score >='] = $minCsat;
+			}
+			if ($apenasNps) {
+				$where['TicketCsatResponses.nps_score IS NOT'] = null;
+			}
+			if ($busca !== '') {
+				$where['TicketCsatResponses.comentario ILIKE'] = '%' . $busca . '%';
+			}
+			$q = $tbl->find()->contain(['Tickets', 'Clientes'])->where($where)->order(['TicketCsatResponses.responded_at' => 'DESC'])->limit(300);
+			$soma = 0;
+			$npsResps = 0;
+			foreach ($q->all() as $r) {
+				$kpi['total']++;
+				$csat = (int)$r->get('csat_score');
+				$soma += $csat;
+				$nps = $r->get('nps_score');
+				if ($nps !== null && $nps !== '') {
+					$npsResps++;
+					$n = (int)$nps;
+					if ($n >= 9) $kpi['promotores']++;
+					elseif ($n <= 6) $kpi['detratores']++;
+					else $kpi['neutros']++;
+				}
+				$cli = $r->cliente ?? null;
+				$itens[] = [
+					'ticket_id' => (int)$r->get('ticket_id'),
+					'csat' => $csat,
+					'nps' => $nps !== null ? (int)$nps : null,
+					'comentario' => (string)($r->get('comentario') ?? ''),
+					'data' => $r->get('responded_at'),
+					'cliente' => $cli ? (string)($cli->get('razaosocial') ?? $cli->get('nome') ?? '') : '—',
+				];
+			}
+			$kpi['csat_media'] = $kpi['total'] > 0 ? round($soma / $kpi['total'], 2) : 0;
+			$kpi['nps'] = $npsResps > 0 ? (int)round((($kpi['promotores'] - $kpi['detratores']) / $npsResps) * 100) : 0;
+		} catch (\Throwable $e) {
+		}
+
+		$this->set([
+			'title' => __('Histórico CSAT'),
+			'sdpNavActive' => 'csat',
+			'csatItens' => $itens,
+			'csatKpi' => $kpi,
+			'csatFiltros' => ['mes' => $mes, 'min_csat' => $minCsat, 'nps' => $apenasNps, 'q' => $busca],
+		]);
+
+		$screensSvc = new ServicedeskPrototypeScreensService(function (\Cake\ORM\Query $q) {});
+		$this->set('sdpNavBadges', $screensSvc->navBadges([
+			'tickets' => $this->Tickets, 'idempresa' => $empresa, 'userId' => (int)$this->Auth->user('id'),
+		]));
+
+		return $this->render('display/csat_historico');
+	}
+
+	/**
 	 * GET /servicedesk-prototype/api/badges — JSON com contagens para o sidebar.
 	 * Usado pelo long-poll do shell premium (atualiza a cada 30s).
 	 */

@@ -16,7 +16,10 @@ $breakdown = (array)($screen['csat_breakdown'] ?? []);
 			<h1 style="font-size:22px;font-weight:600;margin:0;">⭐ <?= h(__('CSAT & NPS')) ?></h1>
 			<div style="font-size:12px;color:var(--text-muted);"><?= h(__('Pesquisa de satisfação pós-atendimento e Net Promoter Score')) ?></div>
 		</div>
-		<?= $this->Html->link('← ' . __('Service Desk'), ['controller' => 'ServicedeskPrototype', 'action' => 'fila'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<div style="display:flex;gap:8px;flex-wrap:wrap;">
+			<?= $this->Html->link('📊 ' . __('Histórico completo'), ['controller' => 'ServicedeskPrototype', 'action' => 'csatHistorico'], ['class' => 'btn btn-primary btn-sm']) ?>
+			<?= $this->Html->link('← ' . __('Service Desk'), ['controller' => 'ServicedeskPrototype', 'action' => 'fila'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		</div>
 	</div>
 
 	<?php if ($kpis !== []) : ?>

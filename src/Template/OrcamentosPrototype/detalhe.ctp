@@ -84,11 +84,12 @@ if ($valorFinal <= 0 && $orcLinhas !== []) {
 					<th class="r"><?= h(__('Unit.')) ?></th>
 					<th class="r"><?= h(__('Desc.')) ?></th>
 					<th class="r"><?= h(__('Subtotal')) ?></th>
+					<th></th>
 				</tr>
 			</thead>
 			<tbody>
 				<?php if ($orcLinhas === []) : ?>
-					<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-muted);"><?= h(__('Sem itens neste orçamento.')) ?></td></tr>
+					<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text-muted);"><?= h(__('Sem itens neste orçamento.')) ?></td></tr>
 				<?php else : foreach ($orcLinhas as $l) : ?>
 					<tr>
 						<td style="font-family:monospace;font-size:11px;"><?= h((string)$l['codigo']) ?></td>
@@ -98,6 +99,11 @@ if ($valorFinal <= 0 && $orcLinhas !== []) {
 						<td class="r"><?= h($H->brl((float)$l['vlr'])) ?></td>
 						<td class="r" style="color:#7A1822;"><?php if ((float)$l['desconto'] > 0) : ?>−<?= h($H->brl((float)$l['desconto'])) ?><?php else : ?>—<?php endif; ?></td>
 						<td class="r"><strong><?= h($H->brl((float)$l['subtotal'])) ?></strong></td>
+						<td class="r">
+							<?php if (!empty($l['id'])) : ?>
+								<button type="button" class="btn btn-ghost btn-xs" data-orc-del="<?= (int)$l['id'] ?>" title="<?= h(__('Excluir item')) ?>">🗑</button>
+							<?php endif; ?>
+						</td>
 					</tr>
 				<?php endforeach; endif; ?>
 			</tbody>
@@ -120,6 +126,24 @@ if ($valorFinal <= 0 && $orcLinhas !== []) {
 	var csrf = <?= json_encode((string)$this->request->getAttribute('csrfToken')) ?>;
 	var btn = document.getElementById('orcItemBtn');
 	var msg = document.getElementById('orcItemMsg');
+	// Excluir item via AJAX
+	var urlDel = <?= json_encode($this->Url->build(['controller' => 'OrcamentosPrototype', 'action' => 'apiExcluirItem'])) ?>;
+	document.querySelectorAll('[data-orc-del]').forEach(function (el) {
+		el.addEventListener('click', function () {
+			var id = this.getAttribute('data-orc-del');
+			if (!id || !confirm('Excluir item #' + id + '?')) return;
+			var fd = new FormData();
+			fd.append('_csrfToken', csrf);
+			fd.append('item_id', id);
+			fetch(urlDel, {method: 'POST', body: fd, credentials: 'same-origin', headers: {'X-CSRF-Token': csrf}})
+				.then(function (r) { return r.json(); })
+				.then(function (data) {
+					if (!data.ok) { alert('Falha: ' + (data.error || '?')); return; }
+					window.location.reload();
+				});
+		});
+	});
+
 	btn && btn.addEventListener('click', function () {
 		var cod = document.getElementById('orcItemCod').value.trim();
 		var d = document.getElementById('orcItemDesc').value.trim();

@@ -9,6 +9,7 @@
 $H = $this->ErpPrototype;
 $csrf = (string)$this->request->getAttribute('csrfToken');
 $urlConc = $this->Url->build(['controller' => 'BancosPrototype', 'action' => 'conciliar']);
+$urlRej = $this->Url->build(['controller' => 'BancosPrototype', 'action' => 'rejeitarMatch']);
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
 	<div>
@@ -85,6 +86,12 @@ $urlConc = $this->Url->build(['controller' => 'BancosPrototype', 'action' => 'co
 											<input type="hidden" name="extrato_id" value="<?= (int)$it['id'] ?>">
 											<input type="hidden" name="lancamento_id" value="<?= (int)$m['id'] ?>">
 											<button type="submit" class="btn btn-primary btn-xs">✓ <?= h(__('Aceitar')) ?></button>
+										</form>
+										<form method="post" action="<?= h($urlRej) ?>" style="margin:0;display:inline;" onsubmit="return confirm('<?= h(__('Marcar como NÃO correspondente?')) ?>')">
+											<input type="hidden" name="_csrfToken" value="<?= h($csrf) ?>">
+											<input type="hidden" name="extrato_id" value="<?= (int)$it['id'] ?>">
+											<input type="hidden" name="lancamento_id" value="<?= (int)$m['id'] ?>">
+											<button type="submit" class="btn btn-ghost btn-xs" title="<?= h(__('Rejeitar match')) ?>">✗</button>
 										</form>
 									<?php endif; ?>
 								</div>

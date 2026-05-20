@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Traits\PrototypeApiSecurityTrait;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 
@@ -14,6 +15,8 @@ use Cake\Http\Exception\NotFoundException;
  * permanecem nas rotas legadas até validação.
  */
 class OrcamentosPrototypeController extends AppController {
+
+	use PrototypeApiSecurityTrait;
 
 	public function initialize() {
 		parent::initialize();
@@ -193,6 +196,7 @@ class OrcamentosPrototypeController extends AppController {
 			$totalSub += $qtd * $vu;
 			$totalDesc += $desc;
 			$linhas[] = [
+				'id' => (int)$it->get('id'),
 				'codigo' => (string)($it->get('codproduto') ?? ''),
 				'descricao' => (string)($it->get('descricao') ?? ''),
 				'unidade' => (string)($it->get('unidade') ?? ''),
@@ -431,10 +435,44 @@ class OrcamentosPrototypeController extends AppController {
 	}
 
 	/**
+	 * POST /orcamentos-prototype/api/excluir-item — remove item do orçamento.
+	 */
+	public function apiExcluirItem() {
+		$this->request->allowMethod(['post']);
+		if ($guard = $this->guardApiEquipe()) {
+			return $guard;
+		}
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$itemId = (int)$this->request->getData('item_id');
+		if ($itemId <= 0) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('ID inválido.')]));
+		}
+		try {
+			$itens = $this->loadModel('Orcamentositens');
+			$row = $itens->find()->where(['Orcamentositens.id' => $itemId, 'Orcamentositens.idempresa' => $empresa])->first();
+			if ($row === null) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Item fora do escopo.')]));
+			}
+			if (!$itens->delete($row)) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Falha ao excluir.')]));
+			}
+
+			return $this->response->withStringBody(json_encode(['ok' => true]));
+		} catch (\Throwable $e) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => $e->getMessage()]));
+		}
+	}
+
+	/**
 	 * POST /orcamentos-prototype/api/adicionar-item — adiciona item ao orçamento.
 	 */
 	public function apiAdicionarItem() {
 		$this->request->allowMethod(['post']);
+		if ($guard = $this->guardApiEquipe()) {
+			return $guard;
+		}
 		$this->autoRender = false;
 		$this->response = $this->response->withType('application/json');
 		$empresa = (int)$this->Auth->user('idempresa');
