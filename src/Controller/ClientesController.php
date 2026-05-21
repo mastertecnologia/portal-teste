@@ -11,6 +11,7 @@ use App\Model\Table\ClientesTable;
 use App\Utility\ClienteDomainEventType;
 use App\Utility\RbacChecker;
 use Cake\Event\Event;
+use Cake\I18n\FrozenDate;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use CakeSoap\Network\CakeSoap;
@@ -149,24 +150,258 @@ class ClientesController extends AppController {
 			$this->Flash->error('Você não possui permissões para acessar esta página.');
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
-		$this->set('title', 'Lista de Clientes');
+		$this->set('title', 'Clientes');
 		$this->set('hideLayoutPageTitle', true);
+		$empresaLbl = trim((string)($this->viewVars['nomeempresa'] ?? ''));
+		if ($empresaLbl === '') {
+			$empresaLbl = __('PGM Soluções');
+		}
+		$this->set('topbarParentLabel', $empresaLbl);
+		$this->set('topbarCurrentLabel', __('Cadastros'));
 
-		$qAtivos = $this->Clientes->find('all')->where(['inativo' => 0]);
-		$this->Abac->applyToQuery($qAtivos, 'Clientes');
-		$clientesAtivos = $qAtivos->toArray();
+		$qAll = $this->Clientes->find('all')->contain(['Cidades'])->order(['Clientes.id' => 'DESC']);
+		$this->Abac->applyToQuery($qAll, 'Clientes');
+		$todos = $qAll->toArray();
 
-		$qInativos = $this->Clientes->find('all')->where(['inativo' => 1]);
-		$this->Abac->applyToQuery($qInativos, 'Clientes');
-		$clientesInativos = $qInativos->toArray();
+		$clientesAtivos = array_values(array_filter($todos, function ($c) {
+			return (int)$c->inativo === 0;
+		}));
+		$clientesInativos = array_values(array_filter($todos, function ($c) {
+			return (int)$c->inativo === 1;
+		}));
 
 		$this->set('clientesAtivos', $clientesAtivos);
 		$this->set('clientesInativos', $clientesInativos);
+		$this->set('clientesLista', $todos);
 
-		$this->set('clientesAtivosPJ', array_values(array_filter($clientesAtivos, function($c){ return (int)$c->tipo === (int)C_ClientesTipoJuridica; })));
-		$this->set('clientesAtivosPF', array_values(array_filter($clientesAtivos, function($c){ return (int)$c->tipo === (int)C_ClientesTipoFisica; })));
-		$this->set('clientesInativosPJ', array_values(array_filter($clientesInativos, function($c){ return (int)$c->tipo === (int)C_ClientesTipoJuridica; })));
-		$this->set('clientesInativosPF', array_values(array_filter($clientesInativos, function($c){ return (int)$c->tipo === (int)C_ClientesTipoFisica; })));
+		$this->set('clientesAtivosPJ', array_values(array_filter($clientesAtivos, function ($c) {
+			return (int)$c->tipo === (int)C_ClientesTipoJuridica;
+		})));
+		$this->set('clientesAtivosPF', array_values(array_filter($clientesAtivos, function ($c) {
+			return (int)$c->tipo === (int)C_ClientesTipoFisica;
+		})));
+		$this->set('clientesInativosPJ', array_values(array_filter($clientesInativos, function ($c) {
+			return (int)$c->tipo === (int)C_ClientesTipoJuridica;
+		})));
+		$this->set('clientesInativosPF', array_values(array_filter($clientesInativos, function ($c) {
+			return (int)$c->tipo === (int)C_ClientesTipoFisica;
+		})));
+
+		$crm = $this->_clientesIndexCrmMetrics($todos, count($clientesAtivos));
+		$this->set('cliCrm', $crm);
+	}
+
+	/**
+	 * KPIs e painéis da lista CRM (receita / inadimplência via financeiro_lancamentos quando existir).
+	 *
+	 * @param \App\Model\Entity\Cliente[] $todos
+	 * @param int $cntAtivos
+	 * @return array<string,mixed>
+	 */
+	protected function _clientesIndexCrmMetrics(array $todos, int $cntAtivos) {
+		$cntTotal = count($todos);
+		$cntPj = 0;
+		$cntPf = 0;
+		foreach ($todos as $c) {
+			if ((int)$c->tipo === (int)C_ClientesTipoJuridica) {
+				$cntPj++;
+			} elseif ((int)$c->tipo === (int)C_ClientesTipoFisica) {
+				$cntPf++;
+			}
+		}
+		$cntInativos = $cntTotal - $cntAtivos;
+
+		$receita12 = 0.0;
+		$receitaPrev = 0.0;
+		$inadValor = 0.0;
+		$inadClientes = 0;
+		$top5 = [];
+		$receitaPorCliente = [];
+		$aReceberPorCliente = [];
+		$hasFin = false;
+
+		try {
+			$finTable = TableRegistry::getTableLocator()->get('FinanceiroLancamentos');
+			$hasFin = true;
+			$idempresa = (int)$this->Auth->user('idempresa');
+			$hoje = FrozenDate::today();
+			$ini12 = $hoje->subMonths(12);
+			$iniPrev = $ini12->subMonths(12);
+			$fimPrev = $ini12->subDay(1);
+
+			$qRec = $finTable->find();
+			$qRec->select(['s' => $qRec->func()->sum('FinanceiroLancamentos.valor')])
+				->where([
+					'FinanceiroLancamentos.idempresa' => $idempresa,
+					'FinanceiroLancamentos.tipo' => 'receita',
+					'FinanceiroLancamentos.data_lancamento >=' => $ini12->format('Y-m-d'),
+					'FinanceiroLancamentos.data_lancamento <=' => $hoje->format('Y-m-d'),
+				]);
+			$rowRec = $qRec->first();
+			$receita12 = $rowRec && $rowRec->s !== null ? (float)$rowRec->s : 0.0;
+
+			$qPrev = $finTable->find();
+			$qPrev->select(['s' => $qPrev->func()->sum('FinanceiroLancamentos.valor')])
+				->where([
+					'FinanceiroLancamentos.idempresa' => $idempresa,
+					'FinanceiroLancamentos.tipo' => 'receita',
+					'FinanceiroLancamentos.data_lancamento >=' => $iniPrev->format('Y-m-d'),
+					'FinanceiroLancamentos.data_lancamento <=' => $fimPrev->format('Y-m-d'),
+				]);
+			$rowPrev = $qPrev->first();
+			$receitaPrev = $rowPrev && $rowPrev->s !== null ? (float)$rowPrev->s : 0.0;
+
+			$qInad = $finTable->find();
+			$qInad->select([
+				'FinanceiroLancamentos.idcliente',
+				'valor' => 'FinanceiroLancamentos.valor',
+			])
+				->where([
+					'FinanceiroLancamentos.idempresa' => $idempresa,
+					'FinanceiroLancamentos.tipo' => 'receita',
+					'FinanceiroLancamentos.status' => 'aberto',
+					'FinanceiroLancamentos.data_vencimento IS NOT' => null,
+					'FinanceiroLancamentos.data_vencimento <' => $hoje->format('Y-m-d'),
+				]);
+			$inadIds = [];
+			foreach ($qInad->all() as $inadRow) {
+				$inadIds[(int)$inadRow->idcliente] = true;
+				$inadValor += (float)($inadRow->valor ?? 0);
+			}
+			$inadClientes = count($inadIds);
+
+			$qTop = $finTable->find();
+			$qTop->select([
+				'FinanceiroLancamentos.idcliente',
+				'total' => $qTop->func()->sum('FinanceiroLancamentos.valor'),
+			])
+				->where([
+					'FinanceiroLancamentos.idempresa' => $idempresa,
+					'FinanceiroLancamentos.tipo' => 'receita',
+					'FinanceiroLancamentos.data_lancamento >=' => $ini12->format('Y-m-d'),
+				])
+				->group(['FinanceiroLancamentos.idcliente'])
+				->order(['total' => 'DESC'])
+				->limit(5);
+			$topRows = $qTop->all()->toArray();
+
+			$nomePorId = [];
+			foreach ($todos as $c) {
+				$nomePorId[(int)$c->id] = $this->_clientesIndexNomeExibicao($c);
+			}
+			foreach ($topRows as $tr) {
+				$cid = (int)$tr->idcliente;
+				$val = (float)($tr->total ?? 0);
+				$top5[] = [
+					'id' => $cid,
+					'nome' => $nomePorId[$cid] ?? ('#' . $cid),
+					'valor' => $val,
+					'pct' => $receita12 > 0 ? (int)round(100 * $val / $receita12) : 0,
+				];
+			}
+
+			$qPorCli = $finTable->find();
+			$qPorCli->select([
+				'FinanceiroLancamentos.idcliente',
+				'total' => $qPorCli->func()->sum('FinanceiroLancamentos.valor'),
+			])
+				->where([
+					'FinanceiroLancamentos.idempresa' => $idempresa,
+					'FinanceiroLancamentos.tipo' => 'receita',
+					'FinanceiroLancamentos.data_lancamento >=' => $ini12->format('Y-m-d'),
+				])
+				->group(['FinanceiroLancamentos.idcliente']);
+			foreach ($qPorCli->all() as $pc) {
+				$receitaPorCliente[(int)$pc->idcliente] = (float)($pc->total ?? 0);
+			}
+
+			$qAberto = $finTable->find();
+			$qAberto->select([
+				'FinanceiroLancamentos.idcliente',
+				'total' => $qAberto->func()->sum('FinanceiroLancamentos.valor'),
+			])
+				->where([
+					'FinanceiroLancamentos.idempresa' => $idempresa,
+					'FinanceiroLancamentos.tipo' => 'receita',
+					'FinanceiroLancamentos.status' => 'aberto',
+				])
+				->group(['FinanceiroLancamentos.idcliente']);
+			foreach ($qAberto->all() as $ab) {
+				$aReceberPorCliente[(int)$ab->idcliente] = (float)($ab->total ?? 0);
+			}
+		} catch (\Throwable $e) {
+			$this->log('Clientes::index CRM financeiro: ' . $e->getMessage(), 'warning');
+		}
+
+		$receitaPct = null;
+		if ($hasFin && $receitaPrev > 0.0001) {
+			$receitaPct = (int)round(100 * ($receita12 - $receitaPrev) / $receitaPrev);
+		}
+		$ticketMedio = ($cntAtivos > 0 && $receita12 > 0) ? $receita12 / $cntAtivos : 0.0;
+
+		$segPctPj = $cntTotal > 0 ? (int)round(100 * $cntPj / $cntTotal) : 0;
+		$segPctPf = $cntTotal > 0 ? (int)round(100 * $cntPf / $cntTotal) : 0;
+
+		$alertaConc = null;
+		if ($top5 !== [] && $receita12 > 0 && $top5[0]['pct'] >= 30) {
+			$alertaConc = [
+				'nome' => $top5[0]['nome'],
+				'pct' => $top5[0]['pct'],
+			];
+		}
+
+		return [
+			'has_fin' => $hasFin,
+			'ativos' => $cntAtivos,
+			'receita12_fmt' => $this->_clientesFmtBrlCompact($receita12),
+			'receita12_pct' => $receitaPct,
+			'ticket_fmt' => $this->_clientesFmtBrl($ticketMedio),
+			'inadimplentes' => $inadClientes,
+			'inadimplentes_valor_fmt' => $this->_clientesFmtBrl($inadValor),
+			'bloqueados' => $cntInativos,
+			'aniversariantes' => 0,
+			'top5' => $top5,
+			'alerta_concentracao' => $alertaConc,
+			'segmentos' => [
+				['label' => __('Pessoa Jurídica'), 'count' => $cntPj, 'pct' => $segPctPj, 'tone' => 'teal'],
+				['label' => __('Pessoa Física'), 'count' => $cntPf, 'pct' => $segPctPf, 'tone' => 'blue'],
+			],
+			'pj_bar' => ['count' => $cntPj, 'pct' => $segPctPj],
+			'pf_bar' => ['count' => $cntPf, 'pct' => $segPctPf],
+			'receita_por_cliente' => $receitaPorCliente,
+			'a_receber_por_cliente' => $aReceberPorCliente,
+		];
+	}
+
+	protected function _clientesIndexNomeExibicao($cliente) {
+		if ((int)$cliente->tipo === (int)C_ClientesTipoJuridica) {
+			$n = trim((string)($cliente->razaosocial ?? ''));
+			if ($n === '') {
+				$n = trim((string)($cliente->nomefantasia ?? ''));
+			}
+
+			return $n !== '' ? $n : __('(sem nome)');
+		}
+
+		$n = trim((string)($cliente->nome ?? ''));
+
+		return $n !== '' ? $n : __('(sem nome)');
+	}
+
+	protected function _clientesFmtBrl($amount) {
+		return 'R$ ' . number_format((float)$amount, 2, ',', '.');
+	}
+
+	protected function _clientesFmtBrlCompact($amount) {
+		$v = (float)$amount;
+		if ($v >= 1000000) {
+			return 'R$ ' . number_format($v / 1000000, 2, ',', '.') . 'M';
+		}
+		if ($v >= 1000) {
+			return 'R$ ' . number_format($v / 1000, 1, ',', '.') . 'k';
+		}
+
+		return $this->_clientesFmtBrl($v);
 	}
 
 	public function cadastrar() {

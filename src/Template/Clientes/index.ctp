@@ -1,13 +1,13 @@
 <?php
     /**
-     * Clientes — lista (esta tela): action index.
-     * Telas relacionadas no mesmo controller: add (novo), edit (cadastro), view (detalhe), search (pesquisa legada por query string).
+     * Clientes — lista CRM (layout alinhado ao mock pg-clientes / shell premium).
      */
     use Cake\Routing\Router;
+
     $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
     $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
 
-    function Mask($mask, $str) {
+    function cliMask($mask, $str) {
         if ($str === null || $str === '') {
             return '';
         }
@@ -25,21 +25,14 @@
         return $mask;
     }
 
-    $cntAPJ = count($clientesAtivosPJ);
-    $cntAPF = count($clientesAtivosPF);
-    $cntIPJ = count($clientesInativosPJ);
-    $cntIPF = count($clientesInativosPF);
-    $cntTotal = $cntAPJ + $cntAPF + $cntIPJ + $cntIPF;
-
-    // Initials helper
     function cliInitials($str) {
         $parts = preg_split('/\s+/', trim($str), -1, PREG_SPLIT_NO_EMPTY);
         $a = strtoupper(substr($parts[0] ?? 'C', 0, 1));
         $b = strtoupper(substr($parts[1] ?? '', 0, 1));
+
         return $a . $b;
     }
 
-    /** Atributos data-* para busca client-side (nome, CNPJ/CPF sem máscara, e-mail) + nome principal para relevância. */
     function cliRowDataAttrs($reg) {
         $isPj = (int)$reg->tipo === (int)C_ClientesTipoJuridica;
         $docDigits = preg_replace('/\D/', '', (string)($isPj ? ($reg->cnpj ?? '') : ($reg->cpf ?? '')));
@@ -55,630 +48,593 @@
         }
         $primaryLower = mb_strtolower(trim($isPj ? (string)($reg->razaosocial ?? '') : (string)($reg->nome ?? '')), 'UTF-8');
         $primaryLower = trim(preg_replace('/\s+/', ' ', $primaryLower));
+
         return ' data-cli-doc="' . h($docDigits) . '" data-cli-email="' . h($emailLower) . '" data-cli-text="' . h($textBlob) . '" data-cli-primary="' . h($primaryLower) . '"';
     }
+
+    $cntAPJ = count($clientesAtivosPJ);
+    $cntAPF = count($clientesAtivosPF);
+    $cntIPJ = count($clientesInativosPJ);
+    $cntIPF = count($clientesInativosPF);
+    $cntAtivos = $cntAPJ + $cntAPF;
+    $cntInativos = $cntIPJ + $cntIPF;
+
+    $crm = isset($cliCrm) && is_array($cliCrm) ? $cliCrm : [];
+    $top5 = $crm['top5'] ?? [];
+    $segmentos = $crm['segmentos'] ?? [];
+    $receitaPorCliente = $crm['receita_por_cliente'] ?? [];
+    $aReceberPorCliente = $crm['a_receber_por_cliente'] ?? [];
+    $barTones = ['teal', 'blue', 'navy', 'orange', 'wine'];
 ?>
-<?php /* Turbo Frame: CSS no corpo para o navegador aplicar após swap do frame (append só no <head> da resposta). */ ?>
 <?= $this->element('pgm_premium_css', ['name' => 'clientes-premium']) ?>
 <?= $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']) ?>
 
 <div class="col-md-12 p-0">
-<div class="cli-root cli-layout-unificado">
+<div class="cli-root cli-layout-unificado cli-crm-lista">
 
-    <!-- ── KPI Strip (sem topbar textual — alinhado ao mock clientes-lista-layout-unificado) ── -->
-    <div class="cli-kpi-strip cli-kpi-strip--list-lead">
-        <div class="cli-kpi active" data-kpi="ativos-pj">
-            <div class="cli-kpi-label">Ativos · PJ</div>
-            <div class="cli-kpi-val teal"><?= $cntAPJ ?></div>
-            <div class="cli-kpi-sub">Pessoa Jurídica</div>
+    <header class="cli-crm-page-head">
+        <div class="cli-crm-page-head-text">
+            <p class="cli-crm-eyebrow"><?= h(__('Módulo comercial')) ?></p>
+            <h1 class="cli-crm-h1"><?= h(__('Clientes')) ?></h1>
+            <p class="cli-crm-subtitle"><?= h(__('Cadastro mestre · CRM básico · Histórico financeiro consolidado')) ?></p>
         </div>
-        <div class="cli-kpi" data-kpi="ativos-pf">
-            <div class="cli-kpi-label">Ativos · PF</div>
-            <div class="cli-kpi-val teal"><?= $cntAPF ?></div>
-            <div class="cli-kpi-sub">Pessoa Física</div>
+        <div class="cli-crm-page-actions">
+            <?= $this->Html->link(
+                '<i class="fas fa-file-excel" aria-hidden="true"></i> ' . __('Exportar Excel'),
+                ['controller' => 'ClientesPrototype', 'action' => 'exportCsv'],
+                ['class' => 'btn-cli-secondary', 'escape' => false, 'title' => __('Exportação CSV (compatível com Excel)')]
+            ) ?>
+            <?= $this->Html->link(
+                '<i class="fas fa-upload" aria-hidden="true"></i> ' . __('Importar'),
+                ['controller' => 'ClientesPrototype', 'action' => 'view', 'import'],
+                ['class' => 'btn-cli-secondary', 'escape' => false]
+            ) ?>
+            <?= $this->Html->link(
+                '<i class="fas fa-plus" aria-hidden="true"></i> ' . __('Novo cliente'),
+                ['action' => 'add'],
+                ['class' => 'btn-cli-primary', 'escape' => false]
+            ) ?>
         </div>
-        <div class="cli-kpi" data-kpi="inativos">
-            <div class="cli-kpi-label">Inativos</div>
-            <div class="cli-kpi-val muted"><?= $cntIPJ + $cntIPF ?></div>
-            <div class="cli-kpi-sub">PJ + PF</div>
+    </header>
+
+    <div class="cli-kpi-strip cli-kpi-strip--crm">
+        <div class="cli-kpi cli-kpi--blue active" data-kpi="ativos">
+            <div class="cli-kpi-label"><?= h(__('Clientes Ativos')) ?></div>
+            <div class="cli-kpi-val teal"><?= (int)($crm['ativos'] ?? $cntAtivos) ?></div>
+            <div class="cli-kpi-sub"><?= h(__('na carteira')) ?></div>
         </div>
-        <div class="cli-kpi" data-kpi="total">
-            <div class="cli-kpi-label">Total cadastros</div>
-            <div class="cli-kpi-val"><?= $cntTotal ?></div>
-            <div class="cli-kpi-sub">Todos</div>
+        <div class="cli-kpi cli-kpi--blue" data-kpi="receita">
+            <div class="cli-kpi-label"><?= h(__('Receita 12 Meses')) ?></div>
+            <div class="cli-kpi-val"><?= h((string)($crm['receita12_fmt'] ?? '—')) ?></div>
+            <div class="cli-kpi-sub">
+                <?php if (!empty($crm['receita12_pct'])) : ?>
+                    ↑ <?= (int)$crm['receita12_pct'] ?>% <?= h(__('vs período anterior')) ?>
+                <?php else : ?>
+                    <?= h(__('consolidado financeiro')) ?>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div class="cli-kpi cli-kpi--rose" data-kpi="ticket">
+            <div class="cli-kpi-label"><?= h(__('Ticket Médio')) ?></div>
+            <div class="cli-kpi-val"><?= h((string)($crm['ticket_fmt'] ?? '—')) ?></div>
+            <div class="cli-kpi-sub"><?= h(__('por cliente / ano')) ?></div>
+        </div>
+        <div class="cli-kpi cli-kpi--orange" data-kpi="inadimplentes">
+            <div class="cli-kpi-label"><?= h(__('Inadimplentes')) ?></div>
+            <div class="cli-kpi-val"><?= (int)($crm['inadimplentes'] ?? 0) ?></div>
+            <div class="cli-kpi-sub"><?= h((string)($crm['inadimplentes_valor_fmt'] ?? '—')) ?> <?= h(__('em atraso')) ?></div>
+        </div>
+        <div class="cli-kpi cli-kpi--rose" data-kpi="bloqueados">
+            <div class="cli-kpi-label"><?= h(__('Bloqueados')) ?></div>
+            <div class="cli-kpi-val"><?= (int)($crm['bloqueados'] ?? $cntInativos) ?></div>
+            <div class="cli-kpi-sub"><?= h(__('restrição interna')) ?></div>
+        </div>
+        <div class="cli-kpi cli-kpi--purple" data-kpi="aniversariantes">
+            <div class="cli-kpi-label"><?= h(__('Aniversariantes do Mês')) ?></div>
+            <div class="cli-kpi-val"><?= (int)($crm['aniversariantes'] ?? 0) ?></div>
+            <div class="cli-kpi-sub"><?= h(__('enviar mensagem')) ?></div>
         </div>
     </div>
 
-    <!-- ── Table area (cartão lista — mock clientes-lista-layout-unificado) ── -->
-    <div class="cli-list-card">
+    <div class="cli-crm-insights">
+        <section class="cli-crm-panel cli-crm-panel--top">
+            <h2 class="cli-crm-panel-title"><?= h(__('TOP 5 CLIENTES · RECEITA 12 MESES')) ?></h2>
+            <?php if ($top5 === []) : ?>
+                <p class="cli-crm-panel-empty"><?= h(__('Sem receitas lançadas no período.')) ?></p>
+            <?php else : ?>
+                <ol class="cli-crm-top-list">
+                    <?php foreach ($top5 as $i => $row) :
+                        $tone = $barTones[$i] ?? 'teal';
+                        $pct = max(4, min(100, (int)($row['pct'] ?? 0)));
+                    ?>
+                    <li class="cli-crm-top-item">
+                        <span class="cli-crm-top-rank"><?= (int)($i + 1) ?></span>
+                        <div class="cli-crm-top-body">
+                            <div class="cli-crm-top-row">
+                                <span class="cli-crm-top-name"><?= h((string)$row['nome']) ?></span>
+                                <span class="cli-crm-top-val"><?= h($this->Number->currency((float)($row['valor'] ?? 0), 'BRL')) ?> · <?= (int)($row['pct'] ?? 0) ?>%</span>
+                            </div>
+                            <div class="cli-crm-top-bar" role="presentation">
+                                <span class="cli-crm-top-bar-fill cli-crm-top-bar-fill--<?= h($tone) ?>" style="width:<?= (int)$pct ?>%"></span>
+                            </div>
+                        </div>
+                    </li>
+                    <?php endforeach; ?>
+                </ol>
+                <?php if (!empty($crm['alerta_concentracao'])) : ?>
+                <div class="cli-crm-alert" role="status">
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                    <span><?= h(__('Concentração: {0} representa {1}% da carteira. Considere diversificar para reduzir risco.', $crm['alerta_concentracao']['nome'], $crm['alerta_concentracao']['pct'])) ?></span>
+                </div>
+                <?php endif; ?>
+            <?php endif; ?>
+        </section>
 
-        <!-- Status toggle (Ativos / Inativos) — mesma ordem do mock: barra de filtros antes da área da tabela -->
-        <div class="cli-filter-bar" id="cli-filter-bar">
-            <div class="cli-pill-group" id="cli-status-pills">
-                <button class="cli-pill active" data-status="ativos">
-                    <i class="fas fa-circle" style="font-size:6px;" aria-hidden="true"></i> Ativos
-                    <span class="cnt"><?= $cntAPJ + $cntAPF ?></span>
-                </button>
-                <button class="cli-pill" data-status="inativos">
-                    <i class="fas fa-circle cli-pill-dot--danger" style="font-size:6px;" aria-hidden="true"></i> Inativos
-                    <span class="cnt"><?= $cntIPJ + $cntIPF ?></span>
-                </button>
+        <section class="cli-crm-panel cli-crm-panel--seg">
+            <h2 class="cli-crm-panel-title"><?= h(__('DISTRIBUIÇÃO POR SEGMENTO')) ?></h2>
+            <div class="cli-crm-seg-grid">
+                <?php
+                $segTones = ['teal', 'blue', 'rose', 'orange', 'purple'];
+                foreach ($segmentos as $si => $seg) :
+                    $tone = $segTones[$si] ?? 'teal';
+                ?>
+                <div class="cli-crm-seg-tile cli-crm-seg-tile--<?= h($tone) ?>">
+                    <span class="cli-crm-seg-n"><?= (int)$seg['count'] ?></span>
+                    <span class="cli-crm-seg-l"><?= h((string)$seg['label']) ?></span>
+                    <span class="cli-crm-seg-p"><?= (int)$seg['pct'] ?>% <?= h(__('da carteira')) ?></span>
+                </div>
+                <?php endforeach; ?>
             </div>
-            <div class="cli-filter-divider"></div>
-            <div class="cli-pill-group" id="cli-type-pills">
-                <button class="cli-pill active" data-type="pj">
-                    <i class="fas fa-building" style="font-size:10px;" aria-hidden="true"></i> Pessoa Jurídica
-                    <span class="cnt" id="cnt-pj"><?= $cntAPJ ?></span>
-                </button>
-                <button class="cli-pill" data-type="pf">
-                    <i class="fas fa-user" style="font-size:10px;" aria-hidden="true"></i> Pessoa Física
-                    <span class="cnt" id="cnt-pf"><?= $cntAPF ?></span>
-                </button>
+            <div class="cli-crm-tipo-bars">
+                <div class="cli-crm-tipo-row">
+                    <span class="cli-crm-tipo-label"><?= h(__('Pessoa Jurídica')) ?></span>
+                    <span class="cli-crm-tipo-meta"><?= (int)($crm['pj_bar']['count'] ?? $cntAPJ + $cntIPJ) ?> (<?= (int)($crm['pj_bar']['pct'] ?? 0) ?>%)</span>
+                    <div class="cli-crm-tipo-track"><span class="cli-crm-tipo-fill cli-crm-tipo-fill--teal" style="width:<?= (int)($crm['pj_bar']['pct'] ?? 0) ?>%"></span></div>
+                </div>
+                <div class="cli-crm-tipo-row">
+                    <span class="cli-crm-tipo-label"><?= h(__('Pessoa Física')) ?></span>
+                    <span class="cli-crm-tipo-meta"><?= (int)($crm['pf_bar']['count'] ?? $cntAPF + $cntIPF) ?> (<?= (int)($crm['pf_bar']['pct'] ?? 0) ?>%)</span>
+                    <div class="cli-crm-tipo-track"><span class="cli-crm-tipo-fill cli-crm-tipo-fill--blue" style="width:<?= (int)($crm['pf_bar']['pct'] ?? 0) ?>%"></span></div>
+                </div>
             </div>
-            <div class="cli-filter-divider"></div>
-            <div class="cli-filter-search" id="cli-filter-search">
+        </section>
+    </div>
+
+    <div class="cli-list-card">
+        <div class="cli-crm-filters">
+            <div class="cli-crm-search-wide">
                 <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                     <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5"/>
                     <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                 </svg>
-                <input type="text" id="cli-search" placeholder="Buscar por nome, CNPJ, e-mail…" autocomplete="off" inputmode="text" aria-describedby="cli-search-mode" />
-                <span class="cli-search-mode" id="cli-search-mode" title="Formato detectado para a busca"></span>
+                <input type="text" id="cli-search" placeholder="<?= h(__('Buscar por nome, CNPJ/CPF, e-mail, telefone...')) ?>" autocomplete="off" inputmode="text" aria-describedby="cli-search-mode" />
+                <span class="cli-search-mode" id="cli-search-mode"></span>
+            </div>
+            <select class="cli-crm-select" id="cli-filter-status" aria-label="<?= h(__('Status')) ?>">
+                <option value=""><?= h(__('Todos os status')) ?></option>
+                <option value="ativos"><?= h(__('Ativos')) ?></option>
+                <option value="inativos"><?= h(__('Inativos')) ?></option>
+            </select>
+            <select class="cli-crm-select" id="cli-filter-tipo" aria-label="<?= h(__('Tipo')) ?>">
+                <option value=""><?= h(__('PJ + PF')) ?></option>
+                <option value="pj"><?= h(__('Pessoa Jurídica')) ?></option>
+                <option value="pf"><?= h(__('Pessoa Física')) ?></option>
+            </select>
+        </div>
+
+        <div class="cli-crm-chips" role="group" aria-label="<?= h(__('Filtros rápidos')) ?>">
+            <button type="button" class="cli-crm-chip" data-chip="top-receita"><?= h(__('Top 10 receita')) ?></button>
+            <button type="button" class="cli-crm-chip" data-chip="novos"><?= h(__('Novos clientes')) ?></button>
+            <button type="button" class="cli-crm-chip" data-chip="atraso"><?= h(__('Em atraso')) ?></button>
+            <button type="button" class="cli-crm-chip" data-chip="sem-contato"><?= h(__('Sem contato 30d')) ?></button>
+            <button type="button" class="cli-crm-chip" data-chip="vip"><?= h(__('Clientes VIP')) ?></button>
+            <button type="button" class="cli-crm-chip" data-chip="aniversariantes"><?= h(__('Aniversariantes')) ?></button>
+        </div>
+
+        <div class="cli-filter-bar cli-filter-bar--crm" id="cli-filter-bar">
+            <div class="cli-pill-group" id="cli-status-pills">
+                <button type="button" class="cli-pill active" data-status="ativos">
+                    <i class="fas fa-circle" style="font-size:6px;" aria-hidden="true"></i> <?= h(__('Ativos')) ?>
+                    <span class="cnt"><?= $cntAtivos ?></span>
+                </button>
+                <button type="button" class="cli-pill" data-status="inativos">
+                    <i class="fas fa-circle cli-pill-dot--danger" style="font-size:6px;" aria-hidden="true"></i> <?= h(__('Inativos')) ?>
+                    <span class="cnt"><?= $cntInativos ?></span>
+                </button>
+            </div>
+            <div class="cli-filter-divider"></div>
+            <div class="cli-pill-group" id="cli-type-pills">
+                <button type="button" class="cli-pill active" data-type="pj">
+                    <i class="fas fa-building" style="font-size:10px;" aria-hidden="true"></i> <?= h(__('Pessoa Jurídica')) ?>
+                    <span class="cnt" id="cnt-pj"><?= $cntAPJ ?></span>
+                </button>
+                <button type="button" class="cli-pill" data-type="pf">
+                    <i class="fas fa-user" style="font-size:10px;" aria-hidden="true"></i> <?= h(__('Pessoa Física')) ?>
+                    <span class="cnt" id="cnt-pf"><?= $cntAPF ?></span>
+                </button>
             </div>
         </div>
 
-    <div class="cli-table-wrap">
-
-        <!-- ── Tables ─── -->
-
-        <!-- ATIVOS PJ -->
-        <div class="cli-table-panel active" id="panel-ativos-pj">
+        <div class="cli-table-wrap">
             <div class="cli-table-card">
-                <table class="cli-table" id="tableAtivosPJ">
+                <table class="cli-table cli-table--crm" id="tableClientes">
                     <thead>
                         <tr>
-                            <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
-                            <th class="cli-col-rs" style="width:42%">Razão Social</th>
-                            <th class="cli-col-doc" style="width:18%">CNPJ</th>
-                            <th class="cli-col-mail" style="width:24%">E-mail</th>
-                            <th class="cli-col-phone" style="width:14%">Telefone</th>
-                            <th class="cli-col-icon" style="width:2%" aria-hidden="true"></th>
+                            <th><?= h(__('Código')) ?></th>
+                            <th><?= h(__('Cliente')) ?></th>
+                            <th><?= h(__('CNPJ/CPF')) ?></th>
+                            <th><?= h(__('Segmento')) ?></th>
+                            <th><?= h(__('Cidade')) ?></th>
+                            <th class="cli-col-num"><?= h(__('Receita 12M')) ?></th>
+                            <th class="cli-col-num"><?= h(__('A receber')) ?></th>
+                            <th><?= h(__('Status')) ?></th>
+                            <th><?= h(__('Última compra')) ?></th>
+                            <th class="cli-col-act"><?= h(__('Ações')) ?></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php $idxPjA = 0; foreach ($clientesAtivosPJ as $reg): ?>
-                        <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPjA ?>" role="button" tabindex="0">
-                            <td class="cli-dt-rank"><?= (int)$idxPjA ?></td>
+                        <?php $idxRow = 0; foreach (($clientesLista ?? []) as $reg) :
+                            $isPj = (int)$reg->tipo === (int)C_ClientesTipoJuridica;
+                            $statusKey = (int)$reg->inativo === 1 ? 'inativos' : 'ativos';
+                            $tipoKey = $isPj ? 'pj' : 'pf';
+                            $nome = $isPj ? ($reg->razaosocial ?? '') : ($reg->nome ?? '');
+                            $doc = $isPj ? ($reg->cnpj ?? '') : ($reg->cpf ?? '');
+                            $cidadeNome = '';
+                            if (!empty($reg->cidade) && !empty($reg->cidade->nome)) {
+                                $cidadeNome = (string)$reg->cidade->nome;
+                            }
+                            $cid = (int)$reg->id;
+                            $rec12 = isset($receitaPorCliente[$cid]) ? (float)$receitaPorCliente[$cid] : null;
+                            $aRec = isset($aReceberPorCliente[$cid]) ? (float)$aReceberPorCliente[$cid] : null;
+                            $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]);
+                            $codigo = trim((string)($reg->public_code ?? ''));
+                            if ($codigo === '') {
+                                $codigo = 'P' . str_pad((string)$reg->id, 8, '0', STR_PAD_LEFT);
+                            }
+                            $ultima = '—';
+                            if (!empty($reg->membrodesde) && $reg->membrodesde instanceof \DateTimeInterface) {
+                                $ultima = $reg->membrodesde->format('d/m/Y');
+                            }
+                        ?>
+                        <tr<?= cliRowDataAttrs($reg) ?>
+                            data-cli-status="<?= h($statusKey) ?>"
+                            data-cli-tipo="<?= h($tipoKey) ?>"
+                            data-cli-receita="<?= $rec12 !== null ? (float)$rec12 : 0 ?>"
+                            data-cli-atraso="<?= ($aRec !== null && $aRec > 0) ? '1' : '0' ?>"
+                            data-cli-edit-url="<?= h($url) ?>"
+                            data-cli-ord="<?= (int)$idxRow ?>"
+                            role="button"
+                            tabindex="0">
+                            <td class="cli-td-code"><span translate="no"><?= h($codigo) ?></span></td>
                             <td>
                                 <div class="cli-td-name">
-                                    <div class="cli-av"><?= cliInitials($reg->razaosocial ?? '') ?></div>
-                                    <span class="cli-name-main"><?= h($reg->razaosocial) ?></span>
+                                    <div class="cli-av"><?= cliInitials($nome) ?></div>
+                                    <span class="cli-name-main"><?= h($nome) ?></span>
                                 </div>
                             </td>
-                            <td class="cli-td-doc"><?= h(formatCnpjCpf($reg->cnpj)) ?></td>
-                            <td class="cli-td-email"><?= h($reg->email) ?></td>
-                            <td class="cli-td-phone">
-                                <?php if (!empty($reg->fone)) echo h(Mask("(###) ####-####", $reg->fone)); ?>
-                                <?php if (!empty($reg->fone2)) echo '<br>' . h(Mask("(###) #####-####", $reg->fone2)); ?>
+                            <td class="cli-td-doc"><?= h(formatCnpjCpf($doc)) ?></td>
+                            <td class="cli-td-seg"><?= $isPj ? h(__('Pessoa Jurídica')) : h(__('Pessoa Física')) ?></td>
+                            <td class="cli-td-city"><?= $cidadeNome !== '' ? h($cidadeNome) : '—' ?></td>
+                            <td class="cli-td-num"><?= $rec12 !== null && $rec12 > 0 ? h($this->Number->currency($rec12, 'BRL')) : '—' ?></td>
+                            <td class="cli-td-num"><?= $aRec !== null && $aRec > 0 ? h($this->Number->currency($aRec, 'BRL')) : '—' ?></td>
+                            <td>
+                                <?php if ((int)$reg->inativo === 1) : ?>
+                                    <span class="cli-status-badge cli-status-badge--off"><?= h(__('Inativo')) ?></span>
+                                <?php else : ?>
+                                    <span class="cli-status-badge cli-status-badge--on"><?= h(__('Ativo')) ?></span>
+                                <?php endif; ?>
                             </td>
-                            <td class="cli-td-arrow">
-                                <?php if (isset($role) && (int)$role === 0): ?>
+                            <td class="cli-td-muted"><?= h($ultima) ?></td>
+                            <td class="cli-td-arrow" onclick="event.stopPropagation()">
+                                <?php if (isset($role) && (int)$role === 0 && (int)$reg->inativo === 0) : ?>
                                 <?= $this->Html->link(
-                                    '<i class="fas fa-user-slash" title="Inativar cliente"></i>',
+                                    '<i class="fas fa-user-slash" title="' . h(__('Inativar cliente')) . '"></i>',
                                     ['controller' => 'Clientes', 'action' => 'inativar', $reg->id],
-                                    ['class' => 'cli-btn-inativar', 'escape' => false, 'confirm' => 'Confirma inativar este cliente no portal e no ERP?', 'onclick' => 'event.stopPropagation();', 'data-turbo' => 'false']
+                                    ['class' => 'cli-btn-inativar', 'escape' => false, 'confirm' => __('Confirma inativar este cliente no portal e no ERP?'), 'data-turbo' => 'false']
                                 ) ?>
                                 <?php endif; ?>
                                 <i class="fas fa-chevron-right" aria-hidden="true"></i>
                             </td>
                         </tr>
-                        <?php $idxPjA++; endforeach; ?>
+                        <?php $idxRow++; endforeach; ?>
                     </tbody>
                 </table>
             </div>
         </div>
-
-        <!-- ATIVOS PF -->
-        <div class="cli-table-panel" id="panel-ativos-pf">
-            <div class="cli-table-card">
-                <table class="cli-table" id="tableAtivosPF">
-                    <thead>
-                        <tr>
-                            <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
-                            <th class="cli-col-rs" style="width:42%">Nome</th>
-                            <th class="cli-col-doc" style="width:18%">CPF</th>
-                            <th class="cli-col-mail" style="width:24%">E-mail</th>
-                            <th class="cli-col-phone" style="width:14%">Telefone</th>
-                            <th class="cli-col-icon" style="width:2%" aria-hidden="true"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php $idxPfA = 0; foreach ($clientesAtivosPF as $reg): ?>
-                        <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPfA ?>" role="button" tabindex="0">
-                            <td class="cli-dt-rank"><?= (int)$idxPfA ?></td>
-                            <td>
-                                <div class="cli-td-name">
-                                    <div class="cli-av"><?= cliInitials($reg->nome ?? '') ?></div>
-                                    <span class="cli-name-main"><?= h($reg->nome) ?></span>
-                                </div>
-                            </td>
-                            <td class="cli-td-doc"><?= h(formatCnpjCpf($reg->cpf)) ?></td>
-                            <td class="cli-td-email"><?= h($reg->email) ?></td>
-                            <td class="cli-td-phone">
-                                <?php if (!empty($reg->fone)) echo h(Mask("(###) ####-####", $reg->fone)); ?>
-                                <?php if (!empty($reg->fone2)) echo '<br>' . h(Mask("(###) #####-####", $reg->fone2)); ?>
-                            </td>
-                            <td class="cli-td-arrow">
-                                <?php if (isset($role) && (int)$role === 0): ?>
-                                <?= $this->Html->link(
-                                    '<i class="fas fa-user-slash" title="Inativar cliente"></i>',
-                                    ['controller' => 'Clientes', 'action' => 'inativar', $reg->id],
-                                    ['class' => 'cli-btn-inativar', 'escape' => false, 'confirm' => 'Confirma inativar este cliente no portal e no ERP?', 'onclick' => 'event.stopPropagation();', 'data-turbo' => 'false']
-                                ) ?>
-                                <?php endif; ?>
-                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                            </td>
-                        </tr>
-                        <?php $idxPfA++; endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- INATIVOS PJ -->
-        <div class="cli-table-panel" id="panel-inativos-pj">
-            <div class="cli-table-card">
-                <table class="cli-table" id="tableInativosPJ">
-                    <thead>
-                        <tr>
-                            <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
-                            <th class="cli-col-rs-sm">Razão Social</th>
-                            <th class="cli-col-doc-sm">CNPJ</th>
-                            <th class="cli-col-mail-sm">E-mail</th>
-                            <th class="cli-col-phone">Telefone</th>
-                            <th class="cli-col-act">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php $idxPjI = 0; foreach ($clientesInativosPJ as $reg): ?>
-                        <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPjI ?>" role="button" tabindex="0">
-                            <td class="cli-dt-rank"><?= (int)$idxPjI ?></td>
-                            <td>
-                                <div class="cli-td-name">
-                                    <div class="cli-av cli-av--inactive"><?= cliInitials($reg->razaosocial ?? '') ?></div>
-                                    <span class="cli-name-main"><?= h($reg->razaosocial) ?></span>
-                                </div>
-                            </td>
-                            <td class="cli-td-doc"><?= h(formatCnpjCpf($reg->cnpj)) ?></td>
-                            <td class="cli-td-email"><?= h($reg->email) ?></td>
-                            <td class="cli-td-phone">
-                                <?php if (!empty($reg->fone)) echo h(Mask("(###) ####-####", $reg->fone)); ?>
-                                <?php if (!empty($reg->fone2)) echo '<br>' . h(Mask("(###) #####-####", $reg->fone2)); ?>
-                            </td>
-                            <td onclick="event.stopPropagation()">
-                                <?= $this->Html->link(
-                                    '<i class="fas fa-redo-alt"></i> Reativar',
-                                    ['controller' => 'Clientes', 'action' => 'reativar', $reg->id],
-                                    ['class' => 'cli-btn-reativar', 'escape' => false, 'confirm' => 'Confirmar reativação deste cliente?', 'data-turbo' => 'false']
-                                ) ?>
-                            </td>
-                        </tr>
-                        <?php $idxPjI++; endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- INATIVOS PF -->
-        <div class="cli-table-panel" id="panel-inativos-pf">
-            <div class="cli-table-card">
-                <table class="cli-table" id="tableInativosPF">
-                    <thead>
-                        <tr>
-                            <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
-                            <th class="cli-col-rs-sm">Nome</th>
-                            <th class="cli-col-doc-sm">CPF</th>
-                            <th class="cli-col-mail-sm">E-mail</th>
-                            <th class="cli-col-phone">Telefone</th>
-                            <th class="cli-col-act">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php $idxPfI = 0; foreach ($clientesInativosPF as $reg): ?>
-                        <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPfI ?>" role="button" tabindex="0">
-                            <td class="cli-dt-rank"><?= (int)$idxPfI ?></td>
-                            <td>
-                                <div class="cli-td-name">
-                                    <div class="cli-av cli-av--inactive"><?= cliInitials($reg->nome ?? '') ?></div>
-                                    <span class="cli-name-main"><?= h($reg->nome) ?></span>
-                                </div>
-                            </td>
-                            <td class="cli-td-doc"><?= h(formatCnpjCpf($reg->cpf)) ?></td>
-                            <td class="cli-td-email"><?= h($reg->email) ?></td>
-                            <td class="cli-td-phone">
-                                <?php if (!empty($reg->fone)) echo h(Mask("(###) ####-####", $reg->fone)); ?>
-                                <?php if (!empty($reg->fone2)) echo '<br>' . h(Mask("(###) #####-####", $reg->fone2)); ?>
-                            </td>
-                            <td onclick="event.stopPropagation()">
-                                <?= $this->Html->link(
-                                    '<i class="fas fa-redo-alt"></i> Reativar',
-                                    ['controller' => 'Clientes', 'action' => 'reativar', $reg->id],
-                                    ['class' => 'cli-btn-reativar', 'escape' => false, 'confirm' => 'Confirmar reativação deste cliente?', 'data-turbo' => 'false']
-                                ) ?>
-                            </td>
-                        </tr>
-                        <?php $idxPfI++; endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    </div><!-- /cli-table-wrap -->
-    </div><!-- /cli-list-card -->
-</div><!-- /cli-root -->
+    </div>
+</div>
 </div>
 
 <script>
 (function () {
     if (typeof window.jQuery === 'undefined') {
-        console.error('[Clientes] jQuery não encontrado. Verifique no DevTools → Network se /assets/node_modules/jquery/jquery-3.2.1.min.js retorna 200 e se o layout carrega scripts antes desta view.');
         return;
     }
     var $ = window.jQuery;
     $(document).ready(function () {
+        var status = 'ativos';
+        var type = 'pj';
+        var typeAll = false;
+        var activeChip = '';
 
-    // Navegação para edição — registrar ANTES do DataTables: se $.fn.dataTable ou o init falhar, o clique na linha ainda funciona (evita “erro JS silencioso” que quebra só parte da tela).
-    $('.cli-root').on('click', 'table.cli-table tbody tr[data-cli-edit-url]', function(e) {
-        if ($(e.target).closest('a, button, input, select, textarea').length) {
-            return;
-        }
-        var u = this.getAttribute('data-cli-edit-url');
-        if (u) {
-            window.location.href = u;
-        }
-    });
-    $('.cli-root').on('keydown', 'table.cli-table tbody tr[data-cli-edit-url]', function(e) {
-        if (e.key !== 'Enter' && e.key !== ' ') {
-            return;
-        }
-        if ($(e.target).is('a, button')) {
-            return;
-        }
-        e.preventDefault();
-        var u = this.getAttribute('data-cli-edit-url');
-        if (u) {
-            window.location.href = u;
-        }
-    });
+        var counts = {
+            ativos:   { pj: <?= $cntAPJ ?>, pf: <?= $cntAPF ?> },
+            inativos: { pj: <?= $cntIPJ ?>, pf: <?= $cntIPF ?> }
+        };
 
-    // State
-    var status = 'ativos';
-    var type = 'pj';
-
-    var counts = {
-        'ativos':   { pj: <?= $cntAPJ ?>, pf: <?= $cntAPF ?> },
-        'inativos': { pj: <?= $cntIPJ ?>, pf: <?= $cntIPF ?> }
-    };
-
-    /** APIs mínimas quando DataTables não existe ou falha no init (evita TypeError em pills/busca). */
-    var dtStub = { draw: function () {}, search: function () {} };
-    var tables = {
-        ativosPJ: dtStub,
-        ativosPF: dtStub,
-        inativosPJ: dtStub,
-        inativosPF: dtStub
-    };
-
-    function activeTableKey() {
-        return status === 'ativos'
-            ? (type === 'pj' ? 'ativosPJ' : 'ativosPF')
-            : (type === 'pj' ? 'inativosPJ' : 'inativosPF');
-    }
-
-    function redrawActiveTable() {
-        var t = tables[activeTableKey()];
-        if (t && typeof t.draw === 'function') {
-            t.draw();
-        }
-    }
-
-    function showPanel() {
-        $('.cli-table-panel').removeClass('active');
-        $('#panel-' + status + '-' + type).addClass('active');
-        redrawActiveTable();
-    }
-
-    // KPI clicks
-    $('.cli-kpi').on('click', function() {
-        var kpi = $(this).data('kpi');
-        if (kpi === 'ativos-pj')  { status = 'ativos';   type = 'pj'; }
-        else if (kpi === 'ativos-pf')  { status = 'ativos';   type = 'pf'; }
-        else if (kpi === 'inativos')   { status = 'inativos'; type = 'pj'; }
-        else if (kpi === 'total')      { status = 'ativos';   type = 'pj'; }
-        $('.cli-kpi').removeClass('active');
-        $(this).addClass('active');
-        updatePills();
-        showPanel();
-    });
-
-    // Status pills
-    $('#cli-status-pills .cli-pill').on('click', function() {
-        status = $(this).data('status');
-        $('#cli-status-pills .cli-pill').removeClass('active');
-        $(this).addClass('active');
-        // reset type to pj
-        type = 'pj';
-        updateTypePills();
-        updatePills();
-        showPanel();
-    });
-
-    // Type pills
-    $('#cli-type-pills .cli-pill').on('click', function() {
-        type = $(this).data('type');
-        $('#cli-type-pills .cli-pill').removeClass('active');
-        $(this).addClass('active');
-        showPanel();
-    });
-
-    function updateTypePills() {
-        $('#cli-type-pills .cli-pill').removeClass('active');
-        $('#cli-type-pills .cli-pill[data-type="pj"]').addClass('active');
-        var c = counts[status];
-        $('#cnt-pj').text(c.pj);
-        $('#cnt-pf').text(c.pf);
-    }
-
-    function updatePills() {
-        updateTypePills();
-    }
-
-    function normalizeAccent(s) {
-        if (!s) return '';
-        try {
-            return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        } catch (e) {
-            return s;
-        }
-    }
-
-    function detectQueryType(raw) {
-        var s = (raw || '').trim();
-        if (!s) return { type: 'empty' };
-        if (s.indexOf('@') >= 0) {
-            return { type: 'email', value: s.toLowerCase().replace(/\s/g, '') };
-        }
-        var digits = s.replace(/\D/g, '');
-        var onlyDocChars = /^[\d\s.\-\/\(\)]+$/u.test(s);
-        if (digits.length >= 3 && onlyDocChars) {
-            return { type: 'doc', digits: digits };
-        }
-        var lowered = normalizeAccent(s.toLowerCase());
-        var words = lowered.split(/\s+/).filter(function(w) { return w.length > 0; });
-        return { type: 'nome', words: words };
-    }
-
-    function rowMatches($row, q) {
-        var doc = $row.attr('data-cli-doc') || '';
-        var email = $row.attr('data-cli-email') || '';
-        var text = normalizeAccent(($row.attr('data-cli-text') || '').toLowerCase());
-        if (q.type === 'empty') return true;
-        if (q.type === 'email') {
-            return email.indexOf(q.value) !== -1;
-        }
-        if (q.type === 'doc') {
-            if (!doc) return false;
-            return doc.indexOf(q.digits) !== -1;
-        }
-        if (q.type === 'nome') {
-            if (q.words.length === 0) return true;
-            for (var i = 0; i < q.words.length; i++) {
-                if (text.indexOf(q.words[i]) === -1) return false;
+        function rowVisible($row) {
+            if ($row.attr('data-cli-status') !== status) {
+                return false;
+            }
+            if (!typeAll && $row.attr('data-cli-tipo') !== type) {
+                return false;
+            }
+            if (activeChip === 'atraso' && $row.attr('data-cli-atraso') !== '1') {
+                return false;
+            }
+            if (activeChip === 'top-receita') {
+                var r = parseFloat($row.attr('data-cli-receita') || '0');
+                if (!(r > 0)) {
+                    return false;
+                }
             }
             return true;
         }
-        return true;
-    }
 
-    /**
-     * Relevância da linha frente à busca (espelha ideia de ORDER BY CASE WHEN … no SQL).
-     * Tier menor = mais relevante; dentro do tier, texto mais curto primeiro; desempate = ordem original (data-cli-ord).
-     */
-    function rowRelevanceRank($row, q) {
-        var ord = parseInt($row.attr('data-cli-ord') || '0', 10);
-        var doc = $row.attr('data-cli-doc') || '';
-        var email = $row.attr('data-cli-email') || '';
-        var text = normalizeAccent(($row.attr('data-cli-text') || '').toLowerCase());
-        var primary = normalizeAccent(($row.attr('data-cli-primary') || '').toLowerCase());
-        var textLen = Math.min(text.length || 0, 9999);
+        var dtStub = { draw: function () {}, search: function () {} };
+        var table = dtStub;
 
-        function pack(tier, lenKey) {
-            var lk = Math.min(lenKey || 0, 9999);
-            return tier * 10000000 + lk * 1000 + ord;
+        function redrawTable() {
+            if (table && typeof table.draw === 'function') {
+                table.draw();
+            }
         }
 
-        if (q.type === 'empty') {
-            return ord;
+        function syncSelectsFromPills() {
+            $('#cli-filter-status').val(status === 'ativos' ? 'ativos' : (status === 'inativos' ? 'inativos' : ''));
+            $('#cli-filter-tipo').val(type === 'pj' ? 'pj' : (type === 'pf' ? 'pf' : ''));
         }
-        if (q.type === 'email') {
-            var v = q.value;
-            if (email === v) {
-                return pack(1, textLen);
-            }
-            if (email.indexOf(v) === 0) {
-                return pack(2, textLen);
-            }
-            return pack(3, textLen);
-        }
-        if (q.type === 'doc') {
-            var d = q.digits;
-            if (!doc) {
-                return pack(99, 9999);
-            }
-            if (doc === d) {
-                return pack(1, doc.length);
-            }
-            if (doc.indexOf(d) === 0) {
-                return pack(2, doc.length);
-            }
-            return pack(3, doc.length);
-        }
-        if (q.type === 'nome') {
-            var words = q.words;
-            if (words.length === 0) {
-                return ord;
-            }
-            var phrase = words.join(' ');
-            if (text === phrase || primary === phrase) {
-                return pack(1, textLen);
-            }
-            if (primary.indexOf(phrase) === 0) {
-                return pack(2, textLen);
-            }
-            if (primary.indexOf(words[0]) === 0) {
-                return pack(3, textLen);
-            }
-            if (text.indexOf(phrase) === 0) {
-                return pack(4, textLen);
-            }
-            return pack(5, textLen);
-        }
-        return pack(50, textLen);
-    }
 
-    function cliPreDrawUpdateRank(settings) {
-        var api = new $.fn.dataTable.Api(settings);
-        var q = detectQueryType($('#cli-search').val());
-        api.rows().every(function () {
-            var $tr = $(this.node());
-            var match = rowMatches($tr, q);
-            var rk = match ? rowRelevanceRank($tr, q) : 999999999;
-            var $cell = $tr.find('td.cli-dt-rank');
-            if ($cell.length) {
-                $cell.text(String(rk));
+        function updateTypePills() {
+            $('#cli-type-pills .cli-pill').removeClass('active');
+            $('#cli-type-pills .cli-pill[data-type="' + type + '"]').addClass('active');
+            var c = counts[status] || { pj: 0, pf: 0 };
+            $('#cnt-pj').text(c.pj);
+            $('#cnt-pf').text(c.pf);
+        }
+
+        function updateStatusPills() {
+            $('#cli-status-pills .cli-pill').removeClass('active');
+            $('#cli-status-pills .cli-pill[data-status="' + status + '"]').addClass('active');
+            updateTypePills();
+            syncSelectsFromPills();
+        }
+
+        $('.cli-root').on('click', '#tableClientes tbody tr[data-cli-edit-url]', function (e) {
+            if ($(e.target).closest('a, button, input, select, textarea').length) {
+                return;
+            }
+            var u = this.getAttribute('data-cli-edit-url');
+            if (u) {
+                window.location.href = u;
             }
         });
-    }
 
-    var dtOpts = {
-        "pageLength": <?= $pagelength ?? 25 ?>,
-        "order": [[0, "asc"]],
-        "orderFixed": [[0, "asc"]],
-        "columnDefs": [
-            { "targets": 0, "visible": false, "searchable": false, "orderable": true, "type": "num" }
-        ],
-        "preDrawCallback": cliPreDrawUpdateRank,
-        "language": {
-            "sLengthMenu":    "Mostrar _MENU_ registros",
-            "sZeroRecords":   "Nenhum registro encontrado",
-            "sEmptyTable":    "Nenhum dado disponível",
-            "sInfo":          "Mostrando _START_ a _END_ de _TOTAL_",
-            "sInfoEmpty":     "Nenhum registro",
-            "sInfoFiltered":  "(filtrado de _MAX_)",
-            "sSearch":        "Filtrar:",
-            "sLoadingRecords":"Carregando...",
-            "oPaginate": { "sFirst":"<<","sLast":">>","sNext":">","sPrevious":"<" }
-        },
-        "dom": 'rt<"cli-table-footer cli-dt-bottom w-100 d-flex justify-content-between align-items-center flex-wrap"lip>',
-    };
+        $('.cli-kpi[data-kpi="ativos"], .cli-kpi[data-kpi="bloqueados"]').on('click', function () {
+            var k = $(this).data('kpi');
+            status = k === 'bloqueados' ? 'inativos' : 'ativos';
+            type = 'pj';
+            $('.cli-kpi').removeClass('active');
+            $(this).addClass('active');
+            updateStatusPills();
+            redrawTable();
+        });
 
-    if (typeof $.fn.dataTable === 'undefined') {
-        console.error('[Clientes] DataTables não disponível ($.fn.dataTable). Verifique /assets/node_modules/datatables/datatables.min.js (Network → 404?) e ordem: jQuery antes do DataTables.');
-    } else {
-        try {
-            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                var api = new $.fn.dataTable.Api(settings);
-                var row = api.row(dataIndex).node();
-                if (!row) return true;
-                var q = detectQueryType($('#cli-search').val());
-                return rowMatches($(row), q);
-            });
-            tables = {
-                'ativosPJ':   $('#tableAtivosPJ').DataTable(dtOpts),
-                'ativosPF':   $('#tableAtivosPF').DataTable(dtOpts),
-                'inativosPJ': $('#tableInativosPJ').DataTable(dtOpts),
-                'inativosPF': $('#tableInativosPF').DataTable(dtOpts)
-            };
-            $.each(tables, function(_, dt) {
-                if (dt && typeof dt.search === 'function') {
-                    dt.search('');
-                }
-            });
-        } catch (err) {
-            console.error('[Clientes] Erro ao inicializar DataTables:', err && err.message ? err.message : err);
-            if (err && err.stack) {
-                console.debug(err.stack);
-            }
-            tables = {
-                ativosPJ: dtStub,
-                ativosPF: dtStub,
-                inativosPJ: dtStub,
-                inativosPF: dtStub
-            };
-        }
-    }
+        $('#cli-status-pills .cli-pill').on('click', function () {
+            status = $(this).data('status');
+            type = 'pj';
+            typeAll = false;
+            updateStatusPills();
+            redrawTable();
+        });
 
-    function updateSearchModeUi() {
-        var $inp = $('#cli-search');
-        var $wrap = $('#cli-filter-search');
-        var $mode = $('#cli-search-mode');
-        var q = detectQueryType($inp.val());
-        $wrap.removeClass('cli-mode-nome cli-mode-doc cli-mode-email');
-        if (q.type === 'empty') {
-            $mode.text('');
-            $inp.attr('inputmode', 'text');
-            $inp.removeAttr('maxlength');
-            return;
-        }
-        if (q.type === 'email') {
-            $mode.text('E-mail');
-            $wrap.addClass('cli-mode-email');
-            $inp.attr('inputmode', 'email');
-            $inp.removeAttr('maxlength');
-            return;
-        }
-        if (q.type === 'doc') {
-            if (q.digits.length < 11) {
-                $mode.text('CNPJ/CPF');
-            } else if (q.digits.length === 11) {
-                $mode.text('CPF');
+        $('#cli-type-pills .cli-pill').on('click', function () {
+            type = $(this).data('type');
+            typeAll = false;
+            $('#cli-filter-tipo').val(type);
+            updateTypePills();
+            redrawTable();
+        });
+
+        $('#cli-filter-status').on('change', function () {
+            var v = $(this).val();
+            status = v === 'inativos' ? 'inativos' : 'ativos';
+            type = 'pj';
+            updateStatusPills();
+            redrawTable();
+        });
+
+        $('#cli-filter-tipo').on('change', function () {
+            var v = $(this).val();
+            if (v === '') {
+                typeAll = true;
             } else {
-                $mode.text('CNPJ');
+                typeAll = false;
+                type = v === 'pf' ? 'pf' : 'pj';
+                updateTypePills();
             }
-            $wrap.addClass('cli-mode-doc');
-            $inp.attr('inputmode', 'numeric');
-            $inp.attr('maxlength', '20');
-            return;
-        }
-        $mode.text('Nome');
-        $wrap.addClass('cli-mode-nome');
-        $inp.attr('inputmode', 'text');
-        $inp.removeAttr('maxlength');
-    }
+            redrawTable();
+        });
 
-    // Persist pagelength
-    $('#tableAtivosPJ, #tableAtivosPF, #tableInativosPJ, #tableInativosPF').on('length.dt', function(e, s, len) {
-        if (typeof pagelength === 'function') {
-            pagelength(len);
+        $('.cli-crm-chip').on('click', function () {
+            var chip = $(this).data('chip');
+            if (activeChip === chip) {
+                activeChip = '';
+                $('.cli-crm-chip').removeClass('active');
+            } else {
+                activeChip = chip;
+                $('.cli-crm-chip').removeClass('active');
+                $(this).addClass('active');
+            }
+            redrawTable();
+        });
+
+        function normalizeAccent(s) {
+            if (!s) return '';
+            try {
+                return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            } catch (e) {
+                return s;
+            }
+        }
+
+        function detectQueryType(raw) {
+            var s = (raw || '').trim();
+            if (!s) return { type: 'empty' };
+            if (s.indexOf('@') >= 0) {
+                return { type: 'email', value: s.toLowerCase().replace(/\s/g, '') };
+            }
+            var digits = s.replace(/\D/g, '');
+            var onlyDocChars = /^[\d\s.\-\/\(\)]+$/u.test(s);
+            if (digits.length >= 3 && onlyDocChars) {
+                return { type: 'doc', digits: digits };
+            }
+            var lowered = normalizeAccent(s.toLowerCase());
+            var words = lowered.split(/\s+/).filter(function (w) { return w.length > 0; });
+            return { type: 'nome', words: words };
+        }
+
+        function rowMatches($row, q) {
+            if (!rowVisible($row)) {
+                return false;
+            }
+            var doc = $row.attr('data-cli-doc') || '';
+            var email = $row.attr('data-cli-email') || '';
+            var text = normalizeAccent(($row.attr('data-cli-text') || '').toLowerCase());
+            if (q.type === 'empty') return true;
+            if (q.type === 'email') {
+                return email.indexOf(q.value) !== -1;
+            }
+            if (q.type === 'doc') {
+                if (!doc) return false;
+                return doc.indexOf(q.digits) !== -1;
+            }
+            if (q.type === 'nome') {
+                if (q.words.length === 0) return true;
+                for (var i = 0; i < q.words.length; i++) {
+                    if (text.indexOf(q.words[i]) === -1) return false;
+                }
+                return true;
+            }
+            return true;
+        }
+
+        function rowRelevanceRank($row, q) {
+            var ord = parseInt($row.attr('data-cli-ord') || '0', 10);
+            var doc = $row.attr('data-cli-doc') || '';
+            var email = $row.attr('data-cli-email') || '';
+            var text = normalizeAccent(($row.attr('data-cli-text') || '').toLowerCase());
+            var primary = normalizeAccent(($row.attr('data-cli-primary') || '').toLowerCase());
+            var textLen = Math.min(text.length || 0, 9999);
+
+            function pack(tier, lenKey) {
+                var lk = Math.min(lenKey || 0, 9999);
+                return tier * 10000000 + lk * 1000 + ord;
+            }
+
+            if (q.type === 'empty') {
+                return ord;
+            }
+            if (q.type === 'email') {
+                var v = q.value;
+                if (email === v) return pack(1, textLen);
+                if (email.indexOf(v) === 0) return pack(2, textLen);
+                return pack(3, textLen);
+            }
+            if (q.type === 'doc') {
+                var d = q.digits;
+                if (!doc) return pack(99, 9999);
+                if (doc === d) return pack(1, doc.length);
+                if (doc.indexOf(d) === 0) return pack(2, doc.length);
+                return pack(3, doc.length);
+            }
+            if (q.type === 'nome') {
+                var words = q.words;
+                if (words.length === 0) return ord;
+                var phrase = words.join(' ');
+                if (text === phrase || primary === phrase) return pack(1, textLen);
+                if (primary.indexOf(phrase) === 0) return pack(2, textLen);
+                if (primary.indexOf(words[0]) === 0) return pack(3, textLen);
+                if (text.indexOf(phrase) === 0) return pack(4, textLen);
+                return pack(5, textLen);
+            }
+            return pack(50, textLen);
+        }
+
+        var dtOpts = {
+            pageLength: <?= $pagelength ?? 25 ?>,
+            order: [[0, 'asc']],
+            columnDefs: [
+                { targets: '_all', orderable: true }
+            ],
+            language: {
+                sLengthMenu: 'Mostrar _MENU_ registros',
+                sZeroRecords: 'Nenhum registro encontrado',
+                sEmptyTable: 'Nenhum dado disponível',
+                sInfo: 'Mostrando _START_ a _END_ de _TOTAL_',
+                sInfoEmpty: 'Nenhum registro',
+                sInfoFiltered: '(filtrado de _MAX_)',
+                oPaginate: { sFirst: '<<', sLast: '>>', sNext: '>', sPrevious: '<' }
+            },
+            dom: 'rt<"cli-table-footer cli-dt-bottom w-100 d-flex justify-content-between align-items-center flex-wrap"lip>'
+        };
+
+        if (typeof $.fn.dataTable !== 'undefined') {
+            try {
+                $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                    var api = new $.fn.dataTable.Api(settings);
+                    var row = api.row(dataIndex).node();
+                    if (!row) return true;
+                    var q = detectQueryType($('#cli-search').val());
+                    return rowMatches($(row), q);
+                });
+                table = $('#tableClientes').DataTable(dtOpts);
+            } catch (err) {
+                table = dtStub;
+            }
+        }
+
+        function updateSearchModeUi() {
+            var $inp = $('#cli-search');
+            var $mode = $('#cli-search-mode');
+            var q = detectQueryType($inp.val());
+            if (q.type === 'empty') {
+                $mode.text('');
+                return;
+            }
+            if (q.type === 'email') {
+                $mode.text('E-mail');
+                return;
+            }
+            if (q.type === 'doc') {
+                $mode.text(q.digits.length === 11 ? 'CPF' : 'CNPJ/CPF');
+                return;
+            }
+            $mode.text('Nome');
+        }
+
+        $('#cli-search').on('keyup input', function () {
+            updateSearchModeUi();
+            redrawTable();
+        });
+        updateSearchModeUi();
+        updateStatusPills();
+
+        if (typeof filters !== 'undefined') {
+            $('#cli-search').val(filters);
+            updateSearchModeUi();
+            redrawTable();
         }
     });
-
-    $('#cli-search').on('keyup input', function() {
-        updateSearchModeUi();
-        redrawActiveTable();
-    });
-
-    updateSearchModeUi();
-
-    // Auto-apply filter if passed from another page
-    if (typeof filters !== 'undefined') {
-        $('#cli-search').val(filters);
-        updateSearchModeUi();
-        redrawActiveTable();
-    }
-    }); // ready
-})(); // IIFE Clientes index
+})();
 </script>
