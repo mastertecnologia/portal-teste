@@ -8,8 +8,6 @@ $this->Breadcrumbs->add('Gestão de Incidentes', ['controller' => 'Servicedesk',
 $this->Breadcrumbs->add('Service Desk protótipo', ['controller' => 'ServicedeskPrototype', 'action' => 'index']);
 $this->Breadcrumbs->add('Fila técnica', ['controller' => 'ServicedeskPrototype', 'action' => 'fila'], ['class' => 'breadcrumb-item active']);
 
-$w = $this->request->getAttribute('webroot');
-$this->Html->css($w . 'dist/css/pages/pgm-servicedesk-prototype.css', ['block' => true]);
 ?>
 <div class="row">
 	<div class="col-12 pgm-sd-prototype">

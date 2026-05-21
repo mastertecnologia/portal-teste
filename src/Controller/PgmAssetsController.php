@@ -27,17 +27,24 @@ class PgmAssetsController extends AppController
 		'ativos-premium' => 'ativos-premium.css',
 	];
 
+	/** @var string[] slug => path relativo a WWW_ROOT ou webroot/ */
+	protected static $allowedDistCss = [
+		'style-min' => 'dist/css/style.min.css',
+		'pgm-erp-prototype' => 'dist/css/pgm-erp-prototype.css',
+		'pgm-servicedesk-prototype' => 'dist/css/pages/pgm-servicedesk-prototype.css',
+	];
+
 	public function initialize()
 	{
 		parent::initialize();
 		if ($this->components()->has('Security')) {
-			$this->Security->setConfig('unlockedActions', ['css', 'legacyCss', 'clientesModuleJs']);
+			$this->Security->setConfig('unlockedActions', ['css', 'legacyCss', 'clientesModuleJs', 'distCss', 'manifestErp']);
 		}
 	}
 
 	public function beforeFilter(Event $event)
 	{
-		$this->Auth->allow(['css', 'legacyCss', 'clientesModuleJs']);
+		$this->Auth->allow(['css', 'legacyCss', 'clientesModuleJs', 'distCss', 'manifestErp']);
 		parent::beforeFilter($event);
 	}
 
@@ -74,6 +81,70 @@ class PgmAssetsController extends AppController
 		if (!is_readable($file)) {
 			throw new NotFoundException();
 		}
+
+		return $this->respondStaticFile($file, 'text/css');
+	}
+
+	/**
+	 * GET /pgm-assets/dist/:name — CSS em public/dist (protótipo ERP/SD com APP_BASE=/portal).
+	 *
+	 * @param string|null $name
+	 * @return \Cake\Http\Response
+	 */
+	public function distCss($name = null)
+	{
+		if ($name === null || !isset(static::$allowedDistCss[$name])) {
+			throw new NotFoundException();
+		}
+		$file = static::distAssetPath(static::$allowedDistCss[$name]);
+		if ($file === null) {
+			throw new NotFoundException();
+		}
+
+		return $this->respondStaticFile($file, 'text/css');
+	}
+
+	/**
+	 * GET /manifest-erp.json — PWA manifest do shell erp_prototype.
+	 *
+	 * @return \Cake\Http\Response
+	 */
+	public function manifestErp()
+	{
+		$file = static::distAssetPath('manifest-erp.json');
+		if ($file === null) {
+			throw new NotFoundException();
+		}
+
+		return $this->respondStaticFile($file, 'application/manifest+json');
+	}
+
+	/**
+	 * @param string $relative ex.: dist/css/style.min.css
+	 * @return string|null
+	 */
+	protected static function distAssetPath($relative)
+	{
+		$relative = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $relative);
+		$inWww = WWW_ROOT . $relative;
+		if (is_readable($inWww)) {
+			return $inWww;
+		}
+		$inWebroot = ROOT . DIRECTORY_SEPARATOR . 'webroot' . DIRECTORY_SEPARATOR . $relative;
+		if (is_readable($inWebroot)) {
+			return $inWebroot;
+		}
+
+		return null;
+	}
+
+	/**
+	 * @param string $file Caminho absoluto
+	 * @param string $mime
+	 * @return \Cake\Http\Response
+	 */
+	protected function respondStaticFile($file, $mime)
+	{
 		$body = file_get_contents($file);
 		if ($body === false) {
 			throw new NotFoundException();
@@ -82,7 +153,7 @@ class PgmAssetsController extends AppController
 
 		$this->autoRender = false;
 		$this->response = $this->response
-			->withType('text/css')
+			->withType($mime)
 			->withHeader('Cache-Control', 'public, max-age=86400')
 			->withHeader('Last-Modified', gmdate('D, d M Y H:i:s', $mtime) . ' GMT')
 			->withStringBody($body);

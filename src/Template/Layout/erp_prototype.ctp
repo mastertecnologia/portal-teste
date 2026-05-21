@@ -26,13 +26,7 @@
  * @var array $erpBreadcrumb
  * @var array $erpEmpresas
  */
-use App\Utility\PgmAppUrlBase;
-
 $w = (string)($this->getRequest()->getAttribute('webroot') ?? '');
-if ($w === '' || $w === '/') {
-	$base = PgmAppUrlBase::path($this->getRequest());
-	$w = $base !== '' ? rtrim($base, '/') . '/' : '/';
-}
 $csrf = $this->getRequest()->getAttribute('csrfToken');
 if (!$csrf && method_exists($this->getRequest(), 'getParam')) {
 	$csrf = $this->getRequest()->getParam('_csrfToken');
@@ -52,17 +46,14 @@ $htmlLang = $erpLocale === 'en_US' ? 'en' : ($erpLocale === 'es' ? 'es' : 'pt-BR
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="theme-color" content="#1D9E75">
 	<meta name="turbo-visit-control" content="reload">
-	<link rel="manifest" href="<?= h($w) ?>manifest-erp.json">
 	<?php if ($csrf) : ?>
 		<meta name="csrfToken" content="<?= h($csrf) ?>">
 	<?php endif; ?>
 	<title><?= h($title ?? 'PGM ERP') ?> — PGM</title>
 	<?= $this->Html->meta('icon') ?>
-	<?= $this->Html->css($w . 'dist/css/style.min') ?>
-	<?= $this->Html->css($w . 'dist/css/pgm-erp-prototype.css') ?>
-	<?php if (!empty($loadServicedeskPrototypeCss)) : ?>
-		<?= $this->Html->css($w . 'dist/css/pages/pgm-servicedesk-prototype.css', ['block' => false]) ?>
-	<?php endif; ?>
+	<?= $this->element('ErpPrototype/head_assets', [
+		'includeServicedeskPrototypeCss' => !empty($loadServicedeskPrototypeCss),
+	]) ?>
 	<?php
 	// Opt-in: views que precisam de gráficos setam $useChartJs = true.
 	if (!empty($useChartJs)) :
