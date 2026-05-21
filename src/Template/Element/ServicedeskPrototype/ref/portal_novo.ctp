@@ -7,10 +7,18 @@
  */
 $H = $this->ServicedeskPrototype;
 $uPortal = $H->sdpPage('portal');
+$novo = (array)($screen['portal_novo'] ?? []);
 $subtitle = trim((string)($screen['subtitle'] ?? ''));
 if ($subtitle === '') {
 	$subtitle = __('Descreva sua necessidade · resposta em até 2h conforme SLA do seu contrato');
 }
+$selectedCat = (string)($novo['selected_categoria'] ?? 'acesso');
+$tipos = (array)($novo['tipos'] ?? []);
+$prioridades = (array)($novo['prioridades'] ?? []);
+$categorias = (array)($novo['categorias'] ?? []);
+$subcategorias = (array)($novo['subcategorias'] ?? []);
+$kbSuggestions = (array)($novo['kb_suggestions'] ?? []);
+$contract = (array)($novo['contract'] ?? []);
 $addUrl = ['controller' => 'Servicedesk', 'action' => 'add'];
 foreach ((array)($screen['links'] ?? []) as $lnk) {
 	if (!empty($lnk['url'])) {
@@ -38,21 +46,18 @@ foreach ((array)($screen['links'] ?? []) as $lnk) {
 			<div class="sdp-pn-row2">
 				<div class="sdp-pn-field">
 					<label><?= h(__('Tipo')) ?> *</label>
-					<select>
-						<option><?= h(__('Incidente · algo parou de funcionar')) ?></option>
-						<option selected><?= h(__('Requisição · solicitar acesso/serviço')) ?></option>
-						<option><?= h(__('Bug · erro no sistema')) ?></option>
-						<option><?= h(__('Dúvida · informação')) ?></option>
-						<option><?= h(__('Sugestão / Melhoria')) ?></option>
+					<select disabled aria-disabled="true">
+						<?php foreach ($tipos as $key => $label) : ?>
+							<option value="<?= h((string)$key) ?>" <?= $key === 'requisicao' ? 'selected' : '' ?>><?= h((string)$label) ?></option>
+						<?php endforeach; ?>
 					</select>
 				</div>
 				<div class="sdp-pn-field">
 					<label><?= h(__('Prioridade percebida')) ?></label>
-					<select>
-						<option selected><?= h(__('Baixa · sem urgência')) ?></option>
-						<option><?= h(__('Média · afeta minha rotina')) ?></option>
-						<option><?= h(__('Alta · afeta minha equipe')) ?></option>
-						<option><?= h(__('Crítica · parou tudo')) ?></option>
+					<select disabled aria-disabled="true">
+						<?php foreach ($prioridades as $key => $label) : ?>
+							<option value="<?= h((string)$key) ?>" <?= $key === 'baixa' ? 'selected' : '' ?>><?= h((string)$label) ?></option>
+						<?php endforeach; ?>
 					</select>
 				</div>
 			</div>
@@ -60,41 +65,36 @@ foreach ((array)($screen['links'] ?? []) as $lnk) {
 			<div class="sdp-pn-row2">
 				<div class="sdp-pn-field">
 					<label><?= h(__('Categoria')) ?> *</label>
-					<select>
-						<option><?= h(__('Hardware')) ?></option>
-						<option selected><?= h(__('Acesso & Permissões')) ?></option>
-						<option><?= h(__('Software / ERP')) ?></option>
-						<option><?= h(__('E-mail')) ?></option>
-						<option><?= h(__('Rede / Internet')) ?></option>
-						<option><?= h(__('Telefonia')) ?></option>
-						<option><?= h(__('Outros')) ?></option>
+					<select disabled aria-disabled="true">
+						<?php foreach ($categorias as $key => $cat) : ?>
+							<option value="<?= h((string)$key) ?>" <?= $key === $selectedCat ? 'selected' : '' ?>><?= h((string)($cat['label'] ?? $key)) ?></option>
+						<?php endforeach; ?>
 					</select>
 				</div>
 				<div class="sdp-pn-field">
 					<label><?= h(__('Subcategoria')) ?></label>
-					<select>
-						<option><?= h(__('Senha')) ?></option>
-						<option selected><?= h(__('Novo acesso')) ?></option>
-						<option><?= h(__('Bloqueio de conta')) ?></option>
-						<option><?= h(__('Permissão específica')) ?></option>
+					<select disabled aria-disabled="true">
+						<?php foreach ($subcategorias as $key => $label) : ?>
+							<option value="<?= h((string)$key) ?>" <?= $key === 'novo_acesso' ? 'selected' : '' ?>><?= h((string)$label) ?></option>
+						<?php endforeach; ?>
 					</select>
 				</div>
 			</div>
 
 			<div class="sdp-pn-field">
 				<label><?= h(__('Título do chamado')) ?> *</label>
-				<input type="text" placeholder="<?= h(__('Resuma em uma frase · ex: Ana Paula precisa de acesso ao módulo financeiro')) ?>" />
+				<input type="text" disabled aria-disabled="true" placeholder="<?= h(__('Resuma em uma frase · ex: Ana Paula precisa de acesso ao módulo financeiro')) ?>" />
 			</div>
 
 			<div class="sdp-pn-field">
 				<label><?= h(__('Descrição detalhada')) ?> *</label>
-				<textarea rows="6" placeholder="<?= h(__('Descreva com o máximo de detalhes possível: o que você precisa, quem é afetado, há quanto tempo, o que já tentou...')) ?>"></textarea>
+				<textarea rows="6" disabled aria-disabled="true" placeholder="<?= h(__('Descreva com o máximo de detalhes possível: o que você precisa, quem é afetado, há quanto tempo, o que já tentou...')) ?>"></textarea>
 				<p class="sdp-pn-hint">💡 <?= h(__('Dica: print da tela, mensagens de erro e horários ajudam muito o técnico')) ?></p>
 			</div>
 
 			<div class="sdp-pn-field">
 				<label><?= h(__('Anexar arquivos')) ?></label>
-				<div class="sdp-pn-upload">📎 <?= h(__('Arraste arquivos ou clique · PDF, imagens, planilhas até 10MB')) ?></div>
+				<div class="sdp-pn-upload" aria-disabled="true">📎 <?= h(__('Arraste arquivos ou clique · PDF, imagens, planilhas até 10MB')) ?></div>
 			</div>
 
 			<div class="sdp-pn-field sdp-pn-field-last">
@@ -102,7 +102,7 @@ foreach ((array)($screen['links'] ?? []) as $lnk) {
 					<?= h(__('Observadores (CC)')) ?>
 					<span class="sdp-pn-label-opt"><?= h(__('opcional')) ?></span>
 				</label>
-				<input type="text" placeholder="<?= h(__('email@empresa.com.br · receberão cópias das respostas')) ?>" />
+				<input type="text" disabled aria-disabled="true" placeholder="<?= h(__('email@empresa.com.br · receberão cópias das respostas')) ?>" />
 			</div>
 		</div>
 
@@ -111,14 +111,21 @@ foreach ((array)($screen['links'] ?? []) as $lnk) {
 				<div class="sec-title">💡 <?= h(__('Talvez você não precise abrir um chamado!')) ?></div>
 				<p class="sdp-pn-kb-intro"><?= h(__('Encontramos artigos que podem resolver sua dúvida:')) ?></p>
 				<div class="sdp-pn-kb-list">
-					<div class="sdp-pn-kb-item">
-						<div class="sdp-pn-kb-item-title">📄 <?= h(__('Como solicitar acesso ao módulo financeiro')) ?></div>
-						<div class="sdp-pn-kb-item-meta">⭐ 4.8 · <?= h(__('5 min de leitura')) ?></div>
-					</div>
-					<div class="sdp-pn-kb-item">
-						<div class="sdp-pn-kb-item-title">📄 <?= h(__('Perfis padrão por departamento')) ?></div>
-						<div class="sdp-pn-kb-item-meta">⭐ 4.5 · <?= h(__('3 min')) ?></div>
-					</div>
+					<?php if ($kbSuggestions === []) : ?>
+						<p class="sdp-pn-kb-intro" style="margin:0;"><?= h(__('Nenhum artigo sugerido no momento.')) ?></p>
+					<?php else : ?>
+						<?php foreach ($kbSuggestions as $art) :
+							$code = (string)($art['code'] ?? '');
+							$kbUrl = $code !== '' ? $H->sdpPage('detalhe-kb', ['code' => $code]) : $H->sdpPage('kb');
+						?>
+							<?= $this->Html->link(
+								'<div class="sdp-pn-kb-item-title">📄 ' . h((string)($art['titulo'] ?? '')) . '</div>'
+								. '<div class="sdp-pn-kb-item-meta">' . h((string)($art['meta'] ?? '')) . '</div>',
+								$kbUrl,
+								['class' => 'sdp-pn-kb-item', 'escape' => false]
+							) ?>
+						<?php endforeach; ?>
+					<?php endif; ?>
 				</div>
 			</div>
 
@@ -127,25 +134,26 @@ foreach ((array)($screen['links'] ?? []) as $lnk) {
 				<dl class="sdp-pn-contract-list">
 					<div class="sdp-pn-contract-row">
 						<dt><?= h(__('Plano')) ?></dt>
-						<dd><?= h(__('Premium 24/7')) ?></dd>
+						<dd><?= h((string)($contract['plano'] ?? __('Premium 24/7'))) ?></dd>
 					</div>
 					<div class="sdp-pn-contract-row">
 						<dt><?= h(__('SLA esta categoria')) ?></dt>
-						<dd class="sdp-pn-sla"><?= h(__('Resposta 2h · Resolução 1d')) ?></dd>
+						<dd class="sdp-pn-sla"><?= h((string)($contract['sla_categoria'] ?? $contract['sla'] ?? __('Resposta 2h · Resolução 1d'))) ?></dd>
 					</div>
 					<div class="sdp-pn-contract-row">
 						<dt><?= h(__('Horas restantes mês')) ?></dt>
-						<dd><?= h(__('18h de 20h')) ?></dd>
+						<dd><?= h((string)($contract['horas_restantes'] ?? '—')) ?></dd>
 					</div>
 				</dl>
 			</div>
 
-			<?= $this->Html->link(
-				'📤 ' . __('Abrir chamado'),
-				$addUrl,
-				['class' => 'btn btn-primary sdp-pn-submit']
-			) ?>
-			<p class="sdp-pn-footer-note"><?= h(__('Você receberá número de protocolo e atualizações por e-mail')) ?></p>
+			<button type="button" class="btn btn-primary sdp-pn-submit" disabled title="<?= h(__('Protótipo somente leitura')) ?>">
+				📤 <?= h(__('Abrir chamado')) ?>
+			</button>
+			<p class="sdp-pn-footer-note">
+				<?= h(__('Você receberá número de protocolo e atualizações por e-mail')) ?>
+				· <?= $this->Html->link(__('Abrir na equipe'), $addUrl, ['style' => 'color:var(--teal);']) ?>
+			</p>
 		</aside>
 	</div>
 </div>

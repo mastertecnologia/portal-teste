@@ -67,20 +67,13 @@ class ServicedeskPrototypeScreensService {
 			case 'templates':
 				return $this->withRefPage($this->screenTemplates($ctx), 'templates');
 			case 'portal-novo':
-				$portal = $this->screenPortal($ctx);
-				$portal['title'] = __('+ Abrir novo chamado');
-				$portal['subtitle'] = __('Descreva sua necessidade · resposta em até 2h conforme SLA do seu contrato');
-				$portal['links'] = [
-					['label' => __('Abrir chamado (equipa)'), 'url' => ['controller' => 'Servicedesk', 'action' => 'add']],
-				];
-
-				return $this->withRefPage($portal, 'portal_novo');
+				return $this->withRefPage($this->screenPortalNovo($ctx), 'portal_novo');
 			case 'detalhe-kb':
-				return $this->withRefPage($this->screenKb($ctx), 'kb');
+				return $this->withRefPage($this->screenDetalheKb($ctx), 'detalhe-kb');
 			case 'detalhe-fatura':
-				return $this->withRefPage($this->screenFaturamento($ctx), 'fat');
+				return $this->withRefPage($this->screenDetalheFatura($ctx), 'detalhe-fatura');
 			case 'automacoes-editor':
-				return $this->withRefPage($this->screenConfig($ctx), 'config');
+				return $this->withRefPage($this->screenAutomacoesEditor($ctx), 'automacoes-editor');
 			default:
 				return [
 					'title' => $page,
@@ -128,41 +121,30 @@ class ServicedeskPrototypeScreensService {
 		$idempresa = (int)$ctx['idempresa'];
 		$userId = (int)$ctx['userId'];
 		$userName = (string)($ctx['userName'] ?? '');
-		$cols = $tickets->getSchema()->columns();
-		$closed = $this->closedSituacoes();
+		/** @var UsersTable $users */
+		$users = TableRegistry::getTableLocator()->get('Users');
 
+		$metrics = new ServicedeskExecutiveMetricsService($this->applyAbac);
+		$extras = $metrics->buildMeusExtras($tickets, $users, $idempresa, $userId, $userName);
+		$tabCounts = (array)($extras['tabCounts'] ?? []);
+		$tabRows = (array)($extras['tabRows'] ?? []);
+		$slaViolIds = (array)($extras['sla_viol_ids'] ?? []);
+		$nearSla = (int)($extras['near_sla'] ?? 0);
+		$nivel = (string)($extras['nivel_label'] ?? '');
+		$horasMes = $extras['horas_mes'] ?? null;
+		$horasFat = $extras['horas_faturaveis'] ?? null;
+		$csatUser = $extras['csat_user'] ?? null;
+
+		$ativos = (int)($tabCounts['ativos'] ?? 0);
+		$slaViol = count($slaViolIds);
+		$resolvidosMes = 0;
+		$cols = $tickets->getSchema()->columns();
 		$tecField = in_array('idtecnico_responsavel', $cols, true) ? 'idtecnico_responsavel' : null;
 		if ($tecField === null && in_array('owner_id', $cols, true)) {
 			$tecField = 'owner_id';
 		}
-
-		$ativos = 0;
-		$slaViol = 0;
-		$aguarda = 0;
-		$resolvidosMes = 0;
-
-		if ($tecField !== null && $closed !== []) {
-			$base = [
-				'Tickets.idempresa' => $idempresa,
-				'Tickets.' . $tecField => $userId,
-				'Tickets.situacao NOT IN' => $closed,
-			];
-			$q = $tickets->find()->where($base);
-			($this->applyAbac)($q);
-			$ativos = $q->count();
-
-			if (in_array('sla_status', $cols, true)) {
-				$qv = clone $q;
-				$slaViol = $qv->where(['Tickets.sla_status' => 'violado'])->count();
-			}
-			if (defined('C_TicketSituacaoRespondido')) {
-				$qa = $tickets->find()->where($base + ['Tickets.situacao' => (int)C_TicketSituacaoRespondido]);
-				($this->applyAbac)($qa);
-				$aguarda = $qa->count();
-			}
-		}
-
-		if ($tecField !== null && defined('C_TicketSituacaoResolvido') && in_array('data_resolucao', $cols, true)) {
+		$resolvidosMesAnt = 0;
+		if ($tecField !== null && in_array('data_resolucao', $cols, true)) {
 			$m0 = Time::now()->startOfMonth()->format('Y-m-d H:i:s');
 			$m1 = Time::now()->endOfMonth()->format('Y-m-d H:i:s');
 			$qr = $tickets->find()->where([
@@ -173,28 +155,93 @@ class ServicedeskPrototypeScreensService {
 			]);
 			($this->applyAbac)($qr);
 			$resolvidosMes = $qr->count();
+
+			$p0 = Time::now()->subMonths(1)->startOfMonth()->format('Y-m-d H:i:s');
+			$p1 = Time::now()->subMonths(1)->endOfMonth()->format('Y-m-d H:i:s');
+			$qp = $tickets->find()->where([
+				'Tickets.idempresa' => $idempresa,
+				'Tickets.' . $tecField => $userId,
+				'Tickets.data_resolucao >=' => $p0,
+				'Tickets.data_resolucao <=' => $p1,
+			]);
+			($this->applyAbac)($qp);
+			$resolvidosMesAnt = $qp->count();
 		}
 
-		$rows = [];
-		if ($tecField !== null) {
-			$rows = $this->fetchTicketRows($tickets, $idempresa, [
-				'Tickets.' . $tecField => $userId,
-				'Tickets.situacao NOT IN' => $closed,
-			], 50);
+		$resolvidosHint = '';
+		if ($resolvidosMesAnt > 0) {
+			$pct = (int)round(100 * ($resolvidosMes - $resolvidosMesAnt) / $resolvidosMesAnt);
+			if ($pct > 0) {
+				$resolvidosHint = sprintf('↑ %d%% %s', $pct, __('vs anterior'));
+			} elseif ($pct < 0) {
+				$resolvidosHint = sprintf('↓ %d%% %s', abs($pct), __('vs anterior'));
+			} else {
+				$resolvidosHint = __('igual ao mês anterior');
+			}
+		} elseif ($resolvidosMes > 0) {
+			$resolvidosHint = __('↑ vs anterior');
+		}
+
+		$tabKeys = ['ativos', 'aguarda', 'resolvidos_hoje', 'observados', 'favoritos'];
+		$activeTab = trim((string)($ctx['query']['tab'] ?? 'ativos'));
+		if (!in_array($activeTab, $tabKeys, true)) {
+			$activeTab = 'ativos';
+		}
+
+		$csatHint = __('90 dias');
+		$csatHintColor = 'var(--teal-dark)';
+		if ($csatUser !== null && $tecField !== null) {
+			$sinceCsat = Time::now()->subDays(90)->format('Y-m-d H:i:s');
+			$teamCsat = [];
+			try {
+				$qu = TableRegistry::getTableLocator()->get('QueuesUsers')->find()
+					->select(['QueuesUsers.user_id'])
+					->contain(['Queues'])
+					->where(['Queues.idempresa' => $idempresa])
+					->group(['QueuesUsers.user_id'])
+					->enableHydration(false)
+					->toArray();
+				foreach ($qu as $row) {
+					$uid = (int)($row['user_id'] ?? 0);
+					if ($uid <= 0) {
+						continue;
+					}
+					$avg = $this->core->tecnicoCsatScore($tickets, $idempresa, $tecField, $uid, $sinceCsat, $cols);
+					if ($avg !== null) {
+						$teamCsat[$uid] = $avg;
+					}
+				}
+			} catch (\Throwable $e) {
+				$teamCsat = [];
+			}
+			if ($teamCsat !== [] && ($teamCsat[$userId] ?? null) === max($teamCsat)) {
+				$csatHint = __('topo do ranking');
+			}
+		}
+
+		$slaHint = $slaViolIds !== [] ? '#' . implode(' #', array_slice($slaViolIds, 0, 4)) : '';
+		$subtitle = $userName !== '' ? sprintf(__('Visão pessoal · %s'), $userName) : __('Atribuídos a você');
+		if ($nivel !== '') {
+			$subtitle .= ' · ' . $nivel;
 		}
 
 		return [
 			'title' => __('🎯 Meus tickets'),
-			'subtitle' => $userName !== '' ? sprintf(__('Visão pessoal · %s'), $userName) : __('Atribuídos a você'),
+			'subtitle' => $subtitle,
 			'kpis' => [
 				['lbl' => __('Atribuídos a mim'), 'val' => (string)$ativos, 'hint' => __('ativos agora'), 'border' => 'var(--teal)'],
-				['lbl' => __('SLA estourado'), 'val' => (string)$slaViol, 'hint' => '', 'alert' => $slaViol > 0, 'bg' => '#F8D8DA', 'border' => 'var(--red)', 'val_color' => '#7A1822'],
-				['lbl' => __('Próx. limite (4h)'), 'val' => '—', 'hint' => __('prioridade'), 'bg' => '#FAEEDA', 'border' => 'var(--amber)', 'val_color' => '#8A4D02'],
-				['lbl' => __('Resolvidos mês'), 'val' => (string)$resolvidosMes, 'hint' => '', 'border' => 'var(--blue)', 'val_color' => '#0C447C'],
-				['lbl' => __('Meu CSAT'), 'val' => '—', 'hint' => __('módulo CSAT'), 'border' => '#D946A0', 'val_color' => '#7A1B5C'],
-				['lbl' => __('Horas mês'), 'val' => '—', 'hint' => __('apontamentos'), 'border' => 'var(--teal-mid)'],
+				['lbl' => __('SLA estourado'), 'val' => (string)$slaViol, 'hint' => $slaHint, 'alert' => $slaViol > 0, 'bg' => '#F8D8DA', 'border' => 'var(--red)', 'val_color' => '#7A1822'],
+				['lbl' => __('Próx. limite (4h)'), 'val' => (string)$nearSla, 'hint' => __('prioridade'), 'bg' => '#FAEEDA', 'border' => 'var(--amber)', 'val_color' => '#8A4D02'],
+				['lbl' => __('Resolvidos mês'), 'val' => (string)$resolvidosMes, 'hint' => $resolvidosHint, 'hint_color' => 'var(--teal-dark)', 'border' => 'var(--blue)', 'val_color' => '#0C447C'],
+				['lbl' => __('Meu CSAT'), 'val' => $csatUser !== null ? '⭐ ' . number_format((float)$csatUser, 1, ',', '.') : '—', 'hint' => $csatHint, 'hint_color' => $csatHintColor, 'border' => '#D946A0', 'val_color' => '#7A1B5C'],
+				['lbl' => __('Horas mês'), 'val' => $horasMes !== null ? number_format((float)$horasMes, 0, ',', '.') . 'h' : '—', 'hint' => $horasFat !== null ? number_format((float)$horasFat, 0, ',', '.') . 'h ' . __('faturáveis') : __('apontamentos'), 'border' => 'var(--teal-mid)'],
 			],
-			'rows' => $rows,
+			'rows' => (array)($tabRows[$activeTab] ?? []),
+			'tab_counts' => $tabCounts,
+			'tab_rows' => $tabRows,
+			'active_tab' => $activeTab,
+			'notificacoes' => (array)($extras['notificacoes'] ?? []),
+			'compromissos' => (array)($extras['compromissos'] ?? []),
 			'items' => [],
 			'mode' => 'tickets',
 			'empty' => __('Nenhum ticket atribuído a você no escopo atual.'),
@@ -271,15 +318,17 @@ class ServicedeskPrototypeScreensService {
 		}
 
 		$qName = $queueId !== null && isset($queues[$queueId]) ? (string)$queues[$queueId] : __('Todas as filas visíveis');
+		$grupo = $this->core->buildGrupoPayload($tickets, $idempresa, $userId, $queueIds, $qName);
 
 		return [
-			'title' => __('Meu grupo'),
-			'subtitle' => sprintf(__('Fila: %s · %d tickets abertos'), $qName, $total),
+			'title' => sprintf(__('👥 Tickets do meu grupo · %s'), $grupo['queue_name'] ?? $qName),
+			'subtitle' => __('Visão de fila do grupo · você pode pegar (claim) ou re-atribuir tickets'),
+			'grupo' => $grupo,
 			'kpis' => [
-				['lbl' => __('Abertos no grupo'), 'val' => (string)$total, 'hint' => ''],
-				['lbl' => __('Sem técnico'), 'val' => (string)$semTec, 'hint' => __('disponíveis para claim')],
+				['lbl' => __('Abertos no grupo'), 'val' => (string)($grupo['stats']['total'] ?? $total), 'hint' => ''],
+				['lbl' => __('Sem técnico'), 'val' => (string)($grupo['stats']['sem_tec'] ?? $semTec), 'hint' => __('disponíveis para claim')],
 			],
-			'rows' => $this->fetchTicketRows($tickets, $idempresa, $where, 60),
+			'rows' => (array)($grupo['rows'] ?? []),
 			'items' => [],
 			'mode' => 'tickets',
 			'queues' => $queues,
@@ -320,124 +369,21 @@ class ServicedeskPrototypeScreensService {
 	 * @return array<string,mixed>
 	 */
 	protected function screenCmdb(array $ctx): array {
+		/** @var TicketsTable $tickets */
+		$tickets = $ctx['tickets'];
 		$idempresa = (int)$ctx['idempresa'];
-		$items = [];
-		$total = 0;
-		$comIncidente = 0;
-		$typeKpis = [];
-		$tids = [];
-		try {
-			$assets = TableRegistry::getTableLocator()->get('Assets');
-			$cols = $assets->getSchema()->columns();
-			$where = ['Assets.idempresa' => $idempresa];
-			if (in_array('inativo', $cols, true)) {
-				$where['Assets.inativo'] = 0;
-			}
-			$q = $assets->find()
-				->contain(['Clientes'])
-				->where($where)
-				->order(['Assets.id' => 'DESC'])
-				->limit(100);
-			$total = $assets->find()->where($where)->count();
-
-			$ticketAssetIds = [];
-			if ($this->tableExists('ticket_assets')) {
-				$ta = TableRegistry::getTableLocator()->get('TicketAssets');
-				$tCols = $ta->getSchema()->columns();
-				if (in_array('asset_id', $tCols, true)) {
-					/** @var TicketsTable $tickets */
-					$tickets = $ctx['tickets'];
-					$closed = $this->closedSituacoes();
-					$tq = $tickets->find()->select(['Tickets.id'])->where(['Tickets.idempresa' => $idempresa]);
-					if ($closed !== []) {
-						$tq->where(['Tickets.situacao NOT IN' => $closed]);
-					}
-					($this->applyAbac)($tq);
-					$tids = $tq->extract('id')->toList();
-					if ($tids !== []) {
-						$ticketAssetIds = $ta->find()
-							->select(['asset_id'])
-							->where(['ticket_id IN' => $tids])
-							->group(['asset_id'])
-							->extract('asset_id')
-							->toList();
-					}
-				}
-			}
-			$comIncidente = count(array_unique(array_map('intval', $ticketAssetIds)));
-
-			$ticketCountByAsset = [];
-			if (!empty($tids) && isset($ta)) {
-				$fCnt = $ta->find()->func()->count('*');
-				foreach ($ta->find()
-					->select(['asset_id', 'cnt' => $fCnt])
-					->where(['ticket_id IN' => $tids])
-					->group(['asset_id'])
-					->enableHydration(false)
-					->toArray() as $tar) {
-					$aid = (int)($tar['asset_id'] ?? 0);
-					if ($aid > 0) {
-						$ticketCountByAsset[$aid] = (int)($tar['cnt'] ?? 0);
-					}
-				}
-			}
-
-			$byTipo = [];
-			foreach ($q->all() as $a) {
-				$c = $a->cliente ?? null;
-				$cliente = '—';
-				if ($c) {
-					$cliente = (int)($c->get('tipo') ?? 0) === 2
-						? (string)($c->get('razaosocial') ?? '')
-						: (string)($c->get('nome') ?? '');
-				}
-				$tipo = trim((string)($a->get('tipo') ?? $a->get('categoria') ?? ''));
-				if ($tipo === '') {
-					$tipo = __('Outros');
-				}
-				$byTipo[$tipo] = (int)($byTipo[$tipo] ?? 0) + 1;
-				$aid = (int)$a->get('id');
-				$nome = trim((string)($a->get('descricao') ?? ''));
-				$items[] = [
-					'id' => $aid,
-					'tag' => 'CI-' . str_pad((string)$aid, 4, '0', STR_PAD_LEFT),
-					'nome' => $nome !== '' ? $nome : ('CI #' . $aid),
-					'tipo' => $tipo,
-					'cliente' => $cliente,
-					'host' => (string)($a->get('hostname') ?? $a->get('identificador') ?? '—'),
-					'tickets' => (int)($ticketCountByAsset[$aid] ?? 0),
-					'link' => ['controller' => 'Ativos', 'action' => 'view', $aid],
-				];
-			}
-			$typeKpis = [];
-			arsort($byTipo);
-			foreach (array_slice($byTipo, 0, 4, true) as $tipoNome => $cnt) {
-				$typeKpis[] = ['lbl' => $tipoNome, 'val' => (string)$cnt, 'hint' => ''];
-			}
-		} catch (\Throwable $e) {
-			return [
-				'title' => __('CMDB · Ativos'),
-				'subtitle' => __('Módulo de ativos indisponível'),
-				'kpis' => [],
-				'rows' => [],
-				'items' => [],
-				'mode' => 'items',
-				'empty' => $e->getMessage(),
-			];
-		}
+		$query = (array)($ctx['query'] ?? []);
+		$cmdb = $this->core->buildCmdbPayload($tickets, $idempresa, $query);
+		$total = (int)($cmdb['total'] ?? 0);
 
 		return [
-			'title' => __('CMDB · Ativos'),
-			'subtitle' => sprintf(__('%d ativos cadastrados na empresa'), $total),
-			'layout' => 'cmdb',
-			'kpis' => array_merge([
-				['lbl' => __('Total CIs'), 'val' => (string)$total, 'hint' => ''],
-				['lbl' => __('Com ticket aberto'), 'val' => (string)$comIncidente, 'hint' => '', 'alert' => $comIncidente > 0],
-			], $typeKpis),
-			'rows' => [],
-			'items' => $items,
-			'mode' => 'items',
-			'item_headers' => [__('Ativo'), __('Cliente'), __('Tipo'), __('Host/ID')],
+			'title' => __('CMDB · Configuration Items'),
+			'subtitle' => sprintf(__('Inventário de ativos e relacionamentos · %d CIs cadastrados · base ITIL v4'), $total),
+			'cmdb' => $cmdb,
+			'kpis' => (array)($cmdb['kpis'] ?? []),
+			'rows' => (array)($cmdb['rows'] ?? []),
+			'items' => (array)($cmdb['rows'] ?? []),
+			'mode' => 'cmdb',
 			'empty' => __('Nenhum ativo encontrado.'),
 			'links' => [
 				['label' => __('Módulo Ativos'), 'url' => ['controller' => 'Ativos', 'action' => 'index']],
@@ -453,53 +399,18 @@ class ServicedeskPrototypeScreensService {
 		/** @var TicketsTable $tickets */
 		$tickets = $ctx['tickets'];
 		$idempresa = (int)$ctx['idempresa'];
-		$items = [];
-		$problemaCol = in_array('problema_id', $tickets->getSchema()->columns(), true)
-			? 'problema_id'
-			: (in_array('idproblema', $tickets->getSchema()->columns(), true) ? 'idproblema' : null);
-
-		try {
-			$prob = TableRegistry::getTableLocator()->get('Problemas');
-			$probs = $prob->find()->order(['id' => 'ASC'])->limit(200)->toArray();
-			foreach ($probs as $p) {
-				$pid = (int)$p->get('id');
-				$label = trim((string)($p->get('descricao') ?? $p->get('nome') ?? ('#' . $pid)));
-				if ($label === '') {
-					$label = 'Problema #' . $pid;
-				}
-				$cnt = 0;
-				if ($problemaCol !== null) {
-					$q = $tickets->find()->where([
-						'Tickets.idempresa' => $idempresa,
-						'Tickets.' . $problemaCol => $pid,
-					]);
-					($this->applyAbac)($q);
-					$cnt = $q->count();
-				}
-				$items[] = [
-					'id' => $pid,
-					'col1' => $label,
-					'col2' => (string)$cnt,
-					'col3' => '—',
-					'col4' => '—',
-					'link' => ['controller' => 'Problemas', 'action' => 'index'],
-				];
-			}
-		} catch (\Throwable $e) {
-			$items = [];
-		}
+		$prob = $this->core->buildProblemasPayload($tickets, $idempresa);
+		$active = (int)($prob['active_count'] ?? 0);
 
 		return [
-			'title' => __('Problemas'),
-			'subtitle' => __('Catálogo de problemas / tipos vinculados a tickets'),
-			'kpis' => [
-				['lbl' => __('Registos'), 'val' => (string)count($items), 'hint' => __('tabela problemas')],
-			],
-			'rows' => [],
-			'items' => $items,
-			'mode' => 'items',
-			'item_headers' => [__('Problema'), __('Tickets'), '', ''],
-			'empty' => __('Nenhum problema cadastrado.'),
+			'title' => __('Gestão de Problemas'),
+			'subtitle' => __('Raiz causa de incidentes recorrentes · análise RCA · %d problemas ativos', $active),
+			'problemas' => $prob,
+			'kpis' => (array)($prob['kpis'] ?? []),
+			'rows' => (array)($prob['rows'] ?? []),
+			'items' => [],
+			'mode' => 'problemas',
+			'empty' => __('Nenhum cluster recorrente nos últimos 90 dias.'),
 		];
 	}
 
@@ -511,27 +422,17 @@ class ServicedeskPrototypeScreensService {
 		/** @var TicketsTable $tickets */
 		$tickets = $ctx['tickets'];
 		$idempresa = (int)$ctx['idempresa'];
-		$cols = $tickets->getSchema()->columns();
-		$where = ['Tickets.idempresa' => $idempresa];
-		$closed = $this->closedSituacoes();
-		if ($closed !== []) {
-			$where['Tickets.situacao NOT IN'] = $closed;
-		}
-		if (in_array('prioridade', $cols, true)) {
-			$where = array_merge($where, TicketPriorityKpi::p1MatchOrConditions('Tickets.prioridade'));
-		}
-		$rows = $this->fetchTicketRows($tickets, $idempresa, $where, 40);
+		$mud = $this->core->buildMudancasPayload($tickets, $idempresa);
 
 		return [
-			'title' => __('Mudanças'),
-			'subtitle' => __('Tickets P1/críticos em aberto (não há módulo CAB separado no portal)'),
-			'kpis' => [
-				['lbl' => __('Críticos abertos'), 'val' => (string)count($rows), 'hint' => __('proxy para mudanças')],
-			],
-			'rows' => $rows,
+			'title' => __('Gestão de Mudanças (Change Management)'),
+			'subtitle' => __('CAB · janelas de manutenção · análise de risco · rollback plans'),
+			'mudancas' => $mud,
+			'kpis' => (array)($mud['kpis'] ?? []),
+			'rows' => [],
 			'items' => [],
-			'mode' => 'tickets',
-			'empty' => __('Nenhum ticket crítico em aberto.'),
+			'mode' => 'mudancas',
+			'empty' => __('Nenhuma mudança programada.'),
 		];
 	}
 
@@ -541,56 +442,17 @@ class ServicedeskPrototypeScreensService {
 	 */
 	protected function screenContratos(array $ctx): array {
 		$idempresa = (int)$ctx['idempresa'];
-		$items = [];
-		try {
-			$cc = TableRegistry::getTableLocator()->get('Clicontratos');
-			$where = [];
-			if (in_array('idempresa', $cc->getSchema()->columns(), true)) {
-				$where['Clicontratos.idempresa'] = $idempresa;
-			}
-			$rows = $cc->find()
-				->contain(['Clientes'])
-				->where($where)
-				->order(['Clicontratos.id' => 'DESC'])
-				->limit(80)
-				->all();
-			foreach ($rows as $r) {
-				$cl = $r->cliente ?? null;
-				$cn = $cl ? (string)($cl->get('razaosocial') ?? $cl->get('nome') ?? '') : '—';
-				$items[] = [
-					'id' => (int)$r->get('id'),
-					'col1' => 'CL #' . (int)$r->get('id'),
-					'col2' => $cn,
-					'col3' => \Cake\Utility\Text::truncate((string)($r->get('descricao') ?? ''), 60, ['ellipsis' => '…']),
-					'col4' => (string)($r->get('situacao') ?? '—'),
-					'link' => ['controller' => 'Clientes', 'action' => 'index'],
-				];
-			}
-		} catch (\Throwable $e) {
-			$items = [];
-		}
-
-		$slaCount = 0;
-		try {
-			if ($this->tableExists('workflow_sla_policies')) {
-				$slaCount = TableRegistry::getTableLocator()->get('WorkflowSlaPolicies')
-					->find()
-					->count();
-			}
-		} catch (\Throwable $e) {
-		}
+		$query = (array)($ctx['query'] ?? []);
+		$contr = $this->core->buildContratosPayload($idempresa, $query);
 
 		return [
-			'title' => __('Contratos SLA'),
-			'subtitle' => __('Contratos de cliente (clicontratos) e políticas de workflow SLA'),
-			'kpis' => [
-				['lbl' => __('Contratos listados'), 'val' => (string)count($items), 'hint' => ''],
-				['lbl' => __('Políticas SLA'), 'val' => (string)$slaCount, 'hint' => __('workflow_sla_policies')],
-			],
-			'rows' => [],
-			'items' => $items,
-			'mode' => 'items',
-			'item_headers' => [__('Contrato'), __('Cliente'), __('Descrição'), __('Situação')],
+			'title' => __('Contratos & SLA por cliente'),
+			'subtitle' => __('Gestão de contratos · horas mensais · valor recorrente · renovações'),
+			'contratos' => $contr,
+			'kpis' => (array)($contr['kpis'] ?? []),
+			'rows' => (array)($contr['rows'] ?? []),
+			'items' => [],
+			'mode' => 'contratos',
 			'empty' => __('Nenhum contrato encontrado.'),
 		];
 	}
@@ -603,33 +465,14 @@ class ServicedeskPrototypeScreensService {
 		/** @var TicketsTable $tickets */
 		$tickets = $ctx['tickets'];
 		$idempresa = (int)$ctx['idempresa'];
-		$cols = $tickets->getSchema()->columns();
-		$where = ['Tickets.idempresa' => $idempresa];
-		if (defined('C_TicketSituacaoResolvido')) {
-			$where['Tickets.situacao'] = (int)C_TicketSituacaoResolvido;
-		}
-		$rows = $this->fetchTicketRows($tickets, $idempresa, $where, 50);
-		$faturas = 0;
-		try {
-			if ($this->tableExists('faturas')) {
-				$ft = TableRegistry::getTableLocator()->get('Faturas');
-				$fw = [];
-				if (in_array('idempresa', $ft->getSchema()->columns(), true)) {
-					$fw['idempresa'] = $idempresa;
-				}
-				$faturas = $fw === [] ? $ft->find()->count() : $ft->find()->where($fw)->count();
-			}
-		} catch (\Throwable $e) {
-		}
+		$fat = $this->core->buildFatPayload($tickets, $idempresa);
 
 		return [
-			'title' => __('Faturamento'),
-			'subtitle' => __('Tickets resolvidos (candidatos a faturar) e volume de faturas no portal'),
-			'kpis' => [
-				['lbl' => __('Tickets resolvidos'), 'val' => (string)count($rows), 'hint' => __('a faturar')],
-				['lbl' => __('Faturas (módulo)'), 'val' => (string)$faturas, 'hint' => ''],
-			],
-			'rows' => $rows,
+			'title' => __('Faturamento de tickets'),
+			'subtitle' => __('Horas apontadas · serviços extras · convertidos em faturas para o financeiro'),
+			'fat' => $fat,
+			'kpis' => (array)($fat['kpis'] ?? []),
+			'rows' => (array)($fat['rows'] ?? []),
 			'items' => [],
 			'mode' => 'tickets',
 			'empty' => __('Nenhum ticket resolvido pendente de faturamento.'),
@@ -706,6 +549,32 @@ class ServicedeskPrototypeScreensService {
 	 * @param array<string,mixed> $ctx
 	 * @return array<string,mixed>
 	 */
+	protected function screenPortalNovo(array $ctx): array {
+		/** @var TicketsTable $tickets */
+		$tickets = $ctx['tickets'];
+		$idempresa = (int)$ctx['idempresa'];
+		$query = array_merge((array)($ctx['query'] ?? []), ['userName' => (string)($ctx['userName'] ?? '')]);
+		$novo = $this->core->buildPortalNovoPayload($tickets, $idempresa, $query);
+
+		return [
+			'title' => __('+ Abrir novo chamado'),
+			'subtitle' => __('Descreva sua necessidade · resposta em até 2h conforme SLA do seu contrato'),
+			'portal_novo' => $novo,
+			'kpis' => [],
+			'rows' => [],
+			'items' => [],
+			'mode' => 'portal_novo',
+			'links' => [
+				['label' => __('Abrir chamado (equipa)'), 'url' => ['controller' => 'Servicedesk', 'action' => 'add']],
+			],
+			'empty' => '',
+		];
+	}
+
+	/**
+	 * @param array<string,mixed> $ctx
+	 * @return array<string,mixed>
+	 */
 	protected function screenCalendar(array $ctx): array {
 		/** @var TicketsTable $tickets */
 		$tickets = $ctx['tickets'];
@@ -745,84 +614,22 @@ class ServicedeskPrototypeScreensService {
 		/** @var TicketsTable $tickets */
 		$tickets = $ctx['tickets'];
 		$idempresa = (int)$ctx['idempresa'];
-		$fechados = 0;
-		if (defined('C_TicketSituacaoFechado') && in_array('situacao', $tickets->getSchema()->columns(), true)) {
-			$q = $tickets->find()->where([
-				'Tickets.idempresa' => $idempresa,
-				'Tickets.situacao' => (int)C_TicketSituacaoFechado,
-			]);
-			($this->applyAbac)($q);
-			$fechados = $q->count();
-		}
-
-		$totalRespostas = 0;
-		$csatSoma = 0;
-		$promotores = 0;
-		$detratores = 0;
-		$neutros = 0;
-		$respostasNps = 0;
-		$ultimos = [];
-		if ($this->tableExists('ticket_csat_responses')) {
-			try {
-				$tbl = TableRegistry::getTableLocator()->get('TicketCsatResponses');
-				$rows = $tbl->find()
-					->where(['TicketCsatResponses.idempresa' => $idempresa])
-					->order(['TicketCsatResponses.responded_at' => 'DESC'])
-					->limit(200)
-					->all();
-				foreach ($rows as $r) {
-					$totalRespostas++;
-					$csatSoma += (int)$r->get('csat_score');
-					$nps = $r->get('nps_score');
-					if ($nps !== null && $nps !== '') {
-						$respostasNps++;
-						$n = (int)$nps;
-						if ($n >= 9) {
-							$promotores++;
-						} elseif ($n <= 6) {
-							$detratores++;
-						} else {
-							$neutros++;
-						}
-					}
-					if (count($ultimos) < 8) {
-						$ultimos[] = [
-							'ticket_id' => (int)$r->get('ticket_id'),
-							'csat' => (int)$r->get('csat_score'),
-							'nps' => $nps !== null ? (int)$nps : null,
-							'comentario' => (string)($r->get('comentario') ?? ''),
-							'data' => $r->get('responded_at'),
-						];
-					}
-				}
-			} catch (\Throwable $e) {
-			}
-		}
-
-		$csatMedia = $totalRespostas > 0 ? round($csatSoma / $totalRespostas, 2) : null;
-		$npsScore = $respostasNps > 0
-			? round((($promotores - $detratores) / $respostasNps) * 100)
-			: null;
-
-		$kpis = [
-			['lbl' => __('Tickets fechados'), 'val' => (string)$fechados, 'hint' => __('total empresa')],
-			['lbl' => __('Respostas CSAT'), 'val' => (string)$totalRespostas, 'hint' => __('formulário pós-fechamento')],
-			['lbl' => __('CSAT médio'), 'val' => $csatMedia !== null ? number_format($csatMedia, 2, ',', '.') . ' ⭐' : '—', 'hint' => __('escala 1-5')],
-			['lbl' => __('NPS'), 'val' => $npsScore !== null ? (string)$npsScore : '—', 'hint' => sprintf(__('%d resp.'), $respostasNps)],
-		];
+		$query = (array)($ctx['query'] ?? []);
+		$csat = $this->core->buildCsatPayload($tickets, $idempresa, $query);
+		$total = (int)($csat['total_respostas'] ?? 0);
+		$taxa = (int)($csat['taxa_resposta_pct'] ?? 0);
 
 		return [
-			'title' => __('CSAT & NPS'),
-			'subtitle' => $totalRespostas > 0
-				? sprintf(__('%d respostas registradas'), $totalRespostas)
+			'title' => __('CSAT & NPS · Satisfação'),
+			'subtitle' => $total > 0
+				? sprintf(__('%d respostas · taxa de resposta %d%% · últimos %d dias'), $total, $taxa, (int)($csat['period_days'] ?? 30))
 				: __('Aguardando primeiras respostas (envie o link CSAT após fechar o ticket)'),
-			'kpis' => $kpis,
+			'csat' => $csat,
+			'kpis' => [],
 			'rows' => [],
 			'items' => [],
-			'mode' => 'info',
-			'empty' => '',
-			'csat_ultimos' => $ultimos,
-			'csat_breakdown' => ['promotores' => $promotores, 'neutros' => $neutros, 'detratores' => $detratores, 'total_nps' => $respostasNps],
+			'mode' => 'csat',
+			'empty' => __('Nenhuma resposta CSAT no período.'),
 		];
 	}
 
@@ -834,24 +641,13 @@ class ServicedeskPrototypeScreensService {
 		/** @var TicketsTable $tickets */
 		$tickets = $ctx['tickets'];
 		$idempresa = (int)$ctx['idempresa'];
-		$dash = new DashboardService($tickets);
-		$snap = $dash->operationalSnapshot($idempresa);
-		$kpis = (array)($snap['sla_operational_kpis'] ?? []);
-
-		$violados = count((array)($snap['alertas_sla_violado'] ?? []));
+		$metrics = new ServicedeskExecutiveMetricsService($this->applyAbac);
 
 		return [
 			'title' => __('Relatórios & Métricas'),
-			'subtitle' => __('Snapshot operacional · ' . Time::now()->format('d/m/Y H:i')),
+			'subtitle' => __('KPIs operacionais · SLA · produtividade · satisfação CSAT'),
 			'layout' => 'relatorios',
-			'kpis' => [
-				['lbl' => __('Backlog'), 'val' => (string)($snap['backlog'] ?? 0), 'hint' => __('abertos')],
-				['lbl' => __('Resolvidos hoje'), 'val' => (string)($snap['resolvidos_hoje'] ?? 0), 'hint' => ''],
-				['lbl' => __('P1 abertos'), 'val' => (string)($snap['p1_abertos'] ?? 0), 'hint' => '', 'alert' => ((int)($snap['p1_abertos'] ?? 0)) > 0],
-				['lbl' => __('Sem técnico'), 'val' => (string)($kpis['sem_tecnico'] ?? 0), 'hint' => ''],
-				['lbl' => __('SLA violado'), 'val' => (string)$violados, 'hint' => '', 'alert' => $violados > 0],
-				['lbl' => __('Aguarda cliente'), 'val' => (string)($kpis['aguardando_cliente'] ?? 0), 'hint' => ''],
-			],
+			'kpis' => $metrics->buildRelatoriosKpis($idempresa, $tickets),
 			'rows' => [],
 			'items' => [],
 			'mode' => 'info',
@@ -868,6 +664,16 @@ class ServicedeskPrototypeScreensService {
 	 * @return array<string,mixed>
 	 */
 	protected function screenConfig(array $ctx): array {
+		/** @var TicketsTable $tickets */
+		$tickets = $ctx['tickets'];
+		$idempresa = (int)$ctx['idempresa'];
+		$query = (array)($ctx['query'] ?? []);
+		$config = $this->core->buildConfigPayload($tickets, $idempresa);
+		$tab = trim((string)($query['tab'] ?? 'sla'));
+		$validTabs = ['sla', 'filas', 'auto', 'templ', 'horario', 'sat'];
+		if (!in_array($tab, $validTabs, true)) {
+			$tab = 'sla';
+		}
 		$items = [];
 		try {
 			if ($this->tableExists('workflow_states')) {
@@ -887,19 +693,23 @@ class ServicedeskPrototypeScreensService {
 		}
 
 		return [
-			'title' => __('SLA & Config'),
-			'subtitle' => __('Estados de workflow cadastrados'),
+			'title' => __('SLA & Configurações'),
+			'subtitle' => __('Políticas de SLA · filas · automações · templates'),
+			'config' => $config,
+			'active_tab' => $tab,
 			'kpis' => [
-				['lbl' => __('Estados'), 'val' => (string)count($items), 'hint' => ''],
+				['lbl' => __('Políticas SLA'), 'val' => (string)count((array)($config['sla_policies'] ?? [])), 'hint' => __('ativas'), 'border' => 'var(--teal)'],
+				['lbl' => __('Filas'), 'val' => (string)count((array)($config['queues'] ?? [])), 'hint' => __('atendimento'), 'border' => 'var(--blue)', 'val_color' => '#0C447C'],
+				['lbl' => __('Automações'), 'val' => (string)count((array)($config['automacoes'] ?? [])), 'hint' => __('regras'), 'border' => '#6B5B95', 'val_color' => '#3D2D63'],
+				['lbl' => __('Templates'), 'val' => (string)($config['templates_count'] ?? 8), 'hint' => __('ativos'), 'border' => '#D946A0', 'val_color' => '#7A1B5C'],
 			],
 			'rows' => [],
 			'items' => $items,
-			'mode' => 'items',
-			'item_headers' => [__('Nome'), __('Código'), __('Inicial'), __('Tipo')],
+			'mode' => 'info',
 			'links' => [
 				['label' => __('Admin Workflow SLA'), 'url' => ['controller' => 'Servicedesk', 'action' => 'workflowSlaAdmin']],
 			],
-			'empty' => __('Nenhum estado de workflow.'),
+			'empty' => '',
 		];
 	}
 
@@ -908,46 +718,25 @@ class ServicedeskPrototypeScreensService {
 	 * @return array<string,mixed>
 	 */
 	protected function screenPerm(array $ctx): array {
-		$items = [];
-		$count = 0;
-		try {
-			if ($this->tableExists('rbac_permissions')) {
-				$rp = TableRegistry::getTableLocator()->get('RbacPermissions');
-				$rows = $rp->find()
-					->where(['OR' => [
-						['controller' => 'Servicedesk'],
-						['controller' => 'Tickets'],
-						['code LIKE' => 'servicedesk.%'],
-					]])
-					->order(['code' => 'ASC'])
-					->limit(80)
-					->all();
-				foreach ($rows as $p) {
-					$items[] = [
-						'id' => (int)$p->get('id'),
-						'col1' => (string)$p->get('code'),
-						'col2' => (string)$p->get('name'),
-						'col3' => (string)$p->get('controller'),
-						'col4' => (string)$p->get('action'),
-						'link' => ['controller' => 'Users', 'action' => 'index'],
-					];
-				}
-				$count = count($items);
-			}
-		} catch (\Throwable $e) {
-		}
+		$idempresa = (int)$ctx['idempresa'];
+		$query = (array)($ctx['query'] ?? []);
+		$perm = $this->core->buildPermPayload($idempresa, $query);
+		$nUsers = count((array)($perm['usuarios'] ?? []));
 
 		return [
-			'title' => __('Permissões'),
-			'subtitle' => __('Permissões RBAC relacionadas a Service Desk / Tickets'),
+			'title' => __('Permissões & Usuários'),
+			'subtitle' => __('Controle granular de acesso · perfis · grupos · auditoria LGPD'),
+			'perm' => $perm,
 			'kpis' => [
-				['lbl' => __('Permissões'), 'val' => (string)$count, 'hint' => ''],
+				['lbl' => __('Usuários'), 'val' => (string)$nUsers, 'hint' => __('filtrados'), 'border' => 'var(--teal)'],
+				['lbl' => __('Perfis'), 'val' => (string)($perm['roles_count'] ?? 0), 'hint' => __('RBAC'), 'border' => 'var(--blue)', 'val_color' => '#0C447C'],
+				['lbl' => __('Grupos'), 'val' => (string)($perm['groups_count'] ?? 0), 'hint' => __('filas'), 'border' => '#6B5B95', 'val_color' => '#3D2D63'],
+				['lbl' => __('Eventos log · 30d'), 'val' => (string)($perm['log_eventos_30d'] ?? 0), 'hint' => __('auditoria'), 'border' => '#D946A0', 'val_color' => '#7A1B5C'],
 			],
 			'rows' => [],
-			'items' => $items,
-			'mode' => 'items',
-			'item_headers' => [__('Código'), __('Nome'), __('Controller'), __('Action')],
-			'empty' => __('RBAC não disponível ou sem permissões mapeadas.'),
+			'items' => [],
+			'mode' => 'info',
+			'empty' => '',
 		];
 	}
 
@@ -956,54 +745,20 @@ class ServicedeskPrototypeScreensService {
 	 * @return array<string,mixed>
 	 */
 	protected function screenIntegracoes(array $ctx): array {
-		$items = [];
-		try {
-			if ($this->tableExists('config')) {
-				$cfg = TableRegistry::getTableLocator()->get('Config');
-				$keys = ['email', 'smtp', 'ticket', 'servicedesk', 'erp', 'url'];
-				foreach ($cfg->find()->limit(200)->all() as $row) {
-					$nome = strtolower((string)($row->get('nome') ?? $row->get('chave') ?? ''));
-					$match = false;
-					foreach ($keys as $k) {
-						if ($nome !== '' && strpos($nome, $k) !== false) {
-							$match = true;
-							break;
-						}
-					}
-					if (!$match) {
-						continue;
-					}
-					$val = (string)($row->get('valor') ?? $row->get('value') ?? '');
-					if (strlen($val) > 60) {
-						$val = substr($val, 0, 57) . '…';
-					}
-					$items[] = [
-						'id' => (int)($row->get('id') ?? 0),
-						'col1' => (string)($row->get('nome') ?? $row->get('chave') ?? ''),
-						'col2' => $val !== '' ? $val : '—',
-						'col3' => '—',
-						'col4' => '—',
-						'link' => null,
-					];
-					if (count($items) >= 30) {
-						break;
-					}
-				}
-			}
-		} catch (\Throwable $e) {
-		}
+		/** @var TicketsTable $tickets */
+		$tickets = $ctx['tickets'];
+		$idempresa = (int)$ctx['idempresa'];
+		$integ = $this->core->buildIntegracoesPayload($tickets, $idempresa);
 
 		return [
 			'title' => __('Integrações'),
-			'subtitle' => __('Parâmetros de configuração relacionados a e-mail, tickets e ERP'),
-			'kpis' => [
-				['lbl' => __('Parâmetros'), 'val' => (string)count($items), 'hint' => __('filtrados')],
-			],
+			'subtitle' => __('Conecte o Service Desk com e-mail, mensageria, telefonia, monitoramento e mais'),
+			'integracoes' => $integ,
+			'kpis' => (array)($integ['kpis'] ?? []),
 			'rows' => [],
-			'items' => $items,
-			'mode' => 'items',
-			'item_headers' => [__('Chave'), __('Valor'), '', ''],
-			'empty' => __('Nenhum parâmetro de integração encontrado em config.'),
+			'items' => [],
+			'mode' => 'info',
+			'empty' => '',
 		];
 	}
 
@@ -1012,49 +767,99 @@ class ServicedeskPrototypeScreensService {
 	 * @return array<string,mixed>
 	 */
 	protected function screenTemplates(array $ctx): array {
-		$items = [];
-		try {
-			if ($this->tableExists('ticketcomentarios')) {
-				$tc = TableRegistry::getTableLocator()->get('Ticketcomentarios');
-				$rows = $tc->find()
-					->select(['comentario'])
-					->order(['id' => 'DESC'])
-					->limit(100)
-					->all();
-				$seen = [];
-				foreach ($rows as $r) {
-					$txt = trim(strip_tags((string)($r->get('comentario') ?? '')));
-					if ($txt === '' || strlen($txt) < 20 || isset($seen[$txt])) {
-						continue;
-					}
-					$seen[$txt] = true;
-					$items[] = [
-						'id' => count($items),
-						'col1' => \Cake\Utility\Text::truncate($txt, 100, ['ellipsis' => '…']),
-						'col2' => (string)strlen($txt) . ' chars',
-						'col3' => '—',
-						'col4' => '—',
-						'link' => null,
-					];
-					if (count($items) >= 25) {
-						break;
-					}
-				}
-			}
-		} catch (\Throwable $e) {
-		}
+		/** @var TicketsTable $tickets */
+		$tickets = $ctx['tickets'];
+		$idempresa = (int)$ctx['idempresa'];
+		$query = (array)($ctx['query'] ?? []);
+		$tpl = $this->core->buildTemplatesPayload($tickets, $idempresa, $query);
+		$stats = (array)($tpl['stats'] ?? []);
 
 		return [
-			'title' => __('Templates de resposta'),
-			'subtitle' => __('Trechos reais de comentários de tickets (amostra para reutilização)'),
+			'title' => __('Templates & Formulários'),
+			'subtitle' => __('Modelos de resposta · formulários de categoria · variáveis dinâmicas'),
+			'templates' => $tpl,
 			'kpis' => [
-				['lbl' => __('Amostras'), 'val' => (string)count($items), 'hint' => ''],
+				['lbl' => __('Templates ativos'), 'val' => (string)($stats['ativos'] ?? 0), 'border' => 'var(--teal)'],
+				['lbl' => __('Mais usado'), 'val' => (string)($stats['mais_usado'] ?? '—'), 'hint' => ((int)($stats['mais_usado_count'] ?? 0)) . ' ' . __('usos/mês'), 'border' => 'var(--blue)', 'val_color' => '#0C447C', 'val_size' => '18px'],
+				['lbl' => __('Economia tempo'), 'val' => (string)($stats['economia_tempo'] ?? '2.4h/dia'), 'hint' => __('vs digitar manual'), 'border' => '#D946A0', 'val_color' => '#7A1B5C'],
+				['lbl' => __('Formulários ativos'), 'val' => (string)($stats['formularios'] ?? 0), 'border' => '#6B5B95', 'val_color' => '#3D2D63'],
 			],
 			'rows' => [],
-			'items' => $items,
-			'mode' => 'items',
-			'item_headers' => [__('Texto'), __('Tamanho'), '', ''],
-			'empty' => __('Sem comentários longos para sugerir como template.'),
+			'items' => [],
+			'mode' => 'info',
+			'empty' => '',
+		];
+	}
+
+	/**
+	 * @param array<string,mixed> $ctx
+	 * @return array<string,mixed>
+	 */
+	protected function screenDetalheKb(array $ctx): array {
+		/** @var TicketsTable $tickets */
+		$tickets = $ctx['tickets'];
+		$idempresa = (int)$ctx['idempresa'];
+		$query = (array)($ctx['query'] ?? []);
+		$code = trim((string)($query['code'] ?? 'KB-042'));
+		$article = $this->core->buildDetalheKbPayload($tickets, $idempresa, $code);
+
+		return [
+			'title' => (string)($article['titulo'] ?? __('Artigo KB')),
+			'subtitle' => '',
+			'kb_article' => $article,
+			'kpis' => [],
+			'rows' => [],
+			'items' => [],
+			'mode' => 'info',
+			'empty' => '',
+		];
+	}
+
+	/**
+	 * @param array<string,mixed> $ctx
+	 * @return array<string,mixed>
+	 */
+	protected function screenDetalheFatura(array $ctx): array {
+		/** @var TicketsTable $tickets */
+		$tickets = $ctx['tickets'];
+		$idempresa = (int)$ctx['idempresa'];
+		$query = (array)($ctx['query'] ?? []);
+		$ticketId = isset($query['ticket_id']) && $query['ticket_id'] !== '' ? (int)$query['ticket_id'] : null;
+		$fatura = $this->core->buildDetalheFaturaPayload($tickets, $idempresa, $ticketId);
+
+		return [
+			'title' => (string)($fatura['numero'] ?? __('Fatura')),
+			'subtitle' => '',
+			'fatura' => $fatura,
+			'kpis' => [],
+			'rows' => [],
+			'items' => [],
+			'mode' => 'info',
+			'empty' => '',
+		];
+	}
+
+	/**
+	 * @param array<string,mixed> $ctx
+	 * @return array<string,mixed>
+	 */
+	protected function screenAutomacoesEditor(array $ctx): array {
+		/** @var TicketsTable $tickets */
+		$tickets = $ctx['tickets'];
+		$idempresa = (int)$ctx['idempresa'];
+		$query = (array)($ctx['query'] ?? []);
+		$ruleKey = trim((string)($query['rule'] ?? 'roteamento'));
+		$editor = $this->core->buildAutomacoesEditorPayload($tickets, $idempresa, $ruleKey);
+
+		return [
+			'title' => __('Editor de Automações'),
+			'subtitle' => (string)($editor['subtitle'] ?? ''),
+			'automacoes_editor' => $editor,
+			'kpis' => [],
+			'rows' => [],
+			'items' => [],
+			'mode' => 'info',
+			'empty' => '',
 		];
 	}
 

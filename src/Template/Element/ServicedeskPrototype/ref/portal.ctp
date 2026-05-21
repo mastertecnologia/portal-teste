@@ -14,6 +14,7 @@ $res30Hint = (string)($portal['resolvidos_30d_hint'] ?? '');
 $aguarda = (int)($portal['aguarda_cliente'] ?? 0);
 $tempoMedio = (string)($portal['tempo_medio_resolucao'] ?? '—');
 $contrato = (string)($portal['contrato_label'] ?? __('Premium · suporte 24/7'));
+$satisfacaoFmt = (string)($portal['satisfacao_fmt'] ?? '—');
 $tickets = (array)($portal['tickets_abertos'] ?? []);
 $cats = (array)($portal['categorias'] ?? []);
 $kb = (array)($portal['kb_popular'] ?? []);
@@ -71,7 +72,7 @@ $uKb = $H->sdpPage('kb');
 		</div>
 		<div class="summary-card" style="border-left:3px solid #D946A0;">
 			<div class="lbl"><?= h(__('Satisfação')) ?></div>
-			<div class="val" style="color:#7A1B5C;">⭐ —</div>
+			<div class="val" style="color:#7A1B5C;"><?= h($satisfacaoFmt) ?></div>
 			<div style="font-size:11px;color:var(--text-muted);"><?= h(__('de 5,0')) ?></div>
 		</div>
 	</div>
@@ -112,12 +113,15 @@ $uKb = $H->sdpPage('kb');
 		<div class="card">
 			<div class="sec-title">⚡ <?= h(__('Categorias mais usadas')) ?></div>
 			<div class="sdp-portal-cat-grid">
-				<?php foreach ($cats as $cat) : ?>
+				<?php foreach ($cats as $cat) :
+					$catKey = (string)($cat['cat'] ?? '');
+					$catUrl = $catKey !== '' ? $H->sdpPage('portal-novo', ['cat' => $catKey]) : $uNovo;
+				?>
 					<?= $this->Html->link(
 						'<div class="sdp-portal-cat-icon">' . h((string)($cat['icon'] ?? '')) . '</div>'
 						. '<div class="sdp-portal-cat-name">' . h((string)($cat['nome'] ?? '')) . '</div>'
 						. '<div class="sdp-portal-cat-sla">SLA ' . h((string)($cat['sla'] ?? '')) . '</div>',
-						$uNovo,
+						$catUrl,
 						['class' => 'sdp-portal-cat', 'escape' => false]
 					) ?>
 				<?php endforeach; ?>
@@ -128,11 +132,14 @@ $uKb = $H->sdpPage('kb');
 	<div class="card sdp-portal-kb-card">
 		<div class="sec-title">📚 <?= h(__('Artigos populares · resolva sozinho')) ?></div>
 		<div class="sdp-portal-kb-grid">
-			<?php foreach ($kb as $art) : ?>
+			<?php foreach ($kb as $art) :
+				$code = (string)($art['code'] ?? '');
+				$kbUrl = $code !== '' ? $H->sdpPage('detalhe-kb', ['code' => $code]) : $uKb;
+			?>
 				<?= $this->Html->link(
 					'<div class="sdp-portal-kb-title">📄 ' . h((string)($art['titulo'] ?? '')) . '</div>'
 					. '<div class="sdp-portal-kb-meta">' . h((string)($art['meta'] ?? '')) . '</div>',
-					$uKb,
+					$kbUrl,
 					['class' => 'sdp-portal-kb-item', 'escape' => false]
 				) ?>
 			<?php endforeach; ?>

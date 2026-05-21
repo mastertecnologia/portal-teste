@@ -148,9 +148,7 @@ class RetornosController extends AppController
 
         $linhas = preg_split("/\r\n|\n|\r/", $conteudo);
         $linhas = array_values(
-            array_filter(array_map("rtrim", (array) $linhas), function (
-                $linha,
-            ) {
+            array_filter(array_map("rtrim", (array) $linhas), function ($linha) {
                 return trim((string) $linha) !== "";
             }),
         );
@@ -537,7 +535,7 @@ class RetornosController extends AppController
         $idempresa,
         $nossoNumero,
         $bancoInformado,
-        array $registro,
+        array $registro
     ) {
         if ($nossoNumero === "") {
             return null;
@@ -571,7 +569,7 @@ class RetornosController extends AppController
             ->contain([
                 "FinanceiroLancamentos" => function ($q) use (
                     $idempresa,
-                    $bancoInformado,
+                    $bancoInformado
                 ) {
                     $conditions = [
                         "FinanceiroLancamentos.idempresa" => (int) $idempresa,
@@ -710,7 +708,7 @@ class RetornosController extends AppController
         $lancamento,
         $itemRemessa,
         array $registro,
-        array $logItem,
+        array $logItem
     ) {
         if (
             empty($this->FinanceiroRetornoItens) ||
@@ -808,7 +806,7 @@ class RetornosController extends AppController
         $valorPago,
         $dataOcorrencia,
         $codigoOcorrencia,
-        $mensagem,
+        $mensagem
     ) {
         $lancamento->status_cobranca = "liquidado";
         $lancamento->codigo_rejeicao = null;
@@ -855,7 +853,7 @@ class RetornosController extends AppController
     protected function _aplicarRejeicao(
         $lancamento,
         $codigoOcorrencia,
-        $mensagem,
+        $mensagem
     ) {
         $lancamento->status_cobranca = "rejeitado";
         $lancamento->codigo_rejeicao =
@@ -889,7 +887,7 @@ class RetornosController extends AppController
     protected function _registrarOcorrenciaInformativa(
         $lancamento,
         $codigoOcorrencia,
-        $mensagem,
+        $mensagem
     ) {
         if ($codigoOcorrencia !== "") {
             $lancamento->codigo_rejeicao = $codigoOcorrencia;

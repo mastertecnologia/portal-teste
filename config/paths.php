@@ -51,8 +51,16 @@ define('CONFIG', ROOT . DS . 'config' . DS);
  * File path to the webroot directory.
  * No Linux: use 'webroot' ou 'public' conforme a estrutura em /var/www/portal.
  * Definir WEBROOT_DIR no .env (ex.: WEBROOT_DIR=public) se a pasta for "public".
+ *
+ * Predefinição: se existir public/index.php (layout seguro Linux), usar "public";
+ * caso contrário "webroot" — evita login em branco (preloader) quando dist/ só está em public/.
  */
-define('WWW_ROOT', ROOT . DS . (getenv('WEBROOT_DIR') ?: 'webroot') . DS);
+$_pgmWebrootDir = getenv('WEBROOT_DIR');
+if ($_pgmWebrootDir === false || $_pgmWebrootDir === '') {
+	$_pgmWebrootDir = is_file(ROOT . DS . 'public' . DS . 'index.php') ? 'public' : 'webroot';
+}
+define('WWW_ROOT', ROOT . DS . $_pgmWebrootDir . DS);
+unset($_pgmWebrootDir);
 
 /**
  * Path to the tests directory.
@@ -61,8 +69,30 @@ define('TESTS', ROOT . DS . 'tests' . DS);
 
 /**
  * Path to the temporary files directory.
+ *
+ * WSL + projeto em /mnt/c: drvfs não suporta chmod em ficheiros de cache → avisos no topo
+ * da página. Em dev, usar tmp em ext4 (/tmp). Sobrescrever com CAKE_TMP no .env se precisar.
  */
-define('TMP', ROOT . DS . 'tmp' . DS);
+$_pgmTmp = ROOT . DS . 'tmp' . DS;
+if (
+	DIRECTORY_SEPARATOR === '/'
+	&& strpos(ROOT, '/mnt/') === 0
+	&& is_readable('/proc/version')
+	&& stripos((string)@file_get_contents('/proc/version'), 'microsoft') !== false
+) {
+	$_pgmTmpOverride = getenv('CAKE_TMP');
+	$_pgmTmp = ($_pgmTmpOverride !== false && $_pgmTmpOverride !== '')
+		? rtrim($_pgmTmpOverride, '/\\') . DS
+		: '/tmp/pgm-portal-' . substr(hash('sha256', ROOT), 0, 12) . DS;
+	foreach (['cache', 'cache' . DS . 'persistent', 'cache' . DS . 'models', 'cache' . DS . 'views', 'sessions'] as $_pgmTmpSub) {
+		$_pgmTmpDir = $_pgmTmp . $_pgmTmpSub;
+		if (!is_dir($_pgmTmpDir)) {
+			@mkdir($_pgmTmpDir, 0775, true);
+		}
+	}
+}
+define('TMP', $_pgmTmp);
+unset($_pgmTmp, $_pgmTmpOverride, $_pgmTmpSub, $_pgmTmpDir);
 
 /**
  * Path to the logs directory.
