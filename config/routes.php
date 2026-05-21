@@ -2334,6 +2334,18 @@ Router::scope("/", function ($routes) {
         ["controller" => "PgmAssets", "action" => "css"],
         ["pass" => ["name"]],
     );
+    $routes->connect(
+        "/pgm-assets/dist/:name",
+        ["controller" => "PgmAssets", "action" => "distCss"],
+        [
+            "pass" => ["name"],
+            "name" => "(style-min|pgm-erp-prototype|pgm-servicedesk-prototype)",
+        ],
+    );
+    $routes->connect("/manifest-erp.json", [
+        "controller" => "PgmAssets",
+        "action" => "manifestErp",
+    ]);
     // Alias OGM (mesmas ações que pgm-assets) — HTML/deploy pode usar /ogm-assets/...
     $routes->connect(
         "/ogm-assets/css/:name",

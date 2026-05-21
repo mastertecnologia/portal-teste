@@ -30,9 +30,7 @@ $htmlLang = $erpLocale === 'en_US' ? 'en' : ($erpLocale === 'es' ? 'es' : 'pt-BR
 	<?php endif; ?>
 	<title><?= h($title ?? 'Service Desk (β)') ?> — PGM</title>
 	<?= $this->Html->meta('icon') ?>
-	<?= $this->Html->css($w . 'dist/css/style.min') ?>
-	<?= $this->Html->css($w . 'dist/css/pgm-erp-prototype.css') ?>
-	<?= $this->Html->css($w . 'dist/css/pages/pgm-servicedesk-prototype.css', ['block' => false]) ?>
+	<?= $this->element('ErpPrototype/head_assets', ['includeServicedeskPrototypeCss' => true]) ?>
 	<style>
 		.sdp-shell{display:flex;min-height:100vh;background:var(--bg-surface,#f9f9f8);}
 		.sdp-shell-nav{width:220px;flex-shrink:0;background:#1a1a18;color:#fff;padding:14px 10px 18px;display:flex;flex-direction:column;gap:6px;}
