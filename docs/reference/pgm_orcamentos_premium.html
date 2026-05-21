@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>PGM Soluções — Orçamentos Premium</title>
+<link rel="stylesheet" href="webroot/css/pgm-action-buttons.css"/>
+<style>
+:root{
+  --teal:#00C08B;--teal-dark:#008F68;--teal-light:#E6FAF4;--teal-mid:#5CDBC0;
+  --amber:#FFC107;--amber-light:#FFF8E1;--amber-dark:#8A6A00;
+  --red:#E24B4A;--red-light:#FCEBEB;--red-dark:#791F1F;
+  --blue:#33CCFF;--blue-light:#E6F9FF;--blue-dark:#006B88;
+  --purple:#A682E6;--purple-light:#F3EDFC;--purple-dark:#4A3488;
+  --gray-50:#f9f9f8;--gray-100:#f2f1ee;--gray-200:#e5e4e0;
+  --gray-400:#9a9890;--gray-600:#5f5e5a;--gray-900:#1a1a18;
+  --border:#e5e4e0;--border-light:#f8f8f7;--row-divider:#f8f8f7;
+  --text:#1a1a18;--text-muted:#6b6a65;--text-hint:#9a9890;
+  --bg:#ffffff;--bg-surface:#f9f9f8;--bg-raised:#ffffff;
+  --radius:8px;--radius-lg:12px;--radius-xl:16px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:13px;color:var(--text);background:var(--gray-100);height:100vh;overflow:hidden;}
+.app{display:flex;height:100vh;width:100%;min-height:0;}
+
+/* SIDEBAR */
+.sidebar{width:220px;background:var(--gray-900);color:#fff;display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;z-index:100;}
+.sidebar-logo{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+.logo-box{width:32px;height:32px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
+.logo-box svg{width:18px;height:18px;}
+.logo-name{font-size:14px;font-weight:600;color:#fff;}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.6px;}
+.sidebar-nav{padding:12px 10px;flex:1;}
+.nav-section{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.3);padding:8px 8px 4px;margin-top:8px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;font-size:12px;color:rgba(255,255,255,.6);cursor:pointer;transition:all .15s;margin-bottom:1px;}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff;}
+.nav-item.active{background:rgba(0,192,139,.25);color:var(--teal-mid);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;}
+.sidebar-user{padding:14px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:9px;}
+.user-av{width:30px;height:30px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;}
+.user-name{font-size:12px;color:#fff;font-weight:500;}
+.user-role{font-size:10px;color:rgba(255,255,255,.4);}
+
+/* MAIN — SPA: topbar fixa no topo da área principal; só #dynamic-content rola */
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-width:0;height:100vh;overflow:hidden;}
+.topbar{
+  flex-shrink:0;height:60px;background:#fff;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 30px;
+  position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(0,0,0,.03);
+}
+.breadcrumb{font-size:14px;color:var(--gray-900);line-height:1.2;}
+.breadcrumb b{color:var(--gray-900);font-weight:700;}
+.user-section{display:flex;align-items:center;gap:15px;font-size:13px;color:#666;}
+.avatar-circle{
+  width:35px;height:35px;border-radius:50%;background:var(--teal);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;
+}
+
+#dynamic-content.page-content{
+  flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+  padding:30px 28px;width:100%;
+}
+
+/* BTNs */
+.btn{padding:7px 14px;border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:all .15s;font-family:inherit;white-space:nowrap;}
+.btn svg{width:13px;height:13px;flex-shrink:0;}
+.btn-primary{background:var(--teal);color:#fff;}.btn-primary:hover{background:var(--teal-dark);}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);}.btn-ghost:hover{background:var(--bg-surface);}
+.btn-blue{background:var(--blue-light);color:var(--blue-dark);border:1px solid #B5D4F4;}.btn-blue:hover{background:#B5D4F4;}
+.btn-amber{background:var(--amber-light);color:var(--amber-dark);border:1px solid #FAC775;}.btn-amber:hover{background:#FAC775;}
+.btn-red{background:var(--red-light);color:var(--red-dark);border:1px solid #F7C1C1;}.btn-red:hover{background:#F7C1C1;}
+.btn-purple{background:var(--purple-light);color:var(--purple-dark);border:1px solid #CECBF6;}.btn-purple:hover{background:#CECBF6;}
+.btn-sm{padding:5px 10px;font-size:11px;}
+.btn-xs{padding:3px 8px;font-size:11px;}
+
+/* CARDS */
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:14px;box-shadow:var(--shadow);}
+.sec-title{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border-light);}
+
+/* STEPPER */
+.stepper{display:flex;align-items:center;margin-bottom:22px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 20px;box-shadow:var(--shadow);}
+.stp{display:flex;align-items:center;gap:8px;flex:1;}
+.stp-c{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;border:1.5px solid var(--border);background:var(--bg-surface);color:var(--text-muted);transition:all .2s;}
+.stp.active .stp-c{background:var(--teal);color:#fff;border-color:var(--teal);}
+.stp.done .stp-c{background:var(--teal-light);color:var(--teal-dark);border-color:var(--teal-mid);}
+.stp-l{font-size:11px;color:var(--text-muted);white-space:nowrap;}
+.stp.active .stp-l{color:var(--teal);font-weight:500;}
+.stp.done .stp-l{color:var(--teal-dark);}
+.stp-line{flex:1;height:1px;background:var(--border);margin:0 8px;}
+.stp.done .stp-line{background:var(--teal-mid);}
+
+/* FORMS */
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:11px;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:.4px;}
+.field input,.field select,.field textarea{padding:8px 11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-surface);color:var(--text);font-size:13px;outline:none;font-family:inherit;transition:border-color .15s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--teal);background:#fff;box-shadow:0 0 0 3px rgba(0,192,139,.08);}
+.field textarea{resize:vertical;min-height:60px;line-height:1.6;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;white-space:nowrap;}
+.b-pend{background:#FAEEDA;color:#633806;}
+.b-env{background:#E1F5EE;color:#085041;}
+.b-aprov{background:#E6F1FB;color:#0C447C;}
+.b-recus{background:#FCEBEB;color:#791F1F;}
+.b-arq{background:#f0efec;color:#5f5e5a;}
+.b-prod{background:#E1F5EE;color:#085041;}
+.b-serv{background:#E6F1FB;color:#0C447C;}
+.b-lic{background:#EEEDFE;color:#3C3489;}
+.b-loc{background:#FAEEDA;color:#633806;}
+.b-v{background:#00C08B;color:#fff;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:20px;}
+.stat{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;border-left:3px solid transparent;cursor:pointer;transition:all .15s;box-shadow:var(--shadow);}
+.stat:hover,.stat.active{border-left-color:var(--sc);box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.stat.active{background:var(--bg-surface);}
+.stat-n{font-size:24px;font-weight:600;color:var(--sc);line-height:1.1;}
+.stat-l{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tbl thead th{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;background:#ffffff;}
+.tbl thead th.r{text-align:right;}
+.tbl tbody tr{border-bottom:1px solid var(--row-divider,#f8f8f7);cursor:pointer;transition:background .1s;}
+.tbl tbody tr:hover{background:var(--row-divider,#f8f8f7);}
+.tbl td{padding:10px 12px;color:var(--text);vertical-align:middle;}
+.tbl td.r{text-align:right;}
+.tbl td.mu{color:var(--text-muted);font-size:11px;}
+#dynamic-content.page-content svg [stroke]:not([stroke="none"]){stroke:currentColor;}
+
+/* AVATAR */
+.av{width:30px;height:30px;border-radius:50%;background:var(--teal-light);color:var(--teal-dark);font-size:10px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* MARGIN INDICATOR */
+.margin-bar{height:4px;border-radius:2px;background:var(--gray-200);margin-top:4px;overflow:hidden;}
+.margin-fill{height:100%;border-radius:2px;transition:width .4s,background .4s;}
+.margin-good{background:#00C08B;}
+.margin-warn{background:#FFC107;}
+.margin-bad{background:#E24B4A;}
+
+/* CATALOG POPUP */
+.catalog-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center;}
+.catalog-overlay.open{display:flex;}
+.catalog-modal{background:#fff;border-radius:var(--radius-xl);width:680px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.catalog-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.catalog-search{padding:14px 22px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.catalog-search input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none;font-family:inherit;}
+.catalog-search input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,192,139,.08);}
+.catalog-body{overflow-y:auto;flex:1;}
+.catalog-item{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .1s;}
+.catalog-item:hover{background:var(--bg-surface);}
+.catalog-item-info{flex:1;}
+.catalog-item-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;}
+.catalog-item-spec{font-size:11px;color:var(--text-muted);line-height:1.5;}
+.catalog-item-prices{text-align:right;min-width:120px;}
+.catalog-item-price{font-size:14px;font-weight:600;color:var(--teal);}
+.catalog-item-cost{font-size:11px;color:var(--text-muted);}
+.catalog-item-stock{font-size:11px;margin-top:2px;}
+.stock-ok{color:#00C08B;}.stock-low{color:#FFC107;}.stock-no{color:#E24B4A;}
+
+/* VERSION PANEL */
+.version-panel{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:14px;}
+.version-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:12px;}
+.version-item:last-child{border:none;}
+.version-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;font-family:monospace;}
+.v-current{background:#00C08B;color:#fff;}
+.v-old{background:var(--gray-200);color:var(--gray-600);}
+.version-meta{color:var(--text-muted);font-size:11px;}
+
+/* APPROVAL WORKFLOW */
+.workflow-step{display:flex;align-items:center;gap:10px;padding:10px 0;position:relative;}
+.workflow-step::after{content:'';position:absolute;left:15px;top:34px;bottom:-10px;width:1px;background:var(--border);}
+.workflow-step:last-child::after{display:none;}
+.wf-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid var(--border);background:var(--bg);}
+.wf-ok{background:var(--teal-light);border-color:var(--teal-mid);color:var(--teal-dark);}
+.wf-pend{background:#FAEEDA;border-color:#FAC775;color:#633806;}
+.wf-wait{background:var(--bg-surface);}
+.wf-body{flex:1;}
+.wf-title{font-size:12px;font-weight:500;color:var(--text);}
+.wf-sub{font-size:11px;color:var(--text-muted);}
+
+/* ESIGN */
+.esign-box{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:28px;text-align:center;cursor:pointer;transition:all .2s;}
+.esign-box:hover,.esign-box.signed{border-color:var(--teal);background:var(--teal-light);}
+.esign-box.signed{cursor:default;}
+.sign-canvas{border:1px solid var(--border);border-radius:var(--radius);width:100%;height:100px;cursor:crosshair;touch-action:none;background:#fff;}
+
+/* MARGIN SUMMARY */
+.margin-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
+.margin-card{background:var(--bg-surface);border-radius:var(--radius);padding:12px 14px;text-align:center;border:1px solid var(--border-light);}
+.margin-card-val{font-size:20px;font-weight:600;margin-bottom:3px;}
+.margin-card-lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;}
+
+/* TOTALS */
+.tot-wrap{display:flex;justify-content:flex-end;padding-top:14px;border-top:1px solid var(--border);margin-top:8px;}
+.tot-inner{min-width:260px;}
+.tot-l{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;color:var(--text-muted);border-bottom:1px solid var(--border-light);}
+.tot-l:last-child{border:none;font-size:15px;font-weight:600;color:var(--text);padding-top:10px;}
+.tot-l .g{color:var(--teal);font-weight:600;}
+.tot-l .rd{color:var(--red);}
+
+/* ADD ROW */
+.add-row{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:1.5px dashed var(--border);border-radius:var(--radius);cursor:pointer;color:var(--text-muted);font-size:12px;transition:all .15s;background:transparent;width:100%;}
+.add-row:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-light);}
+
+/* PAGES */
+.pg{display:none;}.pg.show{display:block;}
+
+/* TABS */
+.tabs{display:flex;gap:2px;margin-bottom:16px;}
+.tab{padding:7px 14px;border-radius:var(--radius);font-size:12px;color:var(--text-muted);cursor:pointer;border:none;background:transparent;font-family:inherit;transition:all .12s;}
+.tab:hover{background:var(--bg-surface);}
+.tab.active{background:var(--teal-light);color:var(--teal-dark);font-weight:500;}
+
+/* PRINT */
+.paper{background:#fff;border:1px solid var(--border);border-radius:var(--radius-xl);max-width:720px;margin:0 auto;padding:44px 48px;color:#1a1a18;font-size:11px;line-height:1.6;box-shadow:var(--shadow);}
+.paper .ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:20px;border-bottom:2.5px solid #00C08B;}
+.paper .ptbl{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:18px;}
+.paper .ptbl thead tr{background:#00C08B;}
+.paper .ptbl thead th{padding:7px 9px;color:#fff;text-align:left;font-weight:600;font-size:9px;text-transform:uppercase;letter-spacing:.3px;}
+.paper .ptbl thead th.r{text-align:right;}
+.paper .ptbl tbody tr{border-bottom:.5px solid #eee;}
+.paper .ptbl tbody tr:nth-child(even){background:#fafafa;}
+.paper .ptbl td{padding:8px 9px;color:#333;vertical-align:top;}
+.paper .ptbl td.r{text-align:right;}.paper .ptbl td.b{font-weight:600;color:#111;}
+.paper .sig{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:24px;}
+.paper .sig-b{text-align:center;}
+.paper .sig-l{border-top:.5px solid #bbb;padding-top:6px;font-size:10px;color:#666;margin-top:30px;}
+
+/* TIMELINE */
+.tl-item{display:flex;gap:12px;padding-bottom:16px;position:relative;}
+.tl-item::before{content:'';position:absolute;left:11px;top:26px;bottom:0;width:1px;background:var(--border);}
+.tl-item:last-child::before{display:none;}
+.tl-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tl-body{flex:1;padding-top:2px;}
+.tl-title{font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;}
+.tl-sub{font-size:11px;color:var(--text-muted);}
+
+/* FOOTER */
+.footer-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 0 0;border-top:1px solid var(--border);margin-top:6px;}
+
+/* MODAL BG */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:#fff;border-radius:var(--radius-xl);padding:28px;max-width:460px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center;}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:8px;color:var(--text);}
+.modal p{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:18px;}
+.modal-icon{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.modal-btns{display:flex;gap:8px;justify-content:center;}
+
+/* APPROVAL INTERNAL */
+.alçada-block{background:#FFF8E8;border:1px solid #FAC775;border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:14px;display:flex;align-items:flex-start;gap:12px;}
+.alçada-icon{width:32px;height:32px;background:#FAEEDA;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+input[type=number]{text-align:right;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-box"><svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/></svg></div>
+    <div class="logo-name">PGM Soluções</div>
+    <div class="logo-sub">ERP Enterprise</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section">Principal</div>
+    <div class="nav-item" onclick="goTo('pg-lista')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Dashboard</div>
+    <div class="nav-item" onclick="goTo('pg-lista')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1a4 4 0 100 8A4 4 0 008 1zM2 15a6 6 0 0112 0"/></svg>Clientes</div>
+    <div class="nav-item" onclick="openCatalog()"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1.5"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="9" x2="11" y2="9"/></svg>Produtos</div>
+    <div class="nav-section">Operações</div>
+    <div class="nav-item active"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2H3a1 1 0 00-1 1v11a1 1 0 001 1h7l4-4V3a1 1 0 00-1-1z"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="9" x2="9" y2="9"/></svg>Orçamentos</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><polyline points="8 5 8 8 10 10"/></svg>Ordens de Serviço</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H2v10l2-2h10V2z"/></svg>Tickets</div>
+  </div>
+  <div class="sidebar-user">
+    <div class="user-av">DG</div>
+    <div><div class="user-name">Darli Gonçalves</div><div class="user-role">Administrador</div></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+<header class="topbar">
+  <div class="breadcrumb">Orçamentos / <b id="page-title">Lista</b></div>
+  <div class="user-section">
+    <span id="topbar-date">—</span>
+    <div class="avatar-circle" id="topbar-avatar" title="Utilizador">DG</div>
+  </div>
+</header>
+
+<div id="dynamic-content" class="page-content">
+
+<!-- ============ LISTA ============ -->
+<div class="pg show" id="pg-lista">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div>
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Módulo comercial</div>
+      <h1 style="font-size:22px;font-weight:600;color:var(--text);">Orçamentos</h1>
+    </div>
+    <button class="btn btn-pgm btn-pgm-salvar" onclick="goTo('pg-novo')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+      Gerar Orçamento
+    </button>
+  </div>
+
+  <div class="stats">
+    <div class="stat active" style="--sc:#FFC107;" onclick="filtStat('pend',this)"><div class="stat-l">Andamento</div><div class="stat-n" id="cnt-pend">0</div></div>
+    <div class="stat" style="--sc:#00C08B;" onclick="filtStat('env',this)"><div class="stat-l">Enviados</div><div class="stat-n" id="cnt-env">0</div></div>
+    <div class="stat" style="--sc:#33CCFF;" onclick="filtStat('aprov',this)"><div class="stat-l">Aprovados</div><div class="stat-n" id="cnt-aprov">0</div></div>
+    <div class="stat" style="--sc:#E24B4A;" onclick="filtStat('recus',this)"><div class="stat-l">Recusados</div><div class="stat-n" id="cnt-recus">0</div></div>
+    <div class="stat" style="--sc:#888780;" onclick="filtStat('all',this)"><div class="stat-l">Total</div><div class="stat-n" id="cnt-all">0</div></div>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--bg-surface);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="tabs" style="margin:0;">
+          <button class="tab active" onclick="switchTab(this,'pend')">Pendentes</button>
+          <button class="tab" onclick="switchTab(this,'env')">Enviados</button>
+          <button class="tab" onclick="switchTab(this,'aprov')">Aprovados</button>
+          <button class="tab" onclick="switchTab(this,'recus')">Recusados</button>
+          <button class="tab" onclick="switchTab(this,'all')">Todos</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;background:#fff;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
+          <input type="text" placeholder="Buscar..." style="border:none;background:transparent;outline:none;font-size:12px;width:150px;color:var(--text);" oninput="filtQ(this.value)"/>
+        </div>
+        <span style="font-size:11px;color:var(--text-muted);" id="lista-count"></span>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr>
+          <th style="width:65px;">ID</th><th>Empresa</th><th style="width:75px;">Versão</th>
+          <th style="width:85px;">Status</th><th class="r" style="width:100px;">Total</th>
+          <th class="r" style="width:80px;">Margem</th><th style="width:95px;">Data</th><th style="width:90px;">Ações</th>
+        </tr></thead>
+        <tbody id="lista-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ NOVO ORÇAMENTO ============ -->
+<div class="pg" id="pg-novo">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Orçamentos › <span style="color:var(--teal);">Novo</span></div>
+      <h1 style="font-size:20px;font-weight:600;">Proposta de Orçamento <span id="orc-num-title" style="color:var(--teal);">#361</span></h1>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" onclick="goTo('pg-lista')">Cancelar</button>
+      <button class="btn btn-pgm btn-pgm-salvar" onclick="irRevisao()">Avançar para revisão →</button>
+    </div>
+  </div>
+
+  <div class="stepper" id="stp-novo">
+    <div class="stp active"><div class="stp-c">1</div><div class="stp-l">Dados</div><div class="stp-line"></div></div>
+    <div class="stp"><div class="stp-c">2</div><div class="stp-l">Itens</div><div class="stp-line"></div></div>
+    <div class="stp"><div class="stp-c">3</div><div class="stp-l">Aprovação</div><div class="stp-line"></div></div>
+    <div class="stp"><div class="stp-c">4</div><div class="stp-l">Revisão</div><div class="stp-line"></div></div>
+    <div class="stp"><div class="stp-c">5</div><div class="stp-l">Impressão</div><div class="stp-line"></div></div>
+    <div class="stp"><div class="stp-c">6</div><div class="stp-l">Envio & Assinatura</div></div>
+  </div>
+
+  <!-- Dados cliente -->
+  <div class="card">
+    <div class="sec-title">Dados do cliente</div>
+    <div class="g2" style="margin-bottom:12px;">
+      <div class="field"><label>Cliente</label>
+        <select id="n-cli">
+          <option value="">Selecione...</option>
+          <option data-cnpj="10.630.396/0001-04" data-email="financeiro@moblesambientes.com.br" data-contato="João Silva">Mobles Ambientes Pensados</option>
+          <option data-cnpj="12.345.678/0001-99" data-email="compras@cristofoli.com.br" data-contato="Maria Costa">Transportes Cristofoli Ltda</option>
+          <option data-cnpj="98.765.432/0001-11" data-email="ti@fellicci.com.br" data-contato="Pedro Alves">Fellicci Ind de Mov Ltda</option>
+          <option data-cnpj="11.222.333/0001-44" data-email="gerencia@engemed.com.br" data-contato="Ana Rodrigues">Engemed Assessoria Ltda</option>
+        </select>
+      </div>
+      <div class="g2">
+        <div class="field"><label>Pagamento</label>
+          <select id="n-pag"><option>À vista</option><option>Parcelado</option><option>Boleto 30/60/90</option><option>1+5 parcelas boleto</option></select>
+        </div>
+        <div class="field"><label>Válido até</label><input type="date" id="n-val" value="2026-04-24"/></div>
+      </div>
+    </div>
+    <div class="g3">
+      <div class="field"><label>CNPJ</label><input type="text" id="n-cnpj" placeholder="Auto-preenchido" readonly style="background:var(--gray-100);color:var(--text-muted);"/></div>
+      <div class="field"><label>E-mail do cliente</label><input type="email" id="n-email" placeholder="Auto-preenchido"/></div>
+      <div class="field"><label>Contato / responsável</label><input type="text" id="n-contato" placeholder="Auto-preenchido"/></div>
+    </div>
+  </div>
+
+  <!-- Itens + Catálogo -->
+  <div class="card">
+    <div class="sec-title" style="justify-content:space-between;display:flex;align-items:center;">
+      <span style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px;">Produtos e serviços</span>
+      <button class="btn btn-pgm btn-pgm-situacao btn-sm" onclick="openCatalog()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1.5"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="9" x2="11" y2="9"/></svg>
+        Buscar no catálogo
+      </button>
+    </div>
+
+    <!-- Margem summary -->
+    <div class="margin-summary" style="margin-bottom:14px;" id="margin-summary">
+      <div class="margin-card"><div class="margin-card-val" id="ms-subtotal" style="color:var(--text);">R$ 0,00</div><div class="margin-card-lbl">Subtotal venda</div></div>
+      <div class="margin-card"><div class="margin-card-val" id="ms-custo" style="color:var(--text-muted);">R$ 0,00</div><div class="margin-card-lbl">Custo total</div></div>
+      <div class="margin-card"><div class="margin-card-val" id="ms-lucro" style="color:var(--teal);">R$ 0,00</div><div class="margin-card-lbl">Lucro bruto</div></div>
+      <div class="margin-card">
+        <div class="margin-card-val" id="ms-margem" style="color:var(--teal);">0%</div>
+        <div class="margin-card-lbl">Margem bruta</div>
+        <div class="margin-bar"><div class="margin-fill margin-good" id="ms-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- Item form manual -->
+    <div style="display:grid;grid-template-columns:100px 1fr 95px 65px 100px;gap:8px;margin-bottom:8px;align-items:end;">
+      <div class="field"><label>Código</label><input type="text" id="f-cod" placeholder="SKU"/></div>
+      <div class="field"><label>Produto / Serviço</label><input type="text" id="f-nom" placeholder="Descrição..."/></div>
+      <div class="field"><label>Tipo</label><select id="f-tip"><option value="prod">Produto</option><option value="serv">Serviço</option><option value="lic">Licença</option><option value="loc">Locação</option></select></div>
+      <div class="field"><label>Qtde.</label><input type="number" id="f-qtd" value="1" min="1" step="1"/></div>
+      <div class="field"><label>Vl. Unit. (R$)</label><input type="number" id="f-uni" placeholder="0.00" step="0.01"/></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;align-items:end;">
+      <div class="field"><label>Custo unit. (R$)</label><input type="number" id="f-cus" placeholder="0.00" step="0.01" style="border-color:#FFC107;"/></div>
+      <div class="field"><label>Vl. Mensal (R$)</label><input type="number" id="f-men" placeholder="0.00" step="0.01"/></div>
+      <div class="field"><label>Descrição adicional</label><input type="text" id="f-des" placeholder="Detalhes..."/></div>
+    </div>
+    <button class="add-row" onclick="addItem()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+      Adicionar item manualmente
+    </button>
+
+    <div class="tbl-wrap" style="margin-top:14px;">
+      <table class="tbl">
+        <thead><tr>
+          <th style="width:80px;">Código</th><th>Produto</th><th style="width:65px;">Tipo</th>
+          <th class="r" style="width:45px;">Qtd.</th><th class="r" style="width:90px;">Vl. Unit.</th>
+          <th class="r" style="width:80px;">Custo</th><th class="r" style="width:70px;">Margem</th>
+          <th class="r" style="width:95px;">Vl. Total</th><th style="width:30px;"></th>
+        </tr></thead>
+        <tbody id="itens-body"><tr><td colspan="9" style="text-align:center;padding:22px;color:var(--text-muted);">Use o catálogo ou adicione itens manualmente acima.</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- Desconto -->
+    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 14px;background:var(--bg-surface);border-radius:var(--radius);border:1px solid var(--border-light);">
+      <span style="font-size:11px;color:var(--text-muted);">Desconto:</span>
+      <input type="number" id="disc-val" value="0" min="0" step="0.01" style="width:70px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none;text-align:right;" oninput="calcTotais()"/>
+      <select id="disc-tipo" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none;" onchange="calcTotais()">
+        <option value="pct">%</option><option value="fix">R$</option>
+      </select>
+      <span style="font-size:11px;color:var(--text-muted);">| Desconto aplicado:</span>
+      <span style="font-size:12px;font-weight:600;color:var(--red);" id="disc-show">R$ 0,00</span>
+    </div>
+
+    <div class="tot-wrap">
+      <div class="tot-inner">
+        <div class="tot-l"><span>Subtotal</span><span id="t-sub">R$ 0,00</span></div>
+        <div class="tot-l"><span>Custo total</span><span id="t-cus" style="color:var(--text-muted);">R$ 0,00</span></div>
+        <div class="tot-l"><span>Desconto</span><span class="rd" id="t-disc">— R$ 0,00</span></div>
+        <div class="tot-l"><span>Margem após desconto</span><span id="t-marg" style="color:var(--teal);">0%</span></div>
+        <div class="tot-l"><span>Total geral</span><span class="g" id="t-tot">R$ 0,00</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Aprovação interna -->
+  <div id="alcada-alert" style="display:none;">
+    <div class="alçada-block">
+      <div class="alçada-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#854F0B" stroke-width="2"><path d="M8 1L1 14h14L8 1z"/><line x1="8" y1="7" x2="8" y2="10"/><circle cx="8" cy="12" r=".5" fill="#854F0B"/></svg></div>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:#633806;margin-bottom:3px;" id="alcada-msg">Aprovação interna necessária</div>
+        <div style="font-size:11px;color:#854F0B;line-height:1.5;" id="alcada-desc">Este orçamento requer aprovação antes de ser enviado ao cliente.</div>
+        <div style="display:flex;gap:6px;margin-top:8px;" id="alcada-btns"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Observações -->
+  <div class="card">
+    <div class="sec-title">Observações</div>
+    <div class="field"><textarea id="n-obs" placeholder="Condições, prazos, garantias..." rows="3"></textarea></div>
+  </div>
+
+  <div class="footer-bar">
+    <button class="btn btn-red" onclick="limparForm()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 4 14 12 14 13 6"/><path d="M1 6h14M6 6V3h4v3"/></svg>
+      Limpar
+    </button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" onclick="goTo('pg-lista')">Cancelar</button>
+      <button class="btn btn-pgm btn-pgm-salvar" onclick="irRevisao()">Avançar →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ REVISÃO ============ -->
+<div class="pg" id="pg-revisao">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Orçamentos › Novo › <span style="color:var(--teal);">Revisão</span></div>
+      <h1 style="font-size:20px;font-weight:600;">Revisão — <span id="rv-title" style="color:var(--teal);">#361 v1</span></h1>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" onclick="goTo('pg-novo')">← Editar</button>
+      <button class="btn btn-pgm btn-pgm-pdf" onclick="goTo('pg-print')">Pré-visualizar PDF</button>
+      <button class="btn btn-pgm btn-pgm-salvar" onclick="goTo('pg-esign')">Gerar e assinar →</button>
+    </div>
+  </div>
+  <div class="stepper">
+    <div class="stp done"><div class="stp-c">✓</div><div class="stp-l">Dados</div><div class="stp-line"></div></div>
+    <div class="stp done"><div class="stp-c">✓</div><div class="stp-l">Itens</div><div class="stp-line"></div></div>
+    <div class="stp done"><div class="stp-c">✓</div><div class="stp-l">Aprovação</div><div class="stp-line"></div></div>
+    <div class="stp active"><div class="stp-c">4</div><div class="stp-l">Revisão</div><div class="stp-line"></div></div>
+    <div class="stp"><div class="stp-c">5</div><div class="stp-l">Impressão</div><div class="stp-line"></div></div>
+    <div class="stp"><div class="stp-c">6</div><div class="stp-l">Envio & Assinatura</div></div>
+  </div>
+
+  <!-- Versionamento -->
+  <div class="card">
+    <div class="sec-title">Controle de versões</div>
+    <div class="version-panel">
+      <div class="version-item">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="version-badge v-current">v1 — atual</span>
+          <span style="font-size:12px;font-weight:500;">Proposta original</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="version-meta">24/03/2026 · Darli G.</span>
+          <span class="badge b-pend">Rascunho</span>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="criarNovaVersao()" style="margin-top:4px;">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><path d="M12 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V3a1 1 0 00-1-1z"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
+      Criar nova versão (revisão)
+    </button>
+  </div>
+
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="sec-title">Dados do cliente</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border-light);"><span style="color:var(--text-muted);">Cliente</span><span style="font-weight:500;" id="rv-cli">—</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border-light);"><span style="color:var(--text-muted);">Pagamento</span><span id="rv-pag">—</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;"><span style="color:var(--text-muted);">Válido até</span><span style="color:var(--amber);font-weight:500;" id="rv-val">—</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-title">Análise de margem</div>
+        <div class="margin-summary" style="grid-template-columns:1fr 1fr;">
+          <div class="margin-card"><div class="margin-card-val" id="rv-sub" style="color:var(--text);">R$ 0,00</div><div class="margin-card-lbl">Total venda</div></div>
+          <div class="margin-card"><div class="margin-card-val" id="rv-lucro" style="color:var(--teal);">R$ 0,00</div><div class="margin-card-lbl">Lucro bruto</div></div>
+          <div class="margin-card"><div class="margin-card-val" id="rv-cus" style="color:var(--text-muted);">R$ 0,00</div><div class="margin-card-lbl">Custo total</div></div>
+          <div class="margin-card">
+            <div class="margin-card-val" id="rv-marg" style="color:var(--teal);">0%</div>
+            <div class="margin-card-lbl">Margem bruta</div>
+            <div class="margin-bar"><div class="margin-fill margin-good" id="rv-bar" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="sec-title">Workflow de aprovação interna</div>
+        <div id="rv-workflow">
+          <div class="workflow-step">
+            <div class="wf-dot wf-ok"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#0F6E56" stroke-width="2.5"><polyline points="13 2 6 12 2 8"/></svg></div>
+            <div class="wf-body"><div class="wf-title">Vendedor</div><div class="wf-sub">Darli G. · 24/03/2026 · Criado</div></div>
+          </div>
+          <div class="workflow-step" id="wf-gerente">
+            <div class="wf-dot wf-wait"><div style="width:8px;height:8px;border-radius:50%;background:var(--border);"></div></div>
+            <div class="wf-body"><div class="wf-title" style="color:var(--text-muted);">Gerente comercial</div><div class="wf-sub" id="wf-ger-sub">Pendente de verificação</div></div>
+          </div>
+          <div class="workflow-step" id="wf-dir" style="display:none;">
+            <div class="wf-dot wf-wait"><div style="width:8px;height:8px;border-radius:50%;background:var(--border);"></div></div>
+            <div class="wf-body"><div class="wf-title" style="color:var(--text-muted);">Diretoria</div><div class="wf-sub">Necessário para valores > R$ 50.000</div></div>
+          </div>
+          <div class="workflow-step">
+            <div class="wf-dot wf-wait"><div style="width:8px;height:8px;border-radius:50%;background:var(--border);"></div></div>
+            <div class="wf-body"><div class="wf-title" style="color:var(--text-muted);">Envio ao cliente</div><div class="wf-sub">Aguardando aprovações internas</div></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:10px;" id="wf-btns">
+          <button class="btn btn-pgm btn-pgm-salvar btn-sm" onclick="aprovarInterno()">✓ Aprovar (gerente)</button>
+          <button class="btn btn-red btn-sm" onclick="reprovarInterno()">✗ Reprovar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">Itens da proposta</div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr>
+          <th>Produto / Serviço</th><th style="width:65px;">Tipo</th>
+          <th class="r" style="width:45px;">Qtd.</th><th class="r" style="width:90px;">Vl. Unit.</th>
+          <th class="r" style="width:80px;">Custo</th><th class="r" style="width:70px;">Margem</th>
+          <th class="r" style="width:95px;">Total</th>
+        </tr></thead>
+        <tbody id="rv-body"></tbody>
+      </table>
+    </div>
+    <div class="tot-wrap">
+      <div class="tot-inner">
+        <div class="tot-l"><span>Subtotal</span><span id="rv-tot-sub">R$ 0,00</span></div>
+        <div class="tot-l"><span>Desconto</span><span class="rd" id="rv-tot-disc">— R$ 0,00</span></div>
+        <div class="tot-l"><span>Total geral</span><span class="g" id="rv-tot">R$ 0,00</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    <button class="btn btn-ghost" onclick="goTo('pg-novo')">← Voltar</button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-pgm btn-pgm-pdf" onclick="goTo('pg-print')">Pré-visualizar PDF</button>
+      <button class="btn btn-pgm btn-pgm-salvar" onclick="goTo('pg-esign')">Avançar para assinatura →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ IMPRESSÃO ============ -->
+<div class="pg" id="pg-print">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">← <span style="cursor:pointer;color:var(--teal);" onclick="goTo('pg-revisao')">Revisão</span></div><h1 style="font-size:20px;font-weight:600;">Pré-visualização PDF</h1></div>
+    <div style="display:flex;gap:8px;">
+      <button type="button" class="btn btn-pgm btn-pgm-pdf">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/><polyline points="8 2 8 10"/><polyline points="5 7 8 10 11 7"/></svg>
+        Exportar PDF
+      </button>
+      <button class="btn btn-pgm btn-pgm-email" onclick="goTo('pg-esign')">Enviar & Assinar →</button>
+      <button class="btn btn-pgm btn-pgm-salvar" onclick="goTo('pg-esign')">Confirmar e salvar →</button>
+    </div>
+  </div>
+  <div class="stepper">
+    <div class="stp done"><div class="stp-c">✓</div><div class="stp-l">Dados</div><div class="stp-line"></div></div>
+    <div class="stp done"><div class="stp-c">✓</div><div class="stp-l">Itens</div><div class="stp-line"></div></div>
+    <div class="stp done"><div class="stp-c">✓</div><div class="stp-l">Aprovação</div><div class="stp-line"></div></div>
+    <div class="stp done"><div class="stp-c">✓</div><div class="stp-l">Revisão</div><div class="stp-line"></div></div>
+    <div class="stp active"><div class="stp-c">5</div><div class="stp-l">Impressão</div><div class="stp-line"></div></div>
+    <div class="stp"><div class="stp-c">6</div><div class="stp-l">Envio & Assinatura</div></div>
+  </div>
+
+  <div class="paper">
+    <div class="ph">
+      <div>
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:6px;">
+          <div style="width:34px;height:34px;background:#00C08B;border-radius:8px;display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg></div>
+          <div><div style="font-size:15px;font-weight:700;color:#111;">PGM Soluções</div><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.8px;">ERP Enterprise</div></div>
+        </div>
+        <div style="font-size:10px;color:#666;line-height:1.8;">CNPJ: 00.000.000/0001-00 · Bento Gonçalves, RS<br>contato@pgm.inf.br · (54) 0000-0000</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:19px;font-weight:700;color:#111;">Proposta de Orçamento</div>
+        <div style="font-size:10px;color:#888;margin-top:3px;" id="p-num">Nº 361 v1 · 24/03/2026</div>
+        <div style="margin-top:8px;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <div style="font-size:10px;color:#00C08B;display:flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:#00C08B;display:inline-block;"></span>Em andamento</div>
+          <div style="font-size:10px;color:#FFC107;display:flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:#FFC107;display:inline-block;"></span>Válido até <span id="p-val-dt">24/04/2026</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;border:.5px solid #e5e5e5;border-radius:8px;overflow:hidden;margin-bottom:20px;">
+      <div style="padding:11px 15px;border-right:.5px solid #e5e5e5;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:#999;font-weight:600;margin-bottom:3px;">Cliente</div><div style="font-size:12px;font-weight:600;color:#111;" id="p-cli">—</div><div style="font-size:10px;color:#666;" id="p-cnpj">—</div></div>
+      <div style="padding:11px 15px;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:#999;font-weight:600;margin-bottom:3px;">Responsável</div><div style="font-size:12px;font-weight:600;color:#111;" id="p-cont">Darli Gonçalves B.</div><div style="font-size:10px;color:#666;">darli@pgm.inf.br</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-top:.5px solid #e5e5e5;grid-column:1/-1;">
+        <div style="padding:11px 15px;border-right:.5px solid #e5e5e5;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:#999;font-weight:600;margin-bottom:3px;">Pagamento</div><div style="font-size:11px;font-weight:600;color:#111;" id="p-pag">—</div></div>
+        <div style="padding:11px 15px;border-right:.5px solid #e5e5e5;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:#999;font-weight:600;margin-bottom:3px;">Emissão</div><div style="font-size:11px;font-weight:600;color:#111;">24/03/2026</div></div>
+        <div style="padding:11px 15px;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:#999;font-weight:600;margin-bottom:3px;">Validade</div><div style="font-size:11px;font-weight:600;color:#FFC107;" id="p-val2">—</div></div>
+      </div>
+    </div>
+
+    <table class="ptbl">
+      <thead><tr>
+        <th style="width:60px;">Código</th><th>Produto / Serviço</th><th style="width:60px;">Tipo</th>
+        <th class="r" style="width:38px;">Qtd.</th><th class="r" style="width:80px;">Vl. Unit.</th><th class="r" style="width:90px;">Vl. Total</th>
+      </tr></thead>
+      <tbody id="p-body"></tbody>
+    </table>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:18px;">
+      <div style="min-width:210px;">
+        <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:10px;color:#666;border-bottom:.5px solid #eee;"><span>Subtotal</span><span id="p-sub">—</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:10px;color:#E24B4A;border-bottom:.5px solid #eee;"><span>Desconto</span><span id="p-disc">—</span></div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0 3px;font-size:13px;font-weight:700;"><span style="color:#111;">Total geral</span><span style="color:#00C08B;" id="p-tot">—</span></div>
+      </div>
+    </div>
+
+    <div style="background:#f9f9f9;border-radius:6px;border-left:3px solid #00C08B;padding:10px 13px;margin-bottom:16px;font-size:10px;color:#444;line-height:1.7;" id="p-obs-block"></div>
+
+    <div style="margin-bottom:16px;">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:#999;font-weight:600;margin-bottom:6px;">Condições gerais</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:10px;color:#555;line-height:1.5;">
+        <div style="display:flex;gap:5px;"><span style="width:4px;height:4px;border-radius:50%;background:#00C08B;margin-top:4px;flex-shrink:0;"></span>Proposta válida pelo período indicado.</div>
+        <div style="display:flex;gap:5px;"><span style="width:4px;height:4px;border-radius:50%;background:#00C08B;margin-top:4px;flex-shrink:0;"></span>Garantia de 12 meses contra defeitos.</div>
+        <div style="display:flex;gap:5px;"><span style="width:4px;height:4px;border-radius:50%;background:#00C08B;margin-top:4px;flex-shrink:0;"></span>NF emitida após confirmação do pagamento.</div>
+        <div style="display:flex;gap:5px;"><span style="width:4px;height:4px;border-radius:50%;background:#00C08B;margin-top:4px;flex-shrink:0;"></span>Suporte técnico incluso por 90 dias.</div>
+      </div>
+    </div>
+
+    <div class="sig">
+      <div class="sig-b"><div style="height:28px;"></div><div class="sig-l"></div><div style="font-size:11px;font-weight:700;color:#111;">PGM Soluções em TI Ltda</div><div style="font-size:9px;color:#999;">Fornecedor · CNPJ: 00.000.000/0001-00</div></div>
+      <div class="sig-b"><div id="p-sig-img" style="height:28px;display:flex;align-items:center;justify-content:center;"></div><div class="sig-l"></div><div style="font-size:11px;font-weight:700;color:#111;" id="p-sig-cli">Cliente</div><div style="font-size:9px;color:#999;">Contratante</div></div>
+    </div>
+    <div style="text-align:center;font-size:9px;color:#bbb;border-top:.5px solid #eee;padding-top:10px;margin-top:14px;line-height:1.8;"><span style="color:#00C08B;font-weight:600;">PGM Soluções em TI Ltda</span> · portal.pgm.inf.br · contato@pgm.inf.br<br>Documento gerado pelo ERP Enterprise · 24/03/2026</div>
+  </div>
+</div>
+
+<!-- ============ E-SIGN ============ -->
+<div class="pg" id="pg-esign">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">← <span style="cursor:pointer;color:var(--teal);" onclick="goTo('pg-print')">Impressão</span> › <span style="color:var(--teal);">Envio & Assinatura Digital</span></div><h1 style="font-size:20px;font-weight:600;">Envio & Assinatura Digital</h1></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" onclick="goTo('pg-print')">← Voltar</button>
+      <button class="btn btn-pgm btn-pgm-salvar" onclick="enviarAssinar()">Enviar e aguardar assinatura →</button>
+    </div>
+  </div>
+  <div class="stepper">
+    <div class="stp done"><div class="stp-c">✓</div><div class="stp-l">Dados</div><div class="stp-line"></div></div>
+    <div class="stp done"><div class="stp-c">✓</div><div class="stp-l">Itens</div><div class="stp-line"></div></div>
+    <div class="stp done"><div class="stp-c">✓</div><div class="stp-l">Aprovação</div><div class="stp-line"></div></div>
+    <div class="stp done"><div class="stp-c">✓</div><div class="stp-l">Revisão</div><div class="stp-line"></div></div>
+    <div class="stp done"><div class="stp-c">✓</div><div class="stp-l">Impressão</div><div class="stp-line"></div></div>
+    <div class="stp active"><div class="stp-c">6</div><div class="stp-l">Envio & Assinatura</div></div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="sec-title">Envio por e-mail</div>
+        <div style="display:flex;flex-direction:column;gap:0;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border-light);font-size:12px;">
+            <span style="font-size:11px;color:var(--text-muted);width:52px;flex-shrink:0;">Para:</span>
+            <input type="email" id="em-para" style="flex:1;border:none;background:transparent;outline:none;font-size:12px;font-family:inherit;color:var(--text);"/>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border-light);font-size:12px;">
+            <span style="font-size:11px;color:var(--text-muted);width:52px;flex-shrink:0;">CC:</span>
+            <input type="email" placeholder="Cópia (opcional)" style="flex:1;border:none;background:transparent;outline:none;font-size:12px;font-family:inherit;color:var(--text);"/>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border-light);font-size:12px;">
+            <span style="font-size:11px;color:var(--text-muted);width:52px;flex-shrink:0;">Assunto:</span>
+            <input type="text" id="em-assunto" style="flex:1;border:none;background:transparent;outline:none;font-size:12px;font-family:inherit;color:var(--text);"/>
+          </div>
+          <div style="padding:12px 14px;font-size:12px;color:var(--text);line-height:1.8;" contenteditable="true" id="em-corpo"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-surface);border-radius:var(--radius);border:1px solid var(--border-light);margin-bottom:10px;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="14" rx="1"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="9" x2="9" y2="9"/></svg>
+          <span style="font-size:12px;color:var(--text-muted);flex:1;" id="em-anexo">Orcamento_361_v1.pdf</span>
+          <span class="badge b-env">Anexado</span>
+        </div>
+        <div style="background:var(--teal-light);border-radius:var(--radius);padding:10px 13px;font-size:11px;color:var(--teal-dark);display:flex;align-items:flex-start;gap:8px;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><polyline points="13 2 6 12 2 8"/></svg>
+          <span>Link de assinatura digital incluso. O cliente assina com validade jurídica diretamente no portal — compatível com <strong>D4Sign</strong> e <strong>ClickSign</strong>.</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="sec-title">Assinatura digital — fornecedor</div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:var(--text);">Assine o documento como fornecedor:</div>
+          <canvas id="sign-canvas" class="sign-canvas" width="400" height="100"></canvas>
+          <div style="display:flex;gap:6px;margin-top:8px;">
+            <button class="btn btn-ghost btn-xs" onclick="clearCanvas()">Limpar assinatura</button>
+            <button class="btn btn-pgm btn-pgm-salvar btn-xs" onclick="salvarAssinatura()">✓ Salvar assinatura</button>
+          </div>
+        </div>
+        <div id="sign-ok" style="display:none;background:var(--teal-light);border-radius:var(--radius);padding:10px 12px;display:none;align-items:center;gap:8px;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 6 12 2 8"/></svg>
+          <span style="font-size:12px;color:var(--teal-dark);font-weight:500;">Assinatura salva · PGM Soluções em TI Ltda</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec-title">Assinatura digital — cliente</div>
+        <div style="background:var(--bg-surface);border-radius:var(--radius);padding:14px;text-align:center;border:1px solid var(--border-light);">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">O cliente receberá um link exclusivo por e-mail para assinar digitalmente.</div>
+          <div style="font-size:11px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;font-family:monospace;color:var(--blue-dark);margin-bottom:10px;word-break:break-all;">https://portal.pgm.inf.br/assinar/361/abc123</div>
+          <div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px;">
+            <span class="badge" style="background:var(--purple-light);color:var(--purple-dark);">D4Sign</span>
+            <span class="badge" style="background:var(--blue-light);color:var(--blue-dark);">ClickSign</span>
+            <span class="badge b-env">ICP-Brasil</span>
+          </div>
+          <button class="btn btn-pgm btn-pgm-email btn-sm" style="width:100%;justify-content:center;" onclick="simularAssinaturaCliente()">Simular assinatura do cliente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    <button class="btn btn-ghost" onclick="goTo('pg-print')">← Voltar</button>
+    <button class="btn btn-pgm btn-pgm-salvar" onclick="enviarAssinar()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><line x1="14" y1="2" x2="5" y2="11"/><polygon points="14 2 9 14 5 11 14 2"/></svg>
+      Enviar e aguardar assinatura →
+    </button>
+  </div>
+</div>
+
+<!-- ============ SUCESSO ============ -->
+<div class="pg" id="pg-sucesso">
+  <div class="card" style="text-align:center;padding:32px;max-width:600px;margin:0 auto;">
+    <div style="width:60px;height:60px;border-radius:50%;background:var(--teal-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00C08B" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div style="font-size:26px;font-weight:600;color:var(--teal);margin-bottom:4px;" id="suc-titulo">Orçamento #361 v1 gerado!</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:24px;" id="suc-sub">Proposta enviada. Aguardando assinaturas digitais.</div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:28px;">
+      <button class="btn btn-ghost" onclick="goTo('pg-lista')">Ver lista</button>
+      <button class="btn btn-pgm btn-pgm-email" onclick="goTo('pg-esign')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="1" y="3" width="14" height="10" rx="1"/><polyline points="1 3 8 9 15 3"/></svg>
+        Reenviar e-mail
+      </button>
+      <button type="button" class="btn btn-pgm btn-pgm-pdf">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/><polyline points="8 2 8 10"/><polyline points="5 7 8 10 11 7"/></svg>
+        Baixar PDF
+      </button>
+      <button class="btn btn-pgm btn-pgm-salvar" onclick="novoOrc()">+ Novo orçamento</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:800px;margin:0 auto;">
+    <div class="card">
+      <div class="sec-title">Status das assinaturas</div>
+      <div id="sign-status">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-light);">
+          <div style="display:flex;align-items:center;gap:8px;"><div class="av">PG</div><div><div style="font-size:12px;font-weight:500;">PGM Soluções em TI Ltda</div><div style="font-size:11px;color:var(--text-muted);">Fornecedor</div></div></div>
+          <span class="badge b-env" id="pgm-sign-badge">Assinado</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;">
+          <div style="display:flex;align-items:center;gap:8px;"><div class="av" id="cli-av">CL</div><div><div style="font-size:12px;font-weight:500;" id="cli-sign-name">Cliente</div><div style="font-size:11px;color:var(--text-muted);">Contratante</div></div></div>
+          <span class="badge b-pend" id="cli-sign-badge">Aguardando</span>
+        </div>
+      </div>
+      <button class="btn btn-pgm btn-pgm-email btn-sm" style="width:100%;justify-content:center;margin-top:10px;" onclick="simularAssinaturaCliente2()">Simular assinatura do cliente</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Histórico / timeline</div>
+      <div id="timeline-suc">
+        <div class="tl-item">
+          <div class="tl-dot" style="background:var(--teal-light);"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#0F6E56" stroke-width="2"><polyline points="13 2 6 12 2 8"/></svg></div>
+          <div class="tl-body"><div class="tl-title">Orçamento criado · #361 v1</div><div class="tl-sub">24/03/2026 · Darli G.</div></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot" style="background:var(--teal-light);"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#0F6E56" stroke-width="2"><polyline points="13 2 6 12 2 8"/></svg></div>
+          <div class="tl-body"><div class="tl-title">Aprovação interna concedida</div><div class="tl-sub">24/03/2026 · Gerente comercial</div></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot" style="background:var(--blue-light);"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#0C447C" stroke-width="2"><rect x="1" y="3" width="14" height="10" rx="1"/><polyline points="1 3 8 9 15 3"/></svg></div>
+          <div class="tl-body"><div class="tl-title">E-mail enviado ao cliente</div><div class="tl-sub">24/03/2026 · Com link de assinatura</div></div>
+        </div>
+        <div class="tl-item" id="tl-asscliente" style="display:none;">
+          <div class="tl-dot" style="background:var(--teal-light);"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#0F6E56" stroke-width="2"><polyline points="13 2 6 12 2 8"/></svg></div>
+          <div class="tl-body"><div class="tl-title" style="color:var(--teal-dark);">Cliente assinou digitalmente</div><div class="tl-sub">24/03/2026 · via portal · ICP-Brasil</div></div>
+        </div>
+        <div class="tl-item" id="tl-finalizado" style="display:none;">
+          <div class="tl-dot" style="background:var(--teal);"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2"><polyline points="13 2 6 12 2 8"/></svg></div>
+          <div class="tl-body"><div class="tl-title" style="color:var(--teal-dark);font-weight:600;">Contrato finalizado!</div><div class="tl-sub">Todas as assinaturas coletadas · Documento arquivado</div></div>
+        </div>
+        <div class="tl-item" id="tl-wait">
+          <div class="tl-dot" style="background:var(--bg-surface);border:1px solid var(--border);"><div style="width:8px;height:8px;border-radius:50%;background:var(--border);"></div></div>
+          <div class="tl-body"><div class="tl-title" style="color:var(--text-muted);">Assinatura do cliente</div><div class="tl-sub">Aguardando...</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /#dynamic-content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- CATALOG MODAL -->
+<div class="catalog-overlay" id="catalog-overlay">
+  <div class="catalog-modal">
+    <div class="catalog-header">
+      <div>
+        <div style="font-size:15px;font-weight:600;color:var(--text);">Catálogo de produtos</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Clique para adicionar ao orçamento</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeCatalog()">✕ Fechar</button>
+    </div>
+    <div class="catalog-search">
+      <input type="text" id="cat-search" placeholder="Buscar produto, código ou descrição..." oninput="filterCatalog(this.value)"/>
+    </div>
+    <div class="catalog-body" id="cat-body"></div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-icon" id="modal-icon" style="background:var(--amber-light);"></div>
+    <h3 id="modal-title">Confirmar ação</h3>
+    <p id="modal-desc">Descrição da ação.</p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-pgm btn-pgm-salvar" id="modal-ok" onclick="closeModal()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const R = v => 'R$ ' + Number(v).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const ini = n => n.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+const tipM = {prod:'b-prod',serv:'b-serv',lic:'b-lic',loc:'b-loc'};
+const tipL = {prod:'Produto',serv:'Serviço',lic:'Licença',loc:'Locação'};
+
+// CATALOG DATA
+const catalog = [
+  {cod:'HW-001',nome:'Computador Work Office AMD',spec:'Ryzen 7 4.6GHz · 32GB RAM · NVMe 256GB · Fonte 500W 80+ · Win 11 Pro · Office H&B 2019',tipo:'prod',preco:7890,custo:5200,estoque:8,unidade:'un'},
+  {cod:'HW-002',nome:'Notebook Ultrabook Intel i7',spec:'Intel i7 13ª · 16GB · SSD 512GB · Tela 15.6" FHD · Win 11 Pro',tipo:'prod',preco:5490,custo:3800,estoque:3,unidade:'un'},
+  {cod:'HW-003',nome:'Switch Gerenciável 24p PoE',spec:'Ubiquiti US-24-250W · 24 portas PoE · Gerenciável · Rack',tipo:'prod',preco:3800,custo:2650,estoque:5,unidade:'un'},
+  {cod:'HW-004',nome:'Servidor Dell PowerEdge T40',spec:'Intel Xeon E-2224G · 16GB ECC · HDD 2TB · Torre',tipo:'prod',preco:12500,custo:9100,estoque:2,unidade:'un'},
+  {cod:'SW-001',nome:'Licença ERP Enterprise PGM',spec:'Módulos: Clientes, OS, Orçamentos, Tickets, Agenda · 1 usuário',tipo:'lic',preco:1200,custo:0,estoque:999,unidade:'usr/mês'},
+  {cod:'SW-002',nome:'Windows 11 Pro OEM',spec:'Licença perpétua · 64 bits · Inclui suporte Microsoft',tipo:'lic',preco:890,custo:620,estoque:999,unidade:'un'},
+  {cod:'SW-003',nome:'Microsoft Office 365 Business',spec:'Word, Excel, PowerPoint, Teams · Assinatura anual por usuário',tipo:'lic',preco:480,custo:320,estoque:999,unidade:'usr/ano'},
+  {cod:'SV-001',nome:'Implantação e configuração',spec:'Setup completo · Instalação · Configuração de rede · Treinamento 8h',tipo:'serv',preco:2500,custo:800,estoque:999,unidade:'projeto'},
+  {cod:'SV-002',nome:'Suporte técnico mensal',spec:'8h/mês · Remoto + presencial · SLA 4h · Relatório mensal',tipo:'serv',preco:890,custo:300,estoque:999,unidade:'mês'},
+  {cod:'SV-003',nome:'Migração de dados',spec:'Importação de planilhas, sistemas legados · Validação · Backup',tipo:'serv',preco:1800,custo:600,estoque:999,unidade:'projeto'},
+  {cod:'LC-001',nome:'Locação servidor cloud',spec:'4 vCPU · 16GB RAM · 200GB SSD · Backup diário · 99.9% uptime',tipo:'loc',preco:490,custo:180,estoque:999,unidade:'mês'},
+  {cod:'LC-002',nome:'Locação notebook i5',spec:'Intel i5 · 8GB · SSD 256GB · Win 11 Pro · Seguro incluso',tipo:'loc',preco:280,custo:120,estoque:12,unidade:'mês'},
+];
+
+// LIST DATA
+const listaData = [
+  {id:360,emp:'Fellicci Ind de Mov Ltda',st:'pend',tot:8500,custo:5800,dt:'20/03/2026',ver:'v1'},
+  {id:359,emp:'PGM Soluções em TI Ltda',st:'pend',tot:3200,custo:1200,dt:'02/03/2026',ver:'v2'},
+  {id:357,emp:'Transportes Cristofoli Ltda',st:'env',tot:15700,custo:10200,dt:'20/02/2026',ver:'v1'},
+  {id:356,emp:'Transportes Cristofoli Ltda',st:'aprov',tot:6400,custo:4100,dt:'20/02/2026',ver:'v3'},
+  {id:355,emp:'Transportes Cristofoli Ltda',st:'pend',tot:4100,custo:2900,dt:'20/02/2026',ver:'v1'},
+  {id:352,emp:'Fellicci Ind de Mov Ltda',st:'aprov',tot:12000,custo:7800,dt:'13/02/2026',ver:'v2'},
+  {id:350,emp:'Transportes Cristofoli Ltda',st:'recus',tot:5600,custo:3800,dt:'11/02/2026',ver:'v1'},
+  {id:349,emp:'Rodrigo Bertolini',st:'pend',tot:1800,custo:900,dt:'10/02/2026',ver:'v1'},
+  {id:348,emp:'Compomaq Ind de Maq para Bebidas',st:'aprov',tot:22400,custo:15600,dt:'06/02/2026',ver:'v1'},
+  {id:343,emp:'Engemed Assessoria em Segurança do Trabalho',st:'pend',tot:7300,custo:4200,dt:'22/01/2026',ver:'v1'},
+];
+
+const bdgM = {pend:'b-pend',env:'b-env',aprov:'b-aprov',recus:'b-recus',arq:'b-arq'};
+const bdgL = {pend:'Pendente',env:'Enviado',aprov:'Aprovado',recus:'Recusado',arq:'Arquivado'};
+
+let curFilter = 'pend';
+let items = [];
+let orcVersion = 1;
+let internalApproved = false;
+let signatureSaved = false;
+
+// ===== RENDER LISTA =====
+function renderLista(rows){
+  const tb = document.getElementById('lista-body');
+  tb.innerHTML = rows.length ? rows.map(r => {
+    let m = null;
+    if (r.tot > 0.0001 && r.custo > 0.0001) {
+      m = Math.round((r.tot - r.custo) / r.tot * 100);
+    } else if (r.tot > 0.0001) {
+      m = 100;
+    }
+    const mc = m === null ? '#6b6a65' : (m > 30 ? '#00C08B' : m > 15 ? '#FFC107' : '#E24B4A');
+    const margTxt = m === null ? '—' : (m + '%');
+    return `<tr onclick="abrirOrc(${r.id})">
+      <td style="font-weight:600;color:var(--teal);">#${r.id}</td>
+      <td><div style="display:flex;align-items:center;gap:8px;"><div class="av">${ini(r.emp)}</div><span style="color:var(--text);font-weight:500;">${r.emp}</span></div></td>
+      <td><span class="badge b-v" style="background:#00C08B;">${r.ver}</span></td>
+      <td><span class="badge ${bdgM[r.st]}">${bdgL[r.st]}</span></td>
+      <td class="r" style="font-weight:600;">${R(r.tot)}</td>
+      <td class="r"><span style="font-weight:700;color:${mc};">${margTxt}</span></td>
+      <td class="mu" style="color:var(--text);">${r.dt}</td>
+      <td><div style="display:flex;gap:4px;">
+        <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();abrirOrc(${r.id})">Ver</button>
+        <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();">•••</button>
+      </div></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--text-muted);">Nenhum orçamento encontrado.</td></tr>';
+}
+
+function updateCounts(){
+  document.getElementById('cnt-pend').textContent = listaData.filter(r=>r.st==='pend').length;
+  document.getElementById('cnt-env').textContent = listaData.filter(r=>r.st==='env').length;
+  document.getElementById('cnt-aprov').textContent = listaData.filter(r=>r.st==='aprov').length;
+  document.getElementById('cnt-recus').textContent = listaData.filter(r=>r.st==='recus').length;
+  document.getElementById('cnt-all').textContent = listaData.length;
+  document.getElementById('lista-count').textContent = listaData.filter(r=>curFilter==='all'||r.st===curFilter).length + ' registros';
+}
+
+function filtStat(s,el){
+  curFilter=s;
+  document.querySelectorAll('#pg-lista .stats .stat').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  const tabMap = {pend:0, env:1, aprov:2, recus:3, all:4};
+  const tabs = document.querySelectorAll('#pg-lista .tabs .tab');
+  const ti = tabMap[s];
+  tabs.forEach(t=>t.classList.remove('active'));
+  if (ti !== undefined && tabs[ti]) tabs[ti].classList.add('active');
+  renderLista(s==='all'?listaData:listaData.filter(r=>r.st===s));
+}
+function switchTab(el,s){
+  curFilter=s;
+  document.querySelectorAll('#pg-lista .tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const statMap = {pend:0, env:1, aprov:2, recus:3, all:4};
+  const stats = document.querySelectorAll('#pg-lista .stats .stat');
+  const si = statMap[s];
+  stats.forEach(e=>e.classList.remove('active'));
+  if (si !== undefined && stats[si]) stats[si].classList.add('active');
+  renderLista(s==='all'?listaData:listaData.filter(r=>r.st===s));
+}
+function filtQ(q){
+  const f=q.toLowerCase();
+  const base=curFilter==='all'?listaData:listaData.filter(r=>r.st===curFilter);
+  renderLista(base.filter(r=>r.emp.toLowerCase().includes(f)||String(r.id).includes(f)));
+}
+function abrirOrc(id){ goTo('pg-print'); }
+
+// ===== CATALOG =====
+function renderCatalog(data){
+  const body = document.getElementById('cat-body');
+  body.innerHTML = data.map(p => {
+    const m = p.custo>0?Math.round((p.preco-p.custo)/p.preco*100):null;
+    const sc = p.estoque>5?'stock-ok':p.estoque>0?'stock-low':'stock-no';
+    const sl = p.estoque>5?'Em estoque ('+p.estoque+')':p.estoque>0?'Baixo estoque ('+p.estoque+')':'Sem estoque';
+    return `<div class="catalog-item" onclick="addFromCatalog('${p.cod}')">
+      <div class="catalog-item-info">
+        <div class="catalog-item-name">${p.nome} <span class="badge ${tipM[p.tipo]}" style="font-size:9px;">${tipL[p.tipo]}</span></div>
+        <div class="catalog-item-spec">${p.spec}</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+          <span class="catalog-item-stock ${sc}">${sl}</span>
+          ${m!==null?`<span style="font-size:10px;color:var(--teal);font-weight:600;">Margem: ${m}%</span>`:''}
+        </div>
+      </div>
+      <div class="catalog-item-prices">
+        <div class="catalog-item-price">${R(p.preco)}</div>
+        <div class="catalog-item-cost">${p.custo>0?'Custo: '+R(p.custo):'Serviço interno'}</div>
+        <div style="font-size:10px;color:var(--text-hint);">${p.unidade}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function filterCatalog(q){
+  const f=q.toLowerCase();
+  renderCatalog(catalog.filter(p=>p.nome.toLowerCase().includes(f)||p.cod.toLowerCase().includes(f)||p.spec.toLowerCase().includes(f)));
+}
+function openCatalog(){ document.getElementById('catalog-overlay').classList.add('open'); renderCatalog(catalog); }
+function closeCatalog(){ document.getElementById('catalog-overlay').classList.remove('open'); }
+function addFromCatalog(cod){
+  const p = catalog.find(x=>x.cod===cod);
+  if(!p) return;
+  items.push({cod:p.cod,nom:p.nome,tip:p.tipo,qtd:1,uni:p.preco,cus:p.custo,men:p.tipo==='loc'?p.preco:0,des:p.spec.split('·')[0].trim()});
+  renderItems(); calcTotais(); closeCatalog();
+}
+
+// ===== ITEMS =====
+function addItem(){
+  const nom = document.getElementById('f-nom').value.trim();
+  if(!nom){ document.getElementById('f-nom').focus(); return; }
+  items.push({
+    cod:document.getElementById('f-cod').value.trim(),
+    nom, tip:document.getElementById('f-tip').value,
+    qtd:Math.round(parseFloat(document.getElementById('f-qtd').value)||1),
+    uni:parseFloat(document.getElementById('f-uni').value)||0,
+    cus:parseFloat(document.getElementById('f-cus').value)||0,
+    men:parseFloat(document.getElementById('f-men').value)||0,
+    des:document.getElementById('f-des').value.trim(),
+  });
+  ['f-cod','f-nom','f-uni','f-cus','f-men','f-des'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-qtd').value=1;
+  renderItems(); calcTotais();
+}
+function remItem(i){ items.splice(i,1); renderItems(); calcTotais(); }
+
+function margClass(m){ return m>30?'margin-good':m>15?'margin-warn':'margin-bad'; }
+function margColor(m){ return m>30?'var(--teal)':m>15?'var(--amber)':'var(--red)'; }
+
+function renderItems(){
+  const b = document.getElementById('itens-body');
+  if(!items.length){
+    b.innerHTML='<tr><td colspan="9" style="text-align:center;padding:22px;color:var(--text-muted);">Use o catálogo ou adicione itens manualmente.</td></tr>';
+    return;
+  }
+  b.innerHTML = items.map((it,i)=>{
+    const vt=it.qtd*it.uni, ct=it.qtd*it.cus;
+    const m=vt>0&&ct>0?Math.round((vt-ct)/vt*100):null;
+    return `<tr>
+      <td style="font-size:11px;color:var(--text-muted);font-family:monospace;">${it.cod||'—'}</td>
+      <td style="font-weight:500;">${it.nom}${it.des?`<div style="font-size:11px;color:var(--text-muted);font-weight:400;">${it.des}</div>`:''}</td>
+      <td><span class="badge ${tipM[it.tip]}">${tipL[it.tip]}</span></td>
+      <td class="r">${it.qtd}</td>
+      <td class="r">${R(it.uni)}</td>
+      <td class="r" style="color:var(--text-muted);">${it.cus?R(it.cus):'—'}</td>
+      <td class="r">${m!==null?`<span style="font-weight:600;color:${margColor(m)};">${m}%</span>`:'—'}</td>
+      <td class="r" style="font-weight:600;color:var(--teal);">${R(vt)}</td>
+      <td><button onclick="remItem(${i})" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);padding:0 4px;border-radius:4px;line-height:1;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">×</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function calcTotais(){
+  let sub=0,cus=0,men=0;
+  items.forEach(it=>{sub+=it.qtd*it.uni;cus+=it.qtd*it.cus;men+=it.men;});
+  const dv=parseFloat(document.getElementById('disc-val').value)||0;
+  const dt=document.getElementById('disc-tipo').value;
+  const disc=dt==='pct'?sub*(dv/100):Math.min(dv,sub);
+  const tot=Math.max(0,sub-disc);
+  const lucro=tot-cus;
+  const marg=tot>0&&cus>0?Math.round(lucro/tot*100):0;
+  const mc=margClass(marg);
+
+  document.getElementById('disc-show').textContent=R(disc);
+  document.getElementById('t-sub').textContent=R(sub);
+  document.getElementById('t-cus').textContent=R(cus);
+  document.getElementById('t-disc').textContent='— '+R(disc);
+  document.getElementById('t-marg').textContent=marg+'%';
+  document.getElementById('t-marg').style.color=margColor(marg);
+  document.getElementById('t-tot').textContent=R(tot);
+
+  document.getElementById('ms-subtotal').textContent=R(sub);
+  document.getElementById('ms-custo').textContent=R(cus);
+  document.getElementById('ms-lucro').textContent=R(lucro);
+  document.getElementById('ms-margem').textContent=marg+'%';
+  document.getElementById('ms-margem').style.color=margColor(marg);
+  document.getElementById('ms-bar').style.width=Math.min(marg,100)+'%';
+  document.getElementById('ms-bar').className='margin-fill '+mc;
+
+  // Alçada
+  checkAlçada(disc, sub, dv, dt, tot);
+}
+
+function checkAlçada(disc, sub, dv, dt, tot){
+  const pct = dt==='pct'?dv:(sub>0?disc/sub*100:0);
+  const alert = document.getElementById('alcada-alert');
+  const msg = document.getElementById('alcada-msg');
+  const desc = document.getElementById('alcada-desc');
+  const btns = document.getElementById('alcada-btns');
+  if(pct>15||tot>50000){
+    alert.style.display='block';
+    if(tot>50000 && pct>15){
+      msg.textContent='Aprovação de gerente e diretoria necessária';
+      desc.textContent=`Desconto de ${Math.round(pct)}% (acima de 15%) e valor total de ${R(tot)} (acima de R$ 50.000) exigem dupla aprovação antes do envio ao cliente.`;
+    } else if(tot>50000){
+      msg.textContent='Aprovação da diretoria necessária';
+      desc.textContent=`Valor total de ${R(tot)} está acima de R$ 50.000. Aprovação da diretoria obrigatória.`;
+    } else {
+      msg.textContent='Aprovação do gerente necessária';
+      desc.textContent=`Desconto de ${Math.round(pct)}% está acima de 15%. Aguardando aprovação do gerente comercial.`;
+    }
+    document.getElementById('wf-dir').style.display = tot>50000?'flex':'none';
+    btns.innerHTML=`<button class="btn btn-pgm btn-pgm-salvar btn-xs" onclick="internalApproved=true;document.getElementById('alcada-alert').style.display='none';">✓ Simular aprovação</button>`;
+  } else {
+    alert.style.display='none';
+    internalApproved=true;
+  }
+}
+
+// ===== INTERNAL APPROVAL =====
+function aprovarInterno(){
+  internalApproved=true;
+  const dot = document.querySelector('#wf-gerente .wf-dot');
+  dot.className='wf-dot wf-ok';
+  dot.innerHTML='<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#0F6E56" stroke-width="2.5"><polyline points="13 2 6 12 2 8"/></svg>';
+  document.querySelector('#wf-gerente .wf-title').style.color='var(--text)';
+  document.getElementById('wf-ger-sub').textContent='Aprovado · 24/03/2026 · Gerente comercial';
+  document.getElementById('wf-btns').innerHTML='<span class="badge b-env">✓ Aprovado internamente — pronto para envio</span>';
+}
+function reprovarInterno(){
+  document.getElementById('wf-btns').innerHTML='<span class="badge b-recus">✗ Reprovado — edite o orçamento</span><button class="btn btn-ghost btn-xs" onclick="goTo(\'pg-novo\')" style="margin-left:8px;">Editar</button>';
+}
+
+// ===== VERSION =====
+function criarNovaVersao(){
+  orcVersion++;
+  const vp = document.querySelector('.version-panel');
+  const oldBadge = vp.querySelector('.version-badge');
+  oldBadge.className='version-badge v-old';
+  oldBadge.textContent='v'+(orcVersion-1)+' — anterior';
+  const vi = document.createElement('div');
+  vi.className='version-item';
+  vi.innerHTML=`<div style="display:flex;align-items:center;gap:8px;"><span class="version-badge v-current">v${orcVersion} — atual</span><span style="font-size:12px;font-weight:500;">Revisão do cliente</span></div><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:11px;color:var(--text-muted);">24/03/2026 · Darli G.</span><span class="badge b-pend">Rascunho</span></div>`;
+  vp.insertBefore(vi, vp.firstChild);
+  document.getElementById('rv-title').textContent='#361 v'+orcVersion;
+  document.getElementById('orc-num-title').textContent='#361 v'+orcVersion;
+  document.getElementById('p-num').textContent='Nº 361 v'+orcVersion+' · 24/03/2026';
+}
+
+// ===== FORM =====
+document.getElementById('n-cli').addEventListener('change', function(){
+  const opt = this.options[this.selectedIndex];
+  document.getElementById('n-cnpj').value = opt.dataset.cnpj||'';
+  document.getElementById('n-email').value = opt.dataset.email||'';
+  document.getElementById('n-contato').value = opt.dataset.contato||'';
+});
+
+function irRevisao(){
+  const cli = document.getElementById('n-cli').value;
+  if(!cli){ document.getElementById('n-cli').focus(); return; }
+  const sub=items.reduce((s,it)=>s+it.qtd*it.uni,0);
+  const cus=items.reduce((s,it)=>s+it.qtd*it.cus,0);
+  const dv=parseFloat(document.getElementById('disc-val').value)||0;
+  const dt=document.getElementById('disc-tipo').value;
+  const disc=dt==='pct'?sub*(dv/100):Math.min(dv,sub);
+  const tot=Math.max(0,sub-disc);
+  const lucro=tot-cus;
+  const marg=tot>0&&cus>0?Math.round(lucro/tot*100):0;
+  const val=document.getElementById('n-val').value.split('-').reverse().join('/');
+  const pag=document.getElementById('n-pag').value;
+  const email=document.getElementById('n-email').value||'—';
+  const cont=document.getElementById('n-contato').value||'—';
+  const obs=document.getElementById('n-obs').value||'';
+
+  document.getElementById('rv-cli').textContent=cli;
+  document.getElementById('rv-pag').textContent=pag;
+  document.getElementById('rv-val').textContent=val;
+  document.getElementById('rv-sub').textContent=R(tot);
+  document.getElementById('rv-lucro').textContent=R(lucro);
+  document.getElementById('rv-cus').textContent=R(cus);
+  document.getElementById('rv-marg').textContent=marg+'%';
+  document.getElementById('rv-marg').style.color=margColor(marg);
+  document.getElementById('rv-bar').style.width=Math.min(marg,100)+'%';
+  document.getElementById('rv-bar').className='margin-fill '+margClass(marg);
+  document.getElementById('rv-tot-sub').textContent=R(sub);
+  document.getElementById('rv-tot-disc').textContent='— '+R(disc);
+  document.getElementById('rv-tot').textContent=R(tot);
+  document.getElementById('rv-body').innerHTML=items.length?items.map(it=>{
+    const vt=it.qtd*it.uni, ct=it.qtd*it.cus;
+    const m=vt>0&&ct>0?Math.round((vt-ct)/vt*100):null;
+    return `<tr><td style="font-weight:500;">${it.nom}</td><td><span class="badge ${tipM[it.tip]}">${tipL[it.tip]}</span></td><td class="r">${it.qtd}</td><td class="r">${R(it.uni)}</td><td class="r" style="color:var(--text-muted);">${it.cus?R(it.cus):'—'}</td><td class="r">${m!==null?`<span style="font-weight:600;color:${margColor(m)};">${m}%</span>`:'—'}</td><td class="r" style="font-weight:600;color:var(--teal);">${R(vt)}</td></tr>`;
+  }).join(''):'<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--text-muted);">Sem itens.</td></tr>';
+
+  // Print
+  document.getElementById('p-cli').textContent=cli;
+  document.getElementById('p-cnpj').textContent=document.getElementById('n-cnpj').value||'';
+  document.getElementById('p-cont').textContent=cont+' · '+email;
+  document.getElementById('p-pag').textContent=pag;
+  document.getElementById('p-val2').textContent=val;
+  document.getElementById('p-val-dt').textContent=val;
+  document.getElementById('p-sub').textContent=R(sub);
+  document.getElementById('p-disc').textContent=disc>0?'— '+R(disc):'—';
+  document.getElementById('p-tot').textContent=R(tot);
+  document.getElementById('p-sig-cli').textContent=cli;
+  document.getElementById('p-obs-block').textContent=obs||'Permanecemos à disposição para quaisquer esclarecimentos.';
+  document.getElementById('p-body').innerHTML=items.length?items.map(it=>{
+    const vt=it.qtd*it.uni;
+    return `<tr><td style="font-size:9px;color:#999;">${it.cod||'—'}</td><td class="b">${it.nom}${it.des?`<div style="font-size:9px;color:#666;font-weight:400;">${it.des}</div>`:''}</td><td><span style="display:inline-flex;padding:2px 6px;border-radius:99px;font-size:9px;font-weight:600;" class="${tipM[it.tip]}">${tipL[it.tip]}</span></td><td class="r">${it.qtd}</td><td class="r">${R(it.uni)}</td><td class="r b" style="color:#00C08B;">${R(vt)}</td></tr>`;
+  }).join(''):'<tr><td colspan="6" style="text-align:center;padding:14px;color:#999;">Sem itens.</td></tr>';
+
+  // E-mail
+  document.getElementById('em-para').value=email==='—'?'':email;
+  document.getElementById('em-assunto').value=`Proposta de Orçamento Nº 361 v${orcVersion} — PGM Soluções`;
+  document.getElementById('em-anexo').textContent=`Orcamento_361_v${orcVersion}.pdf`;
+  document.getElementById('em-corpo').textContent=`Prezado(a) ${cont==='—'?cli:cont},\n\nSegue nossa Proposta de Orçamento Nº 361 v${orcVersion} no valor de ${R(tot)}.\n\nPara assinar digitalmente, acesse:\nhttps://portal.pgm.inf.br/assinar/361/abc123\n\nAtenciosamente,\nPGM Soluções em TI Ltda`;
+
+  // Sucesso
+  document.getElementById('suc-sub').textContent=`Proposta enviada para ${cli}. Aguardando assinaturas digitais.`;
+  const cliAv = document.getElementById('cli-av');
+  cliAv.textContent=ini(cli);
+  document.getElementById('cli-sign-name').textContent=cli;
+
+  goTo('pg-revisao');
+}
+
+function limparForm(){
+  items=[];
+  document.getElementById('n-cli').value='';
+  document.getElementById('n-cnpj').value='';
+  document.getElementById('n-email').value='';
+  document.getElementById('n-contato').value='';
+  document.getElementById('n-obs').value='';
+  document.getElementById('disc-val').value=0;
+  renderItems(); calcTotais();
+}
+
+// ===== ESIGN CANVAS =====
+let painting=false,ctx,lastX,lastY;
+function initCanvas(){
+  const c=document.getElementById('sign-canvas');
+  if(!c) return;
+  ctx=c.getContext('2d');
+  ctx.strokeStyle='#1a1a18';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';
+  c.addEventListener('mousedown',e=>{painting=true;[lastX,lastY]=[e.offsetX,e.offsetY];});
+  c.addEventListener('mousemove',e=>{if(!painting)return;ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(e.offsetX,e.offsetY);ctx.stroke();[lastX,lastY]=[e.offsetX,e.offsetY];});
+  c.addEventListener('mouseup',()=>painting=false);
+  c.addEventListener('mouseleave',()=>painting=false);
+}
+function clearCanvas(){if(ctx)ctx.clearRect(0,0,400,100);}
+function salvarAssinatura(){
+  signatureSaved=true;
+  const ok=document.getElementById('sign-ok');
+  ok.style.display='flex';
+  const c=document.getElementById('sign-canvas');
+  const img=c.toDataURL();
+  const el=document.getElementById('p-sig-img');
+  el.innerHTML=`<img src="${img}" style="height:36px;opacity:.7;"/>`;
+}
+function simularAssinaturaCliente(){ goTo('pg-sucesso'); finalizarAssinatura(); }
+function simularAssinaturaCliente2(){ finalizarAssinatura(); }
+function finalizarAssinatura(){
+  document.getElementById('cli-sign-badge').textContent='Assinado';
+  document.getElementById('cli-sign-badge').className='badge b-env';
+  document.getElementById('tl-asscliente').style.display='flex';
+  document.getElementById('tl-finalizado').style.display='flex';
+  document.getElementById('tl-wait').style.display='none';
+  document.getElementById('suc-titulo').textContent='Contrato finalizado! 🎉';
+  document.getElementById('suc-sub').textContent='Todas as assinaturas coletadas. Documento arquivado com validade jurídica (ICP-Brasil).';
+}
+
+function enviarAssinar(){ goTo('pg-sucesso'); }
+
+// ===== NAVIGATION (só troca conteúdo em #dynamic-content; topbar permanece) =====
+const PAGE_TITLES={
+  'pg-lista':'Lista',
+  'pg-novo':'Novo',
+  'pg-revisao':'Revisão',
+  'pg-print':'Impressão',
+  'pg-esign':'Assinatura',
+  'pg-sucesso':'Concluído'
+};
+function setTopbarDate(){
+  const el=document.getElementById('topbar-date');
+  if(!el) return;
+  const d=new Date();
+  el.textContent=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function goTo(id){
+  document.querySelectorAll('#dynamic-content .pg').forEach(p=>p.classList.remove('show'));
+  const page=document.getElementById(id);
+  if(page) page.classList.add('show');
+  const titleEl=document.getElementById('page-title');
+  if(titleEl) titleEl.textContent=PAGE_TITLES[id]||'—';
+  if(id==='pg-esign') setTimeout(initCanvas,100);
+}
+
+function novoOrc(){
+  items=[];orcVersion=1;internalApproved=false;signatureSaved=false;
+  limparForm();
+  document.getElementById('wf-btns').innerHTML='<button class="btn btn-pgm btn-pgm-salvar btn-sm" onclick="aprovarInterno()">✓ Aprovar (gerente)</button><button class="btn btn-red btn-sm" onclick="reprovarInterno()">✗ Reprovar</button>';
+  const dot=document.querySelector('#wf-gerente .wf-dot');
+  dot.className='wf-dot wf-wait';
+  dot.innerHTML='<div style="width:8px;height:8px;border-radius:50%;background:var(--border);"></div>';
+  document.querySelector('#wf-gerente .wf-title').style.color='var(--text-muted)';
+  document.getElementById('wf-ger-sub').textContent='Pendente de verificação';
+  goTo('pg-novo');
+}
+
+function openModal(title,desc,okLabel,okCb){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-desc').textContent=desc;
+  document.getElementById('modal-ok').textContent=okLabel||'Confirmar';
+  document.getElementById('modal-ok').onclick=()=>{closeModal();if(okCb)okCb();};
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal-bg').classList.remove('open'); }
+
+// ===== INIT =====
+setTopbarDate();
+updateCounts();
+renderLista(listaData.filter(r=>r.st==='pend'));
+calcTotais();
+</script>
+</body>
+</html>

@@ -75,7 +75,7 @@ $htmlLang = $erpLocale === 'en_US' ? 'en' : ($erpLocale === 'es' ? 'es' : 'pt-BR
 				'erpBreadcrumb' => (array)($erpBreadcrumb ?? []),
 				'erpEmpresas' => (array)($erpEmpresas ?? []),
 			]) ?>
-			<div class="content">
+			<div id="dynamic-content" class="page-content">
 				<?= $this->Flash->render() ?>
 				<?= $this->fetch('content') ?>
 			</div>

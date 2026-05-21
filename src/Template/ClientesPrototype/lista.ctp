@@ -9,20 +9,16 @@
 $H = $this->ErpPrototype;
 $f = (array)($cliFiltros ?? ['q' => '', 'tipo' => '', 'status' => '']);
 ?>
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-	<div>
-		<div style="font-size:11px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;"><?= h(__('Cadastros')) ?></div>
-		<h1 style="font-size:22px;font-weight:600;margin:0;">👥 <?= h(__('Clientes')) ?></h1>
-		<div style="font-size:12px;color:var(--text-muted);">
-			<?= sprintf(h(__('%d clientes · %d PJ · %d PF no escopo')), (int)$cliCounts['total'], (int)$cliCounts['pj'], (int)$cliCounts['pf']) ?>
-		</div>
-	</div>
-	<div style="display:flex;gap:8px;flex-wrap:wrap;">
-		<?= $this->Html->link('📥 ' . __('Exportar CSV'), ['controller' => 'ClientesPrototype', 'action' => 'exportCsv'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('📤 ' . __('Importar'), ['controller' => 'ClientesPrototype', 'action' => 'view', 'import'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('+ ' . __('Novo cliente'), ['controller' => 'ClientesPrototype', 'action' => 'view', 'novo'], ['class' => 'btn btn-primary btn-sm']) ?>
-	</div>
-</div>
+<?= $this->element('ErpPrototype/page_header', [
+	'eyebrow' => __('Cadastros'),
+	'title' => __('Clientes'),
+	'subtitle' => sprintf(__('%d clientes · %d PJ · %d PF no escopo'), (int)$cliCounts['total'], (int)$cliCounts['pj'], (int)$cliCounts['pf']),
+	'actions' => [
+		['label' => __('Exportar CSV'), 'url' => ['controller' => 'ClientesPrototype', 'action' => 'exportCsv'], 'class' => 'btn btn-ghost btn-sm'],
+		['label' => __('Importar'), 'url' => ['controller' => 'ClientesPrototype', 'action' => 'view', 'import'], 'class' => 'btn btn-ghost btn-sm'],
+		['label' => '+ ' . __('Novo cliente'), 'url' => ['controller' => 'ClientesPrototype', 'action' => 'view', 'novo'], 'class' => 'btn btn-primary'],
+	],
+]) ?>
 
 <div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
 	<div class="stat" style="--sc:var(--teal);"><div class="stat-l"><?= h(__('Total')) ?></div><div class="stat-n"><?= (int)$cliCounts['total'] ?></div></div>

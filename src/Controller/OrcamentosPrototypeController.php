@@ -103,12 +103,25 @@ class OrcamentosPrototypeController extends AppController {
 			$totalValor += $valor;
 			$cl = $o->cliente ?? null;
 			$autor = $o->user ?? null;
+			$stKey = 'pend';
+			if ($st === $stEnv) {
+				$stKey = 'env';
+			} elseif ($st === $stApr) {
+				$stKey = 'aprov';
+			} elseif ($st === $stRec) {
+				$stKey = 'recus';
+			}
+			$empNome = $cl ? (string)($cl->get('razaosocial') ?? $cl->get('nome') ?? '') : '—';
 			$items[] = [
 				'id' => (int)$o->get('id'),
-				'cliente' => $cl ? (string)($cl->get('razaosocial') ?? $cl->get('nome') ?? '') : '—',
+				'cliente' => $empNome,
+				'empresa' => $empNome,
 				'autor' => $autor ? trim((string)($autor->get('name') ?? $autor->get('username'))) : '—',
 				'valor' => $valor,
 				'status' => $st,
+				'st_key' => $stKey,
+				'versao' => 'v1',
+				'margem_pct' => null,
 				'modified' => $o->get('modified') ?? $o->get('created'),
 				'observacao' => (string)($o->get('observacao') ?? ''),
 			];
@@ -118,9 +131,8 @@ class OrcamentosPrototypeController extends AppController {
 			'title' => __('Orçamentos'),
 			'erpNavActive' => 'orc-lista',
 			'erpBreadcrumb' => [
-				['label' => 'PGM ERP'],
-				['label' => __('Comercial')],
-				['label' => __('Orçamentos'), 'cur' => true],
+				['label' => __('Orçamentos')],
+				['label' => __('Lista'), 'cur' => true],
 			],
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
 			'orcCounts' => $counts,
