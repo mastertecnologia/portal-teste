@@ -23,8 +23,9 @@ abstract class AppCompatTestCase extends TestCase {
 		return self::$phpUnit8OrNewer = version_compare(\PHPUnit\Runner\Version::id(), '8.0.0', '>=');
 	}
 
-	protected function assertIsArray($actual, $message = ''): void {
-		if ($this->isPhpUnit8OrNewer()) {
+	public static function assertIsArray($actual, $message = ''): void {
+		if (class_exists(\PHPUnit\Runner\Version::class)
+			&& version_compare(\PHPUnit\Runner\Version::id(), '8.0.0', '>=')) {
 			parent::assertIsArray($actual, $message);
 
 			return;
@@ -32,8 +33,9 @@ abstract class AppCompatTestCase extends TestCase {
 		static::assertInternalType('array', $actual, $message);
 	}
 
-	protected function assertStringContainsString($needle, $haystack, $message = ''): void {
-		if ($this->isPhpUnit8OrNewer()) {
+	public static function assertStringContainsString($needle, $haystack, $message = ''): void {
+		if (class_exists(\PHPUnit\Runner\Version::class)
+			&& version_compare(\PHPUnit\Runner\Version::id(), '8.0.0', '>=')) {
 			parent::assertStringContainsString($needle, $haystack, $message);
 
 			return;
@@ -44,8 +46,12 @@ abstract class AppCompatTestCase extends TestCase {
 		static::assertTrue(strpos((string)$haystack, (string)$needle) !== false, $message);
 	}
 
-	protected function assertEqualsCanonicalizing($expected, $actual, $message = ''): void {
-		if ($this->isPhpUnit8OrNewer()) {
+	/**
+	 * PHPUnit 8+: Assert::assertEqualsCanonicalizing é estático — não pode ser redeclarado como método de instância.
+	 */
+	public static function assertEqualsCanonicalizing($expected, $actual, $message = ''): void {
+		if (class_exists(\PHPUnit\Runner\Version::class)
+			&& version_compare(\PHPUnit\Runner\Version::id(), '8.0.0', '>=')) {
 			parent::assertEqualsCanonicalizing($expected, $actual, $message);
 
 			return;

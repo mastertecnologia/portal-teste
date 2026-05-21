@@ -204,7 +204,7 @@ $sections = array_values(array_filter($sections, static function (array $sec) {
 				$content = h($item['label']) . $badge($itemKey, $badgeStyle);
 				if (!empty($item['url'])) :
 				?>
-					<a class="nav-item<?= $cls($itemKey) ?><?= $indentCls ?>" href="<?= h($u($item['url'])) ?>"><?= $content ?></a>
+					<a class="nav-item<?= $cls($itemKey) ?><?= $indentCls ?>" href="<?= h($u($item['url'])) ?>" data-turbo="false"><?= $content ?></a>
 				<?php else : ?>
 					<span class="nav-item disabled<?= $indentCls ?>" title="<?= h(__('Em construção')) ?>" style="opacity:.45;cursor:not-allowed;"><?= $content ?></span>
 				<?php endif; ?>

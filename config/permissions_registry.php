@@ -1426,7 +1426,7 @@ return [
         "module" => "Tickets",
         "controller" => "Servicedesk",
         "action" =>
-            "index,operacional,slaRelatorio,slarelatorio,view,fila,ticket,downloadAnexo,downloadFile,download_anexo,download_file,csatexportcsv,csathistorico,apinotificacoes,apibadges",
+            "index,operacional,slaRelatorio,slarelatorio,view,fila,ticket,ci,downloadAnexo,downloadFile,download_anexo,download_file,csatexportcsv,csathistorico,apinotificacoes,apibadges",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>

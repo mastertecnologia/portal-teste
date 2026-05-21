@@ -39,7 +39,10 @@ class ServicedeskPrototypeController extends AppController {
 
 		parent::beforeFilter($event);
 		$this->viewBuilder()->setLayout('erp_prototype');
-		$this->set('loadServicedeskPrototypeCss', true);
+		$this->set([
+			'loadServicedeskPrototypeCss' => true,
+			'disablePgmAppShellPremium' => true,
+		]);
 	}
 
 	protected function _erpPrototypeDenyPortalUser(): void {
@@ -70,8 +73,13 @@ class ServicedeskPrototypeController extends AppController {
 		$abac = function (\Cake\ORM\Query $q): void {
 			$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
 		};
-		$dataSvc = new ServicedeskPrototypeDataService($abac);
-		$detail = $dataSvc->buildTicketDetailPayload($this->Tickets, $ticketId, $empresa);
+		try {
+			$dataSvc = new ServicedeskPrototypeDataService($abac);
+			$detail = $dataSvc->buildTicketDetailPayload($this->Tickets, $ticketId, $empresa);
+		} catch (\Throwable $e) {
+			\Cake\Log\Log::error(sprintf('ServicedeskPrototype ticket(%d): %s', $ticketId, $e->getMessage()));
+			throw new NotFoundException(__('Ticket indisponível no momento.'));
+		}
 		if ($detail === null) {
 			throw new NotFoundException(__('Ticket não encontrado ou fora do seu escopo.'));
 		}
@@ -618,38 +626,130 @@ class ServicedeskPrototypeController extends AppController {
 		$this->applyErpShell($page, (string)$meta['title'], [$curLabel], $navBadges);
 
 		$kind = (string)($meta['kind'] ?? '');
-		if ($kind === 'executive') {
-			$this->set('proto', $dataSvc->buildExecutivePayload($this->Tickets, $empresa, $this->Clientes, $this->Users));
-		} elseif ($kind === 'fila') {
-			$p = max(1, (int)$this->request->getQuery('page', 1));
-			$this->set('filaRef', $dataSvc->buildFilaPagePayload(
-				$this->Tickets,
-				$empresa,
-				$p,
-				30,
-				$this->request->getQueryParams()
-			));
-		} elseif ($kind === 'kanban') {
-			$this->set('kanban', $dataSvc->buildKanbanPayload(
-				$this->Tickets,
-				$empresa,
-				$this->request->getQueryParams()
-			));
-		} elseif ($kind === 'screen') {
-			$screen = $screensSvc->build($page, $ctx);
-			if ($page === 'relatorios') {
-				$screen['charts'] = $dataSvc->buildRelatoriosPayload(
+		try {
+			if ($kind === 'executive') {
+				$this->set('proto', $dataSvc->buildExecutivePayload($this->Tickets, $empresa, $this->Clientes, $this->Users));
+			} elseif ($kind === 'fila') {
+				$p = max(1, (int)$this->request->getQuery('page', 1));
+				$this->set('filaRef', $dataSvc->buildFilaPagePayload(
 					$this->Tickets,
 					$empresa,
-					$this->Clientes,
-					$this->Users,
+					$p,
+					30,
 					$this->request->getQueryParams()
-				);
+				));
+			} elseif ($kind === 'kanban') {
+				$this->set('kanban', $dataSvc->buildKanbanPayload(
+					$this->Tickets,
+					$empresa,
+					$this->request->getQueryParams()
+				));
+			} elseif ($kind === 'screen') {
+				$screen = $screensSvc->build($page, $ctx);
+				if ($page === 'relatorios') {
+					$screen['charts'] = $dataSvc->buildRelatoriosPayload(
+						$this->Tickets,
+						$empresa,
+						$this->Clientes,
+						$this->Users,
+						$this->request->getQueryParams()
+					);
+				}
+				$this->set('screen', $screen);
 			}
-			$this->set('screen', $screen);
+		} catch (\Throwable $e) {
+			\Cake\Log\Log::error(sprintf(
+				'ServicedeskPrototype screen(%s) failed: %s',
+				$page,
+				$e->getMessage()
+			), ['exception' => $e]);
+			$this->Flash->warning(__('Não foi possível carregar todos os dados desta tela. Exibindo visão simplificada.'));
+			$this->applyScreenFallback($kind, $page, $empresa);
 		}
 
 		return $this->render($meta['template']);
+	}
+
+	/**
+	 * Payload mínimo quando build* falha (evita página em branco).
+	 *
+	 * @param string $kind
+	 * @param string $page
+	 */
+	protected function applyScreenFallback(string $kind, string $page, int $empresa): void {
+		if ($kind === 'executive') {
+			$this->set('proto', $this->emptyExecutiveProto());
+
+			return;
+		}
+		if ($kind === 'fila') {
+			$this->set('filaRef', [
+				'snap' => [],
+				'sla' => ['overdue' => 0, 'near_due' => 0, 'paused' => 0],
+				'kpis' => [],
+				'violados' => [],
+				'avg_by_state' => [],
+				'fila' => ['rows' => [], 'page' => 1, 'pages' => 1, 'total' => 0],
+				'total_empresa' => 0,
+				'gerado_em' => date('d/m/Y H:i'),
+				'assignment' => [],
+				'filters' => [],
+				'filter_options' => ['queues' => [], 'tecnicos' => [], 'niveis' => []],
+			]);
+
+			return;
+		}
+		if ($kind === 'kanban') {
+			$this->set('kanban', ['columns' => [], 'filters' => []]);
+
+			return;
+		}
+		if ($kind === 'screen') {
+			$this->set('screen', [
+				'title' => $this->screenBreadcrumbLabel($page),
+				'subtitle' => '',
+				'ref_page' => '',
+				'kpis' => [],
+				'rows' => [],
+				'items' => [],
+				'empty' => __('Dados temporariamente indisponíveis.'),
+			]);
+		}
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	protected function emptyExecutiveProto(): array {
+		return [
+			'snapshot' => [
+				'sla_por_etapa' => ['near_due' => 0, 'paused' => 0],
+				'sla_operational_kpis' => [],
+			],
+			'backlog_abac' => 0,
+			'tickets_hoje' => 0,
+			'tickets_ontem' => 0,
+			'sla_violados_total' => 0,
+			'sla_violados_lista' => [],
+			'vol_diario_14' => [],
+			'por_situacao_aberto' => [],
+			'top_clientes' => [],
+			'top_assuntos' => [],
+			'por_categoria' => [],
+			'equipe' => [],
+			'assuntos_quentes' => [],
+			'tickets_abertos_preview' => [],
+			'backlog_empresa' => 0,
+			'heatmap' => [
+				'rows' => [],
+				'hours' => range(8, 18),
+				'max' => 1,
+				'day_labels' => ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'],
+			],
+			'satisfacao' => [],
+			'financeiro' => [],
+			'gerado_em' => date('d/m/Y H:i'),
+		];
 	}
 
 	/**

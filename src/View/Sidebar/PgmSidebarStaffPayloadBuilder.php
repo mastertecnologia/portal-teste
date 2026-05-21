@@ -68,12 +68,13 @@ final class PgmSidebarStaffPayloadBuilder
         if ($sgIncGrp) {
             $items = [];
             if (($sg['tickets_servicedesk'] ?? true)) {
-                $items[] = self::item('headphones', ' Service Desk', ['controller' => 'Servicedesk', 'action' => 'index'], ['data-turbo' => 'false'], $ctx['ticketsServicedeskActive'], '<span class="badge badge-danger hide-menu">12</span>', 'Service Desk');
+                $items[] = self::item('headphones', ' Service Desk', '/servicedesk-prototype', ['data-turbo' => 'false'], (bool)($ctx['ticketsServicedeskActive'] ?? false), '', 'Service Desk');
             }
             if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) {
-                $items[] = self::item('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], [], (bool)($ctx['ticketsOperacionalActive'] ?? false), '', 'Dashboard operacional');
+                $items[] = self::item('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], (bool)($ctx['ticketsOperacionalActive'] ?? false), '', 'Dashboard operacional');
                 $items[] = self::item('bar-chart-3', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ctx['ticketsSlaRelatorioActive'] ?? false), '', 'Relatório SLA');
-                $items[] = self::item('layers', ' SD protótipo (teste)', '/servicedesk-prototype', ['data-turbo' => 'false'], (bool)($ctx['ticketsSdPrototypeActive'] ?? false), '<span class="badge badge-accent hide-menu">β</span>', 'Service Desk protótipo');
+                $legacySdActive = ($ctx['ticketsServicedeskActive'] ?? false) && !($ctx['ticketsSdPrototypeActive'] ?? false);
+                $items[] = self::item('layout-grid', ' Fila legado (React)', '/servicedesk?legacy=1', ['data-turbo' => 'false'], $legacySdActive, '', 'Service Desk legado');
             }
             $configChildren = [];
             if ($roleNav === 0 && (($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true))) {

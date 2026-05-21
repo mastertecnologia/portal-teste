@@ -256,6 +256,13 @@ return [
 			'laudos#clientesbuscar',
 			'laudos#validar',
 			'prototypehistory#setlocale',
+			// Service Desk protótipo (layout erp_prototype, sem turbo-frame)
+			'servicedeskprototype#index',
+			'servicedeskprototype#view',
+			'servicedeskprototype#fila',
+			'servicedeskprototype#ticket',
+			'servicedeskprototype#ci',
+			'servicedeskprototype#csathistorico',
 		],
 		// Em modo warn, também exibir Flash (pode ser repetitivo); env RBAC_WARN_FLASH
 		'warn_flash' => $warnFlash,

@@ -168,12 +168,15 @@
 					</div>
 					<div class="nav-section-items">
 						<?php if (($sg['tickets_servicedesk'] ?? true)) : ?>
-						<?= $pgmSbLink('headphones', ' Service Desk', ['controller' => 'Servicedesk', 'action' => 'index'], ['data-turbo' => 'false'], $ticketsServicedeskActive, '<span class="badge badge-danger hide-menu">12</span>', 'Service Desk') ?>
+						<?= $pgmSbLink('headphones', ' Service Desk', '/servicedesk-prototype', ['data-turbo' => 'false'], $ticketsServicedeskActive, '', 'Service Desk') ?>
 						<?php endif; ?>
 						<?php if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) : ?>
 						<?= $pgmSbLink('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], $ticketsOperacionalActive, '', 'Dashboard operacional') ?>
 						<?= $pgmSbLink('bar-chart-2', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ticketsSlaRelatorioActive ?? false), '', 'Relatório SLA') ?>
-						<?= $pgmSbLink('layers', ' SD protótipo (teste)', '/servicedesk-prototype', ['data-turbo' => 'false'], (bool)($ticketsSdPrototypeActive ?? false), '<span class="badge badge-accent hide-menu">β</span>', 'Service Desk protótipo') ?>
+						<?php
+						$legacySdActive = $ticketsServicedeskActive && !($ticketsSdPrototypeActive ?? false);
+						?>
+						<?= $pgmSbLink('layout-grid', ' Fila legado (React)', '/servicedesk?legacy=1', ['data-turbo' => 'false'], $legacySdActive, '', 'Service Desk legado') ?>
 						<?php endif; ?>
 						<?php
 						$incCfgChildren = [];
