@@ -31,8 +31,9 @@ final class PgmSidebarStaffContext
         $ticketsOperacionalActive = ($ctrl === 'Servicedesk' && $act === 'operacional');
         $ticketsSlaRelatorioActive = ($ctrl === 'Servicedesk' && $act === 'slaRelatorio');
         $ticketsWorkflowSlaActive = ($ctrl === 'Servicedesk' && $act === 'workflowSlaAdmin');
-        $ticketsServicedeskActive = ($ctrl === 'Servicedesk' && !in_array($act, ['operacional', 'workflowSlaAdmin', 'slaRelatorio'], true));
-        $ticketsSdPrototypeActive = ($ctrl === 'ServicedeskPrototype');
+		$ticketsSdPrototypeActive = ($ctrl === 'ServicedeskPrototype');
+		$ticketsServicedeskActive = $ticketsSdPrototypeActive
+			|| ($ctrl === 'Servicedesk' && !in_array($act, ['operacional', 'workflowSlaAdmin', 'slaRelatorio'], true));
         $ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
 
         $advMgmtAct = ($ctrl === 'ContractManagement');

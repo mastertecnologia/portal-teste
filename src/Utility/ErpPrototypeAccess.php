@@ -56,6 +56,10 @@ class ErpPrototypeAccess {
 		$admin = !empty($user['admin']);
 		$userId = (int)($user['id'] ?? 0);
 		$action = strtolower($action);
+		$rb = Configure::read('Rbac');
+		if ($admin && is_array($rb) && !empty($rb['bypass_legacy_super'])) {
+			return true;
+		}
 
 		if ($controller === 'PrototypeHistory') {
 			if ($action === 'setlocale') {
