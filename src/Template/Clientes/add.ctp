@@ -26,7 +26,12 @@
 
 <?= $this->Form->create($cliente, ['class' => 'cli-add-form', 'data-turbo' => 'false']) ?>
 
-    <!-- ── Form body (sem topbar — alinhado ao mock clientes-lista-layout-unificado) ── -->
+    <header class="cli-crm-page-head cli-crm-page-head--bar">
+        <div class="cli-crm-page-head-text">
+            <p class="cli-crm-subtitle"><?= h(__('Cadastro mestre · Novo cliente no ERP')) ?></p>
+        </div>
+    </header>
+
     <div class="cli-form-body cli-form-body--cadastro-lead">
 
         <!-- Avisos CNPJ -->

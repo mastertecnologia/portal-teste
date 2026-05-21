@@ -257,16 +257,16 @@ class ClientesController extends AppController {
 	 */
 	protected function _clientesIndexVendedoresLista() {
 		$out = [];
+		$idempresa = (int)$this->Auth->user('idempresa');
 		try {
 			$this->loadModel('Orcamentos');
-			$idempresa = (int)$this->Auth->user('idempresa');
 			$rows = $this->Orcamentos->find()
 				->select(['Users.id', 'Users.name'])
 				->distinct(['Users.id'])
 				->contain(['Users'])
 				->where([
 					'Orcamentos.idempresa' => $idempresa,
-					'Users.id IS NOT' => null,
+					'Orcamentos.idautor IS NOT' => null,
 				])
 				->order(['Users.name' => 'ASC'])
 				->limit(200)
@@ -278,8 +278,52 @@ class ClientesController extends AppController {
 			}
 		} catch (\Throwable $e) {
 		}
+		if ($out === []) {
+			try {
+				$this->loadModel('Users');
+				$q = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+					->where(['Users.role' => 0, 'Users.inativo' => 0])
+					->order(['Users.name' => 'ASC'])
+					->limit(200);
+				$out = $q->toArray();
+			} catch (\Throwable $e) {
+			}
+		}
 
 		return $out;
+	}
+
+	/**
+	 * Último autor de orçamento por cliente (vendedor para filtro da lista).
+	 *
+	 * @return array<int,int>
+	 */
+	protected function _clientesVendedorPorCliente() {
+		$map = [];
+		try {
+			$this->loadModel('Orcamentos');
+			$idempresa = (int)$this->Auth->user('idempresa');
+			$rows = $this->Orcamentos->find()
+				->select(['Orcamentos.idcliente', 'Orcamentos.idautor'])
+				->where([
+					'Orcamentos.idempresa' => $idempresa,
+					'Orcamentos.idcliente IS NOT' => null,
+					'Orcamentos.idautor IS NOT' => null,
+				])
+				->order(['Orcamentos.id' => 'DESC'])
+				->limit(8000)
+				->all();
+			foreach ($rows as $r) {
+				$cid = (int)$r->idcliente;
+				$aid = (int)$r->idautor;
+				if ($cid > 0 && $aid > 0 && !isset($map[$cid])) {
+					$map[$cid] = $aid;
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $map;
 	}
 
 	/**
@@ -371,6 +415,7 @@ class ClientesController extends AppController {
 		$ultimaOs = (array)($crm['ultima_os_por_cliente'] ?? []);
 		$vipIds = (array)($crm['vip_ids'] ?? []);
 		$top10Ids = (array)($crm['top10_ids'] ?? []);
+		$vendedorPorCliente = (array)($crm['vendedor_por_cliente'] ?? []);
 		$cutoffContato = (new \DateTimeImmutable('today'))->modify('-30 days');
 		$mesAtual = (int)date('n');
 		$anoAtual = (int)date('Y');
@@ -466,6 +511,7 @@ class ClientesController extends AppController {
 				'aniversariante' => $isAniv ? 1 : 0,
 				'top_receita' => isset($top10Ids[$cid]) ? 1 : 0,
 				'sem_contato' => $semContato,
+				'vendedor_id' => (int)($vendedorPorCliente[$cid] ?? 0),
 			];
 		}
 
@@ -703,6 +749,7 @@ class ClientesController extends AppController {
 		$segPctPj = $cntTotal > 0 ? (int)round(100 * $cntPj / $cntTotal) : 0;
 		$segPctPf = $cntTotal > 0 ? (int)round(100 * $cntPf / $cntTotal) : 0;
 		$segmentos = $this->_clientesSegmentosDistribuicao($todos);
+		$vendedorPorCliente = $this->_clientesVendedorPorCliente();
 
 		$alertaConc = null;
 		if ($top5 !== [] && $receita12 > 0 && $top5[0]['pct'] >= 30) {
@@ -734,6 +781,7 @@ class ClientesController extends AppController {
 			'ultima_os_por_cliente' => $ultimaOsPorCliente,
 			'vip_ids' => $vipIds,
 			'top10_ids' => $top10Ids,
+			'vendedor_por_cliente' => $vendedorPorCliente,
 		];
 	}
 
@@ -887,6 +935,7 @@ class ClientesController extends AppController {
 		
 		$this->set('title', 'Adicionar Cliente');
 		$this->set('hideLayoutPageTitle', true);
+		$this->set('topbarParentLabel', __('Cadastros'));
 		$this->set('topbarCurrentLabel', __('Cadastrar clientes'));
 		$cliente = $this->Clientes->newEntity();
 
@@ -959,7 +1008,10 @@ class ClientesController extends AppController {
 		}
 		$titlenome = $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : $cliente->razaosocial;
 		$this->set('title', 'Cliente: ' . $titlenome);
-		
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('topbarParentLabel', __('Cadastros'));
+		$this->set('topbarCurrentLabel', __('Editar cliente'));
+
 		// Todos os usuários relacionados a este cliente:
 		// - vinculados diretamente por idcliente
 		// - ou associados a um cliente com mesmo CNPJ/CPF (casos de cadastros antigos/dominantes)

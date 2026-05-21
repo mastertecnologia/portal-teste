@@ -44,109 +44,7 @@
 	$cliPublicCode = trim((string)($cliente->public_code ?? ''));
 
 ?>
-<style>
-.table td, .table th { padding: 0.4rem; }
-/* ── Empresa edit — Premium tabs ─────────────────────────────── */
-.cli-page-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
-.cli-page-head-left{flex:1;min-width:0;}
-.cli-page-head-left .cli-eyebrow{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#1d9e75;font-weight:700;margin-bottom:3px;}
-.cli-page-head-left h1{font-size:1.2rem;font-weight:800;color:#e6edf3;margin:0;}
-.cli-page-head-left p{font-size:.78rem;color:#6e7681;margin:3px 0 0;}
-.cli-page-head-code-row{display:inline-flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px;max-width:100%;}
-.cli-page-head-code-label{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6e7681;}
-.cli-page-head-code{
-	display:inline-block;max-width:100%;font-family:'DM Mono',Consolas,monospace;font-size:.78rem;font-weight:800;
-	background:transparent;border:none;border-radius:0;padding:0;letter-spacing:.04em;
-	word-break:break-word;line-height:1.35;
-}
-/* Tab nav override */
-.cli-tabs-nav{display:flex;gap:2px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:4px;margin-bottom:20px;flex-wrap:wrap;}
-.cli-tabs-nav .nav-item{flex:none;}
-.cli-tabs-nav .nav-link{display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:7px;font-size:.78rem;font-weight:600;color:#8b949e;border:none!important;background:transparent;transition:all .18s;cursor:pointer;}
-.cli-tabs-nav .nav-link:hover{color:#c9d1d9;background:#161b22;}
-.cli-tabs-nav .nav-link.active{background:#1d9e75!important;color:#fff!important;}
-.cli-tabs-nav .nav-link i{font-size:.8rem;}
-/* Card body */
-.cli-card{background:#161b22;border:1px solid #21262d;border-radius:12px;padding:24px;}
-/* Form labels */
-.cli-label{font-size:.72rem;font-weight:600;color:#8b949e;margin-bottom:4px;display:block;letter-spacing:.04em;text-transform:uppercase;}
-/* Readonly display for clients */
-.cli-field-ro{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:9px 12px;color:#c9d1d9;font-size:.85rem;min-height:38px;}
-/* Section divider */
-.cli-section{margin-top:20px;padding-top:16px;border-top:1px solid #21262d;}
-.cli-section-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6e7681;margin-bottom:14px;}
-/* Acessos table */
-.cli-acessos-table{width:100%;border-collapse:collapse;font-size:.78rem;}
-.cli-acessos-table thead th{padding:8px 10px;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#6e7681;border-bottom:1px solid #21262d;}
-.cli-acessos-table tbody tr{border-bottom:1px solid #21262d;}
-.cli-acessos-table tbody tr:hover{background:#1c2230;}
-.cli-acessos-table td{padding:9px 10px;color:#c9d1d9;vertical-align:middle;}
-.cli-acessos-table th.cli-col-actions{width:10%;}
-.cli-section-title.cli-section-title--mt12{margin-top:12px;}
-.cli-senha-mask{font-family:'DM Mono',monospace;letter-spacing:.1em;cursor:pointer;color:#8b949e;}
-.cli-senha-mask:hover{color:#5cdbc0;}
-/* Token box */
-.cli-token-box{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px 14px;font-family:'DM Mono',monospace;font-size:.8rem;color:#5cdbc0;word-break:break-all;letter-spacing:.04em;}
-.cli-token-note{font-size:.72rem;color:#6e7681;margin-top:8px;}
-/* Rodapé operacional (resumo + atalhos) */
-.cli-smart-footer{margin-top:20px;padding:14px 18px;border-radius:10px;border:1px solid #21262d;background:#0d1117;font-size:.78rem;color:#8b949e;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;}
-.cli-smart-footer strong{color:#c9d1d9;font-weight:600;}
-.cli-smart-footer .cli-sf-badges .badge{font-size:.65rem;font-weight:600;margin-left:4px;}
-.cli-smart-footer a{color:#5cdbc0!important;text-decoration:none!important;}
-.cli-smart-footer a:hover{text-decoration:underline!important;}
-.cli-smart-footer--alert{border-color:rgba(248,81,73,.45);background:rgba(248,81,73,.06);}
-.cli-smart-footer .cli-sf-token{flex:1 1 220px;max-width:100%;}
-/* Rodapé — blocos (ETAPA 3) */
-.cli-sf-inner{align-items:flex-start;}
-.cli-sf-main{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-start;flex:1 1 280px;}
-.cli-sf-block{min-width:0;}
-.cli-sf-kicker{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6e7681;margin-bottom:4px;}
-.cli-sf-contracts .cli-sf-kicker + div{line-height:1.45;}
-.cli-smart-footer .cli-sf-contracts-total-line,.cli-smart-footer .cli-sf-contracts-total-line strong{color:#c9d1d9;font-weight:600;}
-.cli-sf-token-note{font-size:.72rem;color:#6e7681;line-height:1.4;max-width:360px;}
-.cli-sf-badge-danger{background:#da3633;color:#fff;}
-.cli-sf-badge-warn{background:#d29922;color:#1c1c1c;}
-/* Fase 1 — cards + readonly claro (dark UI) */
-.cli-subcard{border:1px solid #21262d;border-radius:10px;background:#0d1117;margin-bottom:16px;overflow:hidden;}
-.cli-subcard-head{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8b949e;padding:10px 16px;border-bottom:1px solid #21262d;background:#161b22;}
-.cli-subcard-body{padding:16px 16px 6px;}
-#form-edit-cliente input.form-control[readonly],#form-edit-cliente textarea.form-control[readonly]{
-	background:#21262d!important;border-color:#30363d!important;color:#e6edf3!important;opacity:1!important;cursor:default;
-}
-#form-edit-cliente input.form-control:focus,#form-edit-cliente textarea.form-control:focus{box-shadow:0 0 0 2px rgba(29,158,117,.25);}
-/* Modo leitura: não alterar checkboxes do cadastro pelo clique (footer switch entra em edição) */
-#form-edit-cliente.cli-ficha--readonly #inativo,#form-edit-cliente.cli-ficha--readonly #contrato,#form-edit-cliente.cli-ficha--readonly #exibirsenhacliente{pointer-events:none;}
-#form-edit-cliente.cli-ficha--readonly label[for="inativo"],#form-edit-cliente.cli-ficha--readonly label[for="contrato"],#form-edit-cliente.cli-ficha--readonly label[for="exibirsenhacliente"]{pointer-events:none;cursor:default;}
-.cli-ficha-toolbar{border:1px solid #21262d;border-radius:10px;padding:10px 14px;background:#161b22;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;}
-.cli-ficha-toolbar .cli-ficha-hint{font-size:.75rem;color:#6e7681;margin:0;}
-.cli-ficha-footer-fixed{position:sticky;bottom:0;z-index:1025;background:#161b22;border-top:1px solid #21262d;box-shadow:0 -4px 24px rgba(0,0,0,.35);padding:10px 16px;font-size:.78rem;}
-.cli-ficha-footer-fixed .cli-ff-inner{max-width:1400px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;}
-.cli-ff-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
-.cli-ff-status .custom-switch{padding-left:2.5rem;}
-.cli-ff-status .custom-control-label{color:#c9d1d9;font-size:.78rem;}
-.cli-ficha-layout-unificado{--cli-footer-offset:12px;}
-.cli-ficha-page-pad{padding-bottom:12px;}
-/* Contratos — situação (ETAPA 6; regra alinhada ao rodapé via controller) */
-.cli-ctr-legend{font-size:.72rem;color:#8b949e;margin-bottom:10px;line-height:1.5;}
-.cli-ctr-legend .badge{font-size:.65rem;font-weight:600;margin-right:2px;}
-.cli-acessos-table tr.cli-ctr-row--vencido td:first-child{border-left:3px solid #da3633;}
-.cli-acessos-table tr.cli-ctr-row--vencendo td:first-child{border-left:3px solid #d29922;}
-.cli-acessos-table tr.cli-ctr-row--cancelado td:first-child,.cli-acessos-table tr.cli-ctr-row--semvalidade td:first-child{border-left:3px solid #484f58;}
-.cli-acessos-table tr.cli-ctr-row--ok td:first-child{border-left:3px solid #238636;}
-.cli-acessos-table tr.cli-ctr-row--cancelado{opacity:.88;}
-/* Acessos — linha inativa (ETAPA 4) */
-.cli-acessos-table tr.cli-row-acesso-inativo td{color:#6e7681;}
-.cli-acessos-table tr.cli-row-acesso-inativo td:first-child{border-left:3px solid #484f58;}
-/* Token — blocos informativos (ETAPA 7) */
-.cli-token-panel{display:flex;flex-direction:column;gap:16px;}
-@media (min-width:768px){
-	.cli-token-panel--split{flex-direction:row;flex-wrap:wrap;}
-	.cli-token-panel--split .cli-token-panel__col{flex:1 1 280px;min-width:0;}
-}
-.cli-token-callout{font-size:.75rem;color:#8b949e;border:1px solid #30363d;border-radius:8px;padding:10px 12px;background:#0d1117;line-height:1.45;}
-.cli-token-callout strong{color:#e6edf3;}
-</style>
-<?= $this->element('Cli/ui_css') ?>
+<style>.table td, .table th { padding: 0.4rem; }</style>
 <div class="col-md-12 p-0 cli-ficha-layout-unificado">
 	<div class="cli-form-root cli-layout-unificado cli-ficha-page-pad">
 	<div class="cli-card">
@@ -166,9 +64,9 @@
 				</div>
 			</div>
 			<?php if ($isEquipe): ?>
-				<div class="d-flex align-items-center flex-wrap pgm-gap-8">
-					<?= $this->Html->link('<i class="fas fa-history"></i> Histórico', ['action' => 'eventos', $cliente->id], ['class' => 'btn btn-sm btn-outline-info', 'escape' => false, 'title' => 'Eventos e auditoria do cliente', 'data-turbo' => 'false']) ?>
-					<?= $this->Html->link('<i class="fas fa-arrow-left"></i> Voltar', ['action' => 'index'], ['class' => 'btn btn-sm btn-outline-secondary', 'escape' => false, 'data-turbo' => 'false']) ?>
+				<div class="cli-crm-page-actions">
+					<?= $this->Html->link('<i class="fas fa-history" aria-hidden="true"></i> ' . __('Histórico'), ['action' => 'eventos', $cliente->id], ['class' => 'btn-cli-secondary', 'escape' => false, 'title' => __('Eventos e auditoria do cliente'), 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link('<i class="fas fa-arrow-left" aria-hidden="true"></i> ' . __('Voltar'), ['action' => 'index'], ['class' => 'btn-cli-secondary', 'escape' => false, 'data-turbo' => 'false']) ?>
 				</div>
 			<?php endif; ?>
 		</div>
@@ -723,15 +621,11 @@
 			<?php endif; ?>
 		</div>
 		<div class="cli-ff-actions">
-			<?= $this->element('Cli/button', ['text' => 'Editar cliente', 'iconHtml' => '<i class="fas fa-pen"></i>', 'class' => 'btn-sm btn-outline-primary', 'attrs' => ['id' => 'btn-cli-ficha-edit']]) ?>
-			<?= $this->element('Cli/button', ['text' => 'Cancelar', 'iconHtml' => '<i class="fas fa-undo"></i>', 'class' => 'btn-sm btn-outline-secondary d-none', 'attrs' => ['id' => 'btn-cli-ficha-cancel']]) ?>
-			<?= $this->element('Cli/button', ['text' => 'Salvar cliente', 'iconHtml' => '<i class="fas fa-save"></i>', 'class' => 'btn-sm btn-success d-none', 'attrs' => ['id' => 'btn-cli-ficha-save']]) ?>
+			<button type="button" class="btn-cli-secondary" id="btn-cli-ficha-edit"><i class="fas fa-pen" aria-hidden="true"></i> <?= h(__('Editar cliente')) ?></button>
+			<button type="button" class="btn-cli-secondary d-none" id="btn-cli-ficha-cancel"><i class="fas fa-undo" aria-hidden="true"></i> <?= h(__('Cancelar')) ?></button>
+			<button type="button" class="btn-cli-primary btn-cli-ficha-save d-none" id="btn-cli-ficha-save"><i class="fas fa-check" aria-hidden="true"></i> <?= h(__('Salvar cliente')) ?></button>
 			<?php if ($isEquipe && empty($cliente->inativo) && !$cliInativoRbacHidden && !$cliInativoRbacReadonly): ?>
-			<?= $this->element('Cli/button', ['text' => 'Inativar…', 'class' => 'btn-sm btn-outline-danger btn-inativar-cliente', 'attrs' => ['type' => 'button']]) ?>
-			<?php endif; ?>
-			<?php if ($isEquipe): ?>
-			<?= $this->Html->link('<i class="fas fa-history"></i>', ['action' => 'eventos', $cliente->id], ['escape' => false, 'class' => 'btn btn-sm btn-outline-info', 'title' => 'Histórico', 'data-turbo' => 'false']) ?>
-			<?= $this->Html->link('<i class="fas fa-sliders-h"></i>', $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', 'action' => 'preferences']), ['escape' => false, 'class' => 'btn btn-sm btn-outline-secondary', 'title' => 'Preferências de alertas', 'data-turbo' => 'false']) ?>
+			<button type="button" class="btn-cli-secondary btn-inativar-cliente" style="border-color:rgba(226,75,74,.4);color:var(--orc-red,#e24b4a);"><i class="fas fa-user-slash" aria-hidden="true"></i> <?= h(__('Inativar')) ?></button>
 			<?php endif; ?>
 		</div>
 	</div>

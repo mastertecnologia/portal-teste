@@ -211,28 +211,52 @@
                 <span class="cli-search-mode" id="cli-search-mode"></span>
             </div>
             <div class="cli-crm-toolbar-filters">
-                <select class="cli-crm-select" id="cli-filter-status" aria-label="<?= h(__('Status')) ?>">
-                    <option value=""><?= h(__('Todos os status')) ?></option>
-                    <option value="ativos" selected><?= h(__('Ativos')) ?></option>
-                    <option value="inativos"><?= h(__('Inativos')) ?></option>
-                </select>
-                <select class="cli-crm-select" id="cli-filter-segmento" aria-label="<?= h(__('Segmento')) ?>">
-                    <option value=""><?= h(__('Todos os segmentos')) ?></option>
-                    <?php foreach ($segmentos as $seg) : ?>
-                    <option value="<?= h((string)$seg['slug']) ?>"><?= h((string)$seg['label']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <select class="cli-crm-select" id="cli-filter-tipo" aria-label="<?= h(__('Tipo')) ?>">
-                    <option value=""><?= h(__('PJ + PF')) ?></option>
-                    <option value="pj"><?= h(__('Pessoa Jurídica')) ?></option>
-                    <option value="pf"><?= h(__('Pessoa Física')) ?></option>
-                </select>
-                <select class="cli-crm-select" id="cli-filter-vendedor" aria-label="<?= h(__('Vendedor')) ?>"<?= $cliVendedores === [] ? ' disabled' : '' ?>>
-                    <option value=""><?= h(__('Todos os vendedores')) ?></option>
-                    <?php foreach ($cliVendedores as $vid => $vname) : ?>
-                    <option value="<?= (int)$vid ?>"><?= h((string)$vname) ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <label class="cli-crm-filter-card">
+                    <span class="cli-crm-filter-card-lbl"><?= h(__('Status')) ?></span>
+                    <span class="cli-crm-filter-card-box">
+                        <select class="cli-crm-select" id="cli-filter-status" aria-label="<?= h(__('Status')) ?>">
+                            <option value="" selected><?= h(__('Todos os status')) ?></option>
+                            <option value="ativos"><?= h(__('Ativos')) ?></option>
+                            <option value="inativos"><?= h(__('Inativos')) ?></option>
+                        </select>
+                        <i class="fas fa-chevron-down cli-crm-filter-card-chev" aria-hidden="true"></i>
+                    </span>
+                </label>
+                <label class="cli-crm-filter-card">
+                    <span class="cli-crm-filter-card-lbl"><?= h(__('Segmento')) ?></span>
+                    <span class="cli-crm-filter-card-box">
+                        <select class="cli-crm-select" id="cli-filter-segmento" aria-label="<?= h(__('Segmento')) ?>">
+                            <option value="" selected><?= h(__('Todos os segmentos')) ?></option>
+                            <?php foreach ($segmentos as $seg) : ?>
+                            <option value="<?= h((string)$seg['slug']) ?>"><?= h((string)$seg['label']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <i class="fas fa-chevron-down cli-crm-filter-card-chev" aria-hidden="true"></i>
+                    </span>
+                </label>
+                <label class="cli-crm-filter-card">
+                    <span class="cli-crm-filter-card-lbl"><?= h(__('Tipo')) ?></span>
+                    <span class="cli-crm-filter-card-box">
+                        <select class="cli-crm-select" id="cli-filter-tipo" aria-label="<?= h(__('Tipo')) ?>">
+                            <option value="" selected><?= h(__('PJ + PF')) ?></option>
+                            <option value="pj"><?= h(__('Pessoa Jurídica')) ?></option>
+                            <option value="pf"><?= h(__('Pessoa Física')) ?></option>
+                        </select>
+                        <i class="fas fa-chevron-down cli-crm-filter-card-chev" aria-hidden="true"></i>
+                    </span>
+                </label>
+                <label class="cli-crm-filter-card">
+                    <span class="cli-crm-filter-card-lbl"><?= h(__('Vendedor')) ?></span>
+                    <span class="cli-crm-filter-card-box">
+                        <select class="cli-crm-select" id="cli-filter-vendedor" aria-label="<?= h(__('Vendedor')) ?>">
+                            <option value="" selected><?= h(__('Todos os vendedores')) ?></option>
+                            <?php foreach ($cliVendedores as $vid => $vname) : ?>
+                            <option value="<?= (int)$vid ?>"><?= h((string)$vname) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <i class="fas fa-chevron-down cli-crm-filter-card-chev" aria-hidden="true"></i>
+                    </span>
+                </label>
             </div>
         </div>
 
@@ -270,11 +294,13 @@
                             $aRec = (float)($row['a_receber'] ?? 0);
                             $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]);
                             $stClass = (string)($row['status_class'] ?? 'on');
+                            $avTone = (string)($seg['tone'] ?? 'teal');
                         ?>
                         <tr<?= cliRowDataAttrs($reg) ?>
                             data-cli-status="<?= h((string)$row['status_key']) ?>"
                             data-cli-tipo="<?= h((string)$row['tipo_key']) ?>"
                             data-cli-segmento="<?= h((string)$row['segmento_slug']) ?>"
+                            data-cli-vendedor="<?= (int)($row['vendedor_id'] ?? 0) ?>"
                             data-cli-receita="<?= (float)$rec12 ?>"
                             data-cli-atraso="<?= (int)($row['atraso'] ?? 0) ?>"
                             data-cli-vip="<?= (int)($row['vip'] ?? 0) ?>"
@@ -286,10 +312,10 @@
                             data-cli-ord="<?= (int)$idxRow ?>"
                             role="button"
                             tabindex="0">
-                            <td class="cli-td-code"><span translate="no"><?= h((string)$row['codigo']) ?></span></td>
+                            <td class="cli-td-code"><span class="cli-code-badge" translate="no"><?= h((string)$row['codigo']) ?></span></td>
                             <td>
                                 <div class="cli-td-name">
-                                    <div class="cli-av"><?= cliInitials((string)$row['nome']) ?></div>
+                                    <div class="cli-av cli-av--<?= h($avTone) ?>"><?= cliInitials((string)$row['nome']) ?></div>
                                     <div class="cli-td-name-text">
                                         <span class="cli-name-main"><?= h((string)$row['nome']) ?></span>
                                         <?php if (!empty($row['subline'])) : ?>
@@ -313,15 +339,19 @@
                                 </span>
                             </td>
                             <td class="cli-td-muted"><?= h((string)$row['ultima']) ?></td>
-                            <td class="cli-td-arrow" onclick="event.stopPropagation()">
+                            <td class="cli-td-act" onclick="event.stopPropagation()">
+                                <?= $this->Html->link(
+                                    '<i class="fas fa-pen" aria-hidden="true"></i>',
+                                    ['controller' => 'Clientes', 'action' => 'edit', $reg->id],
+                                    ['class' => 'cli-btn-edit', 'escape' => false, 'title' => __('Editar cliente'), 'data-turbo' => 'false']
+                                ) ?>
                                 <?php if (isset($role) && (int)$role === 0 && (int)$reg->inativo === 0) : ?>
                                 <?= $this->Html->link(
-                                    '<i class="fas fa-user-slash" title="' . h(__('Inativar cliente')) . '"></i>',
+                                    '<i class="fas fa-user-slash" aria-hidden="true"></i>',
                                     ['controller' => 'Clientes', 'action' => 'inativar', $reg->id],
-                                    ['class' => 'cli-btn-inativar', 'escape' => false, 'confirm' => __('Confirma inativar este cliente no portal e no ERP?'), 'data-turbo' => 'false']
+                                    ['class' => 'cli-btn-inativar', 'escape' => false, 'title' => __('Inativar cliente'), 'confirm' => __('Confirma inativar este cliente no portal e no ERP?'), 'data-turbo' => 'false']
                                 ) ?>
                                 <?php endif; ?>
-                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
                             </td>
                         </tr>
                         <?php $idxRow++; endforeach; ?>
@@ -340,10 +370,11 @@
     }
     var $ = window.jQuery;
     $(document).ready(function () {
-        var statusFilter = 'ativos';
+        var statusFilter = '';
         var type = 'pj';
         var typeAll = true;
         var segmentoFilter = '';
+        var vendedorFilter = '';
         var activeChip = '';
 
         function rowVisible($row) {
@@ -354,6 +385,9 @@
                 return false;
             }
             if (segmentoFilter !== '' && $row.attr('data-cli-segmento') !== segmentoFilter) {
+                return false;
+            }
+            if (vendedorFilter !== '' && String($row.attr('data-cli-vendedor') || '') !== String(vendedorFilter)) {
                 return false;
             }
             if (activeChip === 'atraso' && $row.attr('data-cli-atraso') !== '1') {
@@ -432,6 +466,11 @@
                 typeAll = false;
                 type = v === 'pf' ? 'pf' : 'pj';
             }
+            redrawTable();
+        });
+
+        $('#cli-filter-vendedor').on('change', function () {
+            vendedorFilter = $(this).val();
             redrawTable();
         });
 
