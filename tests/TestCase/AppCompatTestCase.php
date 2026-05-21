@@ -44,8 +44,12 @@ abstract class AppCompatTestCase extends TestCase {
 		static::assertTrue(strpos((string)$haystack, (string)$needle) !== false, $message);
 	}
 
-	protected function assertEqualsCanonicalizing($expected, $actual, $message = ''): void {
-		if ($this->isPhpUnit8OrNewer()) {
+	/**
+	 * PHPUnit 8+: Assert::assertEqualsCanonicalizing é estático — não pode ser redeclarado como método de instância.
+	 */
+	protected static function assertEqualsCanonicalizing($expected, $actual, $message = ''): void {
+		if (class_exists(\PHPUnit\Runner\Version::class)
+			&& version_compare(\PHPUnit\Runner\Version::id(), '8.0.0', '>=')) {
 			parent::assertEqualsCanonicalizing($expected, $actual, $message);
 
 			return;
