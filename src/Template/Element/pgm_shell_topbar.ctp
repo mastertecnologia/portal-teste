@@ -67,6 +67,9 @@ $noCrumb = (bool)($hidePgmTopbarCrumb ?? false);
 	</div>
 	<?php endif; ?>
 	<div class="pgm-app-topbar__right">
+		<?php if (!empty($pgmTopbarClientesLista)) : ?>
+			<?= $this->element('pgm_topbar_clientes_kit') ?>
+		<?php endif; ?>
 		<span class="pgm-app-topbar__date" id="pgm-app-topbar-date"><?= h($dateStr) ?></span>
 		<?php if ($initials !== '') : ?>
 			<div class="pgm-app-topbar__avatar" title="<?= h($userName) ?>"><?= h($initials) ?></div>
