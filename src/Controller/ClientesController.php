@@ -156,8 +156,10 @@ class ClientesController extends AppController {
 		if ($empresaLbl === '') {
 			$empresaLbl = __('PGM Soluções');
 		}
-		$this->set('topbarParentLabel', $empresaLbl);
-		$this->set('topbarCurrentLabel', __('Cadastros'));
+		$this->set('topbarParentLabel', __('Cadastros'));
+		$this->set('topbarCurrentLabel', __('Clientes'));
+		$this->set('pgmTopbarClientesLista', true);
+		$this->set('pgmTopbarEmpresas', $this->_clientesTopbarEmpresas());
 
 		$qAll = $this->Clientes->find('all')->contain(['Cidades'])->order(['Clientes.id' => 'DESC']);
 		$this->Abac->applyToQuery($qAll, 'Clientes');
@@ -189,6 +191,285 @@ class ClientesController extends AppController {
 
 		$crm = $this->_clientesIndexCrmMetrics($todos, count($clientesAtivos));
 		$this->set('cliCrm', $crm);
+		$this->set('cliRows', $this->_clientesIndexRows($todos, $crm));
+		$this->set('cliVendedores', $this->_clientesIndexVendedoresLista());
+	}
+
+	/**
+	 * Empresas do utilizador para o seletor da topbar (lista CRM).
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function _clientesTopbarEmpresas() {
+		$lista = [];
+		$idAtiva = (int)$this->Auth->user('idempresa');
+		$opt = (array)($this->viewVars['empresasOptSidebar'] ?? []);
+		if ($opt === [] && $this->Auth->user('id') > 0) {
+			try {
+				$rows = $this->Empresasusers->find('all')
+					->where(['Empresasusers.iduser' => (int)$this->Auth->user('id')])
+					->contain(['Empresas'])
+					->order(['Empresas.nomefantasia' => 'ASC'])
+					->all();
+				foreach ($rows as $reg) {
+					if (!empty($reg->empresa)) {
+						$opt[(int)$reg->idempresa] = (string)$reg->empresa->nomefantasia;
+					}
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		foreach ($opt as $eid => $nome) {
+			$eid = (int)$eid;
+			$cnpj = '';
+			try {
+				$emp = $this->Empresas->get($eid, ['fields' => ['cnpj', 'razaosocial', 'nomefantasia']]);
+				$cnpj = formatCnpjCpf((string)($emp->cnpj ?? ''));
+				if (trim((string)$nome) === '') {
+					$nome = (string)($emp->nomefantasia ?? $emp->razaosocial ?? '');
+				}
+			} catch (\Throwable $e) {
+			}
+			$parts = preg_split('/\s+/u', trim((string)$nome), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+			$ini = '';
+			if (!empty($parts[0])) {
+				$ini .= mb_strtoupper(mb_substr($parts[0], 0, 1, 'UTF-8'));
+			}
+			if (!empty($parts[1])) {
+				$ini .= mb_strtoupper(mb_substr($parts[1], 0, 1, 'UTF-8'));
+			}
+			$lista[] = [
+				'id' => $eid,
+				'nome' => (string)$nome,
+				'cnpj' => $cnpj,
+				'initials' => $ini !== '' ? $ini : 'PG',
+				'current' => $eid === $idAtiva,
+			];
+		}
+
+		return $lista;
+	}
+
+	/**
+	 * Vendedores (autores de orçamentos) para filtro — dados reais quando existir orçamento.
+	 *
+	 * @return array<int,string>
+	 */
+	protected function _clientesIndexVendedoresLista() {
+		$out = [];
+		try {
+			$this->loadModel('Orcamentos');
+			$idempresa = (int)$this->Auth->user('idempresa');
+			$rows = $this->Orcamentos->find()
+				->select(['Users.id', 'Users.name'])
+				->distinct(['Users.id'])
+				->contain(['Users'])
+				->where([
+					'Orcamentos.idempresa' => $idempresa,
+					'Users.id IS NOT' => null,
+				])
+				->order(['Users.name' => 'ASC'])
+				->limit(200)
+				->all();
+			foreach ($rows as $r) {
+				if (!empty($r->user) && !empty($r->user->id)) {
+					$out[(int)$r->user->id] = trim((string)($r->user->name ?? ''));
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Classifica segmento de mercado por nome/fantasia (heurística — sem coluna segmento no cadastro).
+	 *
+	 * @param \App\Model\Entity\Cliente $cliente
+	 * @return array{slug:string,label:string,short:string,tone:string}
+	 */
+	protected function _clientesClassificarSegmento($cliente) {
+		$blob = mb_strtolower(trim(implode(' ', array_filter([
+			(string)($cliente->razaosocial ?? ''),
+			(string)($cliente->nomefantasia ?? ''),
+			(string)($cliente->nome ?? ''),
+		]))), 'UTF-8');
+		$rules = [
+			['slug' => 'moveis', 'label' => __('Móveis & Decoração'), 'short' => __('Móveis'), 'tone' => 'teal', 'words' => ['móvel', 'moveis', 'moble', 'decora', 'ambiente', 'marcen', 'móveis']],
+			['slug' => 'saude', 'label' => __('Saúde & Estética'), 'short' => __('Saúde'), 'tone' => 'blue', 'words' => ['saúde', 'saude', 'clín', 'clin', 'estét', 'estet', 'hospital', 'biosseg', 'medic', 'laborat']],
+			['slug' => 'imob', 'label' => __('Imobiliário'), 'short' => __('Imobiliário'), 'tone' => 'rose', 'words' => ['imob', 'imóvel', 'imovel', 'corretor', 'incorp']],
+			['slug' => 'industria', 'label' => __('Indústria'), 'short' => __('Indústria'), 'tone' => 'orange', 'words' => ['indúst', 'indust', 'fabri', 'metalúrg', 'metalurg', 'plást', 'plastic']],
+		];
+		foreach ($rules as $rule) {
+			foreach ($rule['words'] as $w) {
+				if ($w !== '' && mb_strpos($blob, $w, 0, 'UTF-8') !== false) {
+					return [
+						'slug' => $rule['slug'],
+						'label' => $rule['label'],
+						'short' => $rule['short'],
+						'tone' => $rule['tone'],
+					];
+				}
+			}
+		}
+
+		return ['slug' => 'outros', 'label' => __('Outros'), 'short' => __('Outros'), 'tone' => 'purple'];
+	}
+
+	/**
+	 * @param \App\Model\Entity\Cliente[] $todos
+	 * @return array<int,array{slug:string,label:string,count:int,pct:int,tone:string}>
+	 */
+	protected function _clientesSegmentosDistribuicao(array $todos) {
+		$defs = [
+			'moveis' => ['label' => __('Móveis & Decoração'), 'tone' => 'teal'],
+			'saude' => ['label' => __('Saúde & Estética'), 'tone' => 'blue'],
+			'imob' => ['label' => __('Imobiliário'), 'tone' => 'rose'],
+			'industria' => ['label' => __('Indústria'), 'tone' => 'orange'],
+			'outros' => ['label' => __('Outros'), 'tone' => 'purple'],
+		];
+		$counts = array_fill_keys(array_keys($defs), 0);
+		foreach ($todos as $c) {
+			if ((int)$c->inativo === 1) {
+				continue;
+			}
+			$seg = $this->_clientesClassificarSegmento($c);
+			$slug = $seg['slug'];
+			if (!isset($counts[$slug])) {
+				$counts['outros']++;
+			} else {
+				$counts[$slug]++;
+			}
+		}
+		$total = array_sum($counts);
+		$out = [];
+		foreach ($defs as $slug => $meta) {
+			$cnt = (int)($counts[$slug] ?? 0);
+			$out[] = [
+				'slug' => $slug,
+				'label' => $meta['label'],
+				'count' => $cnt,
+				'pct' => $total > 0 ? (int)round(100 * $cnt / $total) : 0,
+				'tone' => $meta['tone'],
+			];
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Linhas da tabela CRM com métricas por cliente.
+	 *
+	 * @param \App\Model\Entity\Cliente[] $todos
+	 * @param array<string,mixed> $crm
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function _clientesIndexRows(array $todos, array $crm) {
+		$receitaPorCliente = (array)($crm['receita_por_cliente'] ?? []);
+		$aReceberPorCliente = (array)($crm['a_receber_por_cliente'] ?? []);
+		$atrasoDias = (array)($crm['atraso_dias_por_cliente'] ?? []);
+		$ultimaOs = (array)($crm['ultima_os_por_cliente'] ?? []);
+		$vipIds = (array)($crm['vip_ids'] ?? []);
+		$top10Ids = (array)($crm['top10_ids'] ?? []);
+		$cutoffContato = (new \DateTimeImmutable('today'))->modify('-30 days');
+		$mesAtual = (int)date('n');
+		$anoAtual = (int)date('Y');
+		$rows = [];
+		foreach ($todos as $reg) {
+			$cid = (int)$reg->id;
+			$isPj = (int)$reg->tipo === (int)C_ClientesTipoJuridica;
+			$nome = $this->_clientesIndexNomeExibicao($reg);
+			$doc = $isPj ? (string)($reg->cnpj ?? '') : (string)($reg->cpf ?? '');
+			$seg = $this->_clientesClassificarSegmento($reg);
+			$contato = trim((string)($reg->nomeresponsavel ?? ''));
+			if ($contato === '' && !$isPj) {
+				$contato = trim((string)($reg->nome ?? ''));
+			}
+			$email = trim((string)($reg->email ?? ''));
+			$sub = $contato;
+			if ($email !== '') {
+				$sub = $sub !== '' ? $sub . ' (' . $email . ')' : $email;
+			}
+			$cidadeNome = '';
+			if (!empty($reg->cidade) && !empty($reg->cidade->nome)) {
+				$cidadeNome = (string)$reg->cidade->nome;
+			}
+			$codigo = 'CLI-' . str_pad((string)$reg->id, 4, '0', STR_PAD_LEFT);
+			$pub = trim((string)($reg->public_code ?? ''));
+			if ($pub !== '') {
+				$codigo = $pub;
+			}
+			$rec12 = isset($receitaPorCliente[$cid]) ? (float)$receitaPorCliente[$cid] : 0.0;
+			$aRec = isset($aReceberPorCliente[$cid]) ? (float)$aReceberPorCliente[$cid] : 0.0;
+			$diasAtraso = (int)($atrasoDias[$cid] ?? 0);
+			$ultima = (string)($ultimaOs[$cid] ?? '');
+			if ($ultima === '' && !empty($reg->membrodesde) && $reg->membrodesde instanceof \DateTimeInterface) {
+				$ultima = $reg->membrodesde->format('d/m/Y');
+			}
+			if ($ultima === '') {
+				$ultima = '—';
+			}
+			$statusUi = 'ativo';
+			$statusLabel = __('Ativo');
+			$statusClass = 'on';
+			if ((int)$reg->inativo === 1) {
+				$statusUi = 'inativo';
+				$statusLabel = __('Inativo');
+				$statusClass = 'off';
+			} elseif ($diasAtraso > 0) {
+				$statusUi = 'atraso';
+				$statusLabel = __('Atraso {0}d', $diasAtraso);
+				$statusClass = 'warn';
+			} elseif (isset($vipIds[$cid])) {
+				$statusUi = 'vip';
+				$statusLabel = __('VIP · Ativo');
+				$statusClass = 'vip';
+			}
+			$isNovo = false;
+			$isAniv = false;
+			if (!empty($reg->membrodesde) && $reg->membrodesde instanceof \DateTimeInterface) {
+				$isNovo = ((int)$reg->membrodesde->format('n') === $mesAtual && (int)$reg->membrodesde->format('Y') === $anoAtual);
+				$isAniv = ((int)$reg->membrodesde->format('n') === $mesAtual);
+			}
+			$semContato = 0;
+			if ((int)$reg->inativo === 0) {
+				$ultimaDt = null;
+				if ($ultima !== '' && $ultima !== '—') {
+					$ultimaDt = \DateTime::createFromFormat('d/m/Y', $ultima) ?: null;
+				}
+				if ($ultimaDt === null || $ultimaDt < $cutoffContato) {
+					$semContato = 1;
+				}
+			}
+			$rows[] = [
+				'entity' => $reg,
+				'id' => $cid,
+				'codigo' => $codigo,
+				'nome' => $nome,
+				'subline' => $sub,
+				'doc' => $doc,
+				'segmento' => $seg,
+				'cidade' => $cidadeNome,
+				'receita12' => $rec12,
+				'a_receber' => $aRec,
+				'status_ui' => $statusUi,
+				'status_label' => $statusLabel,
+				'status_class' => $statusClass,
+				'ultima' => $ultima,
+				'is_pj' => $isPj,
+				'status_key' => (int)$reg->inativo === 1 ? 'inativos' : 'ativos',
+				'tipo_key' => $isPj ? 'pj' : 'pf',
+				'atraso' => $diasAtraso > 0 ? 1 : 0,
+				'vip' => isset($vipIds[$cid]) ? 1 : 0,
+				'segmento_slug' => $seg['slug'],
+				'novo_mes' => $isNovo ? 1 : 0,
+				'aniversariante' => $isAniv ? 1 : 0,
+				'top_receita' => isset($top10Ids[$cid]) ? 1 : 0,
+				'sem_contato' => $semContato,
+			];
+		}
+
+		return $rows;
 	}
 
 	/**
@@ -218,7 +499,25 @@ class ClientesController extends AppController {
 		$top5 = [];
 		$receitaPorCliente = [];
 		$aReceberPorCliente = [];
+		$atrasoDiasPorCliente = [];
+		$ultimaOsPorCliente = [];
 		$hasFin = false;
+		$novosMes = 0;
+		$aniversariantes = 0;
+		$mesAtual = (int)date('n');
+		$anoAtual = (int)date('Y');
+		foreach ($todos as $c) {
+			if (!empty($c->membrodesde) && $c->membrodesde instanceof \DateTimeInterface) {
+				$m = (int)$c->membrodesde->format('n');
+				$y = (int)$c->membrodesde->format('Y');
+				if ($m === $mesAtual && $y === $anoAtual) {
+					$novosMes++;
+				}
+				if ($m === $mesAtual) {
+					$aniversariantes++;
+				}
+			}
+		}
 
 		try {
 			$finTable = TableRegistry::getTableLocator()->get('FinanceiroLancamentos');
@@ -254,6 +553,7 @@ class ClientesController extends AppController {
 			$qInad = $finTable->find();
 			$qInad->select([
 				'FinanceiroLancamentos.idcliente',
+				'FinanceiroLancamentos.data_vencimento',
 				'valor' => 'FinanceiroLancamentos.valor',
 			])
 				->where([
@@ -264,9 +564,25 @@ class ClientesController extends AppController {
 					'FinanceiroLancamentos.data_vencimento <' => $hoje->format('Y-m-d'),
 				]);
 			$inadIds = [];
+			$hojeStr = $hoje->format('Y-m-d');
 			foreach ($qInad->all() as $inadRow) {
-				$inadIds[(int)$inadRow->idcliente] = true;
+				$cidInad = (int)$inadRow->idcliente;
+				$inadIds[$cidInad] = true;
 				$inadValor += (float)($inadRow->valor ?? 0);
+				if (!empty($inadRow->data_vencimento)) {
+					$dv = $inadRow->data_vencimento instanceof \DateTimeInterface
+						? $inadRow->data_vencimento->format('Y-m-d')
+						: (string)$inadRow->data_vencimento;
+					try {
+						$d1 = new \DateTimeImmutable($dv);
+						$d2 = new \DateTimeImmutable($hojeStr);
+						$diff = (int)$d1->diff($d2)->days;
+						if (!isset($atrasoDiasPorCliente[$cidInad]) || $diff > $atrasoDiasPorCliente[$cidInad]) {
+							$atrasoDiasPorCliente[$cidInad] = $diff;
+						}
+					} catch (\Throwable $e) {
+					}
+				}
 			}
 			$inadClientes = count($inadIds);
 
@@ -333,6 +649,51 @@ class ClientesController extends AppController {
 			$this->log('Clientes::index CRM financeiro: ' . $e->getMessage(), 'warning');
 		}
 
+		try {
+			$this->loadModel('Ordensservico');
+			$idempresa = (int)$this->Auth->user('idempresa');
+			$osRows = $this->Ordensservico->find()
+				->select(['Ordensservico.idcliente', 'Ordensservico.dataabertura'])
+				->where(['Ordensservico.idempresa' => $idempresa])
+				->order(['Ordensservico.dataabertura' => 'DESC'])
+				->limit(5000)
+				->all();
+			foreach ($osRows as $os) {
+				$cidOs = (int)$os->idcliente;
+				if ($cidOs <= 0 || isset($ultimaOsPorCliente[$cidOs])) {
+					continue;
+				}
+				$raw = $os->dataabertura;
+				if ($raw instanceof \DateTimeInterface) {
+					$ultimaOsPorCliente[$cidOs] = $raw->format('d/m/Y');
+				} elseif (is_string($raw) && trim($raw) !== '') {
+					$ultimaOsPorCliente[$cidOs] = trim($raw);
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+
+		$vipIds = [];
+		$top10Ids = [];
+		if ($receitaPorCliente !== []) {
+			arsort($receitaPorCliente);
+			$iTop = 0;
+			foreach (array_keys($receitaPorCliente) as $tid) {
+				if ($iTop >= 10) {
+					break;
+				}
+				$top10Ids[(int)$tid] = true;
+				$iTop++;
+			}
+			$topN = array_slice($receitaPorCliente, 0, max(1, (int)ceil(count($receitaPorCliente) * 0.1)), true);
+			foreach (array_keys($topN) as $vid) {
+				$vipIds[(int)$vid] = true;
+			}
+			foreach ($top5 as $t) {
+				$vipIds[(int)$t['id']] = true;
+			}
+		}
+
 		$receitaPct = null;
 		if ($hasFin && $receitaPrev > 0.0001) {
 			$receitaPct = (int)round(100 * ($receita12 - $receitaPrev) / $receitaPrev);
@@ -341,6 +702,7 @@ class ClientesController extends AppController {
 
 		$segPctPj = $cntTotal > 0 ? (int)round(100 * $cntPj / $cntTotal) : 0;
 		$segPctPf = $cntTotal > 0 ? (int)round(100 * $cntPf / $cntTotal) : 0;
+		$segmentos = $this->_clientesSegmentosDistribuicao($todos);
 
 		$alertaConc = null;
 		if ($top5 !== [] && $receita12 > 0 && $top5[0]['pct'] >= 30) {
@@ -353,23 +715,25 @@ class ClientesController extends AppController {
 		return [
 			'has_fin' => $hasFin,
 			'ativos' => $cntAtivos,
+			'novos_mes' => $novosMes,
 			'receita12_fmt' => $this->_clientesFmtBrlCompact($receita12),
 			'receita12_pct' => $receitaPct,
 			'ticket_fmt' => $this->_clientesFmtBrl($ticketMedio),
 			'inadimplentes' => $inadClientes,
 			'inadimplentes_valor_fmt' => $this->_clientesFmtBrl($inadValor),
 			'bloqueados' => $cntInativos,
-			'aniversariantes' => 0,
+			'aniversariantes' => $aniversariantes,
 			'top5' => $top5,
 			'alerta_concentracao' => $alertaConc,
-			'segmentos' => [
-				['label' => __('Pessoa Jurídica'), 'count' => $cntPj, 'pct' => $segPctPj, 'tone' => 'teal'],
-				['label' => __('Pessoa Física'), 'count' => $cntPf, 'pct' => $segPctPf, 'tone' => 'blue'],
-			],
+			'segmentos' => $segmentos,
 			'pj_bar' => ['count' => $cntPj, 'pct' => $segPctPj],
 			'pf_bar' => ['count' => $cntPf, 'pct' => $segPctPf],
 			'receita_por_cliente' => $receitaPorCliente,
 			'a_receber_por_cliente' => $aReceberPorCliente,
+			'atraso_dias_por_cliente' => $atrasoDiasPorCliente,
+			'ultima_os_por_cliente' => $ultimaOsPorCliente,
+			'vip_ids' => $vipIds,
+			'top10_ids' => $top10Ids,
 		];
 	}
 
