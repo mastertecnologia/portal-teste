@@ -104,11 +104,12 @@ class RbacClientesHttpTest extends TestCase {
 
 		$this->get($this->clientesIndexPath());
 		$this->assertResponseOk();
-		$this->assertResponseContains('Módulo comercial');
 		$this->assertResponseContains('Clientes');
 		$this->assertResponseContains('Cadastro mestre');
 		$this->assertResponseContains('Novo cliente');
 		$this->assertResponseContains('Clientes Ativos');
+		$this->assertResponseContains('DISTRIBUIÇÃO POR SEGMENTO');
+		$this->assertResponseContains('cli-crm-lista');
 	}
 
 	public function testEquipeWithOnlyMatrixPermissionDeniedOnClientes(): void {
