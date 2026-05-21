@@ -110,7 +110,7 @@ $kpis = [
 			$code = (string)($art['code'] ?? '');
 			$interno = (($art['visibilidade'] ?? '') === 'interno');
 			$cardBg = (string)($art['card_bg'] ?? '');
-			$url = $H->sdpPage('detalhe-kb');
+			$url = $H->sdpPage('detalhe-kb', ['code' => $code]);
 			$tags = (array)($art['tags'] ?? []);
 			$revisar = (string)($art['revisar'] ?? '');
 			$rating = (string)($art['rating'] ?? '');

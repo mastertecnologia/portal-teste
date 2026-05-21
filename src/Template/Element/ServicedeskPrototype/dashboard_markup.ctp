@@ -44,18 +44,68 @@ $hmRows = (array)($heatmap['rows'] ?? []);
 $hmHours = (array)($heatmap['hours'] ?? range(8, 18));
 $hmMax = max(1, (int)($heatmap['max'] ?? 1));
 $hmDays = (array)($heatmap['day_labels'] ?? ['Seg', 'Ter', 'Qua', 'Qui', 'Sex']);
+$satisfacao = (array)($proto['satisfacao'] ?? []);
+$financeiro = (array)($proto['financeiro'] ?? []);
+$porCategoria = (array)($proto['por_categoria'] ?? $topAss);
+$csatMedia = $satisfacao['csat_media'] ?? null;
+$csatRespostas = (int)($satisfacao['csat_respostas'] ?? 0);
+$npsScore = $satisfacao['nps'] ?? null;
+$npsRespostas = (int)($satisfacao['nps_respostas'] ?? 0);
+$receitaMes = $financeiro['receita_mes'] ?? null;
+$aFaturar = (int)($financeiro['a_faturar'] ?? 0);
+$aFaturarValor = $financeiro['a_faturar_valor'] ?? null;
+$fcrPct = $satisfacao['fcr_pct'] ?? null;
+$fcrPrev = $satisfacao['fcr_pct_prev'] ?? null;
+$fcrHint = __('30 dias');
+if ($fcrPct !== null && $fcrPrev !== null) {
+	$delta = (int)$fcrPct - (int)$fcrPrev;
+	if ($delta > 0) {
+		$fcrHint = sprintf('↑ %dpp', $delta);
+	} elseif ($delta < 0) {
+		$fcrHint = sprintf('↓ %dpp', abs($delta));
+	} else {
+		$fcrHint = __('estável');
+	}
+}
+$todayDay = date('d/m');
+$horasMes = $financeiro['horas_mes'] ?? null;
+$margemPct = $financeiro['margem_pct'] ?? null;
+$custoMedio = $financeiro['custo_medio'] ?? null;
+$horasCobertas = $financeiro['horas_cobertas'] ?? null;
+$fmtBrl = static function ($v): string {
+	if ($v === null || $v === '') {
+		return '—';
+	}
+
+	return 'R$ ' . number_format((float)$v, 0, ',', '.');
+};
+$sitBarColors = ['#7DD3C0', '#06B6D4', '#F59E0B', '#10B981', '#6B7280', '#1D9E75', '#378ADD'];
+$hmPeak = ['day' => '', 'hour' => 0, 'count' => 0];
+foreach ($hmDays as $day) {
+	foreach ($hmHours as $h) {
+		$cnt = (int)($hmRows[$day][$h] ?? 0);
+		if ($cnt > $hmPeak['count']) {
+			$hmPeak = ['day' => $day, 'hour' => (int)$h, 'count' => $cnt];
+		}
+	}
+}
 $H = $this->ServicedeskPrototype;
+$uCalendar = $H->sdpPage('calendar');
+$uRelExport = $this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'view', 'relatorios']);
 ?>
-<div id="pg-sd-dashboard">
+<div id="pg-sd-dashboard" class="pgm-sd-prototype">
 	<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
 		<div>
 			<div style="font-size:11px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;"><?= h(__('Service Desk · Visão executiva')) ?></div>
-			<h1 style="font-size:22px;font-weight:600;"><?= h(__('Dashboard executivo')) ?></h1>
-			<div style="font-size:12px;color:var(--text-muted);"><?= h(sprintf(__('Atualizado em %s (cache operacional pode aplicar alguns segundos).'), (string)($proto['gerado_em'] ?? ''))) ?></div>
+			<h1 style="font-size:22px;font-weight:600;">📊 <?= h(__('Dashboard executivo')) ?></h1>
+			<div style="font-size:12px;color:var(--text-muted);"><?= h(sprintf(__('Visão consolidada · atualização em %s'), (string)($proto['gerado_em'] ?? ''))) ?></div>
 		</div>
-		<div style="display:flex;gap:8px;flex-wrap:wrap;">
-			<a class="btn btn-ghost btn-sm" href="<?= h($uFila) ?>"><?= h(__('Fila técnica')) ?></a>
-			<?= $this->Html->link(__('Painel operacional'), ['controller' => 'Servicedesk', 'action' => 'operacional'], ['class' => 'btn btn-default btn-sm']) ?>
+		<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+			<select class="sdp-select" disabled style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;">
+				<option><?= h(__('Hoje · tempo real')) ?></option>
+			</select>
+			<a class="btn btn-ghost btn-sm" href="<?= h($uFila) ?>">📋 <?= h(__('Fila técnica')) ?></a>
+			<a class="btn btn-primary btn-sm" href="<?= h($uRelExport) ?>">📥 <?= h(__('Exportar relatório')) ?></a>
 		</div>
 	</div>
 
@@ -67,28 +117,28 @@ $H = $this->ServicedeskPrototype;
 	<?php endif; ?>
 
 	<div class="summary-grid" style="margin-bottom:14px;">
-		<div class="summary-card" style="border-left:3px solid var(--teal);"><div class="lbl"><?= h(__('Volume hoje')) ?></div><div class="val" style="color:var(--teal-dark);"><?= (int)$ticketsHoje ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h($deltaTxt) ?></div></div>
-		<div class="summary-card" style="border-left:3px solid var(--blue);"><div class="lbl"><?= h(__('Em aberto')) ?></div><div class="val" style="color:#0C447C;"><?= (int)$backlogEmpresa ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('total empresa')) ?><?php if ($backlogAbac !== $backlogEmpresa) : ?> · <?= h(sprintf(__('seu escopo: %d'), $backlogAbac)) ?><?php endif; ?></div></div>
-		<div class="summary-card" style="<?= $slaViol > 0 ? 'background:#F8D8DA;border-left:3px solid var(--red);' : 'border-left:3px solid var(--gray-400);' ?>"><div class="lbl"><?= h(__('SLA crítico / violado')) ?></div><div class="val" style="<?= $slaViol > 0 ? 'color:#7A1822;' : '' ?>"><?= (int)$slaViol ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('Lista no painel operacional')) ?></div></div>
-		<div class="summary-card" style="background:#FAEEDA;border-left:3px solid var(--amber);"><div class="lbl"><?= h(__('Perto do limite (30 min)')) ?></div><div class="val" style="color:#8A4D02;"><?= (int)$near ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('Empresa')) ?></div></div>
-		<div class="summary-card" style="border-left:3px solid #6B5B95;"><div class="lbl"><?= h(__('P1 abertos (empresa)')) ?></div><div class="val" style="color:#3D2D63;"><?= (int)($snap['p1_abertos'] ?? 0) ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('Prioridade máxima')) ?></div></div>
-		<div class="summary-card" style="border-left:3px solid #D946A0;"><div class="lbl"><?= h(__('SLA pausado')) ?></div><div class="val" style="color:#7A1B5C;"><?= (int)$paused ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('Empresa')) ?></div></div>
+		<div class="summary-card" style="border-left:3px solid var(--teal);"><div class="lbl"><?= h(__('Volume hoje')) ?></div><div class="val" style="color:var(--teal-dark);"><?= (int)$ticketsHoje ?></div><div style="font-size:11px;color:var(--teal-dark);"><?= h($deltaTxt) ?></div></div>
+		<div class="summary-card" style="border-left:3px solid var(--blue);"><div class="lbl"><?= h(__('Em aberto')) ?></div><div class="val" style="color:#0C447C;"><?= (int)$backlogEmpresa ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('total empresa')) ?></div></div>
+		<div class="summary-card" style="<?= $slaViol > 0 ? 'background:#F8D8DA;border-left:3px solid var(--red);' : 'border-left:3px solid var(--gray-400);' ?>"><div class="lbl"><?= h(__('SLA estourado')) ?></div><div class="val" style="<?= $slaViol > 0 ? 'color:#7A1822;' : '' ?>"><?= (int)$slaViol ?></div><div style="font-size:11px;<?= $slaViol > 0 ? 'color:#7A1822;' : 'color:var(--text-muted);' ?>"><?= h(__('ação imediata')) ?></div></div>
+		<div class="summary-card" style="background:#FAEEDA;border-left:3px solid var(--amber);"><div class="lbl"><?= h(__('Próx. limite')) ?></div><div class="val" style="color:#8A4D02;"><?= (int)$near ?></div><div style="font-size:11px;color:#8A4D02;"><?= h(__('próximas 4h')) ?></div></div>
+		<div class="summary-card" style="border-left:3px solid #6B5B95;"><div class="lbl"><?= h(__('FCR (1ª resolução)')) ?></div><div class="val" style="color:#3D2D63;"><?= $fcrPct !== null ? h((string)$fcrPct . '%') : '—' ?></div><div style="font-size:11px;color:var(--teal-dark);"><?= h($fcrHint) ?></div></div>
+		<div class="summary-card" style="border-left:3px solid #D946A0;"><div class="lbl"><?= h(__('CSAT médio')) ?></div><div class="val" style="color:#7A1B5C;"><?= $csatMedia !== null ? '⭐ ' . h(number_format((float)$csatMedia, 1, ',', '.')) : '—' ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h(sprintf(__('%d respostas'), $csatRespostas)) ?></div></div>
 	</div>
 
 	<div class="summary-grid" style="margin-bottom:14px;">
-		<div class="summary-card" style="border-left:3px solid var(--teal-mid);"><div class="lbl"><?= h(__('Sem técnico')) ?></div><div class="val" style="color:var(--teal-dark);"><?= (int)$semTec ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('Abertos')) ?></div></div>
-		<div class="summary-card" style="border-left:3px solid var(--blue);"><div class="lbl"><?= h(__('Aguarda cliente')) ?></div><div class="val" style="color:#0C447C;"><?= (int)$aguardaCli ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('Respondido')) ?></div></div>
-		<div class="summary-card" style="border-left:3px solid var(--amber);"><div class="lbl"><?= h(__('Resolvidos hoje')) ?></div><div class="val" style="color:#8A4D02;"><?= (int)($snap['resolvidos_hoje'] ?? 0) ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('Empresa')) ?></div></div>
-		<div class="summary-card" style="opacity:.85;border-left:3px solid var(--border);"><div class="lbl"><?= h(__('FCR / CSAT / NPS')) ?></div><div class="val" style="color:var(--text-muted);">—</div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('Não medido neste protótipo')) ?></div></div>
-		<div class="summary-card" style="opacity:.85;border-left:3px solid var(--border);"><div class="lbl"><?= h(__('Receita SD (mockup)')) ?></div><div class="val" style="color:var(--text-muted);">—</div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('Use financeiro / OS')) ?></div></div>
-		<div class="summary-card" style="opacity:.85;border-left:3px solid var(--border);"><div class="lbl"><?= h(__('Horas técnicas')) ?></div><div class="val" style="color:var(--text-muted);">—</div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('Ver apontamentos / OS')) ?></div></div>
+		<div class="summary-card" style="border-left:3px solid var(--teal-mid);"><div class="lbl"><?= h(__('Receita mensal SD')) ?></div><div class="val" style="color:var(--teal-dark);"><?= h($fmtBrl($receitaMes)) ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('faturas do mês')) ?></div></div>
+		<div class="summary-card" style="border-left:3px solid var(--blue);"><div class="lbl"><?= h(__('A faturar')) ?></div><div class="val" style="color:#0C447C;"><?= $aFaturarValor !== null ? h($fmtBrl($aFaturarValor)) : h((string)$aFaturar) ?></div><div style="font-size:11px;color:var(--text-muted);"><?= $aFaturarValor !== null ? h(sprintf(__('%d tickets fechados'), $aFaturar)) : h(__('tickets resolvidos')) ?></div></div>
+		<div class="summary-card" style="background:var(--teal-light);border-left:3px solid var(--teal);"><div class="lbl"><?= h(__('Margem operacional')) ?></div><div class="val" style="color:var(--teal-dark);"><?= $margemPct !== null ? h((string)$margemPct . '%') : '—' ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('após custo técnico')) ?></div></div>
+		<div class="summary-card" style="border-left:3px solid #6B5B95;"><div class="lbl"><?= h(__('Custo médio/ticket')) ?></div><div class="val" style="color:#3D2D63;"><?= $custoMedio !== null ? h($fmtBrl($custoMedio)) : '—' ?></div><div style="font-size:11px;color:var(--text-muted);"><?= h(__('mês corrente')) ?></div></div>
+		<div class="summary-card" style="border-left:3px solid var(--amber);"><div class="lbl"><?= h(__('Horas técnicas')) ?></div><div class="val" style="color:#8A4D02;"><?= $horasMes !== null ? h(number_format((float)$horasMes, 1, ',', '.') . 'h') : '—' ?></div><div style="font-size:11px;color:var(--text-muted);"><?= $horasCobertas !== null ? h(number_format((float)$horasCobertas, 0, ',', '.') . 'h ' . __('cobertas')) : h(__('apontamentos')) ?></div></div>
+		<div class="summary-card" style="border-left:3px solid #D946A0;"><div class="lbl"><?= h(__('NPS')) ?></div><div class="val" style="color:#7A1B5C;"><?= $npsScore !== null ? h(($npsScore >= 0 ? '+' : '') . (string)$npsScore) : '—' ?></div><div style="font-size:11px;color:var(--teal-dark);"><?= $npsScore !== null && (int)$npsScore >= 50 ? h(__('★ Excelente')) : h(sprintf(__('%d resp.'), $npsRespostas)) ?></div></div>
 	</div>
 
 	<div class="g2" style="margin-bottom:14px;">
 		<div class="card">
 			<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-				<div class="sec-title sdp-sec-no-line" style="margin:0;border:none;"><?= h(__('Volume diário · últimos 14 dias')) ?></div>
-				<div style="font-size:11px;color:var(--text-muted);"><span style="color:var(--teal-dark);">●</span> <?= h(__('Criados')) ?> · <span style="color:#D946A0;">●</span> <?= h(__('Resolvidos')) ?></div>
+				<div class="sec-title sdp-sec-no-line" style="margin:0;border:none;">📈 <?= h(__('Volume diário · últimos 14 dias')) ?></div>
+				<div style="font-size:11px;color:var(--text-muted);"><span style="color:var(--teal-dark);">●</span> <?= h(__('Abertos')) ?> · <span style="color:#D946A0;">●</span> <?= h(__('Fechados')) ?></div>
 			</div>
 			<div style="height:200px;background:var(--bg-surface);border-radius:var(--radius);padding:14px;display:flex;align-items:flex-end;gap:4px;">
 				<?php foreach ($vol as $v) : ?>
@@ -97,11 +147,14 @@ $H = $this->ServicedeskPrototype;
 					$f = (int)($v['fechados'] ?? 0);
 					$ha = $volMax > 0 ? (int)max(4, round(160 * $a / $volMax)) : 0;
 					$hf = $volMax > 0 ? (int)max(2, round(160 * $f / $volMax)) : 0;
+					$isWeekend = !empty($v['weekend']);
+					$isToday = (string)($v['day'] ?? '') === $todayDay;
+					$barOpen = $isWeekend ? 'var(--teal-mid)' : 'var(--teal)';
 					?>
 					<div style="flex:1;display:flex;flex-direction:column;gap:1px;align-items:center;justify-content:flex-end;min-width:0;height:160px;">
-						<div style="width:100%;background:var(--teal);height:<?= $ha ?>px;border-radius:2px 2px 0 0;min-height:<?= $a > 0 ? 4 : 0 ?>px;"></div>
+						<div style="width:100%;background:<?= h($barOpen) ?>;height:<?= $ha ?>px;border-radius:2px 2px 0 0;min-height:<?= $a > 0 ? 4 : 0 ?>px;<?= $isToday ? 'border:1px solid var(--teal-dark);' : '' ?>"></div>
 						<div style="width:100%;background:#D946A0;height:<?= $hf ?>px;min-height:<?= $f > 0 ? 2 : 0 ?>px;"></div>
-						<span style="font-size:9px;color:var(--text-muted);margin-top:4px;"><?= h((string)($v['day'] ?? '')) ?></span>
+						<span style="font-size:9px;color:var(--text-muted);margin-top:4px;<?= $isToday ? 'font-weight:700;' : '' ?>"><?= h((string)($v['day'] ?? '')) ?></span>
 					</div>
 				<?php endforeach; ?>
 				<?php if ($vol === []) : ?>
@@ -111,31 +164,32 @@ $H = $this->ServicedeskPrototype;
 		</div>
 
 		<div class="card">
-			<div class="sec-title"><?= h(__('Distribuição por situação (abertos no seu escopo)')) ?></div>
+			<div class="sec-title">📊 <?= h(sprintf(__('Distribuição por status (%d abertos)'), (int)$backlogAbac)) ?></div>
 			<?php if ($sitRows === []) : ?>
 				<p class="text-muted"><?= h(__('Sem dados.')) ?></p>
 			<?php else : ?>
 				<div style="display:flex;flex-direction:column;gap:10px;">
-					<?php foreach ($sitRows as $r) : ?>
+					<?php foreach ($sitRows as $i => $r) : ?>
+						<?php $barColor = $sitBarColors[$i % count($sitBarColors)]; ?>
 						<div>
 							<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
 								<span><?= h((string)($r['label'] ?? '')) ?></span>
 								<strong><?= (int)($r['count'] ?? 0) ?> (<?= h((string)($r['pct'] ?? '0')) ?>%)</strong>
 							</div>
 							<div style="height:10px;background:var(--bg-surface);border-radius:5px;overflow:hidden;">
-								<div style="height:100%;width:<?= h((string)min(100, (float)($r['pct'] ?? 0))) ?>%;background:var(--teal);"></div>
+								<div style="height:100%;width:<?= h((string)min(100, (float)($r['pct'] ?? 0))) ?>%;background:<?= h($barColor) ?>;"></div>
 							</div>
 						</div>
 					<?php endforeach; ?>
 				</div>
 				<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-light);">
-					<div class="sec-title" style="margin-bottom:8px;"><?= h(__('Top assuntos (90 dias)')) ?></div>
+					<div class="sec-title" style="margin-bottom:8px;"><?= h(__('Por categoria')) ?></div>
 					<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;">
-						<?php foreach ($topAss as $a) : ?>
-							<div><?= h(\Cake\Utility\Text::truncate((string)($a['label'] ?? ''), 42, ['ellipsis' => '…'])) ?> · <strong><?= (int)($a['count'] ?? 0) ?></strong></div>
+						<?php foreach (array_slice($porCategoria, 0, 6) as $a) : ?>
+							<div><?= h(\Cake\Utility\Text::truncate((string)($a['label'] ?? ''), 28, ['ellipsis' => '…'])) ?> · <strong><?= (int)($a['count'] ?? 0) ?></strong></div>
 						<?php endforeach; ?>
-						<?php if ($topAss === []) : ?>
-							<div class="text-muted"><?= h(__('Sem assuntos no período.')) ?></div>
+						<?php if ($porCategoria === []) : ?>
+							<div class="text-muted"><?= h(__('Sem categorias no período.')) ?></div>
 						<?php endif; ?>
 					</div>
 				</div>
@@ -143,13 +197,21 @@ $H = $this->ServicedeskPrototype;
 		</div>
 	</div>
 
-	<div class="sdp-grid-3" style="margin-bottom:14px;">
+	<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;">
 		<div class="card">
-			<div class="sec-title"><?= h(__('Top clientes (90 dias)')) ?></div>
+			<div class="sec-title">🏆 <?= h(__('Top 5 clientes · volume')) ?></div>
 			<div style="display:flex;flex-direction:column;gap:8px;">
 				<?php foreach ($topCli as $c) : ?>
 					<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--bg-surface);border-radius:6px;">
-						<div><strong style="font-size:12px;"><?= h((string)($c['name'] ?? '')) ?></strong></div>
+						<div>
+							<strong style="font-size:12px;"><?= h((string)($c['name'] ?? '')) ?></strong>
+							<?php if (!empty($c['plan']) || ($c['csat'] ?? null) !== null) : ?>
+								<div style="font-size:10px;color:var(--text-muted);">
+									<?= h((string)($c['plan'] ?? '')) ?>
+									<?php if (($c['csat'] ?? null) !== null) : ?> · CSAT ⭐ <?= h(number_format((float)$c['csat'], 1, ',', '.')) ?><?php endif; ?>
+								</div>
+							<?php endif; ?>
+						</div>
 						<strong style="color:var(--teal-dark);"><?= (int)($c['count'] ?? 0) ?></strong>
 					</div>
 				<?php endforeach; ?>
@@ -161,7 +223,7 @@ $H = $this->ServicedeskPrototype;
 		</div>
 
 		<div class="card">
-			<div class="sec-title"><?= h(__('Assuntos com pico (24h)')) ?></div>
+			<div class="sec-title">🔥 <?= h(__('Categorias quentes (24h)')) ?></div>
 			<div style="display:flex;flex-direction:column;gap:8px;">
 				<?php if ($quentes === []) : ?>
 					<p class="text-muted small"><?= h(__('Nenhum assunto com tickets nas últimas 24h.')) ?></p>
@@ -177,18 +239,24 @@ $H = $this->ServicedeskPrototype;
 		</div>
 
 		<div class="card">
-			<div class="sec-title"><?= h(__('Técnicos com mais chamados abertos')) ?></div>
+			<div class="sec-title">👥 <?= h(__('Status da equipe agora')) ?></div>
 			<div style="display:flex;flex-direction:column;gap:8px;">
 				<?php if ($equipe === []) : ?>
 					<p class="text-muted small"><?= h(__('Sem atribuições ou colunas indisponíveis.')) ?></p>
 				<?php else : ?>
-					<?php foreach ($equipe as $m) : ?>
+					<?php
+					$avatarColors = ['var(--teal)', '#06B6D4', '#D946A0', '#9CA3AF', '#6B5B95'];
+					foreach ($equipe as $idx => $m) :
+						$avColor = $avatarColors[$idx % count($avatarColors)];
+						$ab = (int)($m['abertos'] ?? 0);
+						?>
 						<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg-surface);border-radius:6px;">
-							<div style="width:32px;height:32px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;"><?= h((string)($m['initials'] ?? '?')) ?></div>
-							<div style="flex:1;"><strong style="font-size:12px;"><?= h((string)($m['name'] ?? '')) ?></strong><div style="font-size:10px;color:var(--text-muted);"><?= h(sprintf(__('%d abertos'), (int)($m['abertos'] ?? 0))) ?></div></div>
+							<div style="width:32px;height:32px;border-radius:50%;background:<?= h($avColor) ?>;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;position:relative;"><?= h((string)($m['initials'] ?? '?')) ?><span style="position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;background:#10B981;border:2px solid #fff;border-radius:50%;"></span></div>
+							<div style="flex:1;"><strong style="font-size:12px;"><?= h((string)($m['name'] ?? '')) ?></strong><div style="font-size:10px;color:var(--text-muted);">🟢 <?= h(__('Online')) ?> · <?= h(sprintf(__('%d ativos'), $ab)) ?></div></div>
 						</div>
 					<?php endforeach; ?>
 				<?php endif; ?>
+				<a class="btn btn-ghost btn-xs" style="margin-top:4px;" href="<?= h($uCalendar) ?>">📅 <?= h(__('Ver escala completa')) ?></a>
 			</div>
 		</div>
 	</div>
@@ -225,7 +293,7 @@ $H = $this->ServicedeskPrototype;
 	<div class="card">
 		<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
 			<div class="sec-title sdp-sec-no-line" style="margin:0;border:none;">🗺 <?= h(__('Heatmap · volume por dia da semana × horário')) ?></div>
-			<div style="font-size:11px;color:var(--text-muted);"><?= h(__('últimos 90 dias · seu escopo ABAC')) ?></div>
+			<div style="font-size:11px;color:var(--text-muted);"><?= h(__('média últimos 90 dias')) ?></div>
 		</div>
 		<div style="overflow-x:auto;">
 			<table style="width:100%;border-collapse:separate;border-spacing:2px;font-size:11px;min-width:600px;">
@@ -252,9 +320,13 @@ $H = $this->ServicedeskPrototype;
 		</div>
 		<div style="display:flex;align-items:center;gap:14px;margin-top:10px;font-size:11px;color:var(--text-muted);">
 			<span><?= h(__('Intensidade:')) ?></span>
-			<span><span style="display:inline-block;width:14px;height:14px;background:#C5F1D8;border-radius:2px;vertical-align:middle;"></span> 1–9</span>
+			<span><span style="display:inline-block;width:14px;height:14px;background:#C5F1D8;border-radius:2px;vertical-align:middle;"></span> 0–9</span>
 			<span><span style="display:inline-block;width:14px;height:14px;background:#7DD3C0;border-radius:2px;vertical-align:middle;"></span> 10–15</span>
-			<span><span style="display:inline-block;width:14px;height:14px;background:#1D9E75;border-radius:2px;vertical-align:middle;"></span> 16+</span>
+			<span><span style="display:inline-block;width:14px;height:14px;background:#1D9E75;border-radius:2px;vertical-align:middle;"></span> 16–25</span>
+			<span><span style="display:inline-block;width:14px;height:14px;background:#0a3d2c;border-radius:2px;vertical-align:middle;"></span> 26+</span>
+			<?php if ($hmPeak['count'] > 0) : ?>
+				<span style="margin-left:auto;">💡 <?= h(__('Pico:')) ?> <strong><?= h($hmPeak['day']) ?> <?= h((string)$hmPeak['hour']) ?>h</strong> (<?= (int)$hmPeak['count'] ?> <?= h(__('tickets')) ?>)</span>
+			<?php endif; ?>
 		</div>
 	</div>
 </div>

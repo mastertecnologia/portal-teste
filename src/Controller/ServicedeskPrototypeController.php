@@ -16,6 +16,7 @@ use Cake\Http\Exception\NotFoundException;
  */
 class ServicedeskPrototypeController extends AppController {
 
+	use ErpPrototypeRbacTrait;
 	use PrototypeApiSecurityTrait;
 
 	public function initialize() {
@@ -37,7 +38,8 @@ class ServicedeskPrototypeController extends AppController {
 		$this->Auth->setConfig('unauthorizedRedirect', $staffLogin);
 
 		parent::beforeFilter($event);
-		$this->viewBuilder()->setLayout('servicedesk_prototype');
+		$this->viewBuilder()->setLayout('erp_prototype');
+		$this->set('loadServicedeskPrototypeCss', true);
 	}
 
 	protected function _erpPrototypeDenyPortalUser(): void {
@@ -74,12 +76,10 @@ class ServicedeskPrototypeController extends AppController {
 			throw new NotFoundException(__('Ticket não encontrado ou fora do seu escopo.'));
 		}
 
-		$this->set('title', __('Service Desk — Ticket #%s (β)', $ticketId));
-		$this->set('sdpNavActive', 'fila');
 		$this->set('ticket', $detail);
 
 		$screensSvc = new ServicedeskPrototypeScreensService($abac);
-		$this->set('sdpNavBadges', $screensSvc->navBadges([
+		$this->applyErpShell('fila', __('Ticket #%s', $ticketId), [__('Fila técnica'), __('Ticket')], $screensSvc->navBadges([
 			'tickets' => $this->Tickets,
 			'idempresa' => $empresa,
 			'userId' => (int)$this->Auth->user('id'),
@@ -208,15 +208,13 @@ class ServicedeskPrototypeController extends AppController {
 		}
 
 		$this->set([
-			'title' => __('Histórico CSAT'),
-			'sdpNavActive' => 'csat',
 			'csatItens' => $itens,
 			'csatKpi' => $kpi,
 			'csatFiltros' => ['mes' => $mes, 'min_csat' => $minCsat, 'nps' => $apenasNps, 'q' => $busca],
 		]);
 
 		$screensSvc = new ServicedeskPrototypeScreensService(function (\Cake\ORM\Query $q) {});
-		$this->set('sdpNavBadges', $screensSvc->navBadges([
+		$this->applyErpShell('csat', __('Histórico CSAT'), [__('CSAT & NPS'), __('Histórico')], $screensSvc->navBadges([
 			'tickets' => $this->Tickets, 'idempresa' => $empresa, 'userId' => (int)$this->Auth->user('id'),
 		]));
 
@@ -557,8 +555,6 @@ class ServicedeskPrototypeController extends AppController {
 
 		$cliente = $asset->cliente ?? null;
 		$this->set([
-			'title' => __('CI #{0}', $id),
-			'sdpNavActive' => 'cmdb',
 			'ci' => [
 				'id' => (int)$asset->get('id'),
 				'tag' => 'CI-' . str_pad((string)$asset->get('id'), 4, '0', STR_PAD_LEFT),
@@ -574,7 +570,7 @@ class ServicedeskPrototypeController extends AppController {
 		]);
 
 		$screensSvc = new ServicedeskPrototypeScreensService(function (\Cake\ORM\Query $q) {});
-		$this->set('sdpNavBadges', $screensSvc->navBadges([
+		$this->applyErpShell('cmdb', __('CI #{0}', $id), [__('CMDB · Ativos'), __('Detalhe')], $screensSvc->navBadges([
 			'tickets' => $this->Tickets,
 			'idempresa' => $empresa,
 			'userId' => (int)$this->Auth->user('id'),
@@ -593,8 +589,6 @@ class ServicedeskPrototypeController extends AppController {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));
 		}
 		$meta = $defs[$page];
-		$this->set('title', $meta['title']);
-		$this->set('sdpNavActive', $page);
 
 		$empresa = (int)$this->Auth->user('idempresa');
 		$userId = (int)$this->Auth->user('id');
@@ -619,14 +613,22 @@ class ServicedeskPrototypeController extends AppController {
 			'query' => $this->request->getQueryParams(),
 		];
 
-		$this->set('sdpNavBadges', $screensSvc->navBadges($ctx));
+		$navBadges = $screensSvc->navBadges($ctx);
+		$curLabel = (string)($meta['breadcrumb'] ?? $this->screenBreadcrumbLabel($page));
+		$this->applyErpShell($page, (string)$meta['title'], [$curLabel], $navBadges);
 
 		$kind = (string)($meta['kind'] ?? '');
 		if ($kind === 'executive') {
 			$this->set('proto', $dataSvc->buildExecutivePayload($this->Tickets, $empresa, $this->Clientes, $this->Users));
 		} elseif ($kind === 'fila') {
 			$p = max(1, (int)$this->request->getQuery('page', 1));
-			$this->set('filaRef', $dataSvc->buildFilaPagePayload($this->Tickets, $empresa, $p, 30));
+			$this->set('filaRef', $dataSvc->buildFilaPagePayload(
+				$this->Tickets,
+				$empresa,
+				$p,
+				30,
+				$this->request->getQueryParams()
+			));
 		} elseif ($kind === 'kanban') {
 			$this->set('kanban', $dataSvc->buildKanbanPayload(
 				$this->Tickets,
@@ -640,7 +642,8 @@ class ServicedeskPrototypeController extends AppController {
 					$this->Tickets,
 					$empresa,
 					$this->Clientes,
-					$this->Users
+					$this->Users,
+					$this->request->getQueryParams()
 				);
 			}
 			$this->set('screen', $screen);
@@ -699,6 +702,106 @@ class ServicedeskPrototypeController extends AppController {
 			'detalhe-fatura' => $screen(__('Service Desk — Detalhe fatura (β)')),
 			'automacoes-editor' => $screen(__('Service Desk — Automações (β)')),
 		];
+	}
+
+	protected function screenBreadcrumbLabel(string $page): string {
+		$labels = [
+			'dashboard' => __('Dashboard executivo'),
+			'fila' => __('Fila técnica'),
+			'kanban' => __('Kanban'),
+			'meus' => __('Meus tickets'),
+			'grupo' => __('Meu grupo'),
+			'aprovacoes' => __('Aprovações'),
+			'cmdb' => __('CMDB · Ativos'),
+			'problemas' => __('Problemas'),
+			'mudancas' => __('Mudanças'),
+			'contratos' => __('Contratos SLA'),
+			'fat' => __('Faturamento'),
+			'kb' => __('Base conhecimento'),
+			'portal' => __('Portal cliente'),
+			'calendar' => __('Plantões'),
+			'csat' => __('CSAT & NPS'),
+			'relatorios' => __('Relatórios'),
+			'config' => __('SLA & Config'),
+			'perm' => __('Permissões'),
+			'integracoes' => __('Integrações'),
+			'templates' => __('Templates'),
+			'portal-novo' => __('Abrir chamado'),
+			'detalhe-kb' => __('Artigo KB'),
+			'detalhe-fatura' => __('Detalhe fatura'),
+			'automacoes-editor' => __('Automações'),
+		];
+
+		return $labels[$page] ?? ucfirst(str_replace('-', ' ', $page));
+	}
+
+	protected function erpNavKey(string $page): string {
+		if ($page === 'dashboard') {
+			return 'sd-dashboard';
+		}
+
+		return 'sd-' . str_replace('_', '-', $page);
+	}
+
+	/**
+	 * @param array<string,int> $navBadges
+	 */
+	protected function applyErpShell(string $page, string $title, array $trail, array $navBadges = []): void {
+		$erpBadges = [
+			'sd-aprovacoes' => (int)($navBadges['aprovacoes'] ?? 0),
+		];
+		try {
+			$empresas = $this->loadModel('Empresas');
+			$erpBadges['empresas'] = (int)$empresas->find()->count();
+		} catch (\Throwable $e) {
+		}
+		$breadcrumb = [['label' => __('Service Desk')]];
+		foreach ($trail as $i => $label) {
+			$entry = ['label' => (string)$label];
+			if ($i === count($trail) - 1) {
+				$entry['cur'] = true;
+			}
+			$breadcrumb[] = $entry;
+		}
+		$this->set([
+			'title' => $title,
+			'erpNavActive' => $this->erpNavKey($page),
+			'erpNavBadges' => $erpBadges,
+			'erpBreadcrumb' => $breadcrumb,
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+			'loadServicedeskPrototypeCss' => true,
+		]);
+	}
+
+	/**
+	 * @return array<int,array{id:int,nome:string,cnpj:string,current:bool}>
+	 */
+	protected function loadEmpresasParaTopbar(): array {
+		try {
+			$tbl = $this->loadModel('Empresas');
+		} catch (\Throwable $e) {
+			return [];
+		}
+		$active = (int)$this->Auth->user('idempresa');
+		$out = [];
+		try {
+			foreach ($tbl->find()->order(['id' => 'ASC'])->limit(20)->all() as $e) {
+				$nome = (string)($e->get('razaosocial') ?? $e->get('nome') ?? '');
+				if ($nome === '') {
+					continue;
+				}
+				$out[] = [
+					'id' => (int)$e->get('id'),
+					'nome' => $nome,
+					'cnpj' => (string)($e->get('cnpj') ?? ''),
+					'current' => (int)$e->get('id') === $active,
+				];
+			}
+		} catch (\Throwable $e) {
+			return [];
+		}
+
+		return $out;
 	}
 
 }

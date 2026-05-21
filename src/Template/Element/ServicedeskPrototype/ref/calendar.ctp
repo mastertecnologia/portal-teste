@@ -54,15 +54,50 @@ $absenceClass = static function (string $style): string {
 };
 ?>
 <div id="pg-sd-calendar" class="sdp-cal-page">
-	<?= $this->element('ServicedeskPrototype/ref/header', compact('title', 'subtitle', 'toolbar') + ['eyebrow' => __('Service Desk')]) ?>
-
-	<form method="get" action="<?= h($H->sdpPage('calendar')) ?>" class="sdp-cal-month-form" style="margin:-8px 0 14px;display:flex;justify-content:flex-end;">
-		<select name="month" class="sdp-cal-month-select" onchange="this.form.submit()" aria-label="<?= h(__('Mês')) ?>">
-			<?php foreach ($monthOptions as $mo) : ?>
-				<option value="<?= h((string)($mo['value'] ?? '')) ?>" <?= !empty($mo['selected']) ? 'selected' : '' ?>><?= h((string)($mo['label'] ?? '')) ?></option>
-			<?php endforeach; ?>
-		</select>
-	</form>
+	<div class="sdp-cal-page-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+		<div>
+			<div style="font-size:11px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;"><?= h(__('Service Desk')) ?></div>
+			<h1 style="font-size:22px;font-weight:600;margin:0;"><?= h($title) ?></h1>
+			<?php if ($subtitle !== '') : ?>
+				<div style="font-size:12px;color:var(--text-muted);"><?= h($subtitle) ?></div>
+			<?php endif; ?>
+		</div>
+		<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+			<?php
+			$backBtn = null;
+			$addBtn = null;
+			foreach ($toolbar as $btn) {
+				$label = (string)($btn['label'] ?? '');
+				if (strpos($label, __('Voltar')) !== false || strpos($label, '←') !== false) {
+					$backBtn = $btn;
+				} elseif (strpos($label, __('Adicionar')) !== false || strpos($label, '+') !== false) {
+					$addBtn = $btn;
+				}
+			}
+			if ($backBtn !== null && !empty($backBtn['url'])) :
+			?>
+				<?= $this->Html->link(
+					(string)$backBtn['label'],
+					$backBtn['url'],
+					['class' => (string)($backBtn['class'] ?? 'btn btn-ghost btn-sm'), 'escape' => false]
+				) ?>
+			<?php endif; ?>
+			<form method="get" action="<?= h($H->sdpPage('calendar')) ?>" style="margin:0;">
+				<select name="month" class="sdp-cal-month-select" onchange="this.form.submit()" aria-label="<?= h(__('Mês')) ?>" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;">
+					<?php foreach ($monthOptions as $mo) : ?>
+						<option value="<?= h((string)($mo['value'] ?? '')) ?>" <?= !empty($mo['selected']) ? 'selected' : '' ?>><?= h((string)($mo['label'] ?? '')) ?></option>
+					<?php endforeach; ?>
+				</select>
+			</form>
+			<?php if ($addBtn !== null && !empty($addBtn['url'])) : ?>
+				<?= $this->Html->link(
+					(string)$addBtn['label'],
+					$addBtn['url'],
+					['class' => (string)($addBtn['class'] ?? 'btn btn-primary btn-sm'), 'escape' => false]
+				) ?>
+			<?php endif; ?>
+		</div>
+	</div>
 
 	<div class="card sdp-cal-now-banner">
 		<div class="sdp-cal-now-inner">

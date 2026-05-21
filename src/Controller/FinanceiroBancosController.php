@@ -1565,7 +1565,7 @@ class FinanceiroBancosController extends AppController
                         ],
                     ])
                     ->matching("FinanceiroRetornoArquivos", function ($q) use (
-                        $idempresa,
+                        $idempresa
                     ) {
                         return $q->where([
                             "FinanceiroRetornoArquivos.idempresa" => $idempresa,
@@ -3047,7 +3047,7 @@ class FinanceiroBancosController extends AppController
      */
     protected function _contaExtratoCombinaBanco(
         $contaExtrato,
-        array $contasReferencia,
+        array $contasReferencia
     ) {
         $contaExtrato = trim((string) $contaExtrato);
         if ($contaExtrato === "" || empty($contasReferencia)) {

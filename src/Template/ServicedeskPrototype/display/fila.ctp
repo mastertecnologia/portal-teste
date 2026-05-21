@@ -22,6 +22,32 @@ $overdue = (int)($sla['overdue'] ?? 0);
 $near = (int)($sla['near_due'] ?? 0);
 $paused = (int)($sla['paused'] ?? 0);
 $assignment = (array)($ref['assignment'] ?? []);
+$filters = (array)($ref['filters'] ?? []);
+$filterOpts = (array)($ref['filter_options'] ?? []);
+$filterQueues = (array)($filterOpts['queues'] ?? []);
+$filterTecnicos = (array)($filterOpts['tecnicos'] ?? []);
+$filterNiveis = (array)($filterOpts['niveis'] ?? []);
+$activeSla = (string)($filters['sla'] ?? 'todos');
+$activeStatus = (string)($filters['status'] ?? 'abertos');
+$filaBaseUrl = $this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'fila']);
+$buildFilaQs = static function (array $overrides = []) use ($filters): array {
+	$base = [
+		'q' => (string)($filters['q'] ?? ''),
+		'status' => (string)($filters['status'] ?? 'abertos'),
+		'queue_id' => (int)($filters['queue_id'] ?? 0),
+		'nivel' => (string)($filters['nivel'] ?? ''),
+		'tecnico_id' => (string)($filters['tecnico_id'] ?? ''),
+		'sla' => (string)($filters['sla'] ?? 'todos'),
+	];
+	$merged = array_merge($base, $overrides);
+	foreach ($merged as $k => $v) {
+		if ($v === null || $v === '' || $v === 0 || ($k === 'sla' && $v === 'todos') || ($k === 'status' && $v === 'abertos')) {
+			unset($merged[$k]);
+		}
+	}
+
+	return $merged;
+};
 $H = $this->ServicedeskPrototype;
 $patchAssignmentUrl = $this->Url->build(['controller' => 'Tickets', 'action' => 'apiPatchAssignment', '_full' => true]);
 $apiTecnicosUrl = $this->Url->build(['controller' => 'Tickets', 'action' => 'apiTecnicosLista', '_full' => true]);
@@ -42,12 +68,12 @@ $toolbar = [
 	['label' => '+ ' . __('Abrir chamado'), 'url' => ['controller' => 'Servicedesk', 'action' => 'add'], 'class' => 'btn btn-primary btn-sm'],
 ];
 ?>
-<div class="row">
-	<div class="col-12 pgm-sd-prototype" id="pg-sd-fila">
+<div class="pgm-sd-prototype" id="pg-sd-fila">
 		<?= $this->element('ServicedeskPrototype/ref/header', [
 			'title' => __('Fila técnica'),
 			'subtitle' => '',
 			'toolbar' => $toolbar,
+			'eyebrow' => __('Service Desk'),
 		]) ?>
 
 		<div class="card" style="margin-bottom:14px;padding:18px;">
@@ -91,6 +117,21 @@ $toolbar = [
 			<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
 				<?= $this->Html->link(__('Configurar SLA →'), $H->sdpPage('config'), ['style' => 'color:var(--teal);font-size:13px;font-weight:600;text-decoration:none;']) ?>
 			</div>
+			<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+				<?php
+				$slaTabs = [
+					'todos' => __('Todos'),
+					'estourado' => __('Estourado'),
+					'limite' => __('Próx. limite'),
+					'pausado' => __('Pausado'),
+				];
+				foreach ($slaTabs as $slaKey => $slaLbl) :
+					$active = $activeSla === $slaKey;
+					$url = $filaBaseUrl . '?' . http_build_query($buildFilaQs(['sla' => $slaKey === 'todos' ? '' : $slaKey, 'page' => null]));
+				?>
+					<a href="<?= h($url) ?>" class="btn btn-ghost btn-xs" style="<?= $active ? 'background:var(--teal-light);color:var(--teal-dark);' : '' ?>"><?= h($slaLbl) ?></a>
+				<?php endforeach; ?>
+			</div>
 			<div class="g2">
 				<div style="padding:14px 16px;background:#fff;border:1px solid var(--border-light);border-radius:var(--radius);">
 					<div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:600;letter-spacing:.4px;margin-bottom:10px;"><?= h(__('Alertas ativos')) ?></div>
@@ -113,8 +154,8 @@ $toolbar = [
 									}
 								}
 								?>
-								<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;">
-									<?= $this->Html->link('#' . $vid, $H->sdpTicketUrl($vid), ['style' => 'font-family:monospace;font-weight:600;color:var(--teal);']) ?>
+								<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;cursor:pointer;" onclick="window.location.href='<?= h($H->sdpTicketUrl($vid)) ?>'">
+									<span style="font-family:monospace;font-weight:600;color:var(--teal);">#<?= $vid ?></span>
 									<span style="color:#7A1822;font-weight:600;"><?= h(__('SLA estourado')) ?></span>
 									<span style="color:var(--text-muted);font-family:monospace;"><?= h($vlim) ?></span>
 								</div>
@@ -135,13 +176,17 @@ $toolbar = [
 								}
 								$stateLabel = (string)($entry['label'] ?? '');
 								$seconds = (int)($entry['avg_seconds'] ?? 0);
+								$stateColor = 'var(--teal-dark)';
+								if (stripos($stateLabel, __('Pendente')) !== false && $seconds >= 86400) {
+									$stateColor = '#7A1822';
+								}
 								if ($stateLabel === '') {
 									continue;
 								}
 								?>
 								<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;">
 									<span><?= h($stateLabel) ?></span>
-									<span style="font-weight:700;color:var(--teal-dark);"><?= h($H->formatSlaSeconds($seconds)) ?></span>
+									<span style="font-weight:700;color:<?= h($stateColor) ?>;"><?= h($H->formatSlaSeconds($seconds)) ?></span>
 								</div>
 							<?php endforeach; ?>
 						<?php endif; ?>
@@ -151,17 +196,53 @@ $toolbar = [
 		</div>
 
 		<div class="card" style="margin-bottom:14px;padding:12px 14px;">
-			<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+			<form method="get" action="<?= h($filaBaseUrl) ?>" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0;">
+				<?php if ($activeSla !== '' && $activeSla !== 'todos') : ?>
+					<input type="hidden" name="sla" value="<?= h($activeSla) ?>" />
+				<?php endif; ?>
 				<div style="display:flex;align-items:baseline;gap:6px;font-size:13px;flex-shrink:0;">
 					<strong style="font-size:18px;color:var(--teal-dark);"><?= h((string)$totalEmpresa) ?></strong>
 					<span style="color:var(--text-muted);"><?= h(__('na empresa')) ?></span>
+					<?php if ($total !== $totalEmpresa) : ?>
+						<span style="color:var(--text-muted);">· <strong><?= h((string)$total) ?></strong> <?= h(__('filtrados')) ?></span>
+					<?php endif; ?>
 				</div>
-				<input type="text" placeholder="<?= h(__('Buscar nº, cliente ou assunto')) ?>" style="flex:1;min-width:240px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;" disabled />
-				<select class="sdp-select" disabled><option><?= h(__('Aguardando + Em execução')) ?></option></select>
-				<select class="sdp-select" disabled><option><?= h(__('Todas as filas')) ?></option></select>
-				<select class="sdp-select" disabled><option><?= h(__('Todos os níveis')) ?></option></select>
-				<select class="sdp-select" disabled><option><?= h(__('Qualquer técnico')) ?></option></select>
-			</div>
+				<input type="search" name="q" value="<?= h((string)($filters['q'] ?? '')) ?>" placeholder="<?= h(__('Buscar nº, cliente ou assunto')) ?>" style="flex:1;min-width:240px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;" />
+				<select name="status" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:#fff;">
+					<option value="abertos" <?= $activeStatus === 'abertos' ? 'selected' : '' ?>><?= h(__('Aguardando + Em execução')) ?></option>
+					<option value="all" <?= $activeStatus === 'all' ? 'selected' : '' ?>><?= h(__('Todos os status')) ?></option>
+					<option value="pendente" <?= $activeStatus === 'pendente' ? 'selected' : '' ?>><?= h(__('Apenas Aberto')) ?></option>
+					<option value="execucao" <?= $activeStatus === 'execucao' ? 'selected' : '' ?>><?= h(__('Em execução')) ?></option>
+					<option value="respondido" <?= $activeStatus === 'respondido' ? 'selected' : '' ?>><?= h(__('Pendente')) ?></option>
+					<option value="resolvido" <?= $activeStatus === 'resolvido' ? 'selected' : '' ?>><?= h(__('Resolvido')) ?></option>
+					<option value="fechado" <?= $activeStatus === 'fechado' ? 'selected' : '' ?>><?= h(__('Fechado')) ?></option>
+				</select>
+				<select name="queue_id" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:#fff;">
+					<option value=""><?= h(__('Todas as filas')) ?></option>
+					<?php foreach ($filterQueues as $fq) : ?>
+						<?php $fqid = (int)($fq['id'] ?? 0); ?>
+						<option value="<?= $fqid ?>" <?= (int)($filters['queue_id'] ?? 0) === $fqid ? 'selected' : '' ?>><?= h((string)($fq['name'] ?? '')) ?></option>
+					<?php endforeach; ?>
+				</select>
+				<select name="nivel" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:#fff;">
+					<option value=""><?= h(__('Todos os níveis')) ?></option>
+					<?php foreach ($filterNiveis as $nv) : ?>
+						<option value="<?= h((string)$nv) ?>" <?= (string)($filters['nivel'] ?? '') === (string)$nv ? 'selected' : '' ?>><?= h((string)$nv) ?></option>
+					<?php endforeach; ?>
+				</select>
+				<select name="tecnico_id" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:#fff;">
+					<option value=""><?= h(__('Qualquer técnico')) ?></option>
+					<option value="sem" <?= (string)($filters['tecnico_id'] ?? '') === 'sem' ? 'selected' : '' ?>><?= h(__('Sem atribuição')) ?></option>
+					<?php foreach ($filterTecnicos as $ft) : ?>
+						<?php $ftid = (int)($ft['id'] ?? 0); ?>
+						<option value="<?= $ftid ?>" <?= (string)($filters['tecnico_id'] ?? '') === (string)$ftid ? 'selected' : '' ?>><?= h((string)($ft['name'] ?? '')) ?></option>
+					<?php endforeach; ?>
+				</select>
+				<button type="submit" class="btn btn-primary btn-sm"><?= h(__('Filtrar')) ?></button>
+				<?php if ($buildFilaQs([]) !== []) : ?>
+					<a href="<?= h($filaBaseUrl) ?>" class="btn btn-ghost btn-sm"><?= h(__('Limpar')) ?></a>
+				<?php endif; ?>
+			</form>
 		</div>
 
 		<div class="card" style="padding:0;overflow:hidden;">
@@ -189,19 +270,18 @@ $toolbar = [
 				<?php if ($pages > 1) : ?>
 					<div style="display:flex;gap:4px;align-items:center;">
 						<?php if ($page > 1) : ?>
-							<?= $this->Html->link('‹', ['action' => 'fila', '?' => ['page' => $page - 1]], ['class' => 'btn btn-ghost btn-xs']) ?>
+							<?= $this->Html->link('‹', ['action' => 'fila', '?' => $buildFilaQs(['page' => $page - 1])], ['class' => 'btn btn-ghost btn-xs']) ?>
 						<?php else : ?>
 							<button class="btn btn-ghost btn-xs" disabled>‹</button>
 						<?php endif; ?>
 						<span class="btn btn-ghost btn-xs" style="background:var(--teal-light);color:var(--teal-dark);"><?= h((string)$page) ?></span>
 						<?php if ($page < $pages) : ?>
-							<?= $this->Html->link('›', ['action' => 'fila', '?' => ['page' => $page + 1]], ['class' => 'btn btn-ghost btn-xs']) ?>
+							<?= $this->Html->link('›', ['action' => 'fila', '?' => $buildFilaQs(['page' => $page + 1])], ['class' => 'btn btn-ghost btn-xs']) ?>
 						<?php endif; ?>
 					</div>
 				<?php endif; ?>
 			</div>
 		</div>
-	</div>
 </div>
 
 <?php

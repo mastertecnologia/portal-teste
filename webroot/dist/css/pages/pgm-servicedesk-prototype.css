@@ -665,6 +665,15 @@
 	overflow-x: auto;
 }
 
+.pgm-sd-prototype .sdp-kanban-col-drop.sdp-kanban-drop-over {
+	outline: 2px dashed var(--teal);
+	outline-offset: 2px;
+}
+
+.pgm-sd-prototype .sdp-kanban-card-dnd:active {
+	cursor: grabbing;
+}
+
 .pgm-sd-prototype .sec-title.sdp-sec-no-line::after {
 	display: none;
 }

@@ -8,6 +8,10 @@
 	var STORAGE_KEY = 'pgmPortalTheme';
 
 	function applyDark() {
+		/* Se o layout já definiu tema light (ex.: Service Desk), não sobrescrever */
+		var current = document.documentElement.getAttribute('data-pgm-theme');
+		if (current === 'light') return;
+
 		document.documentElement.setAttribute('data-pgm-theme', 'dark');
 		if (document.body) {
 			document.body.classList.remove('pgm-theme-light');

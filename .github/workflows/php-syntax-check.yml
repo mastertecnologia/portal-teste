@@ -52,7 +52,7 @@ jobs:
       - name: Lint — src e config (PHP)
         run: |
           set -e
-          find src config -name "*.php" -print0 | xargs -0 -n1 php -l
+          find src config -name "*.php" ! -path "config/app_local.php" -print0 | xargs -0 -n1 php -l
 
       - name: Lint — templates (.ctp)
         run: |

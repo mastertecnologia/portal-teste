@@ -53,6 +53,9 @@ $htmlLang = $erpLocale === 'en_US' ? 'en' : ($erpLocale === 'es' ? 'es' : 'pt-BR
 	<?= $this->Html->meta('icon') ?>
 	<?= $this->Html->css($w . 'dist/css/style.min') ?>
 	<?= $this->Html->css($w . 'dist/css/pgm-erp-prototype.css') ?>
+	<?php if (!empty($loadServicedeskPrototypeCss)) : ?>
+		<?= $this->Html->css($w . 'dist/css/pages/pgm-servicedesk-prototype.css', ['block' => false]) ?>
+	<?php endif; ?>
 	<?php
 	// Opt-in: views que precisam de gráficos setam $useChartJs = true.
 	if (!empty($useChartJs)) :
