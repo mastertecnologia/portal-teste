@@ -13,20 +13,16 @@ $H = $this->ErpPrototype;
 $f = (array)($osFiltros ?? ['situacao' => '', 'cliente' => '', 'de' => '', 'ate' => '']);
 $clientesOpt = (array)($osClientesOptions ?? []);
 ?>
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-	<div>
-		<div style="font-size:11px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;"><?= h(__('Operações')) ?></div>
-		<h1 style="font-size:22px;font-weight:600;margin:0;">🛠 <?= h(__('Ordens de Serviço')) ?></h1>
-		<div style="font-size:12px;color:var(--text-muted);">
-			<?= sprintf(h(__('%d OS · total R$ %s no escopo da empresa ativa')), (int)$osCounts['total'], number_format((float)$osTotalValor, 2, ',', '.')) ?>
-		</div>
-	</div>
-	<div style="display:flex;gap:8px;flex-wrap:wrap;">
-		<?= $this->Html->link('📥 ' . __('Exportar CSV'), ['controller' => 'OrdensservicoPrototype', 'action' => 'exportCsv', '?' => array_filter($f)], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('🗂 ' . __('Kanban'), ['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'kanban'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('+ ' . __('Nova OS'), ['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'abertura'], ['class' => 'btn btn-primary btn-sm']) ?>
-	</div>
-</div>
+<?= $this->element('ErpPrototype/page_header', [
+	'eyebrow' => __('Operações'),
+	'title' => __('Ordens de Serviço'),
+	'subtitle' => sprintf(__('%d OS · total R$ %s no escopo da empresa ativa'), (int)$osCounts['total'], number_format((float)$osTotalValor, 2, ',', '.')),
+	'actions' => [
+		['label' => __('Exportar CSV'), 'url' => ['controller' => 'OrdensservicoPrototype', 'action' => 'exportCsv', '?' => array_filter($f)], 'class' => 'btn btn-ghost btn-sm'],
+		['label' => __('Kanban'), 'url' => ['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'kanban'], 'class' => 'btn btn-ghost btn-sm'],
+		['label' => '+ ' . __('Nova OS'), 'url' => ['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'abertura'], 'class' => 'btn btn-primary'],
+	],
+]) ?>
 
 <div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
 	<div class="stat" style="--sc:var(--teal);"><div class="stat-l"><?= h(__('Total')) ?></div><div class="stat-n"><?= (int)$osCounts['total'] ?></div></div>

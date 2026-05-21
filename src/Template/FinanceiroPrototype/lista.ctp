@@ -8,18 +8,16 @@
 $H = $this->ErpPrototype;
 $saldo = (float)($finKpis['saldo_mes'] ?? 0);
 ?>
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-	<div>
-		<div style="font-size:11px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;"><?= h(__('Financeiro')) ?></div>
-		<h1 style="font-size:22px;font-weight:600;margin:0;">💰 <?= h(__('Dashboard Financeiro')) ?></h1>
-		<div style="font-size:12px;color:var(--text-muted);"><?= h(__('Visão consolidada do mês corrente · CR, CP e saldo operacional')) ?></div>
-	</div>
-	<div style="display:flex;gap:8px;flex-wrap:wrap;">
-		<?= $this->Html->link('💵 ' . __('Contas a Receber'), ['controller' => 'FinanceiroPrototype', 'action' => 'titulos'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('💳 ' . __('Contas a Pagar'), ['controller' => 'FinanceiroPrototype', 'action' => 'contasPagar'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('🏦 ' . __('Bancos'), ['controller' => 'BancosPrototype', 'action' => 'lista'], ['class' => 'btn btn-primary btn-sm']) ?>
-	</div>
-</div>
+<?= $this->element('ErpPrototype/page_header', [
+	'eyebrow' => __('Financeiro'),
+	'title' => __('Dashboard Financeiro'),
+	'subtitle' => __('Visão consolidada do mês corrente · CR, CP e saldo operacional'),
+	'actions' => [
+		['label' => __('Contas a Receber'), 'url' => ['controller' => 'FinanceiroPrototype', 'action' => 'titulos'], 'class' => 'btn btn-ghost btn-sm'],
+		['label' => __('Contas a Pagar'), 'url' => ['controller' => 'FinanceiroPrototype', 'action' => 'contasPagar'], 'class' => 'btn btn-ghost btn-sm'],
+		['label' => __('Bancos'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'lista'], 'class' => 'btn btn-primary'],
+	],
+]) ?>
 
 <div class="summary-grid" style="margin-bottom:14px;">
 	<div class="summary-card" style="border-left:3px solid var(--teal);">

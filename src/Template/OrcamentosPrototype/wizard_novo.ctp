@@ -13,12 +13,12 @@ $clientes = (array)($orcClientesOptions ?? []);
 $tipoLbls = ['prod' => __('Produto'), 'serv' => __('Serviço'), 'lic' => __('Licença'), 'loc' => __('Locação')];
 $csrf = (string)$this->request->getAttribute('csrfToken');
 ?>
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+<div class="pg-page-head">
 	<div>
-		<div style="font-size:11px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;"><?= h(__('Comercial · Novo orçamento')) ?></div>
-		<h1 style="font-size:22px;font-weight:600;margin:0;">📝 <?= h(__('Cabeçalho e cliente')) ?></h1>
+		<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;"><?= h(__('Orçamentos')) ?> › <span style="color:var(--teal);"><?= h(__('Novo')) ?></span></div>
+		<h1 class="pg-page-title" style="font-size:20px;"><?= h(__('Proposta de Orçamento')) ?></h1>
 	</div>
-	<?= $this->Html->link('← ' . __('Cancelar'), ['controller' => 'OrcamentosPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
+	<?= $this->Html->link(__('Cancelar'), ['controller' => 'OrcamentosPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost']) ?>
 </div>
 
 <?= $H->stepper($wizardSteps) ?>

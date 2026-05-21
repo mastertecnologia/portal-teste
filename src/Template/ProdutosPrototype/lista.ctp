@@ -16,21 +16,17 @@ $tipoLabels = [
 ];
 $f = (array)($prodFiltros ?? ['q' => '', 'tipo' => '', 'ativo' => '']);
 ?>
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-	<div>
-		<div style="font-size:11px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;"><?= h(__('Cadastros')) ?></div>
-		<h1 style="font-size:22px;font-weight:600;margin:0;">📦 <?= h(__('Produtos')) ?></h1>
-		<div style="font-size:12px;color:var(--text-muted);">
-			<?= sprintf(h(__('%d itens · catálogo total %s')), (int)$prodCounts['total'], $H->brl((float)$prodValorTotal)) ?>
-		</div>
-	</div>
-	<div style="display:flex;gap:8px;flex-wrap:wrap;">
-		<?= $this->Html->link('📥 ' . __('Exportar CSV'), ['controller' => 'ProdutosPrototype', 'action' => 'exportCsv'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('📦 ' . __('Estoque'), ['controller' => 'ProdutosPrototype', 'action' => 'estoque'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('💲 ' . __('Tabela de preços'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('+ ' . __('Novo produto'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'novo'], ['class' => 'btn btn-primary btn-sm']) ?>
-	</div>
-</div>
+<?= $this->element('ErpPrototype/page_header', [
+	'eyebrow' => __('Cadastros'),
+	'title' => __('Produtos'),
+	'subtitle' => sprintf(__('%d itens · catálogo total %s'), (int)$prodCounts['total'], $H->brl((float)$prodValorTotal)),
+	'actions' => [
+		['label' => __('Exportar CSV'), 'url' => ['controller' => 'ProdutosPrototype', 'action' => 'exportCsv'], 'class' => 'btn btn-ghost btn-sm'],
+		['label' => __('Estoque'), 'url' => ['controller' => 'ProdutosPrototype', 'action' => 'estoque'], 'class' => 'btn btn-ghost btn-sm'],
+		['label' => __('Tabela de preços'), 'url' => ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'], 'class' => 'btn btn-ghost btn-sm'],
+		['label' => '+ ' . __('Novo produto'), 'url' => ['controller' => 'ProdutosPrototype', 'action' => 'view', 'novo'], 'class' => 'btn btn-primary'],
+	],
+]) ?>
 
 <div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
 	<div class="stat" style="--sc:var(--teal);"><div class="stat-l"><?= h(__('Total')) ?></div><div class="stat-n"><?= (int)$prodCounts['total'] ?></div></div>

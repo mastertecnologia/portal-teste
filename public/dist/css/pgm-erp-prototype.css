@@ -37,7 +37,8 @@
 	--gray-600: #5f5e5a;
 	--gray-900: #1a1a18;
 	--border: #e5e4e0;
-	--border-light: #f0efec;
+	--border-light: #f8f8f7;
+	--row-divider: #f8f8f7;
 	--text: #1a1a18;
 	--text-muted: #6b6a65;
 	--text-hint: #9a9890;
@@ -54,12 +55,23 @@
 	font-size: 13px;
 	color: var(--text);
 	background: var(--gray-100);
-	min-height: 100vh;
 }
 .pgm-erp-shell * { box-sizing: border-box; }
 
+html:has(.pgm-erp-shell),
+html:has(.pgm-erp-shell) body {
+	height: 100%;
+	overflow: hidden;
+}
+
 /* ===== APP / SHELL ===== */
-.pgm-erp-shell .app { display: flex; flex-direction: column; min-height: 100vh; }
+.pgm-erp-shell .app {
+	display: flex;
+	flex-direction: row;
+	height: 100vh;
+	width: 100%;
+	min-height: 0;
+}
 
 /* ===== SIDEBAR ===== */
 .pgm-erp-shell .sidebar {
@@ -113,13 +125,48 @@
 
 /* ===== MAIN / TOPBAR ===== */
 .pgm-erp-shell .main {
-	margin-left: 220px; flex: 1; display: flex; flex-direction: column;
+	margin-left: 220px;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	height: 100vh;
+	overflow: hidden;
 }
 .pgm-erp-shell .topbar {
-	background: var(--bg); border-bottom: 1px solid var(--border);
-	padding: 0 28px; height: 56px;
-	display: flex; align-items: center; justify-content: space-between;
-	position: sticky; top: 0; z-index: 50;
+	flex-shrink: 0;
+	background: var(--bg);
+	border-bottom: 1px solid var(--border);
+	padding: 0 30px;
+	height: 60px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	position: sticky;
+	top: 0;
+	z-index: 100;
+	box-shadow: 0 1px 0 rgba(0,0,0,.03);
+}
+.pgm-erp-shell .topbar .breadcrumb {
+	font-size: 14px;
+	color: var(--gray-900);
+	line-height: 1.2;
+}
+.pgm-erp-shell .topbar .breadcrumb b {
+	color: var(--gray-900);
+	font-weight: 700;
+}
+.pgm-erp-shell #dynamic-content.page-content,
+.pgm-erp-shell .content.page-content {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding: 30px 28px;
+	width: 100%;
+}
+.pgm-erp-shell #dynamic-content.page-content svg [stroke]:not([stroke="none"]) {
+	stroke: currentColor;
 }
 .pgm-erp-shell .topbar-left {
 	display: flex; align-items: center; gap: 6px;
@@ -129,7 +176,6 @@
 .pgm-erp-shell .topbar-left .cur { color: var(--teal); font-weight: 500; }
 .pgm-erp-shell .topbar-actions { display: flex; gap: 8px; align-items: center; }
 .pgm-erp-shell .topbar-sep { width: 1px; height: 20px; background: var(--border); }
-.pgm-erp-shell .content { padding: 24px 28px; flex: 1; }
 
 /* Seletor de empresa */
 .pgm-erp-shell .emp-selector {
@@ -310,14 +356,14 @@
 	text-transform: uppercase; letter-spacing: .4px;
 	padding: 8px 12px; text-align: left;
 	border-bottom: 1px solid var(--border);
-	font-weight: 600; background: var(--bg-surface);
+	font-weight: 600; background: #ffffff;
 }
 .pgm-erp-shell .tbl thead th.r { text-align: right; }
 .pgm-erp-shell .tbl tbody tr {
-	border-bottom: 1px solid var(--border-light);
+	border-bottom: 1px solid var(--row-divider, #f8f8f7);
 	cursor: pointer; transition: background .1s;
 }
-.pgm-erp-shell .tbl tbody tr:hover { background: var(--bg-surface); }
+.pgm-erp-shell .tbl tbody tr:hover { background: var(--row-divider, #f8f8f7); }
 .pgm-erp-shell .tbl td { padding: 10px 12px; color: var(--text); vertical-align: middle; }
 .pgm-erp-shell .tbl td.r { text-align: right; }
 .pgm-erp-shell .tbl td.mu { color: var(--text-muted); font-size: 11px; }
@@ -420,6 +466,144 @@
 	text-transform: uppercase; font-weight: 600; letter-spacing: .4px;
 }
 .pgm-erp-shell .summary-card .val { font-size: 18px; font-weight: 700; color: var(--text); }
+
+/* ===== MOCKUP pg-lista / wizards (pgm_erp_completo) ===== */
+.pgm-erp-shell .pg-page-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 20px;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+.pgm-erp-shell .pg-page-eyebrow {
+	font-size: 11px;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: .5px;
+	margin-bottom: 4px;
+}
+.pgm-erp-shell .pg-page-title {
+	font-size: 22px;
+	font-weight: 600;
+	color: var(--text);
+	margin: 0;
+}
+.pgm-erp-shell .pg-lista-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 18px;
+	border-bottom: 1px solid var(--border);
+	background: var(--bg-surface);
+}
+.pgm-erp-shell .pg-search-box {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	padding: 6px 10px;
+	background: #fff;
+}
+.pgm-erp-shell .pg-search-box input {
+	border: none;
+	background: transparent;
+	outline: none;
+	font-size: 12px;
+	width: 150px;
+	color: var(--text);
+	font-family: inherit;
+}
+.pgm-erp-shell .margin-bar {
+	height: 4px;
+	border-radius: 2px;
+	background: var(--gray-200);
+	margin-top: 4px;
+	overflow: hidden;
+}
+.pgm-erp-shell .margin-fill {
+	height: 100%;
+	border-radius: 2px;
+	transition: width .4s, background .4s;
+}
+.pgm-erp-shell .margin-good { background: var(--teal); }
+.pgm-erp-shell .margin-warn { background: var(--amber); }
+.pgm-erp-shell .margin-bad { background: var(--red); }
+.pgm-erp-shell .margin-summary {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 10px;
+}
+.pgm-erp-shell .margin-card {
+	background: var(--bg-surface);
+	border-radius: var(--radius);
+	padding: 12px 14px;
+	text-align: center;
+	border: 1px solid var(--border-light);
+}
+.pgm-erp-shell .margin-card-val {
+	font-size: 20px;
+	font-weight: 600;
+	margin-bottom: 3px;
+}
+.pgm-erp-shell .margin-card-lbl {
+	font-size: 10px;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: .4px;
+}
+.pgm-erp-shell .catalog-overlay {
+	display: none;
+	position: fixed;
+	inset: 0;
+	background: rgba(0,0,0,.35);
+	z-index: 200;
+	align-items: center;
+	justify-content: center;
+}
+.pgm-erp-shell .catalog-overlay.open { display: flex; }
+.pgm-erp-shell .catalog-modal {
+	background: #fff;
+	border-radius: var(--radius-xl);
+	width: 680px;
+	max-height: 80vh;
+	display: flex;
+	flex-direction: column;
+	box-shadow: 0 20px 60px rgba(0,0,0,.2);
+}
+.pgm-erp-shell .paper {
+	background: #fff;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-xl);
+	max-width: 720px;
+	margin: 0 auto;
+	padding: 44px 48px;
+	color: #1a1a18;
+	font-size: 11px;
+	line-height: 1.6;
+	box-shadow: var(--shadow);
+}
+.pgm-erp-shell .add-row {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 10px;
+	border: 1.5px dashed var(--border);
+	border-radius: var(--radius);
+	cursor: pointer;
+	color: var(--text-muted);
+	font-size: 12px;
+	transition: all .15s;
+	background: transparent;
+	width: 100%;
+}
+.pgm-erp-shell .add-row:hover {
+	border-color: var(--teal);
+	color: var(--teal);
+	background: var(--teal-light);
+}
 
 /* ===== TEMA ESCURO (opt-in: data-pgm-theme="dark" no <html>) ===== */
 html[data-pgm-theme="dark"] .pgm-erp-shell {

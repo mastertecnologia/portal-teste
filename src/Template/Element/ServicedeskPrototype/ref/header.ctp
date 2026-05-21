@@ -13,10 +13,10 @@ $eyebrowHtml = $eyebrowHtml ?? null;
 $subtitle = $subtitle ?? '';
 $toolbar = $toolbar ?? [];
 ?>
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+<div class="pg-page-head">
 	<div>
-		<div style="font-size:11px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;"><?= $eyebrowHtml !== null ? $eyebrowHtml : h($eyebrow) ?></div>
-		<h1 style="font-size:22px;font-weight:600;margin:0;"><?= h($title) ?></h1>
+		<div class="pg-page-eyebrow"><?= $eyebrowHtml !== null ? $eyebrowHtml : h($eyebrow) ?></div>
+		<h1 class="pg-page-title"><?= h($title) ?></h1>
 		<?php if ($subtitle !== '') : ?>
 			<div style="font-size:12px;color:var(--text-muted);"><?= h($subtitle) ?></div>
 		<?php endif; ?>
