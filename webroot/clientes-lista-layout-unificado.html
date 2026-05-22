@@ -1258,38 +1258,38 @@ body { background: var(--mock-erp-shell); font-family: var(--pgm-font-sans); }
           <div class="cli-360-hero-tenure">4 anos · 47 contratos</div>
         </div>
       </section>
-      <div class="cli-kpi-strip cli-360-kpi-strip cli-360-kpi-strip--primary">
-        <div class="cli-kpi cli-kpi--teal">
-          <div class="cli-kpi-label">Receita 12 meses</div>
-          <div class="cli-kpi-val">R$ 524.180</div>
-          <div class="cli-kpi-sub cli-360-kpi-trend cli-360-kpi-trend--up">↑ 32% vs período anterior</div>
+      <div class="cli-360-kpis cli-360-kpis--primary">
+        <div class="cli-360-kpi cli-360-kpi--teal">
+          <div class="cli-360-kpi-lbl">Receita 12 meses</div>
+          <div class="cli-360-kpi-val">R$ 524.180</div>
+          <div class="cli-360-kpi-sub cli-360-kpi-sub--up">↑ 32% vs período anterior</div>
         </div>
-        <div class="cli-kpi cli-kpi--blue">
-          <div class="cli-kpi-label">Receita total</div>
-          <div class="cli-kpi-val">R$ 1,89M</div>
-          <div class="cli-kpi-sub">desde mar/2022</div>
+        <div class="cli-360-kpi cli-360-kpi--blue">
+          <div class="cli-360-kpi-lbl">Receita total</div>
+          <div class="cli-360-kpi-val">R$ 1,89M</div>
+          <div class="cli-360-kpi-sub">desde mar/2022</div>
         </div>
-        <div class="cli-kpi cli-kpi--orange">
-          <div class="cli-kpi-label">A receber</div>
-          <div class="cli-kpi-val">R$ 16.791,67</div>
-          <div class="cli-kpi-sub">5 parcelas · em dia</div>
+        <div class="cli-360-kpi cli-360-kpi--orange">
+          <div class="cli-360-kpi-lbl">A receber</div>
+          <div class="cli-360-kpi-val">R$ 16.791,67</div>
+          <div class="cli-360-kpi-sub">5 parcelas · em dia</div>
         </div>
-        <div class="cli-kpi cli-kpi--purple">
-          <div class="cli-kpi-label">Ticket médio</div>
-          <div class="cli-kpi-val">R$ 11.156</div>
-          <div class="cli-kpi-sub">por contrato</div>
+        <div class="cli-360-kpi cli-360-kpi--rose">
+          <div class="cli-360-kpi-lbl">Ticket médio</div>
+          <div class="cli-360-kpi-val">R$ 11.156</div>
+          <div class="cli-360-kpi-sub">por contrato</div>
         </div>
       </div>
-      <div class="cli-kpi-strip cli-360-kpi-strip cli-360-kpi-strip--secondary">
-        <div class="cli-kpi cli-kpi--purple">
-          <div class="cli-kpi-label">Limite de crédito</div>
-          <div class="cli-kpi-val">R$ 80.000</div>
-          <div class="cli-kpi-sub">R$ 63.208 disponíveis</div>
+      <div class="cli-360-kpis cli-360-kpis--secondary">
+        <div class="cli-360-kpi cli-360-kpi--purple">
+          <div class="cli-360-kpi-lbl">Limite de crédito</div>
+          <div class="cli-360-kpi-val">R$ 80.000</div>
+          <div class="cli-360-kpi-sub">R$ 63.208 disponíveis</div>
         </div>
-        <div class="cli-kpi cli-kpi--teal cli-360-kpi--score">
-          <div class="cli-kpi-label">Score interno</div>
-          <div class="cli-kpi-val">9,2 / 10</div>
-          <div class="cli-kpi-sub">Pagador exemplar</div>
+        <div class="cli-360-kpi cli-360-kpi--score">
+          <div class="cli-360-kpi-lbl">Score interno</div>
+          <div class="cli-360-kpi-val">9,2 / 10</div>
+          <div class="cli-360-kpi-sub">Pagador exemplar</div>
         </div>
       </div>
       <nav class="cli-360-tabs" role="tablist">
@@ -1316,18 +1316,6 @@ body { background: var(--mock-erp-shell); font-family: var(--pgm-font-sans); }
                 <a href="#" class="cli-360-link">Adicionar</a>
               </div>
             </div>
-            <div class="cli-360-card cli-360-card--saude">
-              <div class="cli-360-card-head">
-                <span class="cli-360-card-title"><i class="fas fa-heartbeat"></i> Saúde do relacionamento</span>
-              </div>
-              <div class="cli-360-saude-row">
-                <div class="cli-360-saude-top">
-                  <span class="cli-360-saude-label">Engajamento</span>
-                  <strong class="cli-360-saude-val">Alto</strong>
-                </div>
-                <div class="cli-360-saude-track"><div class="cli-360-saude-fill" style="width:82%"></div></div>
-              </div>
-            </div>
             <div class="cli-360-card">
               <div class="cli-360-card-head">
                 <span class="cli-360-card-title"><i class="fas fa-bolt"></i> Atalhos rápidos</span>
@@ -1337,6 +1325,16 @@ body { background: var(--mock-erp-shell); font-family: var(--pgm-font-sans); }
                 <a href="#" class="cli-360-shortcut"><i class="fas fa-wrench"></i> Abrir OS</a>
                 <a href="#" class="cli-360-shortcut"><i class="fab fa-whatsapp"></i> WhatsApp</a>
                 <a href="#" class="cli-360-shortcut"><i class="fas fa-envelope"></i> Enviar e-mail</a>
+              </div>
+            </div>
+            <div class="cli-360-card cli-360-card--saude">
+              <div class="cli-360-card-head">
+                <span class="cli-360-card-title"><i class="fas fa-heartbeat"></i> Saúde do relacionamento</span>
+              </div>
+              <div class="cli-360-saude-row">
+                <span class="cli-360-saude-label">Engajamento (interações/mês)</span>
+                <div class="cli-360-saude-track"><div class="cli-360-saude-fill" style="width:82%"></div></div>
+                <strong class="cli-360-saude-val">Alto</strong>
               </div>
             </div>
           </div>
