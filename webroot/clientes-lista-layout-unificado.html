@@ -1038,10 +1038,29 @@ body { background: var(--mock-erp-shell); font-family: var(--pgm-font-sans); }
     </div>
     </div>
 
-    <!-- Módulo de cadastros · novo cliente -->
+    <!-- Módulo de cadastros · novo cliente (produção: add.ctp + wizard 4 passos) -->
     <div class="pv-module" id="pv-mod-cadastro-cliente">
     <div class="cli-form-root cli-layout-unificado">
-      <div class="cli-form-body cli-form-body--cadastro-lead">
+      <header class="cli-crm-page-head cli-crm-page-head--bar" style="margin-bottom:12px;">
+        <div class="cli-crm-page-head-text">
+          <h1 class="cli-crm-h1 mb-1">Novo cadastro de cliente</h1>
+          <p class="cli-crm-subtitle mb-0">Preencha as informações principais · Você pode complementar depois</p>
+        </div>
+        <div class="cli-crm-page-actions">
+          <button type="button" class="btn-cli-secondary btn-cli-sm">Cancelar</button>
+          <button type="button" class="btn-cli-primary btn-cli-sm"><i class="fas fa-check"></i> Salvar cliente</button>
+        </div>
+      </header>
+      <div class="cli-form-body cli-form-body--cadastro-lead cli-wizard-root">
+      <nav class="cli-wizard-stepper" aria-label="Etapas">
+        <button type="button" class="cli-wiz-stp cli-wiz-stp--active"><span class="cli-wiz-stp-c">1</span><span class="cli-wiz-stp-l">Identificação</span></button>
+        <span class="cli-wiz-stp-line"></span>
+        <button type="button" class="cli-wiz-stp"><span class="cli-wiz-stp-c">2</span><span class="cli-wiz-stp-l">Endereço &amp; Contato</span></button>
+        <span class="cli-wiz-stp-line"></span>
+        <button type="button" class="cli-wiz-stp"><span class="cli-wiz-stp-c">3</span><span class="cli-wiz-stp-l">Fiscal &amp; Financeiro</span></button>
+        <span class="cli-wiz-stp-line"></span>
+        <button type="button" class="cli-wiz-stp"><span class="cli-wiz-stp-c">4</span><span class="cli-wiz-stp-l">Comercial &amp; CRM</span></button>
+      </nav>
 
         <!-- Tipo -->
         <div class="cli-section">
