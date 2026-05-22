@@ -161,7 +161,7 @@ class ClientesController extends AppController {
 		$this->set('pgmTopbarClientesLista', true);
 		$this->set('pgmTopbarEmpresas', $this->_clientesTopbarEmpresas());
 
-		$qAll = $this->Clientes->find('all')->contain(['Cidades'])->order(['Clientes.id' => 'DESC']);
+		$qAll = $this->Clientes->find('all')->contain(['Cidades.Estados'])->order(['Clientes.id' => 'DESC']);
 		$this->Abac->applyToQuery($qAll, 'Clientes');
 		$todos = $qAll->toArray();
 
@@ -419,6 +419,7 @@ class ClientesController extends AppController {
 		$cutoffContato = (new \DateTimeImmutable('today'))->modify('-30 days');
 		$mesAtual = (int)date('n');
 		$anoAtual = (int)date('Y');
+		$avTones = ['teal', 'blue', 'rose', 'orange', 'purple', 'navy', 'wine'];
 		$rows = [];
 		foreach ($todos as $reg) {
 			$cid = (int)$reg->id;
@@ -435,15 +436,18 @@ class ClientesController extends AppController {
 			if ($email !== '') {
 				$sub = $sub !== '' ? $sub . ' (' . $email . ')' : $email;
 			}
-			$cidadeNome = '';
+			$cidadeDisplay = '';
 			if (!empty($reg->cidade) && !empty($reg->cidade->nome)) {
-				$cidadeNome = (string)$reg->cidade->nome;
+				$cidadeDisplay = (string)$reg->cidade->nome;
+				$uf = '';
+				if (!empty($reg->cidade->estado) && !empty($reg->cidade->estado->sigla)) {
+					$uf = strtoupper(trim((string)$reg->cidade->estado->sigla));
+				}
+				if ($uf !== '') {
+					$cidadeDisplay .= '/' . $uf;
+				}
 			}
 			$codigo = 'CLI-' . str_pad((string)$reg->id, 4, '0', STR_PAD_LEFT);
-			$pub = trim((string)($reg->public_code ?? ''));
-			if ($pub !== '') {
-				$codigo = $pub;
-			}
 			$rec12 = isset($receitaPorCliente[$cid]) ? (float)$receitaPorCliente[$cid] : 0.0;
 			$aRec = isset($aReceberPorCliente[$cid]) ? (float)$aReceberPorCliente[$cid] : 0.0;
 			$diasAtraso = (int)($atrasoDias[$cid] ?? 0);
@@ -459,8 +463,8 @@ class ClientesController extends AppController {
 			$statusClass = 'on';
 			if ((int)$reg->inativo === 1) {
 				$statusUi = 'inativo';
-				$statusLabel = __('Inativo');
-				$statusClass = 'off';
+				$statusLabel = __('Bloqueado');
+				$statusClass = 'blocked';
 			} elseif ($diasAtraso > 0) {
 				$statusUi = 'atraso';
 				$statusLabel = __('Atraso {0}d', $diasAtraso);
@@ -494,7 +498,8 @@ class ClientesController extends AppController {
 				'subline' => $sub,
 				'doc' => $doc,
 				'segmento' => $seg,
-				'cidade' => $cidadeNome,
+				'cidade' => $cidadeDisplay,
+				'av_tone' => $avTones[$cid % count($avTones)],
 				'receita12' => $rec12,
 				'a_receber' => $aRec,
 				'status_ui' => $statusUi,

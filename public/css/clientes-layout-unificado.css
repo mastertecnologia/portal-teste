@@ -1318,40 +1318,32 @@ body:not(.layout-no-topbar) .bs-container .bs-searchbox input {
   appearance: none;
   -webkit-appearance: none;
 }
-.cli-crm-filter-card {
+.cli-crm-toolbar-filters--ref {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 132px;
-  margin: 0;
-  cursor: pointer;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
 }
-.cli-crm-filter-card-lbl {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--orc-text-hint);
-  padding: 0 2px;
-}
-.cli-crm-filter-card-box {
+.cli-crm-filter-box {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  min-width: 128px;
   min-height: 38px;
   padding: 0 10px 0 12px;
   background: var(--orc-bg-card);
   border: 1px solid var(--orc-border);
   border-radius: 10px;
   box-shadow: var(--orc-shadow-sm);
+  cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.cli-crm-filter-card:hover .cli-crm-filter-card-box,
-.cli-crm-filter-card:focus-within .cli-crm-filter-card-box {
-  border-color: var(--orc-teal);
+.cli-crm-filter-box:hover,
+.cli-crm-filter-box:focus-within {
+  border-color: rgba(0, 192, 139, 0.45);
   box-shadow: 0 0 0 2px var(--orc-teal-dim);
 }
-.cli-crm-filter-card-chev {
+.cli-crm-filter-chev {
   font-size: 10px;
   color: var(--orc-text-hint);
   pointer-events: none;
@@ -1386,6 +1378,8 @@ body:not(.layout-no-topbar) .bs-container .bs-searchbox input {
 .cli-crm-chip--indigo:hover { border-color: #6366f1; color: #4338ca; background: #eef2ff; }
 .cli-crm-chip--orange.active,
 .cli-crm-chip--orange:hover { border-color: #f97316; color: #c2410c; background: #fff7ed; }
+.cli-crm-chip--purple.active,
+.cli-crm-chip--purple:hover { border-color: #8b5cf6; color: #6d28d9; background: #f5f3ff; }
 .cli-crm-chip-ic { margin-right: 2px; }
 .cli-crm-page-head--bar {
   margin-bottom: 14px;
@@ -1577,25 +1571,25 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   margin-right: 10px;
 }
 .cli-col-act {
-  width: 72px;
+  width: 88px;
   text-align: right;
 }
 .cli-code-badge {
   display: inline-block;
   padding: 4px 10px;
-  border-radius: 8px;
-  background: var(--orc-teal-light);
-  border: 1px solid rgba(0, 192, 139, 0.22);
-  color: var(--orc-teal-dark);
+  border-radius: 999px;
+  background: #f0efec;
+  border: 1px solid var(--orc-border);
+  color: var(--orc-text-muted);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
-.cli-table--crm .cli-av {
+.cli-layout-unificado .cli-table--crm .cli-av {
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: 50%;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -1603,53 +1597,80 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #fff !important;
+  background: transparent !important;
 }
-.cli-av--teal { background: linear-gradient(135deg, #00c08b, #008f68); }
-.cli-av--blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.cli-av--rose { background: linear-gradient(135deg, #ec4899, #db2777); }
-.cli-av--orange { background: linear-gradient(135deg, #f97316, #ea580c); }
-.cli-av--purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-.cli-av--navy { background: linear-gradient(135deg, #1e3a5f, #0f172a); }
-.cli-av--wine { background: linear-gradient(135deg, #7c2d4a, #5b1f36); }
+.cli-layout-unificado .cli-table--crm .cli-av.cli-av--teal { background: linear-gradient(135deg, #00c08b, #008f68) !important; }
+.cli-layout-unificado .cli-table--crm .cli-av.cli-av--blue { background: linear-gradient(135deg, #3b82f6, #2563eb) !important; }
+.cli-layout-unificado .cli-table--crm .cli-av.cli-av--rose { background: linear-gradient(135deg, #ec4899, #db2777) !important; }
+.cli-layout-unificado .cli-table--crm .cli-av.cli-av--orange { background: linear-gradient(135deg, #f97316, #ea580c) !important; }
+.cli-layout-unificado .cli-table--crm .cli-av.cli-av--purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important; }
+.cli-layout-unificado .cli-table--crm .cli-av.cli-av--navy { background: linear-gradient(135deg, #1e3a5f, #0f172a) !important; }
+.cli-layout-unificado .cli-table--crm .cli-av.cli-av--wine { background: linear-gradient(135deg, #7c2d4a, #5b1f36) !important; }
+.cli-table--crm tbody tr.cli-row--warn td {
+  background: rgba(249, 115, 22, 0.05) !important;
+}
+.cli-table--crm tbody tr.cli-row--warn:hover td {
+  background: rgba(249, 115, 22, 0.08) !important;
+}
+.cli-td-receita {
+  color: var(--orc-teal-dark) !important;
+  font-weight: 700 !important;
+}
+.cli-td-areceber {
+  color: #c2410c !important;
+  font-weight: 700 !important;
+}
+.cli-td-areceber--zero {
+  color: var(--orc-text-muted) !important;
+  font-weight: 500 !important;
+}
+.cli-status-badge--blocked {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+.cli-status-badge--on i {
+  font-size: 9px;
+  margin-right: 2px;
+}
+.cli-status-badge--blocked i {
+  margin-right: 2px;
+}
 .cli-td-act {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 8px;
 }
-.cli-btn-edit {
+.cli-btn-act {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   border: 1px solid var(--orc-border);
   background: var(--orc-bg-card);
-  color: var(--orc-teal-dark);
+  color: var(--orc-text-muted);
   text-decoration: none;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
-.cli-btn-edit:hover {
-  background: var(--orc-teal-light);
+.cli-btn-act:hover {
   border-color: var(--orc-teal);
   color: var(--orc-teal-dark);
+  box-shadow: var(--orc-shadow-sm);
 }
-.cli-btn-inativar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  border: 1px solid rgba(226, 75, 74, 0.35);
-  background: #fff;
-  color: var(--orc-red);
-  text-decoration: none;
+.cli-btn-act--chart {
+  color: #2563eb;
+  background: linear-gradient(180deg, #fff 0%, #eff6ff 100%);
 }
-.cli-btn-inativar:hover {
-  background: rgba(226, 75, 74, 0.08);
+.cli-btn-act--chart:hover {
+  color: #1d4ed8;
+  border-color: #93c5fd;
+}
+.cli-btn-act--more {
+  color: var(--orc-text-muted);
 }
 
 /* Ficha cliente (add/edit) — tema claro unificado */

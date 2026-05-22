@@ -210,53 +210,41 @@
                 <input type="text" id="cli-search" placeholder="<?= h(__('Buscar por nome, CNPJ/CPF, e-mail, telefone...')) ?>" autocomplete="off" inputmode="text" aria-describedby="cli-search-mode" />
                 <span class="cli-search-mode" id="cli-search-mode"></span>
             </div>
-            <div class="cli-crm-toolbar-filters">
-                <label class="cli-crm-filter-card">
-                    <span class="cli-crm-filter-card-lbl"><?= h(__('Status')) ?></span>
-                    <span class="cli-crm-filter-card-box">
-                        <select class="cli-crm-select" id="cli-filter-status" aria-label="<?= h(__('Status')) ?>">
-                            <option value="" selected><?= h(__('Todos os status')) ?></option>
-                            <option value="ativos"><?= h(__('Ativos')) ?></option>
-                            <option value="inativos"><?= h(__('Inativos')) ?></option>
-                        </select>
-                        <i class="fas fa-chevron-down cli-crm-filter-card-chev" aria-hidden="true"></i>
-                    </span>
-                </label>
-                <label class="cli-crm-filter-card">
-                    <span class="cli-crm-filter-card-lbl"><?= h(__('Segmento')) ?></span>
-                    <span class="cli-crm-filter-card-box">
-                        <select class="cli-crm-select" id="cli-filter-segmento" aria-label="<?= h(__('Segmento')) ?>">
-                            <option value="" selected><?= h(__('Todos os segmentos')) ?></option>
-                            <?php foreach ($segmentos as $seg) : ?>
-                            <option value="<?= h((string)$seg['slug']) ?>"><?= h((string)$seg['label']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <i class="fas fa-chevron-down cli-crm-filter-card-chev" aria-hidden="true"></i>
-                    </span>
-                </label>
-                <label class="cli-crm-filter-card">
-                    <span class="cli-crm-filter-card-lbl"><?= h(__('Tipo')) ?></span>
-                    <span class="cli-crm-filter-card-box">
-                        <select class="cli-crm-select" id="cli-filter-tipo" aria-label="<?= h(__('Tipo')) ?>">
-                            <option value="" selected><?= h(__('PJ + PF')) ?></option>
-                            <option value="pj"><?= h(__('Pessoa Jurídica')) ?></option>
-                            <option value="pf"><?= h(__('Pessoa Física')) ?></option>
-                        </select>
-                        <i class="fas fa-chevron-down cli-crm-filter-card-chev" aria-hidden="true"></i>
-                    </span>
-                </label>
-                <label class="cli-crm-filter-card">
-                    <span class="cli-crm-filter-card-lbl"><?= h(__('Vendedor')) ?></span>
-                    <span class="cli-crm-filter-card-box">
-                        <select class="cli-crm-select" id="cli-filter-vendedor" aria-label="<?= h(__('Vendedor')) ?>">
-                            <option value="" selected><?= h(__('Todos os vendedores')) ?></option>
-                            <?php foreach ($cliVendedores as $vid => $vname) : ?>
-                            <option value="<?= (int)$vid ?>"><?= h((string)$vname) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <i class="fas fa-chevron-down cli-crm-filter-card-chev" aria-hidden="true"></i>
-                    </span>
-                </label>
+            <div class="cli-crm-toolbar-filters cli-crm-toolbar-filters--ref">
+                <div class="cli-crm-filter-box">
+                    <select class="cli-crm-select" id="cli-filter-status" aria-label="<?= h(__('Status')) ?>">
+                        <option value="" selected><?= h(__('Todos os status')) ?></option>
+                        <option value="ativos"><?= h(__('Ativos')) ?></option>
+                        <option value="inativos"><?= h(__('Inativos')) ?></option>
+                    </select>
+                    <i class="fas fa-chevron-down cli-crm-filter-chev" aria-hidden="true"></i>
+                </div>
+                <div class="cli-crm-filter-box">
+                    <select class="cli-crm-select" id="cli-filter-segmento" aria-label="<?= h(__('Segmento')) ?>">
+                        <option value="" selected><?= h(__('Todos os segmentos')) ?></option>
+                        <?php foreach ($segmentos as $seg) : ?>
+                        <option value="<?= h((string)$seg['slug']) ?>"><?= h((string)$seg['label']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <i class="fas fa-chevron-down cli-crm-filter-chev" aria-hidden="true"></i>
+                </div>
+                <div class="cli-crm-filter-box">
+                    <select class="cli-crm-select" id="cli-filter-tipo" aria-label="<?= h(__('Tipo')) ?>">
+                        <option value="" selected><?= h(__('PJ + PF')) ?></option>
+                        <option value="pj"><?= h(__('Pessoa Jurídica')) ?></option>
+                        <option value="pf"><?= h(__('Pessoa Física')) ?></option>
+                    </select>
+                    <i class="fas fa-chevron-down cli-crm-filter-chev" aria-hidden="true"></i>
+                </div>
+                <div class="cli-crm-filter-box">
+                    <select class="cli-crm-select" id="cli-filter-vendedor" aria-label="<?= h(__('Vendedor')) ?>">
+                        <option value="" selected><?= h(__('Todos os vendedores')) ?></option>
+                        <?php foreach ($cliVendedores as $vid => $vname) : ?>
+                        <option value="<?= (int)$vid ?>"><?= h((string)$vname) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <i class="fas fa-chevron-down cli-crm-filter-chev" aria-hidden="true"></i>
+                </div>
             </div>
         </div>
 
@@ -264,7 +252,7 @@
             <button type="button" class="cli-crm-chip cli-crm-chip--teal" data-chip="top-receita"><span class="cli-crm-chip-ic" aria-hidden="true">★</span> <?= h(__('Top 10 receita')) ?></button>
             <button type="button" class="cli-crm-chip cli-crm-chip--blue" data-chip="novos"><span class="cli-crm-chip-ic" aria-hidden="true">🆕</span> <?= h(__('Novos clientes')) ?></button>
             <button type="button" class="cli-crm-chip cli-crm-chip--red" data-chip="atraso"><span class="cli-crm-chip-ic" aria-hidden="true">⏰</span> <?= h(__('Em atraso')) ?></button>
-            <button type="button" class="cli-crm-chip cli-crm-chip--rose" data-chip="sem-contato"><span class="cli-crm-chip-ic" aria-hidden="true">📞</span> <?= h(__('Sem contato 30d')) ?></button>
+            <button type="button" class="cli-crm-chip cli-crm-chip--purple" data-chip="sem-contato"><span class="cli-crm-chip-ic" aria-hidden="true">📞</span> <?= h(__('Sem contato 30d')) ?></button>
             <button type="button" class="cli-crm-chip cli-crm-chip--indigo" data-chip="vip"><span class="cli-crm-chip-ic" aria-hidden="true">💎</span> <?= h(__('Clientes VIP')) ?></button>
             <button type="button" class="cli-crm-chip cli-crm-chip--orange" data-chip="aniversariantes"><span class="cli-crm-chip-ic" aria-hidden="true">🎂</span> <?= h(__('Aniversariantes')) ?></button>
         </div>
@@ -294,9 +282,10 @@
                             $aRec = (float)($row['a_receber'] ?? 0);
                             $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]);
                             $stClass = (string)($row['status_class'] ?? 'on');
-                            $avTone = (string)($seg['tone'] ?? 'teal');
+                            $avTone = (string)($row['av_tone'] ?? 'teal');
+                            $rowClass = 'cli-row--' . $stClass;
                         ?>
-                        <tr<?= cliRowDataAttrs($reg) ?>
+                        <tr class="<?= h($rowClass) ?>"<?= cliRowDataAttrs($reg) ?>
                             data-cli-status="<?= h((string)$row['status_key']) ?>"
                             data-cli-tipo="<?= h((string)$row['tipo_key']) ?>"
                             data-cli-segmento="<?= h((string)$row['segmento_slug']) ?>"
@@ -329,29 +318,29 @@
                                 <span class="cli-seg-pill cli-seg-pill--<?= h((string)$seg['tone']) ?>"><?= h((string)$seg['short']) ?></span>
                             </td>
                             <td class="cli-td-city"><?= (string)$row['cidade'] !== '' ? h((string)$row['cidade']) : '—' ?></td>
-                            <td class="cli-td-num"><?= $rec12 > 0 ? h($this->Number->currency($rec12, 'BRL')) : '—' ?></td>
-                            <td class="cli-td-num"><?= $aRec > 0 ? h($this->Number->currency($aRec, 'BRL')) : '—' ?></td>
+                            <td class="cli-td-num cli-td-receita"><?= h($this->Number->currency($rec12, 'BRL')) ?></td>
+                            <td class="cli-td-num cli-td-areceber<?= $aRec <= 0 ? ' cli-td-areceber--zero' : '' ?>"><?= h($this->Number->currency($aRec, 'BRL')) ?></td>
                             <td>
                                 <span class="cli-status-badge cli-status-badge--<?= h($stClass) ?>">
                                     <?php if ($stClass === 'vip') : ?><i class="fas fa-star" aria-hidden="true"></i> <?php endif; ?>
                                     <?php if ($stClass === 'warn') : ?><i class="far fa-clock" aria-hidden="true"></i> <?php endif; ?>
+                                    <?php if ($stClass === 'on') : ?><i class="fas fa-check" aria-hidden="true"></i> <?php endif; ?>
+                                    <?php if ($stClass === 'blocked') : ?><i class="fas fa-ban" aria-hidden="true"></i> <?php endif; ?>
                                     <?= h((string)$row['status_label']) ?>
                                 </span>
                             </td>
                             <td class="cli-td-muted"><?= h((string)$row['ultima']) ?></td>
                             <td class="cli-td-act" onclick="event.stopPropagation()">
                                 <?= $this->Html->link(
-                                    '<i class="fas fa-pen" aria-hidden="true"></i>',
-                                    ['controller' => 'Clientes', 'action' => 'edit', $reg->id],
-                                    ['class' => 'cli-btn-edit', 'escape' => false, 'title' => __('Editar cliente'), 'data-turbo' => 'false']
+                                    '<i class="fas fa-chart-bar" aria-hidden="true"></i>',
+                                    ['controller' => 'Clientes', 'action' => 'eventos', $reg->id],
+                                    ['class' => 'cli-btn-act cli-btn-act--chart', 'escape' => false, 'title' => __('Histórico / indicadores'), 'data-turbo' => 'false']
                                 ) ?>
-                                <?php if (isset($role) && (int)$role === 0 && (int)$reg->inativo === 0) : ?>
                                 <?= $this->Html->link(
-                                    '<i class="fas fa-user-slash" aria-hidden="true"></i>',
-                                    ['controller' => 'Clientes', 'action' => 'inativar', $reg->id],
-                                    ['class' => 'cli-btn-inativar', 'escape' => false, 'title' => __('Inativar cliente'), 'confirm' => __('Confirma inativar este cliente no portal e no ERP?'), 'data-turbo' => 'false']
+                                    '<i class="fas fa-ellipsis-h" aria-hidden="true"></i>',
+                                    ['controller' => 'Clientes', 'action' => 'edit', $reg->id],
+                                    ['class' => 'cli-btn-act cli-btn-act--more', 'escape' => false, 'title' => __('Abrir cliente'), 'data-turbo' => 'false']
                                 ) ?>
-                                <?php endif; ?>
                             </td>
                         </tr>
                         <?php $idxRow++; endforeach; ?>
@@ -589,9 +578,9 @@
                 sLengthMenu: 'Mostrar _MENU_ registros',
                 sZeroRecords: 'Nenhum registro encontrado',
                 sEmptyTable: 'Nenhum dado disponível',
-                sInfo: 'Mostrando _START_ a _END_ de _TOTAL_',
-                sInfoEmpty: 'Nenhum registro',
-                sInfoFiltered: '(filtrado de _MAX_)',
+                sInfo: 'Mostrando _START_ a _END_ de _TOTAL_ clientes',
+                sInfoEmpty: 'Nenhum cliente',
+                sInfoFiltered: '(filtrado de _MAX_ clientes)',
                 oPaginate: { sFirst: '<<', sLast: '>>', sNext: '>', sPrevious: '<' }
             },
             dom: 'rt<"cli-table-footer cli-dt-bottom w-100 d-flex justify-content-between align-items-center flex-wrap"lip>'
