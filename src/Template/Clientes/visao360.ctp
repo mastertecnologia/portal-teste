@@ -157,16 +157,22 @@ $tabs = [
 		</div>
 	</div>
 
+	<?php $finCrm = (array)($c['finance_crm'] ?? []); ?>
 	<div class="cli-360-kpis cli-360-kpis--secondary">
-		<div class="cli-360-kpi cli-360-kpi--muted">
+		<div class="cli-360-kpi cli-360-kpi--teal<?= empty($finCrm['has_limite']) ? ' cli-360-kpi--muted' : '' ?>">
 			<div class="cli-360-kpi-lbl"><?= h(__('Limite de crédito')) ?></div>
-			<div class="cli-360-kpi-val"><?= h(__('Não cadastrado')) ?></div>
-			<div class="cli-360-kpi-sub"><?= h(__('Campo não disponível neste módulo')) ?></div>
+			<div class="cli-360-kpi-val"><?= !empty($finCrm['has_limite']) ? h((string)$finCrm['limite_fmt']) : h(__('Não cadastrado')) ?></div>
+			<?php if (!empty($finCrm['has_limite'])) : ?>
+			<div class="cli-360-kpi-sub"><?= h(__('{0} disponíveis', (string)$finCrm['disponivel_fmt'])) ?></div>
+			<div class="cli-360-credito-track"><div class="cli-360-credito-fill" style="width:<?= min(100, (int)($finCrm['limite_pct'] ?? 0)) ?>%"></div></div>
+			<?php else : ?>
+			<div class="cli-360-kpi-sub"><?= $this->Html->link(__('Definir na ficha'), ['action' => 'edit', $cliente->id, '?' => ['wizard' => 3], '#' => 'cliente'], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?></div>
+			<?php endif; ?>
 		</div>
-		<div class="cli-360-kpi cli-360-kpi--muted">
+		<div class="cli-360-kpi cli-360-kpi--rose<?= empty($finCrm['has_score']) ? ' cli-360-kpi--muted' : '' ?>">
 			<div class="cli-360-kpi-lbl"><?= h(__('Score interno')) ?></div>
-			<div class="cli-360-kpi-val"><?= h(__('—')) ?></div>
-			<div class="cli-360-kpi-sub"><?= h(__('Use indicadores financeiros reais acima')) ?></div>
+			<div class="cli-360-kpi-val"><?= !empty($finCrm['has_score']) ? h((string)$finCrm['score_fmt']) . ' / 10' : h(__('—')) ?></div>
+			<div class="cli-360-kpi-sub"><?= !empty($finCrm['has_score']) ? h(__('Cadastro do cliente')) : h(__('Não informado')) ?></div>
 		</div>
 	</div>
 
@@ -220,7 +226,7 @@ $tabs = [
 			<div class="cli-360-card">
 				<div class="cli-360-card-head">
 					<span class="cli-360-card-title"><i class="fas fa-users" aria-hidden="true"></i> <?= h(__('Contatos')) ?></span>
-					<?= $this->Html->link(__('Editar'), ['action' => 'edit', $cliente->id, '?' => ['wizard' => 2], '#' => 'cliente'], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link(__('Adicionar'), ['action' => 'edit', $cliente->id, '?' => ['wizard' => 2], '#' => 'cliente'], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?>
 				</div>
 				<?php if ($contatos === []) : ?>
 				<p class="cli-360-empty"><?= h(__('Nenhum contato cadastrado. Inclua responsável e e-mails na ficha.')) ?></p>

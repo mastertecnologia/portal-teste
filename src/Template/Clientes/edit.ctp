@@ -156,6 +156,8 @@
 								'gerenciarClass' => 'btn btn-sm btn-outline-info btn-gerenciar-emails',
 							]) ?>
 						</div>
+						<?= $this->element('Cli/card_end') ?>
+						<?= $this->element('Cli/contatos_crm_panel', compact('cliente', 'cliContatosReady', 'cliContatos')) ?>
 						</div>
 						<div class="cli-wizard-pane" data-cli-wizard-step="3" data-cli-wizard-title="<?= h(__('Fiscal & Financeiro')) ?>" hidden>
 						<?php
@@ -171,10 +173,31 @@
 							<?= $this->element('Cli/input', ['label' => '', 'labelHtml' => $cliLabelHtmlIe, 'beforeControlHtml' => $cliBeforeIe, 'field' => 'inscricaoestadual', 'colClass' => 'col-lg-6 col-md-6 col-sm-12 col-xs-12', 'options' => ['id' => 'inscricaoestadual', 'onkeypress' => 'return SomenteNumero(event)', 'placeholder' => 'Insira a inscrição estadual']]) ?>
 						</div>
 						<?= $this->element('Cli/card_end') ?>
+						<?php if (!empty($cliCrmFinanceReady)) : ?>
+						<?= $this->element('Cli/card', ['title' => __('Configuração financeira')]) ?>
+						<div class="row">
+							<div class="col-lg-4 col-md-4 col-sm-12">
+								<label class="cli-label"><?= h(__('Limite de crédito (R$)')) ?></label>
+								<?= $this->Form->control('limite_credito', ['type' => 'text', 'class' => 'form-control', 'label' => false, 'placeholder' => '0,00']) ?>
+							</div>
+							<div class="col-lg-3 col-md-3 col-sm-12">
+								<label class="cli-label"><?= h(__('Score interno (0–10)')) ?></label>
+								<?= $this->Form->control('score_interno', ['type' => 'text', 'class' => 'form-control', 'label' => false, 'placeholder' => '9,2']) ?>
+							</div>
+						</div>
+						<div class="row mt-2">
+							<div class="col-12">
+								<label class="cli-label"><?= h(__('Observações financeiras')) ?></label>
+								<?= $this->Form->control('observacoes_financeiras', ['type' => 'textarea', 'rows' => 3, 'class' => 'form-control', 'label' => false]) ?>
+							</div>
+						</div>
+						<?= $this->element('Cli/card_end') ?>
+						<?php else : ?>
 						<div class="cli-card cli-wizard-info-card">
 							<p class="cli-wizard-info-title"><i class="fas fa-info-circle" aria-hidden="true"></i> <?= h(__('Configuração financeira')) ?></p>
-							<p class="cli-wizard-info-text mb-0"><?= h(__('Limite de crédito, condição de pagamento e score interno não estão no cadastro deste portal. Use os lançamentos em Financeiro e a Visão 360° para acompanhar receita e títulos em aberto.')) ?></p>
+							<p class="cli-wizard-info-text mb-0"><?= h(__('Rode bin/cake migrations migrate para habilitar limite de crédito e score no cadastro.')) ?></p>
 						</div>
+						<?php endif; ?>
 						</div>
 						<div class="cli-wizard-pane" data-cli-wizard-step="4" data-cli-wizard-title="<?= h(__('Comercial & CRM')) ?>" hidden>
 						<?php if($isEquipe){ ?>
