@@ -447,7 +447,10 @@ class ClientesController extends AppController {
 					$cidadeDisplay .= '/' . $uf;
 				}
 			}
-			$codigo = 'CLI-' . str_pad((string)$reg->id, 4, '0', STR_PAD_LEFT);
+			$codigo = trim((string)($reg->public_code ?? ''));
+			if ($codigo === '') {
+				$codigo = '—';
+			}
 			$rec12 = isset($receitaPorCliente[$cid]) ? (float)$receitaPorCliente[$cid] : 0.0;
 			$aRec = isset($aReceberPorCliente[$cid]) ? (float)$aReceberPorCliente[$cid] : 0.0;
 			$diasAtraso = (int)($atrasoDias[$cid] ?? 0);
