@@ -310,7 +310,7 @@
 										</div>
 										<?= $this->Form->hidden('idcliente', ['value' => $cliente->id]); ?>
 										<div class="col-md-4 col-xs-12 m-t-15">
-											<?= $this->Form->button('Salvar permissões', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
+											<?= $this->Form->button(__('Salvar permissões'), ['class' => 'btn-cli-primary btn-cli-sm']) ?>
 										</div>
 									</div>
 								<?= $this->Form->end(); ?>
