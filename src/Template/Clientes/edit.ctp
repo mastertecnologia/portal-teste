@@ -55,7 +55,7 @@
 		<!-- Page head -->
 		<div class="cli-page-head">
 			<div class="cli-page-head-left">
-				<div class="cli-eyebrow">Minha Empresa</div>
+				<div class="cli-eyebrow"><?= $isEquipe ? h(__('Clientes · Editar cadastro')) : h(__('Minha Empresa')) ?></div>
 				<h1><?= h($cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : ($cliente->razaosocial ?: $cliente->nomefantasia)) ?></h1>
 				<p><?= h($cliente->tipo == C_ClientesTipoFisica ? 'Pessoa Física' : 'Pessoa Jurídica') ?> · CNPJ/CPF: <?= h($cliente->tipo == C_ClientesTipoFisica ? Mask('###.###.###-##', $cliente->cpf ?? '') : Mask('##.###.###/####-##', $cliente->cnpj ?? '')) ?></p>
 				<div class="cli-page-head-code-row" title="<?= h(__('Identificador único na empresa; gerado pelo sistema ou informado pela integração.')) ?>">
@@ -65,7 +65,8 @@
 			</div>
 			<?php if ($isEquipe): ?>
 				<div class="cli-crm-page-actions">
-					<?= $this->Html->link('<i class="fas fa-history" aria-hidden="true"></i> ' . __('Histórico'), ['action' => 'eventos', $cliente->id], ['class' => 'btn-cli-secondary', 'escape' => false, 'title' => __('Eventos e auditoria do cliente'), 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link('<i class="fas fa-chart-pie" aria-hidden="true"></i> ' . __('Visão 360°'), ['action' => 'visao360', $cliente->id], ['class' => 'btn-cli-primary btn-cli-sm', 'escape' => false, 'title' => __('Indicadores e histórico do cliente'), 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link('<i class="fas fa-history" aria-hidden="true"></i> ' . __('Histórico'), ['action' => 'visao360', $cliente->id, '?' => ['tab' => 'historico']], ['class' => 'btn-cli-secondary', 'escape' => false, 'title' => __('Linha do tempo completa'), 'data-turbo' => 'false']) ?>
 					<?= $this->Html->link('<i class="fas fa-arrow-left" aria-hidden="true"></i> ' . __('Voltar'), ['action' => 'index'], ['class' => 'btn-cli-secondary', 'escape' => false, 'data-turbo' => 'false']) ?>
 				</div>
 			<?php endif; ?>

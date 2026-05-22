@@ -67,7 +67,7 @@ class RbacClientesHttpTest extends TestCase {
 				'Clientes ver',
 				'Clientes',
 				'Clientes',
-				'index,view,search,eventos,contrato,clientebyid,cliente_by_id,solicitantes,solicitante,cliemail,solemail',
+				'index,view,search,eventos,visao360,contrato,clientebyid,cliente_by_id,solicitantes,solicitante,cliemail,solemail',
 				0,
 			]
 		);
