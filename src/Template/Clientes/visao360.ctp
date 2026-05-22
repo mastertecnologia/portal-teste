@@ -55,8 +55,15 @@ $tabs = [
 	'arquivos' => ['label' => __('Arquivos'), 'icon' => 'fa-paperclip', 'count' => (int)($counts['arquivos'] ?? 0)],
 ];
 ?>
-<div class="col-md-12 p-0 cli-layout-unificado cli-360-root">
-<div class="cli-form-root cli-ficha-page-pad">
+<div class="col-md-12 p-0">
+<div class="cli-root cli-360-page">
+
+	<header class="cli-360-page-head">
+		<div class="cli-360-page-head-text">
+			<p class="cli-eyebrow"><?= h(__('Clientes · Visão 360°')) ?></p>
+			<p class="cli-360-page-sub"><?= h(__('Indicadores, histórico e atalhos operacionais com dados reais do ERP.')) ?></p>
+		</div>
+	</header>
 
 	<header class="cli-360-toolbar">
 		<div class="cli-360-toolbar-back">
@@ -88,7 +95,7 @@ $tabs = [
 				<span class="cli-360-badge cli-360-badge--vip"><i class="fas fa-star" aria-hidden="true"></i> <?= h(__('Cliente VIP')) ?></span>
 				<?php endif; ?>
 				<?php if (!empty($seg['short'])) : ?>
-				<span class="cli-360-badge cli-360-badge--seg cli-seg-pill cli-seg-pill--<?= h((string)($seg['tone'] ?? 'teal')) ?>"><?= h((string)$seg['short']) ?></span>
+				<span class="cli-360-badge cli-360-badge--seg"><?= h((string)$seg['short']) ?></span>
 				<?php endif; ?>
 				<?php if (!empty($c['inativo'])) : ?>
 				<span class="cli-360-badge cli-360-badge--blocked"><?= h(__('Bloqueado')) ?></span>

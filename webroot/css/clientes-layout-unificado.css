@@ -1858,10 +1858,7 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   color: var(--orc-teal-dark);
 }
 
-/* ── Visão 360° (pg-cliente-360) ───────────────────────────────── */
-.cli-360-root {
-  --cli-360-hero: linear-gradient(135deg, #0d7a5c 0%, #065f46 55%, #064e3b 100%);
-}
+/* ── Visão 360° (pg-cliente-360) — estrutura; tema escuro em clientes-premium (.cli-root.cli-360-page) */
 .cli-360-toolbar {
   display: flex;
   align-items: center;
