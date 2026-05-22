@@ -69,7 +69,9 @@ $tabs = [
 			<span class="cli-360-back-name"><?= h((string)$c['nome']) ?></span>
 		</div>
 		<div class="cli-360-toolbar-actions">
-			<?= $this->Html->link(__('Editar'), ['action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary btn-cli-sm', 'data-turbo' => 'false']) ?>
+			<?= $this->Html->link('<i class="fas fa-file-pdf" aria-hidden="true"></i> ' . __('Ficha PDF'), ['action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false', 'title' => __('Abrir ficha do cliente')]) ?>
+			<?= $this->Html->link('<i class="fas fa-paperclip" aria-hidden="true"></i> ' . __('Anexar'), ['controller' => 'Tickets', 'action' => 'index'], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
+			<?= $this->Html->link('<i class="fas fa-pen" aria-hidden="true"></i> ' . __('Editar'), ['action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
 			<?= $this->Html->link(
 				'<i class="fas fa-plus" aria-hidden="true"></i> ' . __('Novo orçamento'),
 				['controller' => 'Orcamentos', 'action' => 'add'],
@@ -79,7 +81,7 @@ $tabs = [
 	</header>
 
 	<section class="cli-360-hero">
-		<div class="cli-360-hero-av cli-av cli-av--<?= h($avTone) ?> cli-av--lg"><?= h(cli360Initials((string)$c['nome'])) ?></div>
+		<div class="cli-360-hero-avatar" aria-hidden="true"><?= h(cli360Initials((string)$c['nome'])) ?></div>
 		<div class="cli-360-hero-body">
 			<h1 class="cli-360-hero-title"><?= h((string)$c['nome']) ?></h1>
 			<div class="cli-360-hero-badges">
@@ -88,6 +90,9 @@ $tabs = [
 				<?php endif; ?>
 				<?php if (!empty($seg['short'])) : ?>
 				<span class="cli-360-badge cli-360-badge--seg"><?= h((string)$seg['short']) ?></span>
+				<?php endif; ?>
+				<?php if (!empty($seg['grade'])) : ?>
+				<span class="cli-360-badge cli-360-badge--grade"><?= h((string)$seg['grade']) ?></span>
 				<?php endif; ?>
 				<?php if (!empty($c['inativo'])) : ?>
 				<span class="cli-360-badge cli-360-badge--blocked"><?= h(__('Bloqueado')) ?></span>
@@ -123,7 +128,7 @@ $tabs = [
 		<?php endif; ?>
 	</section>
 
-	<div class="cli-360-kpis">
+	<div class="cli-360-kpis cli-360-kpis--primary">
 		<div class="cli-360-kpi cli-360-kpi--teal">
 			<div class="cli-360-kpi-lbl"><?= h(__('Receita 12 meses')) ?></div>
 			<div class="cli-360-kpi-val"><?= h((string)($kpis['receita12_fmt'] ?? '—')) ?></div>
@@ -149,7 +154,7 @@ $tabs = [
 			<div class="cli-360-kpi-sub"><?= h((string)$kpis['a_receber_hint']) ?></div>
 			<?php endif; ?>
 		</div>
-		<div class="cli-360-kpi cli-360-kpi--rose">
+		<div class="cli-360-kpi cli-360-kpi--purple">
 			<div class="cli-360-kpi-lbl"><?= h(__('Ticket médio')) ?></div>
 			<div class="cli-360-kpi-val"><?= h((string)($kpis['ticket_medio_fmt'] ?? '—')) ?></div>
 			<div class="cli-360-kpi-sub"><?= (int)($counts['contratos'] ?? 0) > 0 ? h(__('por contrato')) : h(__('estimativa')) ?></div>
@@ -171,7 +176,7 @@ $tabs = [
 		<div class="cli-360-kpi cli-360-kpi--score<?= empty($finCrm['has_score']) ? ' cli-360-kpi--muted' : '' ?>">
 			<div class="cli-360-kpi-lbl"><?= h(__('Score interno')) ?></div>
 			<div class="cli-360-kpi-val"><?= !empty($finCrm['has_score']) ? h((string)$finCrm['score_fmt']) . ' / 10' : h(__('—')) ?></div>
-			<div class="cli-360-kpi-sub"><?= !empty($finCrm['has_score']) ? h(__('Cadastro do cliente')) : h(__('Não informado')) ?></div>
+			<div class="cli-360-kpi-sub"><?= h((string)($finCrm['score_hint'] ?? __('Não informado'))) ?></div>
 		</div>
 	</div>
 
@@ -234,7 +239,7 @@ $tabs = [
 				<ul class="cli-360-contatos-list">
 					<?php foreach ($contatos as $ct) : ?>
 					<li class="cli-360-contato">
-						<div class="cli-av cli-av--<?= h((string)($ct['av_tone'] ?? 'teal')) ?>"><?= h((string)($ct['iniciais'] ?? 'C')) ?></div>
+						<div class="cli-360-contato-av cli-360-contato-av--<?= h((string)($ct['av_tone'] ?? 'teal')) ?>"><?= h((string)($ct['iniciais'] ?? 'C')) ?></div>
 						<div class="cli-360-contato-body">
 							<div class="cli-360-contato-name"><?= h((string)$ct['nome']) ?></div>
 							<?php if (!empty($ct['cargo'])) : ?><div class="cli-360-contato-role"><?= h((string)$ct['cargo']) ?></div><?php endif; ?>
@@ -248,36 +253,38 @@ $tabs = [
 				</ul>
 				<?php endif; ?>
 			</div>
-			<?php if (!empty($c['saude'])) : ?>
-			<div class="cli-360-card">
+			<div class="cli-360-card cli-360-card--saude">
 				<div class="cli-360-card-head">
 					<span class="cli-360-card-title"><i class="fas fa-heartbeat" aria-hidden="true"></i> <?= h(__('Saúde do relacionamento')) ?></span>
 				</div>
-				<?php foreach ((array)$c['saude'] as $sh) : ?>
+				<?php foreach ((array)($c['saude'] ?? []) as $sh) : ?>
 				<div class="cli-360-saude-row">
 					<div class="cli-360-saude-top">
-						<span><?= h((string)$sh['label']) ?></span>
-						<strong><?= h((string)$sh['valor']) ?></strong>
+						<span class="cli-360-saude-label"><?= h((string)$sh['label']) ?></span>
+						<strong class="cli-360-saude-val"><?= h((string)$sh['valor']) ?></strong>
 					</div>
 					<div class="cli-360-saude-track"><div class="cli-360-saude-fill" style="width:<?= min(100, (int)($sh['pct'] ?? 0)) ?>%"></div></div>
 					<?php if (!empty($sh['hint'])) : ?><small class="cli-360-saude-hint"><?= h((string)$sh['hint']) ?></small><?php endif; ?>
 				</div>
 				<?php endforeach; ?>
 			</div>
-			<?php endif; ?>
 			<div class="cli-360-card">
 				<div class="cli-360-card-head">
 					<span class="cli-360-card-title"><i class="fas fa-bolt" aria-hidden="true"></i> <?= h(__('Atalhos rápidos')) ?></span>
 				</div>
-				<div class="cli-360-shortcuts">
+				<div class="cli-360-shortcuts cli-360-shortcuts--mock">
 					<?= $this->Html->link('<i class="fas fa-file-invoice"></i> ' . __('Novo orçamento'), ['controller' => 'Orcamentos', 'action' => 'add'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
 					<?= $this->Html->link('<i class="fas fa-wrench"></i> ' . __('Abrir OS'), ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
-					<?= $this->Html->link('<i class="fas fa-edit"></i> ' . __('Editar cadastro'), ['action' => 'edit', $cliente->id, '#' => 'cliente'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
-					<?= $this->Html->link('<i class="fas fa-file-contract"></i> ' . __('Contratos') . ' (' . (int)($counts['contratos'] ?? 0) . ')', ['action' => 'edit', $cliente->id, '#' => 'contratos'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false', 'title' => __('Tabela e botões de contrato na ficha')]) ?>
-					<?= $this->Html->link('<i class="fas fa-users"></i> ' . __('Usuários'), ['action' => 'edit', $cliente->id, '#' => 'usuarios'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
-					<?= $this->Html->link('<i class="fas fa-desktop"></i> ' . __('Acessos'), ['action' => 'edit', $cliente->id, '#' => 'acessos'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
-					<?= $this->Html->link('<i class="fas fa-key"></i> ' . __('Token API'), ['action' => 'edit', $cliente->id, '#' => 'token'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
-					<?= $this->Html->link('<i class="fas fa-headset"></i> ' . __('Tickets') . ' (' . (int)($counts['tickets_abertos'] ?? 0) . ')', ['controller' => 'Tickets', 'action' => 'index'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
+					<?php
+						$waDigits = preg_replace('/\D/', '', (string)($c['fone2'] ?? $c['fone'] ?? ''));
+						$waHref = strlen($waDigits) >= 10 ? 'https://wa.me/55' . $waDigits : '#';
+					?>
+					<?= $this->Html->link('<i class="fab fa-whatsapp"></i> ' . __('WhatsApp'), $waHref, ['class' => 'cli-360-shortcut' . ($waHref === '#' ? ' cli-360-shortcut--disabled' : ''), 'escape' => false, 'data-turbo' => 'false', 'rel' => $waHref === '#' ? '' : 'noopener']) ?>
+					<?php
+						$mailTo = trim((string)($c['email'] ?? ''));
+						$mailHref = $mailTo !== '' ? 'mailto:' . $mailTo : '#';
+					?>
+					<?= $this->Html->link('<i class="fas fa-envelope"></i> ' . __('Enviar e-mail'), $mailHref, ['class' => 'cli-360-shortcut' . ($mailHref === '#' ? ' cli-360-shortcut--disabled' : ''), 'escape' => false]) ?>
 				</div>
 			</div>
 		</div>

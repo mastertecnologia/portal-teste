@@ -1741,12 +1741,17 @@ class ClientesController extends AppController {
 		}
 		$aRec = (float)($payload['kpis']['a_receber'] ?? 0);
 		$disp = $limite > 0 ? max(0.0, $limite - $aRec) : 0.0;
+		$scoreHint = __('Não informado');
+		if ($score !== null) {
+			$scoreHint = $score >= 8.0 ? __('Pagador exemplar') : __('Cadastro do cliente');
+		}
 		$payload['finance_crm'] = [
 			'has_limite' => $limite > 0,
 			'has_score' => $score !== null,
 			'limite_fmt' => $this->_clientesFmtBrl($limite),
 			'disponivel_fmt' => $this->_clientesFmtBrl($disp),
 			'score_fmt' => $score !== null ? number_format($score, 1, ',', '.') : '—',
+			'score_hint' => $scoreHint,
 			'limite_pct' => $limite > 0 ? (int)round(100 * min(1.0, $aRec / $limite)) : 0,
 		];
 
