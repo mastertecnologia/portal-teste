@@ -961,6 +961,16 @@ class ClientesController extends AppController {
 			if(empty($clientequejaexiste)){
 				if (!isset($data['inativo'])) $data['inativo'] = '0';
 				unset($data['public_code']);
+				if ($this->_clientesCrmFinanceReady()) {
+					if (array_key_exists('limite_credito', $data)) {
+						$data['limite_credito'] = $this->_clientesParseDecimalBr($data['limite_credito']);
+					}
+					if (array_key_exists('score_interno', $data)) {
+						$data['score_interno'] = $this->_clientesParseDecimalBr($data['score_interno']);
+					}
+				} else {
+					unset($data['limite_credito'], $data['score_interno'], $data['observacoes_financeiras']);
+				}
 
 				// Geração do token
 				$cpfoucnpj = isset($data['cnpj']) ? $data['cnpj'] : $data['cpf'];
@@ -1713,9 +1723,10 @@ class ClientesController extends AppController {
 		$payload['contatos'] = $this->_clientesVisao360Contatos($cliente);
 		$payload['counts']['arquivos'] = $this->_clientesContarArquivosCliente($cid, $idempresa);
 		$limite = $this->_clientesCrmFinanceReady() ? (float)($cliente->limite_credito ?? 0) : 0.0;
-		$score = $this->_clientesCrmFinanceReady() && $cliente->score_interno !== null && $cliente->score_interno !== ''
-			? (float)$cliente->score_interno
-			: null;
+		$score = null;
+		if ($this->_clientesCrmFinanceReady() && $cliente->get('score_interno') !== null && $cliente->get('score_interno') !== '') {
+			$score = (float)$cliente->score_interno;
+		}
 		$aRec = (float)($payload['kpis']['a_receber'] ?? 0);
 		$disp = $limite > 0 ? max(0.0, $limite - $aRec) : 0.0;
 		$payload['finance_crm'] = [
