@@ -1038,10 +1038,29 @@ body { background: var(--mock-erp-shell); font-family: var(--pgm-font-sans); }
     </div>
     </div>
 
-    <!-- Módulo de cadastros · novo cliente -->
+    <!-- Módulo de cadastros · novo cliente (produção: add.ctp + wizard 4 passos) -->
     <div class="pv-module" id="pv-mod-cadastro-cliente">
     <div class="cli-form-root cli-layout-unificado">
-      <div class="cli-form-body cli-form-body--cadastro-lead">
+      <header class="cli-crm-page-head cli-crm-page-head--bar" style="margin-bottom:12px;">
+        <div class="cli-crm-page-head-text">
+          <h1 class="cli-crm-h1 mb-1">Novo cadastro de cliente</h1>
+          <p class="cli-crm-subtitle mb-0">Preencha as informações principais · Você pode complementar depois</p>
+        </div>
+        <div class="cli-crm-page-actions">
+          <button type="button" class="btn-cli-secondary btn-cli-sm">Cancelar</button>
+          <button type="button" class="btn-cli-primary btn-cli-sm"><i class="fas fa-check"></i> Salvar cliente</button>
+        </div>
+      </header>
+      <div class="cli-form-body cli-form-body--cadastro-lead cli-wizard-root">
+      <nav class="cli-wizard-stepper" aria-label="Etapas">
+        <button type="button" class="cli-wiz-stp cli-wiz-stp--active"><span class="cli-wiz-stp-c">1</span><span class="cli-wiz-stp-l">Identificação</span></button>
+        <span class="cli-wiz-stp-line"></span>
+        <button type="button" class="cli-wiz-stp"><span class="cli-wiz-stp-c">2</span><span class="cli-wiz-stp-l">Endereço &amp; Contato</span></button>
+        <span class="cli-wiz-stp-line"></span>
+        <button type="button" class="cli-wiz-stp"><span class="cli-wiz-stp-c">3</span><span class="cli-wiz-stp-l">Fiscal &amp; Financeiro</span></button>
+        <span class="cli-wiz-stp-line"></span>
+        <button type="button" class="cli-wiz-stp"><span class="cli-wiz-stp-c">4</span><span class="cli-wiz-stp-l">Comercial &amp; CRM</span></button>
+      </nav>
 
         <!-- Tipo -->
         <div class="cli-section">
@@ -1267,38 +1286,38 @@ body { background: var(--mock-erp-shell); font-family: var(--pgm-font-sans); }
           <div class="cli-360-hero-tenure">4 anos · 47 contratos</div>
         </div>
       </section>
-      <div class="cli-kpi-strip cli-360-kpi-strip cli-360-kpi-strip--primary">
-        <div class="cli-kpi cli-kpi--teal">
-          <div class="cli-kpi-label">Receita 12 meses</div>
-          <div class="cli-kpi-val">R$ 524.180</div>
-          <div class="cli-kpi-sub cli-360-kpi-trend cli-360-kpi-trend--up">↑ 32% vs período anterior</div>
+      <div class="cli-360-kpis cli-360-kpis--primary">
+        <div class="cli-360-kpi cli-360-kpi--teal">
+          <div class="cli-360-kpi-lbl">Receita 12 meses</div>
+          <div class="cli-360-kpi-val">R$ 524.180</div>
+          <div class="cli-360-kpi-sub cli-360-kpi-sub--up">↑ 32% vs período anterior</div>
         </div>
-        <div class="cli-kpi cli-kpi--blue">
-          <div class="cli-kpi-label">Receita total</div>
-          <div class="cli-kpi-val">R$ 1,89M</div>
-          <div class="cli-kpi-sub">desde mar/2022</div>
+        <div class="cli-360-kpi cli-360-kpi--blue">
+          <div class="cli-360-kpi-lbl">Receita total</div>
+          <div class="cli-360-kpi-val">R$ 1,89M</div>
+          <div class="cli-360-kpi-sub">desde mar/2022</div>
         </div>
-        <div class="cli-kpi cli-kpi--orange">
-          <div class="cli-kpi-label">A receber</div>
-          <div class="cli-kpi-val">R$ 16.791,67</div>
-          <div class="cli-kpi-sub">5 parcelas · em dia</div>
+        <div class="cli-360-kpi cli-360-kpi--orange">
+          <div class="cli-360-kpi-lbl">A receber</div>
+          <div class="cli-360-kpi-val">R$ 16.791,67</div>
+          <div class="cli-360-kpi-sub">5 parcelas · em dia</div>
         </div>
-        <div class="cli-kpi cli-kpi--purple">
-          <div class="cli-kpi-label">Ticket médio</div>
-          <div class="cli-kpi-val">R$ 11.156</div>
-          <div class="cli-kpi-sub">por contrato</div>
+        <div class="cli-360-kpi cli-360-kpi--rose">
+          <div class="cli-360-kpi-lbl">Ticket médio</div>
+          <div class="cli-360-kpi-val">R$ 11.156</div>
+          <div class="cli-360-kpi-sub">por contrato</div>
         </div>
       </div>
-      <div class="cli-kpi-strip cli-360-kpi-strip cli-360-kpi-strip--secondary">
-        <div class="cli-kpi cli-kpi--purple">
-          <div class="cli-kpi-label">Limite de crédito</div>
-          <div class="cli-kpi-val">R$ 80.000</div>
-          <div class="cli-kpi-sub">R$ 63.208 disponíveis</div>
+      <div class="cli-360-kpis cli-360-kpis--secondary">
+        <div class="cli-360-kpi cli-360-kpi--purple">
+          <div class="cli-360-kpi-lbl">Limite de crédito</div>
+          <div class="cli-360-kpi-val">R$ 80.000</div>
+          <div class="cli-360-kpi-sub">R$ 63.208 disponíveis</div>
         </div>
-        <div class="cli-kpi cli-kpi--teal cli-360-kpi--score">
-          <div class="cli-kpi-label">Score interno</div>
-          <div class="cli-kpi-val">9,2 / 10</div>
-          <div class="cli-kpi-sub">Pagador exemplar</div>
+        <div class="cli-360-kpi cli-360-kpi--score">
+          <div class="cli-360-kpi-lbl">Score interno</div>
+          <div class="cli-360-kpi-val">9,2 / 10</div>
+          <div class="cli-360-kpi-sub">Pagador exemplar</div>
         </div>
       </div>
       <nav class="cli-360-tabs" role="tablist">
@@ -1323,18 +1342,6 @@ body { background: var(--mock-erp-shell); font-family: var(--pgm-font-sans); }
               <div class="cli-360-card-head">
                 <span class="cli-360-card-title"><i class="fas fa-users"></i> Contatos</span>
                 <a href="#" class="cli-360-link">Adicionar</a>
-              </div>
-            </div>
-            <div class="cli-360-card cli-360-card--saude">
-              <div class="cli-360-card-head">
-                <span class="cli-360-card-title"><i class="fas fa-heartbeat"></i> Saúde do relacionamento</span>
-              </div>
-              <div class="cli-360-saude-row">
-                <div class="cli-360-saude-top">
-                  <span class="cli-360-saude-label">Engajamento</span>
-                  <strong class="cli-360-saude-val">Alto</strong>
-                </div>
-                <div class="cli-360-saude-track"><div class="cli-360-saude-fill" style="width:82%"></div></div>
               </div>
             </div>
             <div class="cli-360-card">
