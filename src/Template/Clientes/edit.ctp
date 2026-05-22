@@ -42,6 +42,7 @@
 	$cliInativoRbacHidden = $isEquipe && $_rbacClienteInativo !== null && empty($_rbacClienteInativo['visible']);
 	$cliInativoRbacReadonly = $isEquipe && $_rbacClienteInativo !== null && !empty($_rbacClienteInativo['visible']) && empty($_rbacClienteInativo['editable']);
 	$cliPublicCode = trim((string)($cliente->public_code ?? ''));
+	$cliWizardStep = max(1, min(4, (int)($this->request->getQuery('wizard') ?? 1)));
 
 ?>
 <style>.table td, .table th { padding: 0.4rem; }</style>
@@ -80,7 +81,17 @@
 						<div class="cli-ficha-toolbar">
 							<p class="cli-ficha-hint mb-0"><i class="fas fa-eye"></i> <span id="cli-ficha-mode-label">Modo leitura</span> — use a barra inferior para <strong>Editar</strong>, <strong>Salvar</strong> ou <strong>Cancelar</strong>.</p>
 						</div>
+						<div class="cli-wizard-root" data-cli-wizard-root data-cli-wizard-initial="<?= (int)$cliWizardStep ?>">
+						<?= $this->element('Cli/cadastro_wizard_stepper', ['wizardStep' => $cliWizardStep]) ?>
+						<div class="cli-wizard-pane cli-wizard-pane--active" data-cli-wizard-step="1" data-cli-wizard-title="<?= h(__('Identificação')) ?>">
 						<?= $this->element('Cli/card', ['title' => 'Dados da empresa']) ?>
+						<div class="row mb-2">
+							<div class="col-lg-4 col-md-5 col-sm-12">
+								<label class="cli-label"><?= __('Código do cliente') ?></label>
+								<input type="text" class="form-control" readonly translate="no" value="<?= $cliPublicCode !== '' ? h($cliPublicCode) : '—' ?>" />
+								<small class="text-muted"><?= h(__('Gerado pelo sistema; não editável.')) ?></small>
+							</div>
+						</div>
 						<div class="row">
 							<?= $this->element('Cli/select', ['label' => 'Tipo', 'field' => 'tipo', 'colClass' => 'col-lg-3 col-md-3 col-sm-12 col-xs-12', 'selectOptions' => C_ClientesTipo, 'options' => ['title' => 'Tipo do cliente', 'required' => true, 'class' => 'form-control']]) ?>
 						</div>
@@ -104,6 +115,8 @@
 						</div>
 						<?= $this->element('Cli/card_end') ?>
 						<?php } ?>
+						</div>
+						<div class="cli-wizard-pane" data-cli-wizard-step="2" data-cli-wizard-title="<?= h(__('Endereço & Contato')) ?>" hidden>
 						<?= $this->element('Cli/card', ['title' => 'Endereço']) ?>
 						<div class="row">
 							<?= $this->element('Cli/input', ['label' => 'Endereço', 'field' => 'endereco', 'colClass' => 'col-lg-6 col-md-6 col-sm-12', 'options' => ['placeholder' => 'Insira o endereço', 'required' => true]]) ?>
@@ -143,6 +156,8 @@
 								'gerenciarClass' => 'btn btn-sm btn-outline-info btn-gerenciar-emails',
 							]) ?>
 						</div>
+						</div>
+						<div class="cli-wizard-pane" data-cli-wizard-step="3" data-cli-wizard-title="<?= h(__('Fiscal & Financeiro')) ?>" hidden>
 						<?php
 						$cliLabelHtmlIe = '<label class="cli-cmp-label d-flex justify-content-between align-items-center flex-wrap pgm-gap-6"><span>Inscrição Estadual <small class="text-muted">(somente números)</small></span>';
 						if (!empty($isEquipe)) {
@@ -156,6 +171,12 @@
 							<?= $this->element('Cli/input', ['label' => '', 'labelHtml' => $cliLabelHtmlIe, 'beforeControlHtml' => $cliBeforeIe, 'field' => 'inscricaoestadual', 'colClass' => 'col-lg-6 col-md-6 col-sm-12 col-xs-12', 'options' => ['id' => 'inscricaoestadual', 'onkeypress' => 'return SomenteNumero(event)', 'placeholder' => 'Insira a inscrição estadual']]) ?>
 						</div>
 						<?= $this->element('Cli/card_end') ?>
+						<div class="cli-card cli-wizard-info-card">
+							<p class="cli-wizard-info-title"><i class="fas fa-info-circle" aria-hidden="true"></i> <?= h(__('Configuração financeira')) ?></p>
+							<p class="cli-wizard-info-text mb-0"><?= h(__('Limite de crédito, condição de pagamento e score interno não estão no cadastro deste portal. Use os lançamentos em Financeiro e a Visão 360° para acompanhar receita e títulos em aberto.')) ?></p>
+						</div>
+						</div>
+						<div class="cli-wizard-pane" data-cli-wizard-step="4" data-cli-wizard-title="<?= h(__('Comercial & CRM')) ?>" hidden>
 						<?php if($isEquipe){ ?>
 						<?= $this->element('Cli/card', ['title' => 'Dados operacionais']) ?>
 							<div class="row">
@@ -193,7 +214,14 @@
 								</div>
 							</div>
 						<?= $this->element('Cli/card_end') ?>
+						<?php } else { ?>
+						<div class="cli-card cli-wizard-info-card">
+							<p class="cli-wizard-info-text mb-0"><?= h(__('Configurações comerciais adicionais estão disponíveis para a equipe interna.')) ?></p>
+						</div>
 						<?php } ?>
+						</div>
+						<?= $this->element('Cli/cadastro_wizard_nav', ['wizardShowSave' => true]) ?>
+						</div>
 						<?= $this->Form->button('Salvar cliente', ['type' => 'submit', 'class' => 'btn-enviar btn btn-pgm btn-pgm-salvar btn-success salvarcliente d-none', 'id' => 'cli-ficha-submit-fallback']) ?>
 					<?= $this->Form->end(); ?>
 				</div>
@@ -752,6 +780,7 @@ window.PgmClienteEditConfig = <?= json_encode($pgmClienteEditCfg, JSON_UNESCAPED
 </script>
 <?= $this->Html->script('/pgm-assets/js/modules/clientes/cliente-edit-ficha') ?>
 <?= $this->Html->script('/pgm-assets/js/modules/clientes/cliente-edit-ficha-acessos') ?>
+<?= $this->Html->script('/pgm-assets/js/modules/clientes/cliente-cadastro-wizard') ?>
 <script>
 <?= $this->element('Cli/toast_js') ?>
 <?= $this->element('Cli/edit_tabs_js') ?>
