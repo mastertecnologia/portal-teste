@@ -226,7 +226,7 @@ $tabs = [
 			<div class="cli-360-card">
 				<div class="cli-360-card-head">
 					<span class="cli-360-card-title"><i class="fas fa-users" aria-hidden="true"></i> <?= h(__('Contatos')) ?></span>
-					<?= $this->Html->link(__('Adicionar'), ['action' => 'edit', $cliente->id, '?' => ['wizard' => 2], '#' => 'cliente'], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link(__('Adicionar'), ['action' => 'edit', $cliente->id, '?' => ['wizard' => 2, 'contato' => 1], '#' => 'cliente'], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?>
 				</div>
 				<?php if ($contatos === []) : ?>
 				<p class="cli-360-empty"><?= h(__('Nenhum contato cadastrado. Inclua responsável e e-mails na ficha.')) ?></p>
