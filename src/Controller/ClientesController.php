@@ -824,6 +824,125 @@ class ClientesController extends AppController {
 		return $this->_clientesFmtBrl($v);
 	}
 
+	/**
+	 * Telefone BR para exibição (dígitos crus do cadastro).
+	 */
+	protected function _clientesFmtTelefoneBr($raw) {
+		$digits = preg_replace('/\D+/', '', (string)$raw);
+		if ($digits === '') {
+			return '';
+		}
+		if (strlen($digits) === 10) {
+			return sprintf('(%s) %s-%s', substr($digits, 0, 2), substr($digits, 2, 4), substr($digits, 6, 4));
+		}
+		if (strlen($digits) === 11) {
+			return sprintf('(%s) %s-%s', substr($digits, 0, 2), substr($digits, 2, 5), substr($digits, 7, 4));
+		}
+
+		return $digits;
+	}
+
+	/**
+	 * Primeiro e-mail de um campo que pode conter vários (; ou ,).
+	 */
+	protected function _clientesPrimeiroEmail($raw) {
+		$raw = trim((string)$raw);
+		if ($raw === '') {
+			return '';
+		}
+		foreach (preg_split('/[;,]+/', $raw) as $em) {
+			$em = trim($em);
+			if ($em !== '') {
+				return $em;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Linha de endereço do hero (mock: logradouro · cidade/UF · CEP).
+	 */
+	protected function _clientesVisao360EnderecoLinha($cliente, $cidadeDisplay) {
+		$rua = trim((string)($cliente->endereco ?? ''));
+		$nro = trim((string)($cliente->nroendereco ?? ''));
+		$bairro = trim((string)($cliente->bairro ?? ''));
+		$cepRaw = preg_replace('/\D+/', '', (string)($cliente->cep ?? ''));
+		$logParts = [];
+		if ($rua !== '') {
+			$logParts[] = $nro !== '' ? $rua . ', ' . $nro : $rua;
+		} elseif ($nro !== '') {
+			$logParts[] = $nro;
+		}
+		if ($bairro !== '') {
+			$logParts[] = $bairro;
+		}
+		$parts = [];
+		$log = trim(implode(', ', $logParts));
+		if ($log !== '') {
+			$parts[] = $log;
+		}
+		if ($cidadeDisplay !== '') {
+			$parts[] = $cidadeDisplay;
+		}
+		if ($cepRaw !== '') {
+			$cepFmt = strlen($cepRaw) === 8
+				? substr($cepRaw, 0, 5) . '-' . substr($cepRaw, 5, 3)
+				: $cepRaw;
+			$parts[] = 'CEP ' . $cepFmt;
+		}
+
+		return implode(' · ', $parts);
+	}
+
+	/**
+	 * Contatos do hero Visão 360° (telefone, WhatsApp/celular, e-mail).
+	 *
+	 * @return array<int,array{kind:string,label:string,label_upper:string,icon:string}>
+	 */
+	protected function _clientesVisao360HeroContatos($cliente) {
+		$out = [];
+		$fone = $this->_clientesFmtTelefoneBr($cliente->fone ?? '');
+		if ($fone !== '') {
+			$out[] = [
+				'kind' => 'phone',
+				'label' => $fone,
+				'label_upper' => mb_strtoupper($fone, 'UTF-8'),
+				'icon' => 'fa-phone',
+			];
+		}
+		$fone2 = $this->_clientesFmtTelefoneBr($cliente->fone2 ?? '');
+		if ($fone2 !== '') {
+			$out[] = [
+				'kind' => 'whatsapp',
+				'label' => $fone2,
+				'label_upper' => mb_strtoupper($fone2, 'UTF-8'),
+				'icon' => 'fab fa-whatsapp',
+			];
+		}
+		$emails = [];
+		$emFat = $this->_clientesPrimeiroEmail($cliente->email ?? '');
+		if ($emFat !== '') {
+			$emails[] = $emFat;
+		}
+		$emResp = $this->_clientesPrimeiroEmail($cliente->emailresponsavel ?? '');
+		if ($emResp !== '' && !in_array(mb_strtolower($emResp, 'UTF-8'), array_map(static function ($e) {
+			return mb_strtolower($e, 'UTF-8');
+		}, $emails), true)) {
+			$emails[] = $emResp;
+		}
+		foreach ($emails as $em) {
+			$out[] = [
+				'kind' => 'email',
+				'label' => $em,
+				'label_upper' => mb_strtoupper($em, 'UTF-8'),
+				'icon' => 'fa-envelope',
+			];
+		}
+
+		return $out;
+	}
+
 	public function cadastrar() {
 		return $this->redirect(['action' => 'add']);
 	}
@@ -1269,15 +1388,12 @@ class ClientesController extends AppController {
 				$cidadeDisplay .= '/' . strtoupper(trim((string)$cliente->cidade->estado->sigla));
 			}
 		}
-		$endereco = trim(implode(', ', array_filter([
-			trim((string)($cliente->endereco ?? '')),
-			trim((string)($cliente->nroendereco ?? '')),
-			trim((string)($cliente->bairro ?? '')),
-			$cidadeDisplay,
-			trim((string)($cliente->cep ?? '')),
-		], static function ($p) {
-			return $p !== '';
-		})));
+		$endereco = $this->_clientesVisao360EnderecoLinha($cliente, $cidadeDisplay);
+		$heroContatos = $this->_clientesVisao360HeroContatos($cliente);
+		$heroIniciaisNome = trim((string)($cliente->nomefantasia ?? ''));
+		if ($heroIniciaisNome === '') {
+			$heroIniciaisNome = $this->_clientesIndexNomeExibicao($cliente);
+		}
 		$membroLabel = '';
 		$anosCliente = '';
 		if (!empty($cliente->membrodesde) && $cliente->membrodesde instanceof \DateTimeInterface) {
@@ -1296,9 +1412,11 @@ class ClientesController extends AppController {
 			'segmento' => $seg,
 			'endereco' => $endereco,
 			'cidade' => $cidadeDisplay,
-			'fone' => trim((string)($cliente->fone ?? '')),
-			'fone2' => trim((string)($cliente->fone2 ?? '')),
-			'email' => trim((string)($cliente->email ?? '')),
+			'hero_contacts' => $heroContatos,
+			'hero_initials_name' => $heroIniciaisNome,
+			'fone' => $this->_clientesFmtTelefoneBr($cliente->fone ?? ''),
+			'fone2' => $this->_clientesFmtTelefoneBr($cliente->fone2 ?? ''),
+			'email' => $this->_clientesPrimeiroEmail($cliente->email ?? ''),
 			'membro_label' => $membroLabel,
 			'anos_cliente' => $anosCliente,
 			'inativo' => (int)$cliente->inativo === 1,
