@@ -190,6 +190,12 @@
                         <?= $this->Form->email('email', ['id' => 'email', 'class' => 'form-control', 'label' => false, 'placeholder' => 'financeiro@empresa.com.br']) ?>
                     </div>
                 </div>
+                <div class="cli-fg cli-fg-1">
+                    <div class="cli-fgroup">
+                        <label><?= h(__('Site')) ?></label>
+                        <?= $this->Form->control('site', ['class' => 'form-control', 'id' => 'site', 'label' => false, 'placeholder' => __('empresa.com.br'), 'autocomplete' => 'url']) ?>
+                    </div>
+                </div>
             </div>
         </div>
         </div>
