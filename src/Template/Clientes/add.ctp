@@ -24,15 +24,16 @@
 <div class="col-md-12 p-0">
 <div class="cli-form-root cli-layout-unificado">
 
-<?= $this->Form->create($cliente, ['class' => 'cli-add-form', 'data-turbo' => 'false']) ?>
+<?= $this->Form->create($cliente, ['class' => 'cli-add-form', 'id' => 'cli-add-form', 'data-turbo' => 'false']) ?>
 
     <header class="cli-crm-page-head cli-crm-page-head--bar">
         <div class="cli-crm-page-head-text">
             <h1 class="cli-crm-h1 mb-1"><?= h(__('Novo cadastro de cliente')) ?></h1>
-            <p class="cli-crm-subtitle mb-0"><?= h(__('Preencha as informações principais · O código P######## é gerado ao salvar')) ?></p>
+            <p class="cli-crm-subtitle mb-0"><?= h(__('Preencha as informações principais · Você pode complementar depois')) ?></p>
         </div>
         <div class="cli-crm-page-actions">
             <?= $this->Html->link(__('Cancelar'), ['action' => 'index'], ['class' => 'btn-cli-secondary btn-cli-sm', 'data-turbo' => 'false']) ?>
+            <?= $this->Form->button('<i class="fas fa-check" aria-hidden="true"></i> ' . __('Salvar cliente'), ['class' => 'btn-cli-primary btn-cli-sm cli-wizard-save-header', 'escape' => false]) ?>
         </div>
     </header>
 
@@ -47,6 +48,8 @@
 
         <!-- ── Seção: Tipo ────────────────────────────────── -->
         <div class="cli-wizard-pane cli-wizard-pane--active" data-cli-wizard-step="1" data-cli-wizard-title="<?= h(__('Identificação')) ?>">
+        <div class="cli-cadastro-grid">
+        <div class="cli-cadastro-col cli-cadastro-col--main">
         <div class="cli-section">
             <div class="cli-section-head">
                 <div class="cli-section-icon"><i class="fas fa-id-card"></i></div>
@@ -90,6 +93,7 @@
                         </label>
                         <?= $this->Form->control('cnpj', ['class' => 'form-control', 'id' => 'cnpj', 'label' => false, 'placeholder' => '00.000.000/0000-00']) ?>
                         <input type="hidden" id="uf_contribuinte" value="" />
+                        <p class="cli-field-hint mb-0"><i class="fas fa-search" aria-hidden="true"></i> <?= h(__('Clique em Buscar para preencher automaticamente via Receita Federal')) ?></p>
                     </div>
                 </div>
                 <div class="cli-fg cli-fg-3">
@@ -129,16 +133,40 @@
             </div>
         </div>
         </div>
+        <div class="cli-cadastro-col cli-cadastro-col--side">
+        <div class="cli-section cli-section--hint">
+            <div class="cli-section-head">
+                <div class="cli-section-icon"><i class="fas fa-barcode"></i></div>
+                <div class="cli-section-title"><?= h(__('Código do cliente')) ?></div>
+            </div>
+            <div class="cli-section-body">
+                <p class="mb-0"><?= h(__('O código portal (P########) é gerado automaticamente ao salvar.')) ?></p>
+            </div>
+        </div>
+        </div>
+        </div>
+        </div>
 
         <!-- ── Seção: Endereço ────────────────────────────── -->
         <div class="cli-wizard-pane" data-cli-wizard-step="2" data-cli-wizard-title="<?= h(__('Endereço & Contato')) ?>" hidden>
+        <div class="cli-cadastro-grid">
+        <div class="cli-cadastro-col cli-cadastro-col--main">
         <div class="cli-section">
             <div class="cli-section-head">
                 <div class="cli-section-icon"><i class="fas fa-map-marker-alt"></i></div>
-                <div class="cli-section-title">Endereço</div>
+                <div class="cli-section-title"><?= h(__('Endereço principal')) ?></div>
             </div>
             <div class="cli-section-body">
-                <div class="cli-fg cli-fg-addr">
+                <div class="cli-fg cli-fg-addr cli-fg-endereco-cep-first">
+                    <div class="cli-fgroup">
+                        <label class="cli-label-between">
+                            <span>CEP <span class="cli-req">*</span></span>
+                            <button type="button" class="btn-cli-outline btn-cli-sm" id="btn-buscar-cep" title="<?= h(__('Buscar CEP')) ?>">
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                            </button>
+                        </label>
+                        <?= $this->Form->control('cep', ['class' => 'form-control', 'id' => 'cep', 'label' => false, 'placeholder' => '00000-000', 'required' => true]) ?>
+                    </div>
                     <div class="cli-fgroup">
                         <label>Logradouro <span class="cli-req">*</span></label>
                         <?= $this->Form->control('endereco', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Rua, Av., Trav…', 'required' => true]) ?>
@@ -148,16 +176,12 @@
                         <?= $this->Form->control('nroendereco', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nro.', 'required' => true]) ?>
                     </div>
                     <div class="cli-fgroup">
-                        <label>Bairro <span class="cli-req">*</span></label>
-                        <?= $this->Form->control('bairro', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Bairro', 'required' => true]) ?>
-                    </div>
-                    <div class="cli-fgroup">
                         <label>Complemento</label>
                         <?= $this->Form->control('complemento', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Sala, Bloco…']) ?>
                     </div>
                     <div class="cli-fgroup">
-                        <label>CEP <span class="cli-req">*</span></label>
-                        <?= $this->Form->control('cep', ['class' => 'form-control', 'id' => 'cep', 'label' => false, 'placeholder' => '00000-000', 'required' => true]) ?>
+                        <label>Bairro <span class="cli-req">*</span></label>
+                        <?= $this->Form->control('bairro', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Bairro', 'required' => true]) ?>
                     </div>
                 </div>
                 <div class="cli-fg cli-fg-2">
@@ -173,35 +197,49 @@
         <div class="cli-section">
             <div class="cli-section-head">
                 <div class="cli-section-icon"><i class="fas fa-phone-alt"></i></div>
-                <div class="cli-section-title">Contato</div>
+                <div class="cli-section-title"><?= h(__('Contatos')) ?></div>
             </div>
             <div class="cli-section-body">
-                <div class="cli-fg cli-fg-3">
+                <div class="cli-fg cli-fg-contatos">
                     <div class="cli-fgroup">
-                        <label>Telefone <span class="cli-req">*</span></label>
+                        <label><?= h(__('Telefone principal')) ?> <span class="cli-req">*</span></label>
                         <?= $this->Form->control('fone', ['class' => 'form-control', 'id' => 'fone', 'label' => false, 'placeholder' => '(00) 0000-0000']) ?>
                     </div>
                     <div class="cli-fgroup">
-                        <label>Celular</label>
+                        <label><?= h(__('WhatsApp')) ?></label>
                         <?= $this->Form->control('fone2', ['class' => 'form-control', 'id' => 'fone2', 'label' => false, 'placeholder' => '(00) 00000-0000']) ?>
                     </div>
-                    <div class="cli-fgroup">
-                        <label>E-mail de faturamento</label>
+                    <div class="cli-fgroup cli-fgroup--wide">
+                        <label><?= h(__('E-mail principal')) ?></label>
                         <?= $this->Form->email('email', ['id' => 'email', 'class' => 'form-control', 'label' => false, 'placeholder' => 'financeiro@empresa.com.br']) ?>
                     </div>
-                </div>
-                <div class="cli-fg cli-fg-1">
-                    <div class="cli-fgroup">
-                        <label><?= h(__('Site')) ?></label>
+                    <div class="cli-fgroup cli-fgroup--wide">
+                        <label><?= h(__('Site / domínio')) ?></label>
                         <?= $this->Form->control('site', ['class' => 'form-control', 'id' => 'site', 'label' => false, 'placeholder' => __('empresa.com.br'), 'autocomplete' => 'url']) ?>
                     </div>
                 </div>
+                <p class="cli-wizard-info-text mb-0"><small><?= h(__('Pessoas de contato e acessos são cadastrados após salvar, na ficha do cliente.')) ?></small></p>
             </div>
+        </div>
+        </div>
+        <div class="cli-cadastro-col cli-cadastro-col--side">
+        <div class="cli-section cli-section--hint">
+            <div class="cli-section-head">
+                <div class="cli-section-icon"><i class="fas fa-file-invoice"></i></div>
+                <div class="cli-section-title"><?= h(__('Fiscal & financeiro')) ?></div>
+            </div>
+            <div class="cli-section-body">
+                <p class="mb-0"><?= h(__('Inscrições e limite de crédito no passo 3 do assistente.')) ?></p>
+            </div>
+        </div>
+        </div>
         </div>
         </div>
 
         <!-- ── Seção: Fiscal (somente PJ) ────────────────── -->
         <div class="cli-wizard-pane" data-cli-wizard-step="3" data-cli-wizard-title="<?= h(__('Fiscal & Financeiro')) ?>" hidden>
+        <div class="cli-cadastro-grid">
+        <div class="cli-cadastro-col cli-cadastro-col--main">
         <div class="cli-section pessoaJuridica">
             <div class="cli-section-head">
                 <div class="cli-section-icon"><i class="fas fa-file-invoice"></i></div>
@@ -225,6 +263,8 @@
                 </div>
             </div>
         </div>
+        </div>
+        <div class="cli-cadastro-col cli-cadastro-col--side">
         <div class="cli-section">
             <div class="cli-section-head">
                 <div class="cli-section-icon"><i class="fas fa-coins"></i></div>
@@ -245,17 +285,20 @@
                     <label><?= h(__('Observações financeiras')) ?></label>
                     <?= $this->Form->control('observacoes_financeiras', ['type' => 'textarea', 'rows' => 2, 'class' => 'form-control', 'label' => false]) ?>
                 </div>
-                <p class="cli-wizard-info-text mb-0"><small><?= h(__('Contatos adicionais podem ser cadastrados após salvar o cliente, na ficha de edição.')) ?></small></p>
             </div>
+        </div>
+        </div>
         </div>
         </div>
 
         <!-- ── Seção: Configurações ───────────────────────── -->
         <div class="cli-wizard-pane" data-cli-wizard-step="4" data-cli-wizard-title="<?= h(__('Comercial & CRM')) ?>" hidden>
+        <div class="cli-cadastro-grid">
+        <div class="cli-cadastro-col cli-cadastro-col--main">
         <div class="cli-section">
             <div class="cli-section-head">
-                <div class="cli-section-icon"><i class="fas fa-cog"></i></div>
-                <div class="cli-section-title">Configurações</div>
+                <div class="cli-section-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="cli-section-title"><?= h(__('Comercial & CRM')) ?></div>
             </div>
             <div class="cli-section-body">
                 <div class="cli-fg cli-fg-1-1-ac">
@@ -273,6 +316,15 @@
             </div>
         </div>
         </div>
+        <div class="cli-cadastro-col cli-cadastro-col--side">
+        <div class="cli-section cli-section--hint">
+            <div class="cli-section-body">
+                <p class="mb-0"><?= h(__('Segmentação ABC, vendedor e tags avançados podem ser evoluídos em fases futuras; os dados operacionais acima já sincronizam com o ERP.')) ?></p>
+            </div>
+        </div>
+        </div>
+        </div>
+        </div>
 
     <?= $this->element('Cli/cadastro_wizard_nav', ['wizardShowSave' => true]) ?>
     </div><!-- /cli-form-body -->
@@ -285,7 +337,7 @@
         </div>
         <div class="cli-form-footer-right">
             <?= $this->Html->link('<i class="fa fa-arrow-left"></i> ' . __('Cancelar'), ['action' => 'index'], ['class' => 'btn-cli-secondary', 'escape' => false, 'data-turbo' => 'false']) ?>
-            <?= $this->Form->button('<i class="fas fa-check"></i> ' . __('Cadastrar cliente'), ['class' => 'btn-cli-primary cli-wizard-save-footer', 'escape' => false]) ?>
+            <?= $this->Form->button('<i class="fas fa-check"></i> ' . __('Salvar cliente'), ['class' => 'btn-cli-primary cli-wizard-save-footer', 'escape' => false]) ?>
         </div>
     </div>
 
@@ -316,6 +368,43 @@
         $("#fone").mask("(999) 9999-9999");
         $("#fone2").mask("(999) 99999-9999");
         $("#cep").mask("99999-999");
+
+        $('#btn-buscar-cep').on('click', function (e) {
+            e.preventDefault();
+            var cep = ($('#cep').val() || '').replace(/\D/g, '');
+            if (cep.length !== 8) {
+                alert('<?= h(__('Informe um CEP válido.')) ?>');
+                return;
+            }
+            var url = "<?= rtrim(Router::url('/', true), '/'); ?>/api/util/cep/" + encodeURIComponent(cep);
+            $.getJSON(url, function (res) {
+                if (!res || !res.success || !res.data) {
+                    alert('<?= h(__('CEP não encontrado.')) ?>');
+                    return;
+                }
+                var d = res.data;
+                if (d.street) $('#endereco').val(String(d.street).toUpperCase());
+                if (d.neighborhood) $('#bairro').val(String(d.neighborhood).toUpperCase());
+                if (d.city && d.state) {
+                    var alvo = String(d.city).toUpperCase() + ' - ' + String(d.state).toUpperCase();
+                    $('#idcidade option').each(function () {
+                        if ($(this).text().toUpperCase().indexOf(alvo) >= 0) {
+                            $('#idcidade').val($(this).val());
+                            if (typeof $().selectpicker === 'function') {
+                                $('#idcidade').selectpicker('refresh');
+                            }
+                            return false;
+                        }
+                    });
+                }
+            }).fail(function () {
+                alert('<?= h(__('Erro ao consultar CEP.')) ?>');
+            });
+        });
+
+        $('.cli-wizard-save-header').on('click', function () {
+            $('.cli-wizard-save-footer').trigger('click');
+        });
 
         // Show/hide PJ/PF sections
         function toggleTipo(val) {

@@ -92,14 +92,9 @@
 						<div class="cli-wizard-root" data-cli-wizard-root data-cli-wizard-initial="<?= (int)$cliWizardStep ?>">
 						<?= $this->element('Cli/cadastro_wizard_stepper', ['wizardStep' => $cliWizardStep]) ?>
 						<div class="cli-wizard-pane cli-wizard-pane--active" data-cli-wizard-step="1" data-cli-wizard-title="<?= h(__('Identificação')) ?>">
-						<?= $this->element('Cli/card', ['title' => 'Dados da empresa']) ?>
-						<div class="row mb-2">
-							<div class="col-lg-4 col-md-5 col-sm-12">
-								<label class="cli-label"><?= __('Código do cliente') ?></label>
-								<input type="text" class="form-control" readonly translate="no" value="<?= $cliPublicCode !== '' ? h($cliPublicCode) : '—' ?>" />
-								<small class="text-muted"><?= h(__('Gerado pelo sistema; não editável.')) ?></small>
-							</div>
-						</div>
+						<div class="cli-cadastro-grid">
+						<div class="cli-cadastro-col cli-cadastro-col--main">
+						<?= $this->element('Cli/card', ['title' => __('Identificação')]) ?>
 						<div class="row">
 							<?= $this->element('Cli/select', ['label' => 'Tipo', 'field' => 'tipo', 'colClass' => 'col-lg-3 col-md-3 col-sm-12 col-xs-12', 'selectOptions' => C_ClientesTipo, 'options' => ['title' => 'Tipo do cliente', 'required' => true, 'class' => 'form-control']]) ?>
 						</div>
@@ -124,8 +119,24 @@
 						<?= $this->element('Cli/card_end') ?>
 						<?php } ?>
 						</div>
+						<div class="cli-cadastro-col cli-cadastro-col--side">
+						<div class="cli-section cli-section--hint">
+							<div class="cli-section-head">
+								<div class="cli-section-icon"><i class="fas fa-barcode"></i></div>
+								<div class="cli-section-title"><?= h(__('Código do cliente')) ?></div>
+							</div>
+							<div class="cli-section-body">
+								<input type="text" class="form-control" readonly translate="no" value="<?= $cliPublicCode !== '' ? h($cliPublicCode) : '—' ?>" />
+								<p class="cli-field-hint mb-0"><?= h(__('Gerado pelo sistema; não editável.')) ?></p>
+							</div>
+						</div>
+						</div>
+						</div>
+						</div>
 						<div class="cli-wizard-pane" data-cli-wizard-step="2" data-cli-wizard-title="<?= h(__('Endereço & Contato')) ?>" hidden>
-						<?= $this->element('Cli/card', ['title' => 'Endereço']) ?>
+						<div class="cli-cadastro-grid">
+						<div class="cli-cadastro-col cli-cadastro-col--main">
+						<?= $this->element('Cli/card', ['title' => __('Endereço principal')]) ?>
 						<div class="row">
 							<?= $this->element('Cli/input', ['label' => 'Endereço', 'field' => 'endereco', 'colClass' => 'col-lg-6 col-md-6 col-sm-12', 'options' => ['placeholder' => 'Insira o endereço', 'required' => true]]) ?>
 							<?= $this->element('Cli/input', ['label' => 'Nro.', 'field' => 'nroendereco', 'colClass' => 'col-lg-2 col-md-6 col-sm-12', 'options' => ['placeholder' => 'Insira o nro.', 'required' => true]]) ?>
@@ -137,11 +148,11 @@
 							<?= $this->element('Cli/select', ['label' => 'Cidade', 'field' => 'idcidade', 'colClass' => 'col-lg-3 col-md-3 col-sm-12 col-xs-12', 'selectOptions' => $cidades, 'options' => ['data-live-search' => 'true', 'class' => 'selectpicker form-control']]) ?>
 						</div>
 						<?= $this->element('Cli/card_end') ?>
-						<?= $this->element('Cli/card', ['title' => 'Contato']) ?>
+						<?= $this->element('Cli/card', ['title' => __('Contatos')]) ?>
 						<div class="row">
-							<?= $this->element('Cli/input', ['label' => 'Telefone', 'field' => 'fone', 'colClass' => 'col-lg-3 col-md-3 col-sm-6 col-xs-6', 'options' => ['id' => 'fone', 'placeholder' => 'Insira o telefone']]) ?>
-							<?= $this->element('Cli/input', ['label' => 'Celular', 'field' => 'fone2', 'colClass' => 'col-lg-3 col-md-3 col-sm-6 col-xs-6', 'options' => ['id' => 'fone2', 'placeholder' => 'Insira o celular']]) ?>
-							<?= $this->element('Cli/input', ['label' => __('Site'), 'field' => 'site', 'colClass' => 'col-lg-6 col-md-6 col-sm-12 col-xs-12', 'options' => ['id' => 'site', 'placeholder' => __('empresa.com.br'), 'autocomplete' => 'url']]) ?>
+							<?= $this->element('Cli/input', ['label' => __('Telefone principal'), 'field' => 'fone', 'colClass' => 'col-lg-3 col-md-3 col-sm-6 col-xs-6', 'options' => ['id' => 'fone', 'placeholder' => 'Insira o telefone']]) ?>
+							<?= $this->element('Cli/input', ['label' => __('WhatsApp'), 'field' => 'fone2', 'colClass' => 'col-lg-3 col-md-3 col-sm-6 col-xs-6', 'options' => ['id' => 'fone2', 'placeholder' => 'Insira o WhatsApp']]) ?>
+							<?= $this->element('Cli/input', ['label' => __('Site / domínio'), 'field' => 'site', 'colClass' => 'col-lg-6 col-md-6 col-sm-12 col-xs-12', 'options' => ['id' => 'site', 'placeholder' => __('empresa.com.br'), 'autocomplete' => 'url']]) ?>
 						</div>
 						<div class="row">
 							<?= $this->element('Cli/email_readonly_block', [
@@ -168,7 +179,19 @@
 						<?= $this->element('Cli/card_end') ?>
 						<?= $this->element('Cli/contatos_crm_panel', compact('cliente', 'cliContatosReady', 'cliContatos')) ?>
 						</div>
+						<div class="cli-cadastro-col cli-cadastro-col--side">
+						<div class="cli-section cli-section--hint">
+							<div class="cli-section-body">
+								<p class="mb-0"><?= h(__('E-mails de faturamento e responsáveis permanecem no bloco acima; pessoas de contato na lista CRM.')) ?></p>
+							</div>
+						</div>
+						</div>
+						</div>
+						</div>
 						<div class="cli-wizard-pane" data-cli-wizard-step="3" data-cli-wizard-title="<?= h(__('Fiscal & Financeiro')) ?>" hidden>
+						<div class="cli-cadastro-grid">
+						<div class="cli-cadastro-col cli-cadastro-col--main">
+						<?= $this->element('Cli/card', ['title' => __('Registros fiscais')]) ?>
 						<?php
 						$cliLabelHtmlIe = '<label class="cli-cmp-label d-flex justify-content-between align-items-center flex-wrap pgm-gap-6"><span>Inscrição Estadual <small class="text-muted">(somente números)</small></span>';
 						if (!empty($isEquipe)) {
@@ -177,19 +200,21 @@
 						$cliLabelHtmlIe .= '</label>';
 						$cliBeforeIe = '<input type="hidden" id="uf_contribuinte_edit" value="' . h($ufContribuinte ?? '') . '" />';
 						?>
-						<div class="row pessoaJuridica <?= $pessoaJuridica ?> mt-2">
+						<div class="row pessoaJuridica <?= $pessoaJuridica ?>">
 							<?= $this->element('Cli/input', ['label' => 'Inscrição Municipal (somente números)', 'field' => 'inscricaomunicipal', 'colClass' => 'col-lg-6 col-md-6 col-sm-12 col-xs-12', 'options' => ['onkeypress' => 'return SomenteNumero(event)', 'placeholder' => 'Insira a inscrição municipal']]) ?>
 							<?= $this->element('Cli/input', ['label' => '', 'labelHtml' => $cliLabelHtmlIe, 'beforeControlHtml' => $cliBeforeIe, 'field' => 'inscricaoestadual', 'colClass' => 'col-lg-6 col-md-6 col-sm-12 col-xs-12', 'options' => ['id' => 'inscricaoestadual', 'onkeypress' => 'return SomenteNumero(event)', 'placeholder' => 'Insira a inscrição estadual']]) ?>
 						</div>
 						<?= $this->element('Cli/card_end') ?>
+						</div>
+						<div class="cli-cadastro-col cli-cadastro-col--side">
 						<?php if (!empty($cliCrmFinanceReady)) : ?>
 						<?= $this->element('Cli/card', ['title' => __('Configuração financeira')]) ?>
 						<div class="row">
-							<div class="col-lg-4 col-md-4 col-sm-12">
+							<div class="col-lg-6 col-md-6 col-sm-12">
 								<label class="cli-label"><?= h(__('Limite de crédito (R$)')) ?></label>
 								<?= $this->Form->control('limite_credito', ['type' => 'text', 'class' => 'form-control', 'label' => false, 'placeholder' => '0,00']) ?>
 							</div>
-							<div class="col-lg-3 col-md-3 col-sm-12">
+							<div class="col-lg-6 col-md-6 col-sm-12">
 								<label class="cli-label"><?= h(__('Score interno (0–10)')) ?></label>
 								<?= $this->Form->control('score_interno', ['type' => 'text', 'class' => 'form-control', 'label' => false, 'placeholder' => '9,2']) ?>
 							</div>
@@ -208,9 +233,13 @@
 						</div>
 						<?php endif; ?>
 						</div>
+						</div>
+						</div>
 						<div class="cli-wizard-pane" data-cli-wizard-step="4" data-cli-wizard-title="<?= h(__('Comercial & CRM')) ?>" hidden>
+						<div class="cli-cadastro-grid">
+						<div class="cli-cadastro-col cli-cadastro-col--main">
 						<?php if($isEquipe){ ?>
-						<?= $this->element('Cli/card', ['title' => 'Dados operacionais']) ?>
+						<?= $this->element('Cli/card', ['title' => __('Comercial & CRM')]) ?>
 							<div class="row">
 							<?= $this->element('Cli/input', ['label' => 'Senha para o cliente visualizar os acessos', 'field' => 'senha', 'colClass' => 'col-lg-2 col-md-3 col-sm-3 col-xs-12', 'options' => ['placeholder' => 'Insira a senha']]) ?>
 								<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-t-30">
@@ -252,6 +281,8 @@
 						</div>
 						<?php } ?>
 						</div>
+						</div>
+						</div>
 						<?= $this->element('Cli/cadastro_wizard_nav', ['wizardShowSave' => true]) ?>
 						</div>
 						<?= $this->Form->button('Salvar cliente', ['type' => 'submit', 'class' => 'btn-enviar btn btn-pgm btn-pgm-salvar btn-success salvarcliente d-none', 'id' => 'cli-ficha-submit-fallback']) ?>
@@ -259,7 +290,13 @@
 				</div>
 				<?php if($isEquipe || !empty($permissaoacesso)){ ?>
 				<div class="tab-pane" id="acessos" role="tabpanel" aria-labelledby="cli-tab-acessos">
-					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-desktop"></i> Acessos', 'extraClass' => 'mb-3']) ?>
+					<div class="cli-ficha-tab-panel">
+					<div class="cli-section">
+					<div class="cli-section-head">
+						<div class="cli-section-icon"><i class="fas fa-desktop" aria-hidden="true"></i></div>
+						<div class="cli-section-title"><?= h(__('Acessos')) ?></div>
+					</div>
+					<div class="cli-section-body">
 					<?php if ($isEquipe) { ?>
 						<div class="cli-subcard mb-3">
 							<div class="cli-subcard-head">Quem pode ver senhas, contratos e token</div>
@@ -330,7 +367,7 @@
 									<div class="row m-t-10">
 										<div class="col-12 d-flex flex-wrap align-items-center pgm-gap-8">
 											<a role="button" class="btn btn-danger btn-inativoAcessos text-white">Exibir inativos</a>
-											<?= $this->Form->button('Adicionar acesso', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success ml-auto'], $cliente->id) ?>
+											<?= $this->Form->button(__('Adicionar acesso'), ['class' => 'btn-cli-primary btn-cli-sm ml-auto'], $cliente->id) ?>
 										</div>
 									</div>
 								<?= $this->Form->end(); ?>
@@ -383,14 +420,22 @@
 							</tbody>
 						</table>
 					</div>
-					<?= $this->element('Cli/card_end') ?>
+					</div>
+					</div>
+					</div>
 				</div>
 				<?php } if($isEquipe){ ?>
 				<div class="tab-pane" id="usuarios" role="tabpanel" aria-labelledby="cli-tab-usuarios">
-					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-users"></i> Usuários do cliente', 'extraClass' => 'mb-3']) ?>
+					<div class="cli-ficha-tab-panel">
+					<div class="cli-section">
+					<div class="cli-section-head">
+						<div class="cli-section-icon"><i class="fas fa-users" aria-hidden="true"></i></div>
+						<div class="cli-section-title"><?= h(__('Usuários do cliente')) ?></div>
+					</div>
+					<div class="cli-section-body">
 					<div class="d-flex flex-wrap align-items-center justify-content-between mb-2 pgm-gap-8">
 						<p class="text-muted small mb-0">Edite cada usuário na mesma aba. Novo usuário: escolha o cliente no formulário de cadastro.</p>
-						<?= $this->Html->link('<i class="fas fa-user-plus"></i> Novo usuário', ['controller' => 'Users', 'action' => 'addcliente'], ['class' => 'btn btn-sm btn-success', 'escape' => false, 'data-turbo' => 'false']) ?>
+							<?= $this->Html->link('<i class="fas fa-user-plus"></i> ' . __('Novo usuário'), ['controller' => 'Users', 'action' => 'addcliente'], ['class' => 'btn-cli-primary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
 					</div>
 					<div class="table-responsive">
 						<table class="cli-acessos-table" id="tableUsers">
@@ -422,15 +467,25 @@
 							</tbody>
 						</table>
 					</div>
-					<?= $this->element('Cli/card_end') ?>
+					</div>
+					</div>
+					</div>
 				</div>
 				<?php } if($isEquipe || !empty($permissaoacesso)){ ?>
 				<div class="tab-pane" id="contratos" role="tabpanel" aria-labelledby="cli-tab-contratos">
-					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-file-contract"></i> Contratos', 'extraClass' => 'mb-3']) ?>
+					<div class="cli-ficha-tab-panel">
+					<div class="cli-section">
+					<div class="cli-section-head">
+						<div class="cli-section-icon"><i class="fas fa-file-contract" aria-hidden="true"></i></div>
+						<div class="cli-section-title"><?= h(__('Contratos')) ?></div>
+					</div>
+					<div class="cli-section-body">
 					<?php if ($isEquipe) : ?>
-					<?= $this->Html->link('Cadastrar item', ['controller' => 'Clicontratos', 'action' => 'add', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success  m-r-5 m-b-20']) ?>
-					<?= $this->Html->link('Contratos de Horas Técnicas', ['controller' => 'ContratosHoras', 'action' => 'index', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-b-20']) ?>
-					<?= $this->Html->link('Cadastrar Contrato de Horas', ['controller' => 'ContratosHoras', 'action' => 'add', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-salvar text-white m-r-5 m-b-20']) ?>
+					<div class="cli-tab-actions">
+					<?= $this->Html->link('<i class="fas fa-plus" aria-hidden="true"></i> ' . __('Cadastrar item'), ['controller' => 'Clicontratos', 'action' => 'add', $cliente->id], ['class' => 'btn-cli-primary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link(__('Contratos de Horas Técnicas'), ['controller' => 'ContratosHoras', 'action' => 'index', $cliente->id], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link('<i class="fas fa-plus" aria-hidden="true"></i> ' . __('Cadastrar Contrato de Horas'), ['controller' => 'ContratosHoras', 'action' => 'add', $cliente->id], ['class' => 'btn-cli-primary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
+					</div>
 					<?php endif; ?>
 					<?php $contratosRowUi = isset($contratosRowUi) && is_array($contratosRowUi) ? $contratosRowUi : []; ?>
 					<p class="cli-ctr-legend mb-2">Situação do item (mesma regra do resumo no rodapé): <span class="badge badge-success">Ativo</span> <span class="badge badge-warning text-dark">Vence em 30 dias</span> <span class="badge badge-danger">Vencido</span> <span class="badge badge-secondary">Cancelado / sem validade</span></p>
@@ -477,7 +532,9 @@
 							</tbody>
 						</table>
 					</div>
-					<?= $this->element('Cli/card_end') ?>
+					</div>
+					</div>
+					</div>
 				</div>
 				<?php }
 				if (!empty($cliente->id)) :
@@ -485,12 +542,18 @@
 					$ativosCount = is_countable($ativosCli) ? count($ativosCli) : 0;
 				?>
 				<div class="tab-pane" id="ativos" role="tabpanel" aria-labelledby="cli-tab-ativos">
-					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-server"></i> Ativos de TI deste cliente <span class="badge badge-secondary" style="margin-left:6px">' . (int)$ativosCount . '</span>', 'extraClass' => 'mb-3']) ?>
-					<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap" style="gap:8px">
-						<input type="search" id="cli-ativos-filter" class="form-control form-control-sm" placeholder="Filtrar por descrição, série, hostname…" style="max-width:320px"/>
-						<div>
-							<?= $this->Html->link('<i class="fas fa-list"></i> Ver todos', ['controller' => 'Ativos', 'action' => 'index', '?' => ['idcliente' => $cliente->id]], ['class' => 'btn btn-sm btn-outline-secondary mr-2', 'escape' => false, 'data-turbo' => 'false']) ?>
-							<?= $this->Html->link('<i class="fas fa-plus"></i> Cadastrar ativo', ['controller' => 'Ativos', 'action' => 'add', '?' => ['idcliente' => $cliente->id]], ['class' => 'btn btn-sm btn-success', 'escape' => false, 'data-turbo' => 'false']) ?>
+					<div class="cli-ficha-tab-panel">
+					<div class="cli-section">
+					<div class="cli-section-head">
+						<div class="cli-section-icon"><i class="fas fa-server" aria-hidden="true"></i></div>
+						<div class="cli-section-title"><?= h(__('Ativos de TI deste cliente')) ?> <?= $this->element('Cli/tab_count_badge', ['count' => (int)$ativosCount]) ?></div>
+					</div>
+					<div class="cli-section-body">
+					<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap pgm-gap-8">
+						<input type="search" id="cli-ativos-filter" class="form-control form-control-sm" placeholder="<?= h(__('Filtrar por descrição, série, hostname…')) ?>" style="max-width:320px"/>
+						<div class="cli-tab-actions mb-0">
+							<?= $this->Html->link(__('Ver todos'), ['controller' => 'Ativos', 'action' => 'index', '?' => ['idcliente' => $cliente->id]], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
+							<?= $this->Html->link('<i class="fas fa-plus" aria-hidden="true"></i> ' . __('Cadastrar ativo'), ['controller' => 'Ativos', 'action' => 'add', '?' => ['idcliente' => $cliente->id]], ['class' => 'btn-cli-primary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
 						</div>
 					</div>
 					<?php if ($ativosCount === 0) : ?>
@@ -550,12 +613,20 @@
 					})();
 					</script>
 					<?php endif; ?>
-					<?= $this->element('Cli/card_end') ?>
+					</div>
+					</div>
+					</div>
 				</div>
 				<?php endif; ?>
 				<?php if($isClientePortal ){ ?>
 				<div class="tab-pane" id="acessosCliente" role="tabpanel" aria-labelledby="cli-tab-acessosCliente">
-					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-desktop"></i> Meus acessos', 'extraClass' => 'mb-3']) ?>
+					<div class="cli-ficha-tab-panel">
+					<div class="cli-section">
+					<div class="cli-section-head">
+						<div class="cli-section-icon"><i class="fas fa-desktop" aria-hidden="true"></i></div>
+						<div class="cli-section-title"><?= h(__('Meus acessos')) ?></div>
+					</div>
+					<div class="cli-section-body">
 					<p class="text-muted small mb-2">Senhas podem ser exibidas mediante clique; não compartilhe em canais inseguros.</p>
 					<div class="table-responsive">
 						<table class="cli-acessos-table" id="tableAcessosClientes">
@@ -596,12 +667,20 @@
 							</tbody>
 						</table>
 					</div>
-					<?= $this->element('Cli/card_end') ?>
+					</div>
+					</div>
+					</div>
 				</div>
 				<?php } ?>
 				<?php if ($showClienteApiTokenTab) { ?>
 				<div class="tab-pane" id="token" role="tabpanel" aria-labelledby="cli-tab-token">
-					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-key"></i> Token de integração API', 'extraClass' => 'mb-3']) ?>
+					<div class="cli-ficha-tab-panel">
+					<div class="cli-section">
+					<div class="cli-section-head">
+						<div class="cli-section-icon"><i class="fas fa-key" aria-hidden="true"></i></div>
+						<div class="cli-section-title"><?= h(__('Token de integração API')) ?></div>
+					</div>
+					<div class="cli-section-body">
 					<div class="cli-token-panel cli-token-panel--split">
 						<div class="cli-token-panel__col">
 							<div class="cli-sf-kicker">Valor atual (somente leitura)</div>
@@ -626,7 +705,9 @@
 							<?php } ?>
 						</div>
 					</div>
-					<?= $this->element('Cli/card_end') ?>
+					</div>
+					</div>
+					</div>
 				</div>
 				<?php }  ?>
 		</div><!-- /tab-content -->
