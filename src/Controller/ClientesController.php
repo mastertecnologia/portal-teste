@@ -1786,7 +1786,7 @@ class ClientesController extends AppController {
 					(string)($u->name ?? $u->username ?? ''),
 					__('Usuário portal'),
 					(string)($u->email ?? ''),
-					(string)($u->fone ?? '')
+					''
 				);
 			}
 		} catch (\Throwable $e) {
