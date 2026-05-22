@@ -280,7 +280,7 @@
                             $seg = $row['segmento'];
                             $rec12 = (float)($row['receita12'] ?? 0);
                             $aRec = (float)($row['a_receber'] ?? 0);
-                            $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]);
+                            $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'visao360', $reg->id]);
                             $stClass = (string)($row['status_class'] ?? 'on');
                             $avTone = (string)($row['av_tone'] ?? 'teal');
                             $rowClass = 'cli-row--' . $stClass;
@@ -333,8 +333,8 @@
                             <td class="cli-td-act" onclick="event.stopPropagation()">
                                 <?= $this->Html->link(
                                     '<i class="fas fa-chart-bar" aria-hidden="true"></i>',
-                                    ['controller' => 'Clientes', 'action' => 'eventos', $reg->id],
-                                    ['class' => 'cli-btn-act cli-btn-act--chart', 'escape' => false, 'title' => __('Histórico / indicadores'), 'data-turbo' => 'false']
+                                    ['controller' => 'Clientes', 'action' => 'visao360', $reg->id],
+                                    ['class' => 'cli-btn-act cli-btn-act--chart', 'escape' => false, 'title' => __('Visão 360° / indicadores'), 'data-turbo' => 'false']
                                 ) ?>
                                 <?= $this->Html->link(
                                     '<i class="fas fa-ellipsis-h" aria-hidden="true"></i>',

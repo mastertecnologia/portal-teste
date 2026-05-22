@@ -1173,37 +1173,531 @@ class ClientesController extends AppController {
 	}
 
 	/**
-	 * Histórico de eventos do domínio cliente (timeline; requer migration portal).
+	 * Visão 360º do cliente (indicadores + histórico com dados reais do ERP).
+	 *
+	 * @param int|string|null $id
+	 */
+	public function visao360($id = null) {
+		if ($this->Auth->user('role') == 1) {
+			$this->Flash->error('Você não possui permissões para acessar esta página.');
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+		$q = $this->Clientes->find()
+			->contain(['Cidades.Estados'])
+			->where(['Clientes.id' => (int)$id]);
+		$this->Abac->applyToQuery($q, 'Clientes');
+		$cliente = $q->first();
+		if (empty($cliente)) {
+			$this->Flash->error(__('Cliente não encontrado ou sem permissão.'));
+			return $this->redirect(['action' => 'index']);
+		}
+		$nome = $this->_clientesIndexNomeExibicao($cliente);
+		$this->set('title', __('Visão 360° — {0}', $nome));
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('topbarParentLabel', __('Clientes'));
+		$this->set('topbarCurrentLabel', __('Visão 360°'));
+		$tab = trim((string)$this->request->getQuery('tab', 'geral'));
+		$allowedTabs = ['geral', 'orcamentos', 'os', 'financeiro', 'contratos', 'historico', 'arquivos'];
+		if (!in_array($tab, $allowedTabs, true)) {
+			$tab = 'geral';
+		}
+		$this->set('cli360Tab', $tab);
+		$this->set('cliente', $cliente);
+		$this->set('cli360', $this->_clientesVisao360Payload($cliente));
+	}
+
+	/**
+	 * Histórico legado — redireciona para a aba Histórico da Visão 360º.
+	 *
+	 * @param int|string|null $id
 	 */
 	public function eventos($id = null) {
 		if ($this->Auth->user('role') == 1) {
 			$this->Flash->error('Você não possui permissões para acessar esta página.');
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
-		$cliente = $this->_findClienteForCurrentUser($id);
-		if (empty($cliente)) {
-			$this->Flash->error(__('Cliente não encontrado ou sem permissão.'));
+		if ($id === null || $id === '') {
 			return $this->redirect(['action' => 'index']);
 		}
-		$titlenome = $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : $cliente->razaosocial;
-		$this->set('title', 'Histórico — ' . $titlenome);
-		$this->set('hideLayoutPageTitle', true);
 
-		$events = [];
-		if (InfrastructureGuard::isReady()) {
+		return $this->redirect(['action' => 'visao360', (int)$id, '?' => ['tab' => 'historico']]);
+	}
+
+	/**
+	 * Dados da Visão 360º (financeiro, contagens, timeline, saúde).
+	 *
+	 * @param \App\Model\Entity\Cliente $cliente
+	 * @return array<string,mixed>
+	 */
+	protected function _clientesVisao360Payload($cliente) {
+		$cid = (int)$cliente->id;
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$isPj = (int)$cliente->tipo === (int)C_ClientesTipoJuridica;
+		$codigo = trim((string)($cliente->public_code ?? ''));
+		if ($codigo === '') {
+			$codigo = '—';
+		}
+		$seg = $this->_clientesClassificarSegmento($cliente);
+		$cidadeDisplay = '';
+		if (!empty($cliente->cidade) && !empty($cliente->cidade->nome)) {
+			$cidadeDisplay = (string)$cliente->cidade->nome;
+			if (!empty($cliente->cidade->estado) && !empty($cliente->cidade->estado->sigla)) {
+				$cidadeDisplay .= '/' . strtoupper(trim((string)$cliente->cidade->estado->sigla));
+			}
+		}
+		$endereco = trim(implode(', ', array_filter([
+			trim((string)($cliente->endereco ?? '')),
+			trim((string)($cliente->nroendereco ?? '')),
+			trim((string)($cliente->bairro ?? '')),
+			$cidadeDisplay,
+			trim((string)($cliente->cep ?? '')),
+		], static function ($p) {
+			return $p !== '';
+		})));
+		$membroLabel = '';
+		$anosCliente = '';
+		if (!empty($cliente->membrodesde) && $cliente->membrodesde instanceof \DateTimeInterface) {
+			$membroLabel = $cliente->membrodesde->i18nFormat('MMMM yyyy');
+			$diff = $cliente->membrodesde->diff(new \DateTimeImmutable('today'));
+			$anos = (int)$diff->y;
+			$anosCliente = $anos > 0 ? __('{0} anos', $anos) : __('menos de 1 ano');
+		}
+
+		$payload = [
+			'codigo' => $codigo,
+			'nome' => $this->_clientesIndexNomeExibicao($cliente),
+			'fantasia' => trim((string)($cliente->nomefantasia ?? '')),
+			'doc' => $isPj ? (string)($cliente->cnpj ?? '') : (string)($cliente->cpf ?? ''),
+			'ie' => trim((string)($cliente->inscricaoestadual ?? '')),
+			'segmento' => $seg,
+			'endereco' => $endereco,
+			'cidade' => $cidadeDisplay,
+			'fone' => trim((string)($cliente->fone ?? '')),
+			'fone2' => trim((string)($cliente->fone2 ?? '')),
+			'email' => trim((string)($cliente->email ?? '')),
+			'membro_label' => $membroLabel,
+			'anos_cliente' => $anosCliente,
+			'inativo' => (int)$cliente->inativo === 1,
+			'is_vip' => false,
+			'kpis' => [
+				'receita12' => 0.0,
+				'receita12_fmt' => $this->_clientesFmtBrl(0),
+				'receita12_pct' => null,
+				'receita_total' => 0.0,
+				'receita_total_fmt' => $this->_clientesFmtBrlCompact(0),
+				'a_receber' => 0.0,
+				'a_receber_fmt' => $this->_clientesFmtBrl(0),
+				'parcelas_abertas' => 0,
+				'a_receber_hint' => '',
+				'ticket_medio' => 0.0,
+				'ticket_medio_fmt' => $this->_clientesFmtBrl(0),
+				'has_fin' => false,
+			],
+			'receita_mensal' => [],
+			'saude' => [],
+			'counts' => [
+				'orcamentos' => 0,
+				'os' => 0,
+				'contratos' => 0,
+				'tickets_abertos' => 0,
+				'arquivos' => 0,
+			],
+			'timeline' => [],
+			'orcamentos' => [],
+			'os_list' => [],
+			'financeiro' => [],
+			'contratos' => [],
+			'domain_events' => [],
+			'domain_events_ready' => InfrastructureGuard::isReady(),
+		];
+
+		$hoje = FrozenDate::today();
+		$ini12 = $hoje->subMonths(12);
+		$iniPrev = $ini12->subMonths(12);
+		$fimPrev = $ini12->subDay(1);
+
+		try {
+			$finTable = TableRegistry::getTableLocator()->get('FinanceiroLancamentos');
+			$payload['kpis']['has_fin'] = true;
+			$baseWhere = [
+				'FinanceiroLancamentos.idempresa' => $idempresa,
+				'FinanceiroLancamentos.idcliente' => $cid,
+				'FinanceiroLancamentos.tipo' => 'receita',
+			];
+
+			$q12 = $finTable->find();
+			$q12->select(['s' => $q12->func()->sum('FinanceiroLancamentos.valor')])
+				->where($baseWhere + [
+					'FinanceiroLancamentos.data_lancamento >=' => $ini12->format('Y-m-d'),
+					'FinanceiroLancamentos.data_lancamento <=' => $hoje->format('Y-m-d'),
+				]);
+			$row12 = $q12->first();
+			$receita12 = $row12 && $row12->s !== null ? (float)$row12->s : 0.0;
+
+			$qPrev = $finTable->find();
+			$qPrev->select(['s' => $qPrev->func()->sum('FinanceiroLancamentos.valor')])
+				->where($baseWhere + [
+					'FinanceiroLancamentos.data_lancamento >=' => $iniPrev->format('Y-m-d'),
+					'FinanceiroLancamentos.data_lancamento <=' => $fimPrev->format('Y-m-d'),
+				]);
+			$rowPrev = $qPrev->first();
+			$receitaPrev = $rowPrev && $rowPrev->s !== null ? (float)$rowPrev->s : 0.0;
+
+			$qTot = $finTable->find();
+			$qTot->select(['s' => $qTot->func()->sum('FinanceiroLancamentos.valor')])
+				->where($baseWhere);
+			$rowTot = $qTot->first();
+			$receitaTotal = $rowTot && $rowTot->s !== null ? (float)$rowTot->s : 0.0;
+
+			$qAb = $finTable->find();
+			$qAb->select(['s' => $qAb->func()->sum('FinanceiroLancamentos.valor')])
+				->where($baseWhere + ['FinanceiroLancamentos.status' => 'aberto']);
+			$rowAb = $qAb->first();
+			$aReceber = $rowAb && $rowAb->s !== null ? (float)$rowAb->s : 0.0;
+
+			$parcelasAbertas = (int)$finTable->find()
+				->where($baseWhere + ['FinanceiroLancamentos.status' => 'aberto'])
+				->count();
+
+			$atraso = false;
+			$qInad = $finTable->find()
+				->where($baseWhere + [
+					'FinanceiroLancamentos.status' => 'aberto',
+					'FinanceiroLancamentos.data_vencimento IS NOT' => null,
+					'FinanceiroLancamentos.data_vencimento <' => $hoje->format('Y-m-d'),
+				])
+				->limit(1);
+			if ($qInad->count() > 0) {
+				$atraso = true;
+			}
+
+			$receitaPct = null;
+			if ($receitaPrev > 0.0001) {
+				$receitaPct = (int)round(100 * ($receita12 - $receitaPrev) / $receitaPrev);
+			}
+
+			$mesesPt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+			$receitaMensal = [];
+			for ($i = 11; $i >= 0; $i--) {
+				$ref = $hoje->subMonths($i);
+				$ym = $ref->format('Y-m');
+				$qMes = $finTable->find();
+				$qMes->select(['s' => $qMes->func()->sum('FinanceiroLancamentos.valor')])
+					->where($baseWhere + [
+						'FinanceiroLancamentos.data_lancamento >=' => $ym . '-01',
+						'FinanceiroLancamentos.data_lancamento <=' => $ref->format('Y-m-t'),
+					]);
+				$rMes = $qMes->first();
+				$valMes = $rMes && $rMes->s !== null ? (float)$rMes->s : 0.0;
+				$receitaMensal[] = [
+					'label' => $mesesPt[(int)$ref->format('n') - 1],
+					'valor' => $valMes,
+					'pct' => 0,
+				];
+			}
+			$maxMes = 0.0;
+			foreach ($receitaMensal as $rm) {
+				if ($rm['valor'] > $maxMes) {
+					$maxMes = $rm['valor'];
+				}
+			}
+			if ($maxMes > 0) {
+				foreach ($receitaMensal as $idx => $rm) {
+					$receitaMensal[$idx]['pct'] = (int)round(100 * $rm['valor'] / $maxMes);
+				}
+			}
+			$mediaMensal = $receita12 > 0 ? $receita12 / 12 : 0.0;
+			$pico = ['valor' => 0.0, 'label' => '—'];
+			foreach ($receitaMensal as $rm) {
+				if ($rm['valor'] >= $pico['valor']) {
+					$pico = ['valor' => $rm['valor'], 'label' => $rm['label']];
+				}
+			}
+			$tendencia = __('Estável');
+			if (count($receitaMensal) >= 6) {
+				$ult3 = array_slice($receitaMensal, -3);
+				$ant3 = array_slice($receitaMensal, -6, 3);
+				$sUlt = array_sum(array_column($ult3, 'valor'));
+				$sAnt = array_sum(array_column($ant3, 'valor'));
+				if ($sAnt > 0.0001) {
+					$delta = ($sUlt - $sAnt) / $sAnt;
+					if ($delta > 0.08) {
+						$tendencia = __('↑ Crescente');
+					} elseif ($delta < -0.08) {
+						$tendencia = __('↓ Em queda');
+					}
+				}
+			}
+
+			$ticketMedio = 0.0;
+
+			$hintReceber = $parcelasAbertas > 0
+				? __(
+					'{0} parcela(s) · {1}',
+					$parcelasAbertas,
+					$atraso ? __('em atraso') : __('em dia')
+				)
+				: __('sem títulos em aberto');
+
+			$payload['kpis'] = [
+				'receita12' => $receita12,
+				'receita12_fmt' => $this->_clientesFmtBrlCompact($receita12),
+				'receita12_pct' => $receitaPct,
+				'receita_total' => $receitaTotal,
+				'receita_total_fmt' => $this->_clientesFmtBrlCompact($receitaTotal),
+				'a_receber' => $aReceber,
+				'a_receber_fmt' => $this->_clientesFmtBrl($aReceber),
+				'parcelas_abertas' => $parcelasAbertas,
+				'a_receber_hint' => $hintReceber,
+				'em_atraso' => $atraso,
+				'ticket_medio' => $ticketMedio,
+				'ticket_medio_fmt' => $this->_clientesFmtBrl($ticketMedio),
+				'has_fin' => true,
+				'desde_hint' => $membroLabel !== '' ? __('desde {0}', $membroLabel) : '',
+			];
+			$payload['receita_mensal'] = $receitaMensal;
+			$payload['receita_chart'] = [
+				'media_fmt' => $this->_clientesFmtBrl($mediaMensal),
+				'pico_fmt' => $this->_clientesFmtBrl($pico['valor']),
+				'pico_label' => $pico['label'],
+				'tendencia' => $tendencia,
+			];
+
+			$finRows = $finTable->find()
+				->where($baseWhere)
+				->order(['FinanceiroLancamentos.data_vencimento' => 'DESC', 'FinanceiroLancamentos.id' => 'DESC'])
+				->limit(30)
+				->all();
+			foreach ($finRows as $fr) {
+				$venc = $fr->get('data_vencimento');
+				$vencStr = $venc instanceof \DateTimeInterface ? $venc->format('d/m/Y') : '—';
+				$payload['financeiro'][] = [
+					'id' => (int)$fr->get('id'),
+					'descricao' => trim((string)($fr->get('descricao') ?? $fr->get('historico') ?? __('Lançamento'))),
+					'valor_fmt' => $this->_clientesFmtBrl((float)($fr->get('valor') ?? 0)),
+					'status' => (string)($fr->get('status') ?? ''),
+					'vencimento' => $vencStr,
+				];
+				$stFin = strtolower((string)($fr->get('status') ?? ''));
+				$isPago = $stFin !== '' && $stFin !== 'aberto';
+				$payload['timeline'][] = [
+					'kind' => 'financeiro',
+					'icon' => 'fa-coins',
+					'tone' => $isPago ? 'teal' : ($atraso ? 'orange' : 'blue'),
+					'label' => ($isPago ? __('Pagamento recebido') : __('Título em aberto')) . ' · ' . $this->_clientesFmtBrl((float)($fr->get('valor') ?? 0)),
+					'sub' => $vencStr . ' · ' . (string)($fr->get('descricao') ?? ''),
+					'data' => $venc instanceof \DateTimeInterface ? $venc : ($fr->get('data_lancamento') instanceof \DateTimeInterface ? $fr->get('data_lancamento') : null),
+					'url' => null,
+				];
+			}
+		} catch (\Throwable $e) {
+			$this->log('Clientes::visao360 financeiro: ' . $e->getMessage(), 'warning');
+		}
+
+		try {
+			$this->loadModel('Orcamentos');
+			$payload['counts']['orcamentos'] = (int)$this->Orcamentos->find()
+				->where(['Orcamentos.idempresa' => $idempresa, 'Orcamentos.idcliente' => $cid])
+				->count();
+			foreach ($this->Orcamentos->find()
+				->where(['Orcamentos.idempresa' => $idempresa, 'Orcamentos.idcliente' => $cid])
+				->order(['Orcamentos.id' => 'DESC'])
+				->limit(12)
+				->all() as $orc) {
+				$oid = (int)$orc->get('id');
+				$payload['orcamentos'][] = [
+					'id' => $oid,
+					'label' => __('Orçamento #{0}', $oid),
+					'status' => (string)($orc->get('status') ?? ''),
+					'data' => $orc->get('created'),
+					'url' => ['controller' => 'Orcamentos', 'action' => 'edit', $oid],
+				];
+				$payload['timeline'][] = [
+					'kind' => 'orcamento',
+					'icon' => 'fa-file-invoice',
+					'tone' => 'purple',
+					'label' => __('Orçamento #{0}', $oid),
+					'sub' => (string)($orc->get('status') ?? ''),
+					'data' => $orc->get('created'),
+					'url' => ['controller' => 'Orcamentos', 'action' => 'edit', $oid],
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		try {
+			$this->loadModel('Ordensservico');
+			$wOs = ['Ordensservico.idempresa' => $idempresa, 'Ordensservico.idcliente' => $cid];
+			$payload['counts']['os'] = (int)$this->Ordensservico->find()->where($wOs)->count();
+			foreach ($this->Ordensservico->find()->where($wOs)->order(['Ordensservico.id' => 'DESC'])->limit(12)->all() as $os) {
+				$oid = (int)$os->get('id');
+				$rel = \Cake\Utility\Text::truncate((string)($os->get('relato') ?? $os->get('descricao') ?? ''), 80, ['ellipsis' => '…']);
+				$payload['os_list'][] = [
+					'id' => $oid,
+					'label' => sprintf('OS-%05d', $oid),
+					'sub' => $rel,
+					'situacao' => (string)($os->get('situacao') ?? ''),
+					'data' => $os->get('dataabertura') ?? $os->get('created'),
+					'url' => ['controller' => 'Ordensservico', 'action' => 'view', $oid],
+				];
+				$payload['timeline'][] = [
+					'kind' => 'os',
+					'icon' => 'fa-wrench',
+					'tone' => 'blue',
+					'label' => sprintf('OS-%05d', $oid) . ($rel !== '' ? ' · ' . $rel : ''),
+					'sub' => (string)($os->get('situacao') ?? ''),
+					'data' => $os->get('dataabertura') ?? $os->get('created'),
+					'url' => ['controller' => 'Ordensservico', 'action' => 'view', $oid],
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		try {
+			$payload['counts']['contratos'] = (int)$this->Clicontratos->find()
+				->where(['Clicontratos.idcliente' => $cid])
+				->count();
+			foreach ($this->Clicontratos->find()
+				->where(['Clicontratos.idcliente' => $cid])
+				->order(['Clicontratos.id' => 'DESC'])
+				->limit(12)
+				->all() as $ct) {
+				$payload['contratos'][] = [
+					'id' => (int)$ct->get('id'),
+					'label' => trim((string)($ct->get('descricao') ?? $ct->get('servico') ?? __('Contrato #{0}', (int)$ct->get('id')))),
+					'validade' => $this->_clicontratoValidadeYmd($ct),
+					'url' => ['controller' => 'Clientes', 'action' => 'edit', $cid, '#' => 'contratos'],
+				];
+			}
+			if ($payload['kpis']['ticket_medio'] <= 0 && $payload['counts']['contratos'] > 0 && $payload['kpis']['receita_total'] > 0) {
+				$payload['kpis']['ticket_medio'] = $payload['kpis']['receita_total'] / $payload['counts']['contratos'];
+				$payload['kpis']['ticket_medio_fmt'] = $this->_clientesFmtBrl($payload['kpis']['ticket_medio']);
+			}
+		} catch (\Throwable $e) {
+		}
+
+		try {
+			$tickets = $this->loadModel('Tickets');
+			$closed = [];
+			if (defined('C_TicketSituacaoFechado')) {
+				$closed[] = (int)C_TicketSituacaoFechado;
+			}
+			if (defined('C_TicketSituacaoResolvido')) {
+				$closed[] = (int)C_TicketSituacaoResolvido;
+			}
+			$wT = ['Tickets.idempresa' => $idempresa, 'Tickets.idcliente' => $cid];
+			$wAb = $wT;
+			if ($closed !== []) {
+				$wAb['Tickets.situacao NOT IN'] = $closed;
+			}
+			$payload['counts']['tickets_abertos'] = (int)$tickets->find()->where($wAb)->count();
+			foreach ($tickets->find()->where($wT)->order(['Tickets.created' => 'DESC'])->limit(8)->all() as $t) {
+				$tid = (int)$t->get('id');
+				$payload['timeline'][] = [
+					'kind' => 'ticket',
+					'icon' => 'fa-headset',
+					'tone' => 'indigo',
+					'label' => '#' . $tid . ' · ' . \Cake\Utility\Text::truncate((string)$t->get('solicitacao'), 60, ['ellipsis' => '…']),
+					'sub' => (string)$t->get('situacao'),
+					'data' => $t->get('created'),
+					'url' => ['controller' => 'Tickets', 'action' => 'view', $tid],
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		try {
+			$faturas = $this->loadModel('Faturas');
+			$wF = ['Faturas.idempresa' => $idempresa, 'Faturas.idcliente' => $cid];
+			foreach ($faturas->find()->where($wF)->order(['Faturas.vencimento' => 'DESC'])->limit(8)->all() as $f) {
+				$fid = (int)$f->get('id');
+				$v = (float)($f->get('valor') ?? 0);
+				$venc = $f->get('vencimento');
+				$payload['timeline'][] = [
+					'kind' => 'fatura',
+					'icon' => 'fa-file-invoice-dollar',
+					'tone' => 'teal',
+					'label' => __('Fatura {0}', (string)($f->get('nro') ?? '#' . $fid)) . ' · ' . $this->_clientesFmtBrl($v),
+					'sub' => $venc instanceof \DateTimeInterface ? $venc->format('d/m/Y') : '',
+					'data' => $venc,
+					'url' => ['controller' => 'Faturas', 'action' => 'view', $fid],
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		if ($payload['domain_events_ready']) {
 			try {
-				$events = TableRegistry::get('ClientDomainEvents')
+				$payload['domain_events'] = TableRegistry::get('ClientDomainEvents')
 					->find()
-					->where(['idcliente' => (int)$id])
+					->where(['idcliente' => $cid])
 					->order(['created' => 'DESC'])
 					->limit(200)
 					->toArray();
+				foreach ($payload['domain_events'] as $ev) {
+					$payload['timeline'][] = [
+						'kind' => 'evento',
+						'icon' => 'fa-history',
+						'tone' => 'gray',
+						'label' => (string)($ev->event_type ?? __('Evento')),
+						'sub' => \Cake\Utility\Text::truncate((string)($ev->description ?? ''), 120, ['ellipsis' => '…']),
+						'data' => $ev->created,
+						'url' => null,
+					];
+				}
 			} catch (\Throwable $e) {
-				$events = [];
+				$payload['domain_events'] = [];
 			}
 		}
-		$this->set(compact('cliente', 'events'));
-		$this->set('domainEventsReady', InfrastructureGuard::isReady());
+
+		usort($payload['timeline'], static function ($a, $b) {
+			$ta = $a['data'] instanceof \DateTimeInterface ? $a['data']->getTimestamp() : 0;
+			$tb = $b['data'] instanceof \DateTimeInterface ? $b['data']->getTimestamp() : 0;
+
+			return $tb <=> $ta;
+		});
+		$payload['timeline'] = array_slice($payload['timeline'], 0, 40);
+		$payload['timeline_preview'] = array_slice($payload['timeline'], 0, 8);
+
+		$interacoes30 = 0;
+		$cut = (new \DateTimeImmutable('today'))->modify('-30 days')->getTimestamp();
+		foreach ($payload['timeline'] as $tl) {
+			if ($tl['data'] instanceof \DateTimeInterface && $tl['data']->getTimestamp() >= $cut) {
+				$interacoes30++;
+			}
+		}
+		$engLabel = $interacoes30 >= 5 ? __('Alto') : ($interacoes30 >= 2 ? __('Médio') : __('Baixo'));
+		$engPct = min(100, $interacoes30 * 15);
+		$payload['saude'] = [
+			[
+				'label' => __('Engajamento (30 dias)'),
+				'valor' => $engLabel,
+				'pct' => $engPct,
+				'hint' => __('{0} interações', $interacoes30),
+			],
+		];
+		if ($payload['kpis']['has_fin'] && $payload['kpis']['parcelas_abertas'] > 0) {
+			$pontPct = !empty($payload['kpis']['em_atraso']) ? 40 : 95;
+			$payload['saude'][] = [
+				'label' => __('Situação financeira'),
+				'valor' => $payload['kpis']['a_receber_hint'],
+				'pct' => $pontPct,
+				'hint' => $payload['kpis']['a_receber_fmt'],
+			];
+		}
+		if (!empty($payload['receita_chart']['tendencia'])) {
+			$payload['saude'][] = [
+				'label' => __('Tendência de receita'),
+				'valor' => (string)$payload['receita_chart']['tendencia'],
+				'pct' => strpos((string)$payload['receita_chart']['tendencia'], 'Crescente') !== false ? 85 : 50,
+				'hint' => (string)$payload['receita_chart']['media_fmt'] . ' ' . __('média/mês'),
+			];
+		}
+
+		$crmOne = $this->_clientesIndexCrmMetrics([$cliente], (int)$cliente->inativo === 0 ? 1 : 0);
+		$payload['is_vip'] = !empty($crmOne['vip_ids'][$cid]);
+
+		return $payload;
 	}
 
 	public function cidadesestado($idcidade){

@@ -166,8 +166,9 @@ class RbacCheckerTest extends TestCase {
 	}
 
 	public function testMatchActionClientesExtendedRoutes() {
-		$view = ['controller' => 'Clientes', 'action' => 'index,view,search,eventos,contrato,clientebyid,cliente_by_id,solicitantes,solicitante,cliemail,solemail'];
+		$view = ['controller' => 'Clientes', 'action' => 'index,view,search,eventos,visao360,contrato,clientebyid,cliente_by_id,solicitantes,solicitante,cliemail,solemail'];
 		$this->assertTrue(RbacChecker::matchAction('Clientes', 'eventos', $view));
+		$this->assertTrue(RbacChecker::matchAction('Clientes', 'visao360', $view));
 		$this->assertTrue(RbacChecker::matchAction('Clientes', 'cliente_by_id', $view));
 		$this->assertTrue(RbacChecker::matchAction('Clientes', 'sincronizacliente', [
 			'controller' => 'Clientes',
