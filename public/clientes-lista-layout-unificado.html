@@ -25,6 +25,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/clientes-layout-unificado.css">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
@@ -758,6 +759,7 @@ body { background: var(--mock-erp-shell); font-family: var(--pgm-font-sans); }
             <div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Cadastros</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
             <div class="nav-section-items">
               <a href="#" class="pgm-nav-link nav-item waves-effect waves-dark active" data-switch="clientes" data-label="Clientes"><span class="pgm-nav-lucide" data-lucide="users" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Clientes</span></a>
+              <a href="#" class="pgm-nav-link nav-item waves-effect waves-dark" data-switch="cliente-360" data-label="Visão 360°"><span class="pgm-nav-lucide" data-lucide="pie-chart" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Visão 360° (ref.)</span></a>
               <a href="#" class="pgm-nav-link nav-item waves-effect waves-dark" data-switch="cadastro-cliente" data-label="Cadastrar clientes"><span class="pgm-nav-lucide" data-lucide="user-plus" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Cadastrar clientes</span></a>
               <a href="#produtos" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Produtos"><span class="pgm-nav-lucide" data-lucide="package" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Produtos</span></a>
             </div>
@@ -1218,6 +1220,131 @@ body { background: var(--mock-erp-shell); font-family: var(--pgm-font-sans); }
     </div>
     </div>
 
+    <!-- pg-cliente-360 — referência visual (mesmas classes da produção /clientes/visao360) -->
+    <div class="pv-module" id="pv-mod-cliente-360">
+    <div class="cli-layout-unificado cli-360-page">
+      <header class="cli-360-toolbar">
+        <div class="cli-360-toolbar-back">
+          <a href="#" class="cli-360-back-link" data-switch="clientes"><i class="fas fa-arrow-left"></i> Clientes</a>
+          <span class="cli-360-back-sep">›</span>
+          <span class="cli-code-badge cli-360-code">CLI-0042</span>
+          <span class="cli-360-back-name">Mobles Ambientes Pensados Ltda</span>
+        </div>
+        <div class="cli-360-toolbar-actions">
+          <a href="#" class="btn-cli-secondary btn-cli-sm"><i class="fas fa-file-pdf"></i> Ficha PDF</a>
+          <a href="#" class="btn-cli-secondary btn-cli-sm"><i class="fas fa-paperclip"></i> Anexar</a>
+          <a href="#" class="btn-cli-secondary btn-cli-sm"><i class="fas fa-pen"></i> Editar</a>
+          <a href="#" class="btn-cli-primary btn-cli-sm"><i class="fas fa-plus"></i> Novo orçamento</a>
+        </div>
+      </header>
+      <section class="cli-360-hero">
+        <div class="cli-360-hero-avatar" aria-hidden="true">MA</div>
+        <div class="cli-360-hero-body">
+          <h1 class="cli-360-hero-title">Mobles Ambientes Pensados Ltda</h1>
+          <div class="cli-360-hero-badges">
+            <span class="cli-360-badge cli-360-badge--vip"><i class="fas fa-star"></i> Cliente VIP</span>
+            <span class="cli-360-badge cli-360-badge--seg">Móveis</span>
+            <span class="cli-360-badge cli-360-badge--grade">A - Estratégico</span>
+          </div>
+          <p class="cli-360-hero-meta"><span>CNPJ: 12.345.678/0001-90</span><span>IE: 123456789</span><span>Móveis &amp; Decoração</span></p>
+          <p class="cli-360-hero-addr"><i class="fas fa-map-marker-alt"></i> Av. Exemplo, 100 — São Paulo/SP</p>
+          <div class="cli-360-hero-contacts">
+            <span><i class="fas fa-phone"></i> (11) 3000-0000</span>
+            <span><i class="fas fa-envelope"></i> contato@mobles.com.br</span>
+          </div>
+        </div>
+        <div class="cli-360-hero-side">
+          <div class="cli-360-hero-since">Março 2022</div>
+          <div class="cli-360-hero-tenure">4 anos · 47 contratos</div>
+        </div>
+      </section>
+      <div class="cli-kpi-strip cli-360-kpi-strip cli-360-kpi-strip--primary">
+        <div class="cli-kpi cli-kpi--teal">
+          <div class="cli-kpi-label">Receita 12 meses</div>
+          <div class="cli-kpi-val">R$ 524.180</div>
+          <div class="cli-kpi-sub cli-360-kpi-trend cli-360-kpi-trend--up">↑ 32% vs período anterior</div>
+        </div>
+        <div class="cli-kpi cli-kpi--blue">
+          <div class="cli-kpi-label">Receita total</div>
+          <div class="cli-kpi-val">R$ 1,89M</div>
+          <div class="cli-kpi-sub">desde mar/2022</div>
+        </div>
+        <div class="cli-kpi cli-kpi--orange">
+          <div class="cli-kpi-label">A receber</div>
+          <div class="cli-kpi-val">R$ 16.791,67</div>
+          <div class="cli-kpi-sub">5 parcelas · em dia</div>
+        </div>
+        <div class="cli-kpi cli-kpi--purple">
+          <div class="cli-kpi-label">Ticket médio</div>
+          <div class="cli-kpi-val">R$ 11.156</div>
+          <div class="cli-kpi-sub">por contrato</div>
+        </div>
+      </div>
+      <div class="cli-kpi-strip cli-360-kpi-strip cli-360-kpi-strip--secondary">
+        <div class="cli-kpi cli-kpi--purple">
+          <div class="cli-kpi-label">Limite de crédito</div>
+          <div class="cli-kpi-val">R$ 80.000</div>
+          <div class="cli-kpi-sub">R$ 63.208 disponíveis</div>
+        </div>
+        <div class="cli-kpi cli-kpi--teal cli-360-kpi--score">
+          <div class="cli-kpi-label">Score interno</div>
+          <div class="cli-kpi-val">9,2 / 10</div>
+          <div class="cli-kpi-sub">Pagador exemplar</div>
+        </div>
+      </div>
+      <nav class="cli-360-tabs" role="tablist">
+        <a href="#" class="cli-360-tab active" role="tab"><i class="fas fa-th-large"></i> Visão geral</a>
+        <a href="#" class="cli-360-tab" role="tab"><i class="fas fa-file-invoice"></i> Orçamentos <span class="cli-360-tab-n">(12)</span></a>
+        <a href="#" class="cli-360-tab" role="tab"><i class="fas fa-wrench"></i> OS <span class="cli-360-tab-n">(28)</span></a>
+        <a href="#" class="cli-360-tab" role="tab"><i class="fas fa-coins"></i> Financeiro</a>
+      </nav>
+      <div class="cli-360-tab-panel">
+        <div class="cli-360-grid">
+          <div class="cli-360-col-main">
+            <div class="cli-360-card">
+              <div class="cli-360-card-head">
+                <span class="cli-360-card-title"><i class="fas fa-bolt"></i> Atividade recente</span>
+                <a href="#" class="cli-360-link">Ver tudo</a>
+              </div>
+              <p class="cli-360-empty" style="margin:0;">Linha do tempo (mock)</p>
+            </div>
+          </div>
+          <div class="cli-360-col-side">
+            <div class="cli-360-card">
+              <div class="cli-360-card-head">
+                <span class="cli-360-card-title"><i class="fas fa-users"></i> Contatos</span>
+                <a href="#" class="cli-360-link">Adicionar</a>
+              </div>
+            </div>
+            <div class="cli-360-card cli-360-card--saude">
+              <div class="cli-360-card-head">
+                <span class="cli-360-card-title"><i class="fas fa-heartbeat"></i> Saúde do relacionamento</span>
+              </div>
+              <div class="cli-360-saude-row">
+                <div class="cli-360-saude-top">
+                  <span class="cli-360-saude-label">Engajamento</span>
+                  <strong class="cli-360-saude-val">Alto</strong>
+                </div>
+                <div class="cli-360-saude-track"><div class="cli-360-saude-fill" style="width:82%"></div></div>
+              </div>
+            </div>
+            <div class="cli-360-card">
+              <div class="cli-360-card-head">
+                <span class="cli-360-card-title"><i class="fas fa-bolt"></i> Atalhos rápidos</span>
+              </div>
+              <div class="cli-360-shortcuts cli-360-shortcuts--mock">
+                <a href="#" class="cli-360-shortcut"><i class="fas fa-file-invoice"></i> Novo orçamento</a>
+                <a href="#" class="cli-360-shortcut"><i class="fas fa-wrench"></i> Abrir OS</a>
+                <a href="#" class="cli-360-shortcut"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                <a href="#" class="cli-360-shortcut"><i class="fas fa-envelope"></i> Enviar e-mail</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
   </div><!-- /pv-main -->
   </div><!-- /pv-content -->
 </div><!-- /pv-shell -->
@@ -1231,10 +1358,12 @@ body { background: var(--mock-erp-shell); font-family: var(--pgm-font-sans); }
 
   var titles = {
     clientes: 'Lista de Clientes',
+    'cliente-360': 'Clientes · Visão 360°',
     'cadastro-cliente': 'Cadastrar Cliente'
   };
   var modIds = {
     clientes: 'pv-mod-clientes',
+    'cliente-360': 'pv-mod-cliente-360',
     'cadastro-cliente': 'pv-mod-cadastro-cliente'
   };
   window.switchView = function (view, navEl) {
