@@ -908,7 +908,7 @@ class ClientesController extends AppController {
 				'kind' => 'phone',
 				'label' => $fone,
 				'label_upper' => mb_strtoupper($fone, 'UTF-8'),
-				'icon' => 'fa-phone',
+				'icon' => 'fas fa-phone',
 			];
 		}
 		$fone2 = $this->_clientesFmtTelefoneBr($cliente->fone2 ?? '');
@@ -936,7 +936,7 @@ class ClientesController extends AppController {
 				'kind' => 'email',
 				'label' => $em,
 				'label_upper' => mb_strtoupper($em, 'UTF-8'),
-				'icon' => 'fa-envelope',
+				'icon' => 'fas fa-envelope',
 			];
 		}
 

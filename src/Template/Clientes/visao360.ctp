@@ -88,6 +88,7 @@ $tabs = [
 	<section class="cli-360-hero">
 		<div class="cli-360-hero-avatar" aria-hidden="true"><?= h(cli360Initials($heroInitialsName)) ?></div>
 		<div class="cli-360-hero-body">
+			<div class="cli-360-hero-title-row">
 			<h1 class="cli-360-hero-title"><?= h((string)$c['nome']) ?></h1>
 			<div class="cli-360-hero-badges">
 				<?php if (!empty($c['is_vip'])) : ?>
@@ -102,6 +103,7 @@ $tabs = [
 				<?php if (!empty($c['inativo'])) : ?>
 				<span class="cli-360-badge cli-360-badge--blocked"><?= h(__('Bloqueado')) ?></span>
 				<?php endif; ?>
+			</div>
 			</div>
 			<p class="cli-360-hero-meta">
 				<?php if ($docFmt !== '') : ?><span><?= $isPj ? 'CNPJ' : 'CPF' ?> <?= h($docFmt) ?></span><?php endif; ?>

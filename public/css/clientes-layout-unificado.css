@@ -2242,20 +2242,22 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   border-radius: 999px;
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero {
-  background: #004d40;
+  background: linear-gradient(102deg, #0a342b 0%, #0f4236 36%, #155647 68%, #1a634f 100%);
   border-radius: var(--orc-radius-lg);
   box-shadow: var(--orc-shadow);
-  padding: 18px 22px;
-  gap: 18px;
+  padding: 20px 24px;
+  gap: 20px;
   align-items: flex-start;
   margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero-avatar {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: #fff;
-  color: #004d40;
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   font-size: 22px;
   font-weight: 700;
   display: flex;
@@ -2264,6 +2266,19 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   flex-shrink: 0;
   letter-spacing: -0.02em;
   line-height: 1;
+}
+.cli-layout-unificado.cli-360-page .cli-360-hero-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-bottom: 6px;
+}
+.cli-layout-unificado.cli-360-page .cli-360-hero-title-row .cli-360-hero-title {
+  margin-bottom: 0;
+}
+.cli-layout-unificado.cli-360-page .cli-360-hero-title-row .cli-360-hero-badges {
+  margin-bottom: 0;
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero .cli-av--lg {
   display: none;
@@ -2287,8 +2302,8 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   color: #fff;
 }
 .cli-layout-unificado.cli-360-page .cli-360-badge--vip {
-  background: rgba(0, 80, 60, 0.55);
-  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.22);
+  border-color: rgba(255, 255, 255, 0.28);
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero-meta,
 .cli-layout-unificado.cli-360-page .cli-360-hero-addr,
@@ -2305,17 +2320,20 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   align-items: center;
   gap: 5px;
 }
-.cli-layout-unificado.cli-360-page .cli-360-hero-contact--phone .fa-phone {
+.cli-layout-unificado.cli-360-page .cli-360-hero-contact--phone i {
   color: #f9a8d4;
 }
-.cli-layout-unificado.cli-360-page .cli-360-hero-contact--whatsapp .fa-whatsapp {
-  color: #d1d5db;
+.cli-layout-unificado.cli-360-page .cli-360-hero-contact--whatsapp i {
+  color: #7dd3fc;
 }
-.cli-layout-unificado.cli-360-page .cli-360-hero-contact--email .fa-envelope {
-  color: #93c5fd;
+.cli-layout-unificado.cli-360-page .cli-360-hero-contact--email i {
+  color: rgba(255, 255, 255, 0.92);
+}
+.cli-layout-unificado.cli-360-page .cli-360-hero-contact--web i {
+  color: #67e8f9;
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero-addr-icon {
-  color: #f87171;
+  color: #fb7185;
   margin-right: 4px;
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero-side {
@@ -2330,13 +2348,16 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero-side-contacts {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px 14px;
   font-size: 10px;
   letter-spacing: 0.02em;
   opacity: 0.95;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  max-width: 320px;
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero-side-contacts .cli-360-hero-contact {
   white-space: nowrap;
