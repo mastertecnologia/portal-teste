@@ -1331,6 +1331,15 @@ class ClientesController extends AppController {
 			'os_list' => [],
 			'financeiro' => [],
 			'contratos' => [],
+			'arquivos_list' => [],
+			'arquivos_filtros' => [
+				'todos' => 0,
+				'tickets' => 0,
+				'financeiro' => 0,
+				'fotos' => 0,
+				'pdf' => 0,
+				'doc' => 0,
+			],
 			'domain_events' => [],
 			'domain_events_ready' => InfrastructureGuard::isReady(),
 		];
@@ -1721,7 +1730,10 @@ class ClientesController extends AppController {
 		$crmOne = $this->_clientesIndexCrmMetrics([$cliente], (int)$cliente->inativo === 0 ? 1 : 0);
 		$payload['is_vip'] = !empty($crmOne['vip_ids'][$cid]);
 		$payload['contatos'] = $this->_clientesVisao360Contatos($cliente);
-		$payload['counts']['arquivos'] = $this->_clientesContarArquivosCliente($cid, $idempresa);
+		$arquivosList = $this->_clientesListarArquivosCliente($cid, $idempresa);
+		$payload['arquivos_list'] = $arquivosList;
+		$payload['arquivos_filtros'] = $this->_clientesArquivosFiltros($arquivosList);
+		$payload['counts']['arquivos'] = count($arquivosList);
 		$limite = $this->_clientesCrmFinanceReady() ? (float)($cliente->limite_credito ?? 0) : 0.0;
 		$score = null;
 		if ($this->_clientesCrmFinanceReady() && $cliente->get('score_interno') !== null && $cliente->get('score_interno') !== '') {
@@ -1859,33 +1871,142 @@ class ClientesController extends AppController {
 	 * Total de anexos vinculados ao cliente (tickets + financeiro).
 	 */
 	protected function _clientesContarArquivosCliente(int $idcliente, int $idempresa): int {
-		$total = 0;
+		return count($this->_clientesListarArquivosCliente($idcliente, $idempresa));
+	}
+
+	/**
+	 * Lista anexos reais (tickets + financeiro) para aba Arquivos da Visão 360°.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function _clientesListarArquivosCliente(int $idcliente, int $idempresa): array {
+		$items = [];
 		try {
 			$this->loadModel('Ticketsanexos');
-			$total += (int)$this->Ticketsanexos->find()
+			$rows = $this->Ticketsanexos->find()
+				->contain(['Tickets'])
 				->innerJoinWith('Tickets', function ($q) use ($idcliente, $idempresa) {
 					return $q->where([
 						'Tickets.idcliente' => $idcliente,
 						'Tickets.idempresa' => $idempresa,
 					]);
 				})
-				->count();
+				->order(['Ticketsanexos.id' => 'DESC'])
+				->limit(150)
+				->all();
+			foreach ($rows as $reg) {
+				$ticket = $reg->ticket ?? null;
+				$nome = trim((string)($reg->arquivo ?? ''));
+				if ($nome === '') {
+					continue;
+				}
+				$meta = $this->_clientesArquivoMeta($nome);
+				$tid = $ticket ? (int)$ticket->id : (int)($reg->idticket ?? 0);
+				$items[] = [
+					'label' => $nome,
+					'sub' => $tid > 0 ? __('Ticket #{0}', $tid) : __('Ticket'),
+					'origem' => 'ticket',
+					'filtro' => $meta['filtro'],
+					'icon' => $meta['icon'],
+					'icon_tone' => $meta['tone'],
+					'data_fmt' => '',
+					'url' => $tid > 0 ? Router::url(['controller' => 'Tickets', 'action' => 'view', $tid]) : null,
+					'sort_ts' => (int)$reg->id,
+				];
+			}
 		} catch (\Throwable $e) {
 		}
 		try {
-			$anexos = TableRegistry::getTableLocator()->get('FinanceiroLancamentoAnexos');
-			$total += (int)$anexos->find()
+			$anexosTbl = TableRegistry::getTableLocator()->get('FinanceiroLancamentoAnexos');
+			$rowsFin = $anexosTbl->find()
+				->contain(['FinanceiroLancamentos'])
 				->innerJoinWith('FinanceiroLancamentos', function ($q) use ($idcliente, $idempresa) {
 					return $q->where([
 						'FinanceiroLancamentos.idcliente' => $idcliente,
 						'FinanceiroLancamentos.idempresa' => $idempresa,
 					]);
 				})
-				->count();
+				->order(['FinanceiroLancamentoAnexos.id' => 'DESC'])
+				->limit(150)
+				->all();
+			foreach ($rowsFin as $reg) {
+				$nome = trim((string)($reg->nome_original ?? $reg->arquivo ?? ''));
+				if ($nome === '') {
+					$nome = trim((string)($reg->arquivo ?? ''));
+				}
+				if ($nome === '') {
+					continue;
+				}
+				$meta = $this->_clientesArquivoMeta($nome);
+				$lid = (int)($reg->idlancamento ?? 0);
+				$created = $reg->created ?? null;
+				$dataFmt = $created instanceof \DateTimeInterface
+					? $created->i18nFormat('dd/MM/yyyy')
+					: '';
+				$items[] = [
+					'label' => $nome,
+					'sub' => __('Financeiro · lançamento #{0}', $lid > 0 ? $lid : '—'),
+					'origem' => 'financeiro',
+					'filtro' => $meta['filtro'],
+					'icon' => $meta['icon'],
+					'icon_tone' => $meta['tone'],
+					'data_fmt' => $dataFmt,
+					'url' => $lid > 0 ? Router::url(['controller' => 'Financeiro', 'action' => 'fatura', $lid]) : null,
+					'sort_ts' => $created instanceof \DateTimeInterface ? $created->getTimestamp() : (int)$reg->id,
+				];
+			}
 		} catch (\Throwable $e) {
 		}
 
-		return $total;
+		usort($items, static function ($a, $b) {
+			return ($b['sort_ts'] ?? 0) <=> ($a['sort_ts'] ?? 0);
+		});
+
+		return $items;
+	}
+
+	/**
+	 * @param array<int,array<string,mixed>> $items
+	 * @return array<string,int>
+	 */
+	protected function _clientesArquivosFiltros(array $items): array {
+		$out = [
+			'todos' => count($items),
+			'tickets' => 0,
+			'financeiro' => 0,
+			'fotos' => 0,
+			'pdf' => 0,
+			'doc' => 0,
+		];
+		foreach ($items as $it) {
+			$origem = (string)($it['origem'] ?? '');
+			if ($origem === 'ticket') {
+				$out['tickets']++;
+			} elseif ($origem === 'financeiro') {
+				$out['financeiro']++;
+			}
+			$f = (string)($it['filtro'] ?? '');
+			if (isset($out[$f])) {
+				$out[$f]++;
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @return array{icon:string,tone:string,filtro:string}
+	 */
+	protected function _clientesArquivoMeta(string $nomeArquivo): array {
+		$ext = strtolower(pathinfo($nomeArquivo, PATHINFO_EXTENSION));
+		if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'], true)) {
+			return ['icon' => 'fa-image', 'tone' => 'img', 'filtro' => 'fotos'];
+		}
+		if ($ext === 'pdf') {
+			return ['icon' => 'fa-file-pdf', 'tone' => 'pdf', 'filtro' => 'pdf'];
+		}
+
+		return ['icon' => 'fa-file-alt', 'tone' => 'doc', 'filtro' => 'doc'];
 	}
 
 	/**

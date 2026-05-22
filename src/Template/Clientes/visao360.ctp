@@ -7,7 +7,6 @@
  * @var array<string,mixed> $cli360
  * @var string $cli360Tab
  */
-$this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
 $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
 
 $this->Breadcrumbs->add(__('Clientes'), ['controller' => 'Clientes', 'action' => 'index'], ['class' => 'breadcrumb-item']);
@@ -56,14 +55,7 @@ $tabs = [
 ];
 ?>
 <div class="col-md-12 p-0">
-<div class="cli-root cli-360-page">
-
-	<header class="cli-360-page-head">
-		<div class="cli-360-page-head-text">
-			<p class="cli-eyebrow"><?= h(__('Clientes · Visão 360°')) ?></p>
-			<p class="cli-360-page-sub"><?= h(__('Indicadores, histórico e atalhos operacionais com dados reais do ERP.')) ?></p>
-		</div>
-	</header>
+<div class="cli-layout-unificado cli-360-page">
 
 	<header class="cli-360-toolbar">
 		<div class="cli-360-toolbar-back">
@@ -166,7 +158,7 @@ $tabs = [
 
 	<?php $finCrm = (array)($c['finance_crm'] ?? []); ?>
 	<div class="cli-360-kpis cli-360-kpis--secondary">
-		<div class="cli-360-kpi cli-360-kpi--teal<?= empty($finCrm['has_limite']) ? ' cli-360-kpi--muted' : '' ?>">
+		<div class="cli-360-kpi cli-360-kpi--purple<?= empty($finCrm['has_limite']) ? ' cli-360-kpi--muted' : '' ?>">
 			<div class="cli-360-kpi-lbl"><?= h(__('Limite de crédito')) ?></div>
 			<div class="cli-360-kpi-val"><?= !empty($finCrm['has_limite']) ? h((string)$finCrm['limite_fmt']) : h(__('Não cadastrado')) ?></div>
 			<?php if (!empty($finCrm['has_limite'])) : ?>
@@ -176,7 +168,7 @@ $tabs = [
 			<div class="cli-360-kpi-sub"><?= $this->Html->link(__('Definir na ficha'), ['action' => 'edit', $cliente->id, '?' => ['wizard' => 3], '#' => 'cliente'], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?></div>
 			<?php endif; ?>
 		</div>
-		<div class="cli-360-kpi cli-360-kpi--rose<?= empty($finCrm['has_score']) ? ' cli-360-kpi--muted' : '' ?>">
+		<div class="cli-360-kpi cli-360-kpi--score<?= empty($finCrm['has_score']) ? ' cli-360-kpi--muted' : '' ?>">
 			<div class="cli-360-kpi-lbl"><?= h(__('Score interno')) ?></div>
 			<div class="cli-360-kpi-val"><?= !empty($finCrm['has_score']) ? h((string)$finCrm['score_fmt']) . ' / 10' : h(__('—')) ?></div>
 			<div class="cli-360-kpi-sub"><?= !empty($finCrm['has_score']) ? h(__('Cadastro do cliente')) : h(__('Não informado')) ?></div>
@@ -195,6 +187,7 @@ $tabs = [
 		<?php endforeach; ?>
 	</nav>
 
+	<div class="cli-360-tab-panel">
 	<?php if ($tab === 'geral') : ?>
 	<div class="cli-360-grid">
 		<div class="cli-360-col-main">
@@ -292,7 +285,7 @@ $tabs = [
 	<?php endif; ?>
 
 	<?php if ($tab === 'historico') : ?>
-	<div class="cli-360-card cli-360-card--full">
+	<div class="cli-360-card cli-360-card--full cli-360-card--in-panel">
 		<div class="cli-360-card-head">
 			<span class="cli-360-card-title"><i class="fas fa-history" aria-hidden="true"></i> <?= h(__('Histórico completo')) ?></span>
 		</div>
@@ -330,7 +323,7 @@ $tabs = [
 		$lk = $listTabs[$tab]['key'];
 		$rows = (array)($c[$lk] ?? []);
 	?>
-	<div class="cli-360-card cli-360-card--full">
+	<div class="cli-360-card cli-360-card--full cli-360-card--in-panel">
 		<?php if ($tab === 'contratos') : ?>
 		<p class="cli-360-ficha-link mb-3">
 			<?= $this->Html->link(
@@ -363,29 +356,102 @@ $tabs = [
 	<?php endif; ?>
 
 	<?php if ($tab === 'arquivos') : ?>
-	<?php $nArq = (int)($counts['arquivos'] ?? 0); ?>
-	<div class="cli-360-card cli-360-card--full">
-		<div class="cli-360-card-head">
-			<span class="cli-360-card-title"><i class="fas fa-paperclip" aria-hidden="true"></i> <?= h(__('Arquivos')) ?></span>
-			<strong><?= $nArq ?> <?= h(__('anexo(s)')) ?></strong>
-		</div>
-		<p class="mb-2"><?= h(__('Contagem real: anexos de tickets e comprovantes em lançamentos financeiros deste cliente.')) ?></p>
-		<?php if ($nArq === 0) : ?>
-		<p class="cli-360-empty"><?= h(__('Nenhum arquivo vinculado encontrado.')) ?></p>
-		<?php else : ?>
-		<p class="cli-360-empty"><?= h(__('Abra os módulos relacionados para ver cada arquivo:')) ?></p>
-		<ul class="cli-360-list mb-3">
-			<li class="cli-360-list-item">
-				<?= $this->Html->link(__('Tickets do cliente'), ['controller' => 'Tickets', 'action' => 'index'], ['class' => 'cli-360-list-link', 'data-turbo' => 'false']) ?>
-			</li>
-			<li class="cli-360-list-item">
-				<?= $this->Html->link(__('Financeiro'), ['controller' => 'Financeiro', 'action' => 'index'], ['class' => 'cli-360-list-link', 'data-turbo' => 'false']) ?>
-			</li>
-		</ul>
-		<?php endif; ?>
-		<?= $this->Html->link(__('Editar cadastro do cliente'), ['action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary', 'data-turbo' => 'false']) ?>
+	<?php
+		$nArq = (int)($counts['arquivos'] ?? 0);
+		$arqList = (array)($c['arquivos_list'] ?? []);
+		$arqFiltros = (array)($c['arquivos_filtros'] ?? []);
+		$pillDefs = [
+			'todos' => ['label' => __('Todos'), 'icon' => 'fa-layer-group'],
+			'tickets' => ['label' => __('Tickets'), 'icon' => 'fa-headset'],
+			'financeiro' => ['label' => __('Financeiro'), 'icon' => 'fa-coins'],
+			'fotos' => ['label' => __('Fotos'), 'icon' => 'fa-image'],
+			'pdf' => ['label' => __('PDF'), 'icon' => 'fa-file-pdf'],
+			'doc' => ['label' => __('Documentos'), 'icon' => 'fa-file-alt'],
+		];
+	?>
+	<div class="cli-360-arq-head">
+		<h2 class="cli-360-arq-title"><i class="fas fa-paperclip" aria-hidden="true"></i> <?= h(__('Arquivos e documentos')) ?> · <?= $nArq ?> <?= h(__('itens')) ?></h2>
+		<?= $this->Html->link(
+			'<i class="fas fa-paperclip" aria-hidden="true"></i> ' . __('Anexar via ticket'),
+			['controller' => 'Tickets', 'action' => 'index'],
+			['class' => 'btn-cli-primary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']
+		) ?>
 	</div>
+	<p class="cli-360-arq-note"><?= h(__('Anexos reais de tickets e comprovantes em lançamentos financeiros deste cliente.')) ?></p>
+	<?php if ($nArq > 0) : ?>
+	<div class="cli-360-arq-filters" id="cli-360-arq-filters" role="group" aria-label="<?= h(__('Filtrar arquivos')) ?>">
+		<?php foreach ($pillDefs as $fKey => $fMeta) :
+			$fc = (int)($arqFiltros[$fKey] ?? 0);
+			if ($fKey !== 'todos' && $fc === 0) {
+				continue;
+			}
+		?>
+		<button type="button" class="cli-360-arq-pill<?= $fKey === 'todos' ? ' active' : '' ?>" data-arq-filter="<?= h($fKey) ?>">
+			<i class="fas <?= h($fMeta['icon']) ?>" aria-hidden="true"></i>
+			<?= h($fMeta['label']) ?> <span class="cnt">(<?= $fKey === 'todos' ? $nArq : $fc ?>)</span>
+		</button>
+		<?php endforeach; ?>
+	</div>
+	<div class="cli-360-arq-grid" id="cli-360-arq-grid">
+		<?php foreach ($arqList as $arq) :
+			$dataFilter = (string)($arq['filtro'] ?? 'doc');
+			$origem = (string)($arq['origem'] ?? '');
+			$filterKeys = 'todos ' . $dataFilter . ($origem !== '' ? ' ' . $origem : '');
+			$iconTone = (string)($arq['icon_tone'] ?? 'doc');
+			$iconClass = (string)($arq['icon'] ?? 'fa-file');
+			$url = $arq['url'] ?? null;
+		?>
+		<?php if ($url) : ?>
+		<a href="<?= h($url) ?>" class="cli-360-arq-file" data-arq-cats="<?= h($filterKeys) ?>" data-turbo="false">
+		<?php else : ?>
+		<div class="cli-360-arq-file" data-arq-cats="<?= h($filterKeys) ?>">
+		<?php endif; ?>
+			<div class="cli-360-arq-file-icon cli-360-arq-file-icon--<?= h($iconTone) ?>"><i class="fas <?= h($iconClass) ?>" aria-hidden="true"></i></div>
+			<div class="cli-360-arq-file-name"><?= h((string)($arq['label'] ?? '')) ?></div>
+			<div class="cli-360-arq-file-sub"><?= h((string)($arq['sub'] ?? '')) ?></div>
+			<?php if (!empty($arq['data_fmt'])) : ?>
+			<div class="cli-360-arq-file-date"><?= h((string)$arq['data_fmt']) ?></div>
+			<?php endif; ?>
+		<?php if ($url) : ?>
+		</a>
+		<?php else : ?>
+		</div>
+		<?php endif; ?>
+		<?php endforeach; ?>
+	</div>
+	<?php else : ?>
+	<p class="cli-360-arq-empty"><?= h(__('Nenhum arquivo vinculado encontrado.')) ?></p>
 	<?php endif; ?>
+	<p class="mt-3 mb-0">
+		<?= $this->Html->link(__('Editar cadastro do cliente'), ['action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary', 'data-turbo' => 'false']) ?>
+	</p>
+	<?php endif; ?>
+
+	</div><!-- /cli-360-tab-panel -->
 
 </div>
 </div>
+<script>
+(function () {
+	var root = document.getElementById('cli-360-arq-filters');
+	var grid = document.getElementById('cli-360-arq-grid');
+	if (!root || !grid) return;
+	root.addEventListener('click', function (e) {
+		var btn = e.target.closest('[data-arq-filter]');
+		if (!btn) return;
+		var f = btn.getAttribute('data-arq-filter') || 'todos';
+		root.querySelectorAll('.cli-360-arq-pill').forEach(function (p) {
+			p.classList.toggle('active', p === btn);
+		});
+		grid.querySelectorAll('.cli-360-arq-file').forEach(function (card) {
+			var cats = (card.getAttribute('data-arq-cats') || '').split(/\s+/);
+			var show = f === 'todos' || cats.indexOf(f) >= 0;
+			if (show) {
+				card.removeAttribute('hidden');
+			} else {
+				card.setAttribute('hidden', 'hidden');
+			}
+		});
+	});
+})();
+</script>
