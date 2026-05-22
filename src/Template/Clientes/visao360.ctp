@@ -272,7 +272,11 @@ $tabs = [
 				<div class="cli-360-shortcuts">
 					<?= $this->Html->link('<i class="fas fa-file-invoice"></i> ' . __('Novo orçamento'), ['controller' => 'Orcamentos', 'action' => 'add'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
 					<?= $this->Html->link('<i class="fas fa-wrench"></i> ' . __('Abrir OS'), ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
-					<?= $this->Html->link('<i class="fas fa-edit"></i> ' . __('Editar cadastro'), ['action' => 'edit', $cliente->id], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link('<i class="fas fa-edit"></i> ' . __('Editar cadastro'), ['action' => 'edit', $cliente->id, '#' => 'cliente'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link('<i class="fas fa-file-contract"></i> ' . __('Contratos') . ' (' . (int)($counts['contratos'] ?? 0) . ')', ['action' => 'edit', $cliente->id, '#' => 'contratos'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false', 'title' => __('Tabela e botões de contrato na ficha')]) ?>
+					<?= $this->Html->link('<i class="fas fa-users"></i> ' . __('Usuários'), ['action' => 'edit', $cliente->id, '#' => 'usuarios'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link('<i class="fas fa-desktop"></i> ' . __('Acessos'), ['action' => 'edit', $cliente->id, '#' => 'acessos'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link('<i class="fas fa-key"></i> ' . __('Token API'), ['action' => 'edit', $cliente->id, '#' => 'token'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
 					<?= $this->Html->link('<i class="fas fa-headset"></i> ' . __('Tickets') . ' (' . (int)($counts['tickets_abertos'] ?? 0) . ')', ['controller' => 'Tickets', 'action' => 'index'], ['class' => 'cli-360-shortcut', 'escape' => false, 'data-turbo' => 'false']) ?>
 				</div>
 			</div>
@@ -320,6 +324,15 @@ $tabs = [
 		$rows = (array)($c[$lk] ?? []);
 	?>
 	<div class="cli-360-card cli-360-card--full">
+		<?php if ($tab === 'contratos') : ?>
+		<p class="cli-360-ficha-link mb-3">
+			<?= $this->Html->link(
+				'<i class="fas fa-external-link-alt" aria-hidden="true"></i> ' . __('Gerenciar contratos na ficha (cadastrar item, horas técnicas, situação)'),
+				['action' => 'edit', $cliente->id, '#' => 'contratos'],
+				['class' => 'cli-360-link', 'escape' => false, 'data-turbo' => 'false']
+			) ?>
+		</p>
+		<?php endif; ?>
 		<?php if ($rows === []) : ?>
 		<p class="cli-360-empty"><?= h($listTabs[$tab]['empty']) ?></p>
 		<?php else : ?>

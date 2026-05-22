@@ -73,8 +73,16 @@
 			<?php endif; ?>
 		</div>
 
-		<!-- Tab nav (element reutilizável + deep-link #hash) -->
-		<?= $this->element('Cli/edit_tabs_nav', array_merge(compact('isEquipe', 'isClientePortal', 'permissaoacesso'), ['showTokenTab' => $showClienteApiTokenTab, 'ativosCount' => is_countable($ativosCliente ?? null) ? count($ativosCliente) : 0])) ?>
+		<!-- Tab nav: wizard só na aba Cliente; demais abas preservam fluxo legado (acessos, usuários, contratos, ativos, token) -->
+		<?php
+			$cliTabCounts = [
+				'ativosCount' => is_countable($ativosCliente ?? null) ? count($ativosCliente) : 0,
+				'contratosCount' => is_countable($contratos ?? null) ? count($contratos) : 0,
+				'usuariosCount' => is_countable($usuarios ?? null) ? count($usuarios) : 0,
+				'acessosCount' => is_countable($acessos ?? null) ? count($acessos) : 0,
+			];
+		?>
+		<?= $this->element('Cli/edit_tabs_nav', array_merge(compact('isEquipe', 'isClientePortal', 'permissaoacesso'), ['showTokenTab' => $showClienteApiTokenTab], $cliTabCounts)) ?>
 			<div class="tab-content">
 				<div class="tab-pane active" id="cliente" role="tabpanel" aria-labelledby="cli-tab-cliente">
 					<?=  $this->Form->create($cliente, ['class' => 'form-material', 'id' => 'form-edit-cliente']) ?>
@@ -380,7 +388,7 @@
 				<div class="tab-pane" id="usuarios" role="tabpanel" aria-labelledby="cli-tab-usuarios">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-users"></i> Usuários do cliente', 'extraClass' => 'mb-3']) ?>
 					<div class="d-flex flex-wrap align-items-center justify-content-between mb-2 pgm-gap-8">
-						<p class="text-muted small mb-0">Edição abre em nova aba. Novo usuário escolhe o cliente no formulário de cadastro.</p>
+						<p class="text-muted small mb-0">Edite cada usuário na mesma aba. Novo usuário: escolha o cliente no formulário de cadastro.</p>
 						<?= $this->Html->link('<i class="fas fa-user-plus"></i> Novo usuário', ['controller' => 'Users', 'action' => 'addcliente'], ['class' => 'btn btn-sm btn-success', 'escape' => false, 'data-turbo' => 'false']) ?>
 					</div>
 					<div class="table-responsive">
@@ -655,7 +663,8 @@
 			<div class="cli-sf-block cli-sf-contracts">
 				<div class="cli-sf-kicker">Contratos (resumo)</div>
 				<div class="small cli-sf-contracts-total-line">
-					<strong>Total:</strong> <?= (int)$cliFooter['contratos_total'] ?>
+					<strong>Total:</strong>
+					<?= $this->Html->link((string)(int)$cliFooter['contratos_total'], ['action' => 'edit', $cliente->id, '#' => 'contratos'], ['class' => 'cli-sf-tab-jump', 'title' => __('Abrir aba Contratos'), 'data-turbo' => 'false']) ?>
 					<?php if (!empty($cliFooter['contratos_vencidos'])): ?>
 						<span class="badge cli-sf-badge-danger ml-1"><?= (int)$cliFooter['contratos_vencidos'] ?> vencido(s)</span>
 					<?php endif; ?>

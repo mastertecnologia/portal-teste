@@ -6,6 +6,9 @@
  * @var bool $isClientePortal
  * @var mixed $permissaoacesso
  * @var bool|null $showTokenTab se definido, controla só o separador Token (aba Contratos mantém-se com acessos)
+ * @var int|null $acessosCount
+ * @var int|null $usuariosCount
+ * @var int|null $contratosCount
  */
 $showAcessos = !empty($isEquipe) || !empty($permissaoacesso);
 $showUsuarios = !empty($isEquipe);
@@ -22,29 +25,27 @@ $acessosPaneId = !empty($isClientePortal) ? 'acessosCliente' : 'acessos';
 	<?php if ($showAcessos) : ?>
 	<li class="nav-item" role="presentation">
 		<a class="nav-link" id="cli-tab-<?= h($acessosPaneId) ?>" data-toggle="tab" href="#<?= h($acessosPaneId) ?>" role="tab" aria-controls="<?= h($acessosPaneId) ?>" aria-selected="false">
-			<i class="fas fa-desktop" aria-hidden="true"></i> Acessos
+			<i class="fas fa-desktop" aria-hidden="true"></i> Acessos<?= $this->element('Cli/tab_count_badge', ['count' => $acessosCount ?? 0]) ?>
 		</a>
 	</li>
 	<?php endif; ?>
 	<?php if ($showUsuarios) : ?>
 	<li class="nav-item" role="presentation">
 		<a class="nav-link" id="cli-tab-usuarios" data-toggle="tab" href="#usuarios" role="tab" aria-controls="usuarios" aria-selected="false">
-			<i class="fas fa-users" aria-hidden="true"></i> Usuários
+			<i class="fas fa-users" aria-hidden="true"></i> Usuários<?= $this->element('Cli/tab_count_badge', ['count' => $usuariosCount ?? 0]) ?>
 		</a>
 	</li>
 	<?php endif; ?>
 	<?php if ($showContratosToken) : ?>
 	<li class="nav-item" role="presentation">
 		<a class="nav-link" id="cli-tab-contratos" data-toggle="tab" href="#contratos" role="tab" aria-controls="contratos" aria-selected="false">
-			<i class="fas fa-file-contract" aria-hidden="true"></i> Contratos
+			<i class="fas fa-file-contract" aria-hidden="true"></i> Contratos<?= $this->element('Cli/tab_count_badge', ['count' => $contratosCount ?? 0]) ?>
 		</a>
 	</li>
 	<li class="nav-item" role="presentation">
 		<a class="nav-link" id="cli-tab-ativos" data-toggle="tab" href="#ativos" role="tab" aria-controls="ativos" aria-selected="false">
 			<i class="fas fa-server" aria-hidden="true"></i> Ativos
-			<?php if (isset($ativosCount) && (int)$ativosCount > 0) : ?>
-				<span class="badge badge-secondary" style="margin-left:6px"><?= (int)$ativosCount ?></span>
-			<?php endif; ?>
+			<?= $this->element('Cli/tab_count_badge', ['count' => $ativosCount ?? 0]) ?>
 		</a>
 	</li>
 	<?php if ($showTokenTab) : ?>

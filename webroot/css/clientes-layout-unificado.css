@@ -1749,6 +1749,28 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   background: var(--orc-teal) !important;
   color: #fff !important;
 }
+.cli-ficha-layout-unificado .cli-tabs-nav .nav-link .cli-tab-count {
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.cli-ficha-layout-unificado .cli-tabs-nav .nav-link.active .cli-tab-count {
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: #fff !important;
+}
+.cli-ficha-layout-unificado .cli-sf-tab-jump {
+  color: var(--orc-teal-dark);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.cli-ficha-layout-unificado .cli-sf-tab-jump:hover {
+  color: var(--orc-teal);
+}
+.cli-360-root .cli-360-ficha-link {
+  font-size: 13px;
+}
 .cli-ficha-layout-unificado .cli-subcard {
   border: 1px solid var(--orc-border);
   border-radius: var(--orc-radius-lg);
