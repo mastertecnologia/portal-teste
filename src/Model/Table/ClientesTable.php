@@ -123,7 +123,22 @@ class ClientesTable extends Table {
                 'message' => __('Score deve estar entre 0 e 10.'),
             ])
             ->scalar('observacoes_financeiras')
-            ->allowEmptyString('observacoes_financeiras');
+            ->allowEmptyString('observacoes_financeiras')
+            ->scalar('site')
+            ->maxLength('site', 255)
+            ->allowEmptyString('site')
+            ->add('site', 'formato', [
+                'rule' => function ($value) {
+                    if ($value === null || $value === '') {
+                        return true;
+                    }
+                    $v = (string)$value;
+
+                    return (bool)preg_match('/^[a-z0-9][a-z0-9.\-]*(\.[a-z0-9][a-z0-9.\-]*)+$/i', $v)
+                        || (bool)preg_match('/^[a-z0-9][a-z0-9.\-]*(\.[a-z0-9][a-z0-9.\-]*)*\/[a-z0-9.\-_\/%+]*$/i', $v);
+                },
+                'message' => __('Informe um site válido (ex.: empresa.com.br).'),
+            ]);
     }
 
     public function generateToken($string) {

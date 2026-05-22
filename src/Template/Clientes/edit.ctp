@@ -141,6 +141,7 @@
 						<div class="row">
 							<?= $this->element('Cli/input', ['label' => 'Telefone', 'field' => 'fone', 'colClass' => 'col-lg-3 col-md-3 col-sm-6 col-xs-6', 'options' => ['id' => 'fone', 'placeholder' => 'Insira o telefone']]) ?>
 							<?= $this->element('Cli/input', ['label' => 'Celular', 'field' => 'fone2', 'colClass' => 'col-lg-3 col-md-3 col-sm-6 col-xs-6', 'options' => ['id' => 'fone2', 'placeholder' => 'Insira o celular']]) ?>
+							<?= $this->element('Cli/input', ['label' => __('Site'), 'field' => 'site', 'colClass' => 'col-lg-6 col-md-6 col-sm-12 col-xs-12', 'options' => ['id' => 'site', 'placeholder' => __('empresa.com.br'), 'autocomplete' => 'url']]) ?>
 						</div>
 						<div class="row">
 							<?= $this->element('Cli/email_readonly_block', [

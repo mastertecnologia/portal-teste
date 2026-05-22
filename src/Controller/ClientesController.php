@@ -939,8 +939,37 @@ class ClientesController extends AppController {
 				'icon' => 'fas fa-envelope',
 			];
 		}
+		$site = trim((string)($cliente->site ?? ''));
+		if ($site !== '') {
+			$out[] = [
+				'kind' => 'web',
+				'label' => $site,
+				'label_upper' => mb_strtoupper($site, 'UTF-8'),
+				'icon' => 'fas fa-globe',
+			];
+		}
 
 		return $out;
+	}
+
+	/**
+	 * Site vindo do JSON da integração ERP (vários aliases).
+	 *
+	 * @param object $json
+	 * @return string|null
+	 */
+	protected function _clientesSiteFromIntegrationJson($json) {
+		foreach (['site', 'website', 'site_web', 'url_site'] as $key) {
+			if (!isset($json->$key)) {
+				continue;
+			}
+			$s = trim((string)$json->$key);
+			if ($s !== '') {
+				return $s;
+			}
+		}
+
+		return null;
 	}
 
 	public function cadastrar() {
@@ -1417,6 +1446,7 @@ class ClientesController extends AppController {
 			'fone' => $this->_clientesFmtTelefoneBr($cliente->fone ?? ''),
 			'fone2' => $this->_clientesFmtTelefoneBr($cliente->fone2 ?? ''),
 			'email' => $this->_clientesPrimeiroEmail($cliente->email ?? ''),
+			'site' => trim((string)($cliente->site ?? '')),
 			'membro_label' => $membroLabel,
 			'anos_cliente' => $anosCliente,
 			'inativo' => (int)$cliente->inativo === 1,
@@ -2830,6 +2860,10 @@ class ClientesController extends AppController {
 				$cliente->fone2 = \removeCaracteres((string)$json->celular);
 			}
 			$cliente->email = $json->email ?? null;
+			$siteIn = $this->_clientesSiteFromIntegrationJson($json);
+			if ($siteIn !== null) {
+				$cliente->site = $siteIn;
+			}
 			$cliente->contrato = $json->contrato ?? null;
 			$cliente->nomefantasia = $json->fantasia ?? null;
 			$cliente->inativo = 0;

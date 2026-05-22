@@ -55,6 +55,21 @@ class Cliente extends Entity {
             }
       }
 
+      protected function _setSite($site) {
+            $s = trim((string)$site);
+            if ($s === '') {
+                  return null;
+            }
+            $s = preg_replace('#^https?://#i', '', $s);
+            $s = preg_replace('#^www\.#i', '', $s);
+            $s = rtrim($s, '/');
+            if (strlen($s) > 255) {
+                  $s = substr($s, 0, 255);
+            }
+
+            return $s !== '' ? $s : null;
+      }
+
       protected function _setRg($rg) {
             if (strlen((string)$rg) > 0) {
                   return $this->removeCaracteres($rg);
