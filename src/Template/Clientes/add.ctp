@@ -345,6 +345,7 @@
 </div><!-- /cli-form-root -->
 </div>
 
+<?= $this->Html->script('/pgm-assets/js/modules/clientes/cliente-cadastro-wizard') ?>
 <script>
     // ── Tipo toggle ──────────────────────────────────────────────
     function cliSetTipo(val) {
@@ -358,7 +359,6 @@
         }
     }
 
-<?= $this->Html->script('/pgm-assets/js/modules/clientes/cliente-cadastro-wizard') ?>
     jQuery(function($) {
 
         // Masks
