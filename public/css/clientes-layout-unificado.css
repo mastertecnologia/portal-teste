@@ -2300,9 +2300,46 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   margin-top: 6px;
   gap: 10px;
 }
+.cli-layout-unificado.cli-360-page .cli-360-hero-contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.cli-layout-unificado.cli-360-page .cli-360-hero-contact--phone .fa-phone {
+  color: #f9a8d4;
+}
+.cli-layout-unificado.cli-360-page .cli-360-hero-contact--whatsapp .fa-whatsapp {
+  color: #d1d5db;
+}
+.cli-layout-unificado.cli-360-page .cli-360-hero-contact--email .fa-envelope {
+  color: #93c5fd;
+}
+.cli-layout-unificado.cli-360-page .cli-360-hero-addr-icon {
+  color: #f87171;
+  margin-right: 4px;
+}
 .cli-layout-unificado.cli-360-page .cli-360-hero-side {
   font-size: 11px;
-  align-self: center;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-width: 140px;
+  margin-left: auto;
+}
+.cli-layout-unificado.cli-360-page .cli-360-hero-side-contacts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  opacity: 0.95;
+  margin-bottom: 8px;
+}
+.cli-layout-unificado.cli-360-page .cli-360-hero-side-contacts .cli-360-hero-contact {
+  white-space: nowrap;
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero-since {
   font-size: 13px;

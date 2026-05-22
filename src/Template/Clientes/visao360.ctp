@@ -80,8 +80,13 @@ $tabs = [
 		</div>
 	</header>
 
+	<?php
+	$heroContacts = (array)($c['hero_contacts'] ?? []);
+	$heroInitialsName = trim((string)($c['hero_initials_name'] ?? $c['nome'] ?? ''));
+	$showHeroSide = $heroContacts !== [] || !empty($c['membro_label']) || !empty($c['anos_cliente']) || (int)($counts['contratos'] ?? 0) > 0;
+	?>
 	<section class="cli-360-hero">
-		<div class="cli-360-hero-avatar" aria-hidden="true"><?= h(cli360Initials((string)$c['nome'])) ?></div>
+		<div class="cli-360-hero-avatar" aria-hidden="true"><?= h(cli360Initials($heroInitialsName)) ?></div>
 		<div class="cli-360-hero-body">
 			<h1 class="cli-360-hero-title"><?= h((string)$c['nome']) ?></h1>
 			<div class="cli-360-hero-badges">
@@ -99,30 +104,41 @@ $tabs = [
 				<?php endif; ?>
 			</div>
 			<p class="cli-360-hero-meta">
-				<?php if ($docFmt !== '') : ?><span><?= $isPj ? 'CNPJ' : 'CPF' ?>: <?= h($docFmt) ?></span><?php endif; ?>
-				<?php if (!empty($c['ie'])) : ?><span>IE: <?= h((string)$c['ie']) ?></span><?php endif; ?>
+				<?php if ($docFmt !== '') : ?><span><?= $isPj ? 'CNPJ' : 'CPF' ?> <?= h($docFmt) ?></span><?php endif; ?>
+				<?php if (!empty($c['ie'])) : ?><span>IE <?= h((string)$c['ie']) ?></span><?php endif; ?>
 				<?php if (!empty($seg['label'])) : ?><span><?= h((string)$seg['label']) ?></span><?php endif; ?>
 			</p>
 			<?php if (!empty($c['endereco'])) : ?>
-			<p class="cli-360-hero-addr"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> <?= h((string)$c['endereco']) ?></p>
+			<p class="cli-360-hero-addr"><i class="fas fa-map-marker-alt cli-360-hero-addr-icon" aria-hidden="true"></i> <?= h((string)$c['endereco']) ?></p>
 			<?php endif; ?>
+			<?php if ($heroContacts !== []) : ?>
 			<div class="cli-360-hero-contacts">
-				<?php if (!empty($c['fone'])) : ?>
-				<span><i class="fas fa-phone" aria-hidden="true"></i> <?= h((string)$c['fone']) ?></span>
-				<?php endif; ?>
-				<?php if (!empty($c['fone2'])) : ?>
-				<span><i class="fas fa-mobile-alt" aria-hidden="true"></i> <?= h((string)$c['fone2']) ?></span>
-				<?php endif; ?>
-				<?php if (!empty($c['email'])) : ?>
-				<span><i class="fas fa-envelope" aria-hidden="true"></i> <?= h((string)$c['email']) ?></span>
-				<?php endif; ?>
+				<?php foreach ($heroContacts as $hc) :
+					$icon = (string)($hc['icon'] ?? 'fa-circle');
+					$kind = (string)($hc['kind'] ?? '');
+				?>
+				<span class="cli-360-hero-contact cli-360-hero-contact--<?= h($kind) ?>"><i class="<?= h($icon) ?>" aria-hidden="true"></i> <?= h((string)($hc['label'] ?? '')) ?></span>
+				<?php endforeach; ?>
 			</div>
+			<?php endif; ?>
 		</div>
-		<?php if (!empty($c['membro_label'])) : ?>
+		<?php if ($showHeroSide) : ?>
 		<div class="cli-360-hero-side">
+			<?php if ($heroContacts !== []) : ?>
+			<div class="cli-360-hero-side-contacts">
+				<?php foreach ($heroContacts as $hc) :
+					$icon = (string)($hc['icon'] ?? 'fa-circle');
+					$kind = (string)($hc['kind'] ?? '');
+				?>
+				<span class="cli-360-hero-contact cli-360-hero-contact--<?= h($kind) ?>"><i class="<?= h($icon) ?>" aria-hidden="true"></i> <?= h((string)($hc['label_upper'] ?? $hc['label'] ?? '')) ?></span>
+				<?php endforeach; ?>
+			</div>
+			<?php endif; ?>
+			<?php if (!empty($c['membro_label'])) : ?>
 			<div class="cli-360-hero-since"><?= h((string)$c['membro_label']) ?></div>
-			<?php if (!empty($c['anos_cliente'])) : ?>
-			<div class="cli-360-hero-tenure"><?= h((string)$c['anos_cliente']) ?> · <?= (int)($counts['contratos'] ?? 0) ?> <?= h(__('contratos')) ?></div>
+			<?php endif; ?>
+			<?php if (!empty($c['anos_cliente']) || (int)($counts['contratos'] ?? 0) > 0) : ?>
+			<div class="cli-360-hero-tenure"><?= !empty($c['anos_cliente']) ? h((string)$c['anos_cliente']) . ' · ' : '' ?><?= (int)($counts['contratos'] ?? 0) ?> <?= h(__('contratos')) ?></div>
 			<?php endif; ?>
 		</div>
 		<?php endif; ?>
