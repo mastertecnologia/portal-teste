@@ -157,6 +157,19 @@ $tabs = [
 		</div>
 	</div>
 
+	<div class="cli-360-kpis cli-360-kpis--secondary">
+		<div class="cli-360-kpi cli-360-kpi--muted">
+			<div class="cli-360-kpi-lbl"><?= h(__('Limite de crédito')) ?></div>
+			<div class="cli-360-kpi-val"><?= h(__('Não cadastrado')) ?></div>
+			<div class="cli-360-kpi-sub"><?= h(__('Campo não disponível neste módulo')) ?></div>
+		</div>
+		<div class="cli-360-kpi cli-360-kpi--muted">
+			<div class="cli-360-kpi-lbl"><?= h(__('Score interno')) ?></div>
+			<div class="cli-360-kpi-val"><?= h(__('—')) ?></div>
+			<div class="cli-360-kpi-sub"><?= h(__('Use indicadores financeiros reais acima')) ?></div>
+		</div>
+	</div>
+
 	<nav class="cli-360-tabs" role="tablist">
 		<?php foreach ($tabs as $slug => $meta) :
 			$url = $this->Url->build(['action' => 'visao360', $cliente->id, '?' => ['tab' => $slug]]);
@@ -203,6 +216,32 @@ $tabs = [
 			<?php endif; ?>
 		</div>
 		<div class="cli-360-col-side">
+			<?php $contatos = (array)($c['contatos'] ?? []); ?>
+			<div class="cli-360-card">
+				<div class="cli-360-card-head">
+					<span class="cli-360-card-title"><i class="fas fa-users" aria-hidden="true"></i> <?= h(__('Contatos')) ?></span>
+					<?= $this->Html->link(__('Editar'), ['action' => 'edit', $cliente->id, '?' => ['wizard' => 2], '#' => 'cliente'], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?>
+				</div>
+				<?php if ($contatos === []) : ?>
+				<p class="cli-360-empty"><?= h(__('Nenhum contato cadastrado. Inclua responsável e e-mails na ficha.')) ?></p>
+				<?php else : ?>
+				<ul class="cli-360-contatos-list">
+					<?php foreach ($contatos as $ct) : ?>
+					<li class="cli-360-contato">
+						<div class="cli-av cli-av--<?= h((string)($ct['av_tone'] ?? 'teal')) ?>"><?= h((string)($ct['iniciais'] ?? 'C')) ?></div>
+						<div class="cli-360-contato-body">
+							<div class="cli-360-contato-name"><?= h((string)$ct['nome']) ?></div>
+							<?php if (!empty($ct['cargo'])) : ?><div class="cli-360-contato-role"><?= h((string)$ct['cargo']) ?></div><?php endif; ?>
+							<div class="cli-360-contato-meta">
+								<?php if (!empty($ct['email'])) : ?><a href="mailto:<?= h((string)$ct['email']) ?>"><?= h((string)$ct['email']) ?></a><?php endif; ?>
+								<?php if (!empty($ct['fone'])) : ?><?= !empty($ct['email']) ? ' · ' : '' ?><?= h((string)$ct['fone']) ?><?php endif; ?>
+							</div>
+						</div>
+					</li>
+					<?php endforeach; ?>
+				</ul>
+				<?php endif; ?>
+			</div>
 			<?php if (!empty($c['saude'])) : ?>
 			<div class="cli-360-card">
 				<div class="cli-360-card-head">
@@ -298,9 +337,27 @@ $tabs = [
 	<?php endif; ?>
 
 	<?php if ($tab === 'arquivos') : ?>
+	<?php $nArq = (int)($counts['arquivos'] ?? 0); ?>
 	<div class="cli-360-card cli-360-card--full">
-		<p class="cli-360-empty"><?= h(__('Anexos do cliente: use a aba correspondente na ficha de edição ou módulo de documentos quando disponível.')) ?></p>
-		<?= $this->Html->link(__('Abrir ficha do cliente'), ['action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary', 'data-turbo' => 'false']) ?>
+		<div class="cli-360-card-head">
+			<span class="cli-360-card-title"><i class="fas fa-paperclip" aria-hidden="true"></i> <?= h(__('Arquivos')) ?></span>
+			<strong><?= $nArq ?> <?= h(__('anexo(s)')) ?></strong>
+		</div>
+		<p class="mb-2"><?= h(__('Contagem real: anexos de tickets e comprovantes em lançamentos financeiros deste cliente.')) ?></p>
+		<?php if ($nArq === 0) : ?>
+		<p class="cli-360-empty"><?= h(__('Nenhum arquivo vinculado encontrado.')) ?></p>
+		<?php else : ?>
+		<p class="cli-360-empty"><?= h(__('Abra os módulos relacionados para ver cada arquivo:')) ?></p>
+		<ul class="cli-360-list mb-3">
+			<li class="cli-360-list-item">
+				<?= $this->Html->link(__('Tickets do cliente'), ['controller' => 'Tickets', 'action' => 'index'], ['class' => 'cli-360-list-link', 'data-turbo' => 'false']) ?>
+			</li>
+			<li class="cli-360-list-item">
+				<?= $this->Html->link(__('Financeiro'), ['controller' => 'Financeiro', 'action' => 'index'], ['class' => 'cli-360-list-link', 'data-turbo' => 'false']) ?>
+			</li>
+		</ul>
+		<?php endif; ?>
+		<?= $this->Html->link(__('Editar cadastro do cliente'), ['action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary', 'data-turbo' => 'false']) ?>
 	</div>
 	<?php endif; ?>
 

@@ -28,11 +28,16 @@
 
     <header class="cli-crm-page-head cli-crm-page-head--bar">
         <div class="cli-crm-page-head-text">
-            <p class="cli-crm-subtitle"><?= h(__('Cadastro mestre · Novo cliente no ERP')) ?></p>
+            <h1 class="cli-crm-h1 mb-1"><?= h(__('Novo cadastro de cliente')) ?></h1>
+            <p class="cli-crm-subtitle mb-0"><?= h(__('Preencha as informações principais · O código P######## é gerado ao salvar')) ?></p>
+        </div>
+        <div class="cli-crm-page-actions">
+            <?= $this->Html->link(__('Cancelar'), ['action' => 'index'], ['class' => 'btn-cli-secondary btn-cli-sm', 'data-turbo' => 'false']) ?>
         </div>
     </header>
 
-    <div class="cli-form-body cli-form-body--cadastro-lead">
+    <div class="cli-form-body cli-form-body--cadastro-lead cli-wizard-root" data-cli-wizard-root>
+    <?= $this->element('Cli/cadastro_wizard_stepper', ['wizardStep' => 1]) ?>
 
         <!-- Avisos CNPJ -->
         <div id="cadastro-empresa-avisos" class="alert d-none" role="alert">
@@ -41,6 +46,7 @@
         </div>
 
         <!-- ── Seção: Tipo ────────────────────────────────── -->
+        <div class="cli-wizard-pane cli-wizard-pane--active" data-cli-wizard-step="1" data-cli-wizard-title="<?= h(__('Identificação')) ?>">
         <div class="cli-section">
             <div class="cli-section-head">
                 <div class="cli-section-icon"><i class="fas fa-id-card"></i></div>
@@ -122,8 +128,10 @@
                 </div>
             </div>
         </div>
+        </div>
 
         <!-- ── Seção: Endereço ────────────────────────────── -->
+        <div class="cli-wizard-pane" data-cli-wizard-step="2" data-cli-wizard-title="<?= h(__('Endereço & Contato')) ?>" hidden>
         <div class="cli-section">
             <div class="cli-section-head">
                 <div class="cli-section-icon"><i class="fas fa-map-marker-alt"></i></div>
@@ -184,8 +192,10 @@
                 </div>
             </div>
         </div>
+        </div>
 
         <!-- ── Seção: Fiscal (somente PJ) ────────────────── -->
+        <div class="cli-wizard-pane" data-cli-wizard-step="3" data-cli-wizard-title="<?= h(__('Fiscal & Financeiro')) ?>" hidden>
         <div class="cli-section pessoaJuridica">
             <div class="cli-section-head">
                 <div class="cli-section-icon"><i class="fas fa-file-invoice"></i></div>
@@ -209,8 +219,14 @@
                 </div>
             </div>
         </div>
+        <div class="cli-card cli-wizard-info-card">
+            <p class="cli-wizard-info-title"><i class="fas fa-info-circle" aria-hidden="true"></i> <?= h(__('Financeiro')) ?></p>
+            <p class="cli-wizard-info-text mb-0"><?= h(__('Limite de crédito e score não são campos deste formulário. Após o cadastro, use Financeiro e a Visão 360° do cliente.')) ?></p>
+        </div>
+        </div>
 
         <!-- ── Seção: Configurações ───────────────────────── -->
+        <div class="cli-wizard-pane" data-cli-wizard-step="4" data-cli-wizard-title="<?= h(__('Comercial & CRM')) ?>" hidden>
         <div class="cli-section">
             <div class="cli-section-head">
                 <div class="cli-section-icon"><i class="fas fa-cog"></i></div>
@@ -231,18 +247,20 @@
                 </div>
             </div>
         </div>
+        </div>
 
+    <?= $this->element('Cli/cadastro_wizard_nav', ['wizardShowSave' => true]) ?>
     </div><!-- /cli-form-body -->
 
     <!-- ── Footer com botão salvar ───────────────────────── -->
     <div class="cli-form-footer">
         <div class="cli-form-footer-left">
             <i class="fas fa-shield-alt cli-icon-teal" style="margin-right:5px;" aria-hidden="true"></i>
-            Dados salvos com segurança no ERP
+            <?= h(__('Dados salvos com segurança no ERP')) ?>
         </div>
         <div class="cli-form-footer-right">
-            <?= $this->Html->link('<i class="fa fa-arrow-left"></i> Cancelar', ['action' => 'index'], ['class' => 'btn-cli-secondary', 'escape' => false, 'data-turbo' => 'false']) ?>
-            <?= $this->Form->button('<i class="fas fa-check"></i> Cadastrar cliente', ['class' => 'btn-cli-primary', 'escape' => false]) ?>
+            <?= $this->Html->link('<i class="fa fa-arrow-left"></i> ' . __('Cancelar'), ['action' => 'index'], ['class' => 'btn-cli-secondary', 'escape' => false, 'data-turbo' => 'false']) ?>
+            <?= $this->Form->button('<i class="fas fa-check"></i> ' . __('Cadastrar cliente'), ['class' => 'btn-cli-primary cli-wizard-save-footer', 'escape' => false]) ?>
         </div>
     </div>
 
@@ -263,6 +281,7 @@
         }
     }
 
+<?= $this->Html->script('/pgm-assets/js/modules/clientes/cliente-cadastro-wizard') ?>
     jQuery(function($) {
 
         // Masks

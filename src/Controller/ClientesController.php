@@ -1696,8 +1696,136 @@ class ClientesController extends AppController {
 
 		$crmOne = $this->_clientesIndexCrmMetrics([$cliente], (int)$cliente->inativo === 0 ? 1 : 0);
 		$payload['is_vip'] = !empty($crmOne['vip_ids'][$cid]);
+		$payload['contatos'] = $this->_clientesVisao360Contatos($cliente);
+		$payload['counts']['arquivos'] = $this->_clientesContarArquivosCliente($cid, $idempresa);
 
 		return $payload;
+	}
+
+	/**
+	 * Contatos exibidos na Visão 360° (cadastro + usuários do portal; sem dados fictícios).
+	 *
+	 * @param \App\Model\Entity\Cliente $cliente
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function _clientesVisao360Contatos($cliente) {
+		$cid = (int)$cliente->id;
+		$isPj = (int)$cliente->tipo === (int)C_ClientesTipoJuridica;
+		$avTones = ['teal', 'blue', 'rose', 'orange', 'purple', 'navy'];
+		$contatos = [];
+		$seen = [];
+		$push = function ($nome, $cargo, $email, $fone) use (&$contatos, &$seen, $avTones) {
+			$nome = trim((string)$nome);
+			$email = trim((string)$email);
+			$fone = trim((string)$fone);
+			if ($nome === '' && $email === '' && $fone === '') {
+				return;
+			}
+			if ($nome === '') {
+				$nome = $email !== '' ? $email : ($fone !== '' ? $fone : __('Contato'));
+			}
+			$key = mb_strtolower($nome . '|' . $email, 'UTF-8');
+			if (isset($seen[$key])) {
+				return;
+			}
+			$seen[$key] = true;
+			$parts = preg_split('/\s+/', $nome, -1, PREG_SPLIT_NO_EMPTY);
+			$ini = strtoupper(substr($parts[0] ?? 'C', 0, 1)) . strtoupper(substr($parts[1] ?? '', 0, 1));
+			$contatos[] = [
+				'nome' => $nome,
+				'cargo' => trim((string)$cargo),
+				'email' => $email,
+				'fone' => $fone,
+				'iniciais' => $ini !== '' ? $ini : 'C',
+				'av_tone' => $avTones[count($contatos) % count($avTones)],
+			];
+		};
+
+		if ($isPj) {
+			$resp = trim((string)($cliente->nomeresponsavel ?? ''));
+			if ($resp !== '') {
+				$push($resp, __('Representante legal'), '', (string)($cliente->fone2 ?? $cliente->fone ?? ''));
+			}
+		} else {
+			$push((string)($cliente->nome ?? ''), __('Titular'), (string)($cliente->email ?? ''), (string)($cliente->fone ?? ''));
+		}
+
+		$emailsContato = trim((string)($cliente->emailresponsavel ?? ''));
+		if ($emailsContato !== '') {
+			foreach (preg_split('/[;,]+/', $emailsContato) as $em) {
+				$em = trim($em);
+				if ($em !== '') {
+					$push($em, __('Contato operacional'), $em, '');
+				}
+			}
+		}
+		$emailFat = trim((string)($cliente->email ?? ''));
+		if ($emailFat !== '') {
+			foreach (preg_split('/[;,]+/', $emailFat) as $em) {
+				$em = trim($em);
+				if ($em !== '') {
+					$push($em, __('Faturamento'), $em, '');
+				}
+			}
+		}
+		if ((string)($cliente->fone ?? '') !== '' && count($contatos) > 0) {
+			if ($contatos[0]['fone'] === '') {
+				$contatos[0]['fone'] = (string)$cliente->fone;
+			}
+		}
+
+		try {
+			$users = $this->Users->find()
+				->select(['id', 'name', 'email', 'username'])
+				->where(['Users.idcliente' => $cid])
+				->order(['Users.name' => 'ASC'])
+				->limit(20)
+				->all();
+			foreach ($users as $u) {
+				$push(
+					(string)($u->name ?? $u->username ?? ''),
+					__('Usuário portal'),
+					(string)($u->email ?? ''),
+					''
+				);
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $contatos;
+	}
+
+	/**
+	 * Total de anexos vinculados ao cliente (tickets + financeiro).
+	 */
+	protected function _clientesContarArquivosCliente(int $idcliente, int $idempresa): int {
+		$total = 0;
+		try {
+			$this->loadModel('Ticketsanexos');
+			$total += (int)$this->Ticketsanexos->find()
+				->innerJoinWith('Tickets', function ($q) use ($idcliente, $idempresa) {
+					return $q->where([
+						'Tickets.idcliente' => $idcliente,
+						'Tickets.idempresa' => $idempresa,
+					]);
+				})
+				->count();
+		} catch (\Throwable $e) {
+		}
+		try {
+			$anexos = TableRegistry::getTableLocator()->get('FinanceiroLancamentoAnexos');
+			$total += (int)$anexos->find()
+				->innerJoinWith('FinanceiroLancamentos', function ($q) use ($idcliente, $idempresa) {
+					return $q->where([
+						'FinanceiroLancamentos.idcliente' => $idcliente,
+						'FinanceiroLancamentos.idempresa' => $idempresa,
+					]);
+				})
+				->count();
+		} catch (\Throwable $e) {
+		}
+
+		return $total;
 	}
 
 	public function cidadesestado($idcidade){

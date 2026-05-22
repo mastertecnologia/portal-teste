@@ -1954,6 +1954,14 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
 .cli-360-kpi--blue { border-top-color: #3b82f6; }
 .cli-360-kpi--orange { border-top-color: #f97316; }
 .cli-360-kpi--rose { border-top-color: #ec4899; }
+.cli-360-kpis--secondary {
+  grid-template-columns: repeat(2, 1fr);
+  margin-top: -6px;
+  margin-bottom: 18px;
+}
+@media (max-width: 560px) {
+  .cli-360-kpis--secondary { grid-template-columns: 1fr; }
+}
 .cli-360-kpi-lbl {
   font-size: 10px;
   font-weight: 700;
@@ -2186,3 +2194,108 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   letter-spacing: 0.04em;
 }
 .cli-360-events-table code { font-size: 11px; }
+
+/* ── Wizard cadastro (4 passos) ─────────────────────────────────── */
+.cli-wizard-stepper {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--orc-bg-card);
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius, 10px);
+}
+.cli-wiz-stp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  padding: 4px 8px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--orc-text-muted);
+}
+.cli-wiz-stp-c {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--orc-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.cli-wiz-stp--active .cli-wiz-stp-c {
+  border-color: var(--orc-teal);
+  background: var(--orc-teal);
+  color: #fff;
+}
+.cli-wiz-stp--done .cli-wiz-stp-c {
+  border-color: var(--orc-teal);
+  background: var(--orc-teal-light);
+  color: var(--orc-teal-dark);
+}
+.cli-wiz-stp--active .cli-wiz-stp-l,
+.cli-wiz-stp--done .cli-wiz-stp-l {
+  color: var(--orc-teal-dark);
+  font-weight: 600;
+}
+.cli-wiz-stp-l { font-size: 12px; white-space: nowrap; }
+.cli-wiz-stp-line {
+  flex: 1;
+  min-width: 12px;
+  max-width: 40px;
+  height: 2px;
+  background: var(--orc-border);
+  margin: 0 4px;
+}
+.cli-wizard-pane[hidden] { display: none !important; }
+.cli-wizard-pane--active { display: block; }
+.cli-wizard-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 20px 0 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--orc-border-light);
+}
+.cli-wizard-step-label {
+  font-size: 12px;
+  color: var(--orc-text-muted);
+  flex: 1;
+  text-align: center;
+}
+.cli-wizard-info-card {
+  padding: 14px 16px;
+  background: var(--orc-bg-surface);
+  border: 1px dashed var(--orc-border);
+  border-radius: 8px;
+  margin-top: 12px;
+}
+.cli-wizard-info-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--orc-teal-dark);
+  margin-bottom: 6px;
+}
+.cli-wizard-info-text { font-size: 12px; color: var(--orc-text-muted); line-height: 1.5; }
+.cli-360-contatos-list { list-style: none; margin: 0; padding: 0; }
+.cli-360-contato {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--orc-border-light);
+}
+.cli-360-contato:last-child { border-bottom: none; }
+.cli-360-contato-body { flex: 1; min-width: 0; }
+.cli-360-contato-name { font-weight: 600; font-size: 13px; }
+.cli-360-contato-role { font-size: 11px; color: var(--orc-text-muted); }
+.cli-360-contato-meta { font-size: 12px; color: var(--orc-text-muted); margin-top: 4px; }
+.cli-360-contato-meta a { color: var(--orc-teal-dark); }
+.cli-360-kpi--muted .cli-360-kpi-val { font-size: 14px; color: var(--orc-text-muted); }
