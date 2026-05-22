@@ -593,7 +593,7 @@ return [
         "module" => "Clientes",
         "controller" => "Clientes",
         "action" =>
-            "index,view,search,eventos,contrato,clientebyid,cliente_by_id,solicitantes,solicitante,cliemail,solemail,lista,exportcsv",
+            "index,view,search,eventos,visao360,contrato,clientebyid,cliente_by_id,solicitantes,solicitante,cliemail,solemail,lista,exportcsv",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
