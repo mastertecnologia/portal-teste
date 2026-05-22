@@ -2216,11 +2216,10 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
 }
 .cli-360-events-table code { font-size: 11px; }
 
-/* Visão 360° — paridade mock pg-cliente-360 (tema claro, largura total) */
+/* Visão 360° — paridade clientes-lista-layout-unificado.html (.cli-kpi-strip / .cli-kpi) */
 .cli-layout-unificado.cli-360-page {
   width: 100%;
   max-width: none;
-  padding: 16px 24px 40px;
 }
 .cli-layout-unificado.cli-360-page .btn-cli-sm {
   padding: 7px 14px;
@@ -2244,20 +2243,20 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero {
   background: #006040;
-  border-radius: 12px;
+  border-radius: var(--orc-radius-lg);
   box-shadow: var(--orc-shadow);
-  padding: 16px 20px;
-  gap: 16px;
+  padding: 14px 18px;
+  gap: 14px;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero-avatar {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: #fff;
   color: #006040;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -2270,9 +2269,10 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   display: none;
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero-title {
-  font-size: 17px;
-  line-height: 1.3;
-  margin-bottom: 6px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 5px;
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero-badges {
   margin-bottom: 6px;
@@ -2305,7 +2305,7 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   align-self: center;
 }
 .cli-layout-unificado.cli-360-page .cli-360-hero-since {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -2316,65 +2316,35 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   margin-top: 2px;
 }
 .cli-layout-unificado.cli-360-page .cli-360-back-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
 }
-.cli-layout-unificado.cli-360-page .cli-360-kpis--primary {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+/* KPIs: mesmas medidas da lista (referência HTML .cli-kpi-strip / .cli-kpi) */
+.cli-layout-unificado.cli-360-page .cli-360-kpi-strip {
   margin-bottom: 10px;
 }
-.cli-layout-unificado.cli-360-page .cli-360-kpi {
-  box-shadow: var(--orc-shadow-sm);
-  border-top: none;
-  border-left: 4px solid var(--orc-teal);
-  padding: 12px 14px;
-  min-height: 88px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.cli-layout-unificado.cli-360-page .cli-360-kpi--teal { border-left-color: var(--orc-teal); }
-.cli-layout-unificado.cli-360-page .cli-360-kpi--blue { border-left-color: #3b82f6; }
-.cli-layout-unificado.cli-360-page .cli-360-kpi--orange { border-left-color: #f97316; }
-.cli-layout-unificado.cli-360-page .cli-360-kpi--purple { border-left-color: #a855f7; }
-.cli-layout-unificado.cli-360-page .cli-360-kpi--score { border-left-color: #14b8a6; }
-.cli-layout-unificado.cli-360-page .cli-360-kpi-lbl {
-  font-size: 9px;
-  letter-spacing: 0.05em;
-  margin-bottom: 2px;
-}
-.cli-layout-unificado.cli-360-page .cli-360-kpi-val {
-  font-family: 'DM Sans', var(--pgm-font-sans);
-  font-size: 19px;
-  font-weight: 700;
-  line-height: 1.15;
-}
-.cli-layout-unificado.cli-360-page .cli-360-kpi-sub {
-  font-size: 10px;
-  margin-top: 2px;
-}
-.cli-layout-unificado.cli-360-page .cli-360-kpi--muted .cli-360-kpi-val {
-  font-size: 13px;
-}
-.cli-layout-unificado.cli-360-page .cli-360-kpis--secondary {
+.cli-layout-unificado.cli-360-page .cli-360-kpi-strip--secondary {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 0;
-  margin-bottom: 14px;
-  max-width: 100%;
+  margin-bottom: 16px;
 }
-@media (max-width: 720px) {
-  .cli-layout-unificado.cli-360-page .cli-360-kpis--primary,
-  .cli-layout-unificado.cli-360-page .cli-360-kpis--secondary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.cli-layout-unificado.cli-360-page .cli-360-kpi-strip .cli-kpi {
+  cursor: default;
 }
-@media (max-width: 480px) {
-  .cli-layout-unificado.cli-360-page .cli-360-kpis--primary,
-  .cli-layout-unificado.cli-360-page .cli-360-kpis--secondary {
-    grid-template-columns: 1fr;
-  }
+.cli-layout-unificado.cli-360-page .cli-360-kpi-strip .cli-kpi:hover {
+  box-shadow: var(--orc-shadow-sm);
+}
+.cli-layout-unificado.cli-360-page .cli-360-kpi--muted .cli-kpi-val {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--orc-text-muted);
+}
+.cli-layout-unificado.cli-360-page .cli-360-kpi-trend--up {
+  color: var(--orc-teal-dark);
+  font-weight: 600;
+}
+.cli-layout-unificado.cli-360-page .cli-360-kpi-trend--down {
+  color: #b91c1c;
+  font-weight: 600;
 }
 .cli-layout-unificado.cli-360-page .cli-360-grid {
   grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
@@ -2385,7 +2355,7 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   margin-bottom: 12px;
 }
 .cli-layout-unificado.cli-360-page .cli-360-card-title {
-  font-size: 10px;
+  font-size: 11px;
 }
 .cli-layout-unificado.cli-360-page .cli-360-contato-av {
   width: 40px;

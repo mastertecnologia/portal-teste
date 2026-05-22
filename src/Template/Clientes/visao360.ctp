@@ -128,55 +128,55 @@ $tabs = [
 		<?php endif; ?>
 	</section>
 
-	<div class="cli-360-kpis cli-360-kpis--primary">
-		<div class="cli-360-kpi cli-360-kpi--teal">
-			<div class="cli-360-kpi-lbl"><?= h(__('Receita 12 meses')) ?></div>
-			<div class="cli-360-kpi-val"><?= h((string)($kpis['receita12_fmt'] ?? '—')) ?></div>
+	<div class="cli-kpi-strip cli-360-kpi-strip cli-360-kpi-strip--primary">
+		<div class="cli-kpi cli-kpi--teal">
+			<div class="cli-kpi-label"><?= h(__('Receita 12 meses')) ?></div>
+			<div class="cli-kpi-val"><?= h((string)($kpis['receita12_fmt'] ?? '—')) ?></div>
 			<?php if ($kpis['receita12_pct'] !== null) : ?>
-			<div class="cli-360-kpi-sub <?= (int)$kpis['receita12_pct'] >= 0 ? 'cli-360-kpi-sub--up' : 'cli-360-kpi-sub--down' ?>">
+			<div class="cli-kpi-sub cli-360-kpi-trend<?= (int)$kpis['receita12_pct'] >= 0 ? ' cli-360-kpi-trend--up' : ' cli-360-kpi-trend--down' ?>">
 				<?= (int)$kpis['receita12_pct'] >= 0 ? '↑' : '↓' ?> <?= abs((int)$kpis['receita12_pct']) ?>% <?= h(__('vs período anterior')) ?>
 			</div>
 			<?php elseif (empty($kpis['has_fin'])) : ?>
-			<div class="cli-360-kpi-sub"><?= h(__('Sem lançamentos financeiros')) ?></div>
+			<div class="cli-kpi-sub"><?= h(__('Sem lançamentos financeiros')) ?></div>
 			<?php endif; ?>
 		</div>
-		<div class="cli-360-kpi cli-360-kpi--blue">
-			<div class="cli-360-kpi-lbl"><?= h(__('Receita total')) ?></div>
-			<div class="cli-360-kpi-val"><?= h((string)($kpis['receita_total_fmt'] ?? '—')) ?></div>
+		<div class="cli-kpi cli-kpi--blue">
+			<div class="cli-kpi-label"><?= h(__('Receita total')) ?></div>
+			<div class="cli-kpi-val"><?= h((string)($kpis['receita_total_fmt'] ?? '—')) ?></div>
 			<?php if (!empty($kpis['desde_hint'])) : ?>
-			<div class="cli-360-kpi-sub"><?= h((string)$kpis['desde_hint']) ?></div>
+			<div class="cli-kpi-sub"><?= h((string)$kpis['desde_hint']) ?></div>
 			<?php endif; ?>
 		</div>
-		<div class="cli-360-kpi cli-360-kpi--orange">
-			<div class="cli-360-kpi-lbl"><?= h(__('A receber')) ?></div>
-			<div class="cli-360-kpi-val"><?= h((string)($kpis['a_receber_fmt'] ?? '—')) ?></div>
+		<div class="cli-kpi cli-kpi--orange">
+			<div class="cli-kpi-label"><?= h(__('A receber')) ?></div>
+			<div class="cli-kpi-val"><?= h((string)($kpis['a_receber_fmt'] ?? '—')) ?></div>
 			<?php if (!empty($kpis['a_receber_hint'])) : ?>
-			<div class="cli-360-kpi-sub"><?= h((string)$kpis['a_receber_hint']) ?></div>
+			<div class="cli-kpi-sub"><?= h((string)$kpis['a_receber_hint']) ?></div>
 			<?php endif; ?>
 		</div>
-		<div class="cli-360-kpi cli-360-kpi--purple">
-			<div class="cli-360-kpi-lbl"><?= h(__('Ticket médio')) ?></div>
-			<div class="cli-360-kpi-val"><?= h((string)($kpis['ticket_medio_fmt'] ?? '—')) ?></div>
-			<div class="cli-360-kpi-sub"><?= (int)($counts['contratos'] ?? 0) > 0 ? h(__('por contrato')) : h(__('estimativa')) ?></div>
+		<div class="cli-kpi cli-kpi--purple">
+			<div class="cli-kpi-label"><?= h(__('Ticket médio')) ?></div>
+			<div class="cli-kpi-val"><?= h((string)($kpis['ticket_medio_fmt'] ?? '—')) ?></div>
+			<div class="cli-kpi-sub"><?= (int)($counts['contratos'] ?? 0) > 0 ? h(__('por contrato')) : h(__('estimativa')) ?></div>
 		</div>
 	</div>
 
 	<?php $finCrm = (array)($c['finance_crm'] ?? []); ?>
-	<div class="cli-360-kpis cli-360-kpis--secondary">
-		<div class="cli-360-kpi cli-360-kpi--purple<?= empty($finCrm['has_limite']) ? ' cli-360-kpi--muted' : '' ?>">
-			<div class="cli-360-kpi-lbl"><?= h(__('Limite de crédito')) ?></div>
-			<div class="cli-360-kpi-val"><?= !empty($finCrm['has_limite']) ? h((string)$finCrm['limite_fmt']) : h(__('Não cadastrado')) ?></div>
+	<div class="cli-kpi-strip cli-360-kpi-strip cli-360-kpi-strip--secondary">
+		<div class="cli-kpi cli-kpi--purple<?= empty($finCrm['has_limite']) ? ' cli-360-kpi--muted' : '' ?>">
+			<div class="cli-kpi-label"><?= h(__('Limite de crédito')) ?></div>
+			<div class="cli-kpi-val"><?= !empty($finCrm['has_limite']) ? h((string)$finCrm['limite_fmt']) : h(__('Não cadastrado')) ?></div>
 			<?php if (!empty($finCrm['has_limite'])) : ?>
-			<div class="cli-360-kpi-sub"><?= h(__('{0} disponíveis', (string)$finCrm['disponivel_fmt'])) ?></div>
+			<div class="cli-kpi-sub"><?= h(__('{0} disponíveis', (string)$finCrm['disponivel_fmt'])) ?></div>
 			<div class="cli-360-credito-track"><div class="cli-360-credito-fill" style="width:<?= min(100, (int)($finCrm['limite_pct'] ?? 0)) ?>%"></div></div>
 			<?php else : ?>
-			<div class="cli-360-kpi-sub"><?= $this->Html->link(__('Definir na ficha'), ['action' => 'edit', $cliente->id, '?' => ['wizard' => 3], '#' => 'cliente'], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?></div>
+			<div class="cli-kpi-sub"><?= $this->Html->link(__('Definir na ficha'), ['action' => 'edit', $cliente->id, '?' => ['wizard' => 3], '#' => 'cliente'], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?></div>
 			<?php endif; ?>
 		</div>
-		<div class="cli-360-kpi cli-360-kpi--score<?= empty($finCrm['has_score']) ? ' cli-360-kpi--muted' : '' ?>">
-			<div class="cli-360-kpi-lbl"><?= h(__('Score interno')) ?></div>
-			<div class="cli-360-kpi-val"><?= !empty($finCrm['has_score']) ? h((string)$finCrm['score_fmt']) . ' / 10' : h(__('—')) ?></div>
-			<div class="cli-360-kpi-sub"><?= h((string)($finCrm['score_hint'] ?? __('Não informado'))) ?></div>
+		<div class="cli-kpi cli-kpi--teal cli-360-kpi--score<?= empty($finCrm['has_score']) ? ' cli-360-kpi--muted' : '' ?>">
+			<div class="cli-kpi-label"><?= h(__('Score interno')) ?></div>
+			<div class="cli-kpi-val"><?= !empty($finCrm['has_score']) ? h((string)$finCrm['score_fmt']) . ' / 10' : h(__('—')) ?></div>
+			<div class="cli-kpi-sub"><?= h((string)($finCrm['score_hint'] ?? __('Não informado'))) ?></div>
 		</div>
 	</div>
 
