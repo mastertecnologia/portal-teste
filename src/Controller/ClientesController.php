@@ -1065,6 +1065,16 @@ class ClientesController extends AppController {
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
 			unset($data['public_code']);
+			if (!$this->_clientesCrmFinanceReady()) {
+				unset($data['limite_credito'], $data['score_interno'], $data['observacoes_financeiras']);
+			} else {
+				if (array_key_exists('limite_credito', $data)) {
+					$data['limite_credito'] = $this->_clientesParseDecimalBr($data['limite_credito']);
+				}
+				if (array_key_exists('score_interno', $data)) {
+					$data['score_interno'] = $this->_clientesParseDecimalBr($data['score_interno']);
+				}
+			}
 			if ((int)$this->Auth->user('role') === C_RoleFuncionario) {
 				$inativoGate = RbacChecker::resourceFieldAccess((int)$this->Auth->user('id'), 'Clientes.field.inativo');
 				if ($inativoGate !== null && (empty($inativoGate['visible']) || empty($inativoGate['editable']))) {
@@ -1170,6 +1180,9 @@ class ClientesController extends AppController {
 		$this->set('usuarios', $usuarios);
 		$this->set('usuariosOptions', $usuariosOptions);
 		$this->set('usuariosValue', $usuariosValue);
+		$this->set('cliCrmFinanceReady', $this->_clientesCrmFinanceReady());
+		$this->set('cliContatosReady', $this->_clientesContatosReady());
+		$this->set('cliContatos', $this->_clientesContatosList((int)$id));
 	}
 
 	/**
@@ -1203,6 +1216,7 @@ class ClientesController extends AppController {
 		}
 		$this->set('cli360Tab', $tab);
 		$this->set('cliente', $cliente);
+		$this->set('cliContatosReady', $this->_clientesContatosReady());
 		$this->set('cli360', $this->_clientesVisao360Payload($cliente));
 	}
 
@@ -1698,6 +1712,20 @@ class ClientesController extends AppController {
 		$payload['is_vip'] = !empty($crmOne['vip_ids'][$cid]);
 		$payload['contatos'] = $this->_clientesVisao360Contatos($cliente);
 		$payload['counts']['arquivos'] = $this->_clientesContarArquivosCliente($cid, $idempresa);
+		$limite = $this->_clientesCrmFinanceReady() ? (float)($cliente->limite_credito ?? 0) : 0.0;
+		$score = $this->_clientesCrmFinanceReady() && $cliente->score_interno !== null && $cliente->score_interno !== ''
+			? (float)$cliente->score_interno
+			: null;
+		$aRec = (float)($payload['kpis']['a_receber'] ?? 0);
+		$disp = $limite > 0 ? max(0.0, $limite - $aRec) : 0.0;
+		$payload['finance_crm'] = [
+			'has_limite' => $limite > 0,
+			'has_score' => $score !== null,
+			'limite_fmt' => $this->_clientesFmtBrl($limite),
+			'disponivel_fmt' => $this->_clientesFmtBrl($disp),
+			'score_fmt' => $score !== null ? number_format($score, 1, ',', '.') : '—',
+			'limite_pct' => $limite > 0 ? (int)round(100 * min(1.0, $aRec / $limite)) : 0,
+		];
 
 		return $payload;
 	}
@@ -1710,6 +1738,27 @@ class ClientesController extends AppController {
 	 */
 	protected function _clientesVisao360Contatos($cliente) {
 		$cid = (int)$cliente->id;
+		if ($this->_clientesContatosReady()) {
+			$dbRows = $this->_clientesContatosList($cid);
+			if ($dbRows !== []) {
+				$out = [];
+				foreach ($dbRows as $c) {
+					$row = $this->_clientesContatoJsonRow($c);
+					$out[] = [
+						'id' => $row['id'],
+						'nome' => $row['nome'],
+						'cargo' => $row['cargo'],
+						'email' => $row['email'],
+						'fone' => $row['fone'],
+						'iniciais' => $row['iniciais'],
+						'av_tone' => $row['av_tone'],
+						'principal' => $row['principal'],
+					];
+				}
+
+				return $out;
+			}
+		}
 		$isPj = (int)$cliente->tipo === (int)C_ClientesTipoJuridica;
 		$avTones = ['teal', 'blue', 'rose', 'orange', 'purple', 'navy'];
 		$contatos = [];
@@ -1826,6 +1875,193 @@ class ClientesController extends AppController {
 		}
 
 		return $total;
+	}
+
+	/**
+	 * @param mixed $raw
+	 * @return string|null
+	 */
+	protected function _clientesParseDecimalBr($raw) {
+		if ($raw === null || $raw === '') {
+			return null;
+		}
+		$s = trim((string)$raw);
+		if ($s === '') {
+			return null;
+		}
+		$s = str_replace(['R$', ' '], '', $s);
+		if (strpos($s, ',') !== false) {
+			$s = str_replace('.', '', $s);
+			$s = str_replace(',', '.', $s);
+		}
+
+		return is_numeric($s) ? $s : null;
+	}
+
+	protected function _clientesCrmFinanceReady(): bool {
+		try {
+			$schema = $this->Clientes->getSchema();
+
+			return $schema->hasColumn('limite_credito');
+		} catch (\Throwable $e) {
+			return false;
+		}
+	}
+
+	protected function _clientesContatosReady(): bool {
+		try {
+			$tables = array_map('strtolower', $this->Clientes->getConnection()->getSchemaCollection()->listTables());
+
+			return in_array('clientes_contatos', $tables, true);
+		} catch (\Throwable $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * @return \App\Model\Entity\ClientesContato[]
+	 */
+	protected function _clientesContatosList(int $idcliente): array {
+		if (!$this->_clientesContatosReady() || $idcliente <= 0) {
+			return [];
+		}
+		try {
+			$tbl = TableRegistry::getTableLocator()->get('ClientesContatos');
+
+			return $tbl->find()
+				->where(['ClientesContatos.idcliente' => $idcliente])
+				->order(['ClientesContatos.principal' => 'DESC', 'ClientesContatos.nome' => 'ASC'])
+				->all()
+				->toArray();
+		} catch (\Throwable $e) {
+			return [];
+		}
+	}
+
+	/**
+	 * GET — lista contatos do cliente (JSON).
+	 *
+	 * @param int|string|null $id idcliente
+	 */
+	public function apiContatos($id = null) {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		if (!$this->_clientesContatosReady()) {
+			return $this->jsonResponse(['ok' => false, 'error' => __('Módulo de contatos indisponível. Rode as migrations.')], 503);
+		}
+		$cliente = $this->_findClienteForCurrentUser($id);
+		if (empty($cliente)) {
+			return $this->jsonResponse(['ok' => false, 'error' => __('Cliente não encontrado.')], 404);
+		}
+		$items = [];
+		foreach ($this->_clientesContatosList((int)$cliente->id) as $c) {
+			$items[] = $this->_clientesContatoJsonRow($c);
+		}
+
+		return $this->jsonResponse(['ok' => true, 'contatos' => $items]);
+	}
+
+	/**
+	 * POST — criar ou atualizar contato.
+	 *
+	 * @param int|string|null $id idcliente
+	 */
+	public function apiContatoSalvar($id = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		if (!$this->_clientesContatosReady()) {
+			return $this->jsonResponse(['ok' => false, 'error' => __('Módulo de contatos indisponível.')], 503);
+		}
+		$cliente = $this->_findClienteForCurrentUser($id);
+		if (empty($cliente)) {
+			return $this->jsonResponse(['ok' => false, 'error' => __('Cliente não encontrado.')], 404);
+		}
+		$tbl = TableRegistry::getTableLocator()->get('ClientesContatos');
+		$data = $this->request->getData();
+		$contatoId = (int)($data['id'] ?? 0);
+		$entity = $contatoId > 0
+			? $tbl->find()->where(['id' => $contatoId, 'idcliente' => (int)$cliente->id])->first()
+			: $tbl->newEntity();
+		if ($contatoId > 0 && $entity === null) {
+			return $this->jsonResponse(['ok' => false, 'error' => __('Contato não encontrado.')], 404);
+		}
+		$patch = [
+			'idcliente' => (int)$cliente->id,
+			'idempresa' => (int)$cliente->idempresa,
+			'nome' => trim((string)($data['nome'] ?? '')),
+			'cargo' => trim((string)($data['cargo'] ?? '')),
+			'email' => trim((string)($data['email'] ?? '')),
+			'fone' => trim((string)($data['fone'] ?? '')),
+			'principal' => !empty($data['principal']),
+		];
+		$entity = $tbl->patchEntity($entity, $patch);
+		if (!empty($patch['principal'])) {
+			$tbl->updateAll(['principal' => false], ['idcliente' => (int)$cliente->id]);
+		}
+		if (!$tbl->save($entity)) {
+			$err = $entity->getErrors();
+			$msg = __('Não foi possível salvar o contato.');
+			if (!empty($err['nome'])) {
+				$msg = (string)array_values($err['nome'])[0];
+			}
+
+			return $this->jsonResponse(['ok' => false, 'error' => $msg, 'errors' => $err], 422);
+		}
+
+		return $this->jsonResponse(['ok' => true, 'contato' => $this->_clientesContatoJsonRow($entity)]);
+	}
+
+	/**
+	 * POST — excluir contato.
+	 *
+	 * @param int|string|null $id idcliente
+	 */
+	public function apiContatoExcluir($id = null) {
+		$this->request->allowMethod(['post', 'delete']);
+		$this->autoRender = false;
+		if (!$this->_clientesContatosReady()) {
+			return $this->jsonResponse(['ok' => false, 'error' => __('Módulo de contatos indisponível.')], 503);
+		}
+		$cliente = $this->_findClienteForCurrentUser($id);
+		if (empty($cliente)) {
+			return $this->jsonResponse(['ok' => false, 'error' => __('Cliente não encontrado.')], 404);
+		}
+		$contatoId = (int)$this->request->getData('id', $this->request->getQuery('id'));
+		if ($contatoId <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => __('ID inválido.')], 400);
+		}
+		$tbl = TableRegistry::getTableLocator()->get('ClientesContatos');
+		$row = $tbl->find()->where(['id' => $contatoId, 'idcliente' => (int)$cliente->id])->first();
+		if ($row === null) {
+			return $this->jsonResponse(['ok' => false, 'error' => __('Contato não encontrado.')], 404);
+		}
+		if (!$tbl->delete($row)) {
+			return $this->jsonResponse(['ok' => false, 'error' => __('Falha ao excluir.')], 500);
+		}
+
+		return $this->jsonResponse(['ok' => true]);
+	}
+
+	/**
+	 * @param \App\Model\Entity\ClientesContato $c
+	 * @return array<string,mixed>
+	 */
+	protected function _clientesContatoJsonRow($c) {
+		$nome = trim((string)$c->nome);
+		$parts = preg_split('/\s+/', $nome, -1, PREG_SPLIT_NO_EMPTY);
+		$ini = strtoupper(substr($parts[0] ?? 'C', 0, 1)) . strtoupper(substr($parts[1] ?? '', 0, 1));
+		$tones = ['teal', 'blue', 'rose', 'orange', 'purple', 'navy'];
+
+		return [
+			'id' => (int)$c->id,
+			'nome' => $nome,
+			'cargo' => trim((string)($c->cargo ?? '')),
+			'email' => trim((string)($c->email ?? '')),
+			'fone' => trim((string)($c->fone ?? '')),
+			'principal' => !empty($c->principal),
+			'iniciais' => $ini !== '' ? $ini : 'C',
+			'av_tone' => $tones[(int)$c->id % count($tones)],
+		];
 	}
 
 	public function cidadesestado($idcidade){

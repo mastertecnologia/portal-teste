@@ -219,9 +219,28 @@
                 </div>
             </div>
         </div>
-        <div class="cli-card cli-wizard-info-card">
-            <p class="cli-wizard-info-title"><i class="fas fa-info-circle" aria-hidden="true"></i> <?= h(__('Financeiro')) ?></p>
-            <p class="cli-wizard-info-text mb-0"><?= h(__('Limite de crédito e score não são campos deste formulário. Após o cadastro, use Financeiro e a Visão 360° do cliente.')) ?></p>
+        <div class="cli-section">
+            <div class="cli-section-head">
+                <div class="cli-section-icon"><i class="fas fa-coins"></i></div>
+                <div class="cli-section-title"><?= h(__('Configuração financeira')) ?></div>
+            </div>
+            <div class="cli-section-body">
+                <div class="cli-fg cli-fg-2">
+                    <div class="cli-fgroup">
+                        <label><?= h(__('Limite de crédito (R$)')) ?></label>
+                        <?= $this->Form->control('limite_credito', ['class' => 'form-control', 'label' => false, 'placeholder' => '0,00']) ?>
+                    </div>
+                    <div class="cli-fgroup">
+                        <label><?= h(__('Score interno (0–10)')) ?></label>
+                        <?= $this->Form->control('score_interno', ['class' => 'form-control', 'label' => false, 'placeholder' => '9,2']) ?>
+                    </div>
+                </div>
+                <div class="cli-fgroup">
+                    <label><?= h(__('Observações financeiras')) ?></label>
+                    <?= $this->Form->control('observacoes_financeiras', ['type' => 'textarea', 'rows' => 2, 'class' => 'form-control', 'label' => false]) ?>
+                </div>
+                <p class="cli-wizard-info-text mb-0"><small><?= h(__('Contatos adicionais podem ser cadastrados após salvar o cliente, na ficha de edição.')) ?></small></p>
+            </div>
         </div>
         </div>
 

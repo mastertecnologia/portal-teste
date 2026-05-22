@@ -16,6 +16,7 @@ class ClientesTable extends Table {
         $this->hasMany('Clicontint')->setForeignKey('idcliente')->setDependent(true);
         $this->hasMany('Clicontratos')->setForeignKey('idcliente')->setDependent(true);
         $this->hasMany('ContratosHoras', ['foreignKey' => 'idcliente', 'dependent' => true]);
+        $this->hasMany('ClientesContatos', ['foreignKey' => 'idcliente', 'dependent' => true]);
         $this->belongsTo('Cidades')->setForeignKey('idcidade');
     }
 
@@ -105,7 +106,24 @@ class ClientesTable extends Table {
         return $validator
             // Telefone obrigatório apenas na criação do cliente; na edição,
             // permitimos salvar mesmo que o campo esteja vazio.
-            ->notEmpty('fone', 'Telefone obrigatório!', 'create');
+            ->notEmpty('fone', 'Telefone obrigatório!', 'create')
+            ->decimal('limite_credito', true)
+            ->allowEmptyString('limite_credito')
+            ->decimal('score_interno', true)
+            ->allowEmptyString('score_interno')
+            ->add('score_interno', 'range', [
+                'rule' => function ($value) {
+                    if ($value === null || $value === '') {
+                        return true;
+                    }
+                    $f = (float)$value;
+
+                    return $f >= 0 && $f <= 10;
+                },
+                'message' => __('Score deve estar entre 0 e 10.'),
+            ])
+            ->scalar('observacoes_financeiras')
+            ->allowEmptyString('observacoes_financeiras');
     }
 
     public function generateToken($string) {

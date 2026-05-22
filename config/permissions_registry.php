@@ -619,7 +619,7 @@ return [
         "module" => "Clientes",
         "controller" => "Clientes",
         "action" =>
-            "edit,consultacnpj,consulta_cnpj,consultaIe,consulta_ie,cidadesestado,cidades_estado,sincronizacliente,sincroniza_cliente,apiatualizarcontato",
+            "edit,consultacnpj,consulta_cnpj,consultaIe,consulta_ie,cidadesestado,cidades_estado,sincronizacliente,sincroniza_cliente,apiatualizarcontato,apicontatos,apicontatosalvar,apicontatoexcluir",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
