@@ -251,6 +251,9 @@ class OrcamentosPrototypeController extends AppController {
 		if ($page === 'lista') {
 			return $this->lista();
 		}
+		if (in_array($page, ['faturamento', 'cobranca'], true)) {
+			return $this->redirect(['controller' => 'Faturamento', 'action' => 'index']);
+		}
 		$orcId = (int)$this->request->getQuery('id', 0);
 		if ($orcId > 0) {
 			if ($page === 'revisao') {
