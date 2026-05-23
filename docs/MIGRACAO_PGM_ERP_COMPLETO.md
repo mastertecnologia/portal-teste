@@ -141,7 +141,8 @@ Controller `ServicedeskPrototypeController` já mapeia as **18 telas** via `scre
 - [x] Templates: `lista.ctp` + `estoque.ctp` + `placeholder.ctp` em cada módulo
 - [x] Rotas em `config/routes.php`: `/clientes-prototype/*`, `/produtos-prototype[/estoque]/*`, `/fornecedores-prototype/*`
 - [x] Sidebar premium: itens Clientes, Produtos, Estoque, Preços, Histórico Preços e Fornecedores apontam para essas rotas
-- [ ] Sub-fases pendentes (cada uma vira PR): wizard de novo cliente, visão 360, importador, tabela de preços, centro de cálculo, log de auditoria, inventário, pedidos de compra
+- [x] **Bridge protótipo → legado (dados reais):** lista `clientes-prototype` → novo `Clientes/add`, linha/ações → `Clientes/visao360` + `edit`; KPI inadimplentes via `faturas`
+- [ ] Sub-fases pendentes (cada uma vira PR): KPIs receita/top5/segmento na lista (quando houver regras no BD), importador, unificar shell `erp_prototype` com `clientes-layout-unificado` na 360°
 
 ### Fase 4 — Financeiro / Bancos / Fiscal
 

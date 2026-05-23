@@ -12,11 +12,11 @@ $f = (array)($cliFiltros ?? ['q' => '', 'tipo' => '', 'status' => '']);
 <?= $this->element('ErpPrototype/page_header', [
 	'eyebrow' => __('Cadastros'),
 	'title' => __('Clientes'),
-	'subtitle' => sprintf(__('%d clientes · %d PJ · %d PF no escopo'), (int)$cliCounts['total'], (int)$cliCounts['pj'], (int)$cliCounts['pf']),
+	'subtitle' => __('Cadastro mestre · CRM básico · Histórico financeiro consolidado'),
 	'actions' => [
 		['label' => __('Exportar CSV'), 'url' => ['controller' => 'ClientesPrototype', 'action' => 'exportCsv'], 'class' => 'btn btn-ghost btn-sm'],
 		['label' => __('Importar'), 'url' => ['controller' => 'ClientesPrototype', 'action' => 'view', 'import'], 'class' => 'btn btn-ghost btn-sm'],
-		['label' => '+ ' . __('Novo cliente'), 'url' => ['controller' => 'ClientesPrototype', 'action' => 'view', 'novo'], 'class' => 'btn btn-primary'],
+		['label' => '+ ' . __('Novo cliente'), 'url' => ['controller' => 'Clientes', 'action' => 'add'], 'class' => 'btn btn-primary btn-sm'],
 	],
 ]) ?>
 
@@ -26,6 +26,7 @@ $f = (array)($cliFiltros ?? ['q' => '', 'tipo' => '', 'status' => '']);
 	<div class="stat" style="--sc:var(--purple);"><div class="stat-l"><?= h(__('PF')) ?></div><div class="stat-n"><?= (int)$cliCounts['pf'] ?></div></div>
 	<div class="stat" style="--sc:var(--teal-dark);"><div class="stat-l"><?= h(__('Ativos')) ?></div><div class="stat-n"><?= (int)$cliCounts['ativos'] ?></div></div>
 	<div class="stat" style="--sc:var(--red);"><div class="stat-l"><?= h(__('Inativos')) ?></div><div class="stat-n"><?= (int)$cliCounts['inativos'] ?></div></div>
+	<div class="stat" style="--sc:var(--amber);"><div class="stat-l"><?= h(__('Inadimplentes')) ?></div><div class="stat-n"><?= (int)($cliCounts['inadimplentes'] ?? 0) ?></div></div>
 </div>
 
 <div class="card" style="padding:0;overflow:hidden;">
@@ -72,12 +73,15 @@ $f = (array)($cliFiltros ?? ['q' => '', 'tipo' => '', 'status' => '']);
 				<?php if ($cliItems === []) : ?>
 					<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-muted);"><?= h(__('Nenhum cliente no escopo.')) ?></td></tr>
 				<?php else : foreach ($cliItems as $it) :
-					$cliHref = $this->Url->build(['controller' => 'ClientesPrototype', 'action' => 'view', '360', '?' => ['id' => (int)$it['id']]]);
+					$cliHref = $this->Url->build(['controller' => 'Clientes', 'action' => 'visao360', (int)$it['id']]);
 				?>
 					<tr data-cli-row="<?= (int)$it['id'] ?>" data-pgm-row-href="<?= h($cliHref) ?>" tabindex="0">
 						<td><span class="badge <?= $it['tipo'] === 'PJ' ? 'b-aprov' : 'b-env' ?>"><?= h((string)$it['tipo']) ?></span></td>
 						<td>
 							<strong><?= h((string)$it['nome']) ?></strong>
+							<?php if (!empty($it['public_code'])) : ?>
+								<div style="font-size:10px;color:var(--teal);font-family:monospace;"><?= h((string)$it['public_code']) ?></div>
+							<?php endif; ?>
 							<?php if (!empty($it['fantasia'])) : ?>
 								<div style="font-size:11px;color:var(--text-muted);"><?= h((string)$it['fantasia']) ?></div>
 							<?php endif; ?>
@@ -95,8 +99,9 @@ $f = (array)($cliFiltros ?? ['q' => '', 'tipo' => '', 'status' => '']);
 						</td>
 						<td class="mu"><?= h($H->dt($it['desde'])) ?></td>
 						<td><?= $H->badge($it['inativo'] ? __('Inativo') : __('Ativo'), $it['inativo'] ? 'arq' : 'paga') ?></td>
-						<td class="r">
-							<?= $this->Html->link(__('Abrir'), ['controller' => 'Clientes', 'action' => 'view', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs']) ?>
+						<td class="r" style="white-space:nowrap;">
+							<?= $this->Html->link(__('360°'), ['controller' => 'Clientes', 'action' => 'visao360', (int)$it['id']], ['class' => 'btn btn-primary btn-xs', 'data-turbo' => 'false']) ?>
+							<?= $this->Html->link(__('Editar'), ['controller' => 'Clientes', 'action' => 'edit', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs', 'data-turbo' => 'false']) ?>
 						</td>
 					</tr>
 				<?php endforeach; endif; ?>
