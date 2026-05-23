@@ -545,8 +545,11 @@ class OrdensservicoPrototypeController extends AppController {
 		if ($page === 'lista') {
 			return $this->lista();
 		}
+		if (in_array($page, ['faturamento', 'cobranca'], true)) {
+			return $this->redirect(['controller' => 'Faturamento', 'action' => 'index']);
+		}
 		$osId = (int)$this->request->getQuery('id', 0);
-		if ($osId > 0 && in_array($page, ['execucao', 'aprovacao', 'conclusao', 'sucesso', 'faturamento', 'cobranca'], true)) {
+		if ($osId > 0 && in_array($page, ['execucao', 'aprovacao', 'conclusao', 'sucesso'], true)) {
 			return $this->redirect(['action' => 'detalhe', $osId]);
 		}
 		$wizard = ['abertura' => 1, 'execucao' => 2, 'aprovacao' => 3, 'conclusao' => 4, 'sucesso' => 5];

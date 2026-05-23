@@ -104,10 +104,10 @@ Service Desk Protótipo cobre **8 das 26 telas SD**:
 ### Fase 0 — Fundação (1–2 dias)
 
 - [x] Service Desk Protótipo (parte feita)
-- [ ] **CSS premium isolado** `webroot/dist/css/pgm-erp-prototype.css` com variáveis + shell (sidebar, topbar, cards, badges, tabela, modal)
-- [ ] **Layout base** `src/Template/Layout/erp_prototype.ctp` (sidebar + topbar + seletor empresa)
-- [ ] **Helper compartilhado** `ErpPrototypeHelper` (badges, stepper, breadcrumb)
-- [ ] **Seletor multi-empresa** real (lê `empresas` da sessão, troca `idempresa_ativa`)
+- [x] **CSS premium isolado** `webroot/dist/css/pgm-erp-prototype.css` com variáveis + shell (sidebar, topbar, cards, badges, tabela, modal)
+- [x] **Layout base** `src/Template/Layout/erp_prototype.ctp` (sidebar + topbar + seletor empresa)
+- [x] **Helper compartilhado** `ErpPrototypeHelper` (badges, stepper, breadcrumb)
+- [x] **Seletor multi-empresa** real (topbar + `Empresasusers/switchempresa`; lista em `EmpresasPrototype`)
 
 ### Fase 1 — Completar Service Desk Protótipo
 
@@ -131,16 +131,15 @@ Controller `ServicedeskPrototypeController` já mapeia as **18 telas** via `scre
 - [x] Sidebar premium atualizada para apontar para essas rotas (`'url' => null` → URL Cake)
 - [x] **Bridge orçamentos:** lista → `detalhe`; `?id=` em revisao/print/esign → detalhe/PDF/view legado; wizard `novo` grava rascunho real
 - [x] **Bridge OS:** lista → `detalhe`; `?id=` em execucao…cobranca → detalhe; abertura grava OS; **Editar** → `Ordensservico/edit`
-- [ ] **Sub-fases pendentes** — cada uma vira PR isolado:
-  - `pg-orc-faturamento`, `pg-orc-cobranca` (Faturamento/Cobrança)
-  - `pg-os-kanban` (board completo)
+- [x] **Bridge faturamento/cobrança:** rotas `orcamentos-prototype` e `ordens-prototype` (`faturamento`|`cobranca`) → `Faturamento/index`
+- [ ] **Sub-fase pendente:** `pg-os-kanban` (board completo; hoje placeholder)
 
 ### Fase 3 — Clientes · Produtos · Estoque · Fornecedores
 
 - [x] **`ClientesPrototypeController`** com `lista()` funcional (KPIs PJ/PF/ativos/inativos) + `view($page)` para novo/360/import/export
 - [x] **`ProdutosPrototypeController`** com `lista()` e `estoque()` funcionais (KPIs por tipo, alertas de estoque baixo/zerado) + `view($page)` para preços/log/inventário/import
-- [x] **`FornecedoresPrototypeController`** com placeholder informativo (não há tabela `fornecedores` dedicada no portal — fornecedor hoje vive em `clientes` PJ ou no módulo Fiscal)
-- [x] Templates: `lista.ctp` + `estoque.ctp` + `placeholder.ctp` em cada módulo
+- [x] **`FornecedoresPrototypeController`** com `lista()` de clientes PJ + `view(novo|360)` com bridge legado (sem tabela `fornecedores` dedicada)
+- [x] Templates: `lista.ctp` + `estoque.ctp` + `placeholder.ctp` (Produtos); `lista.ctp` + `placeholder.ctp` (Fornecedores)
 - [x] Rotas em `config/routes.php`: `/clientes-prototype/*`, `/produtos-prototype[/estoque]/*`, `/fornecedores-prototype/*`
 - [x] Sidebar premium: itens Clientes, Produtos, Estoque, Preços, Histórico Preços e Fornecedores apontam para essas rotas
 - [x] **Bridge protótipo → legado (dados reais):** lista `clientes-prototype` → novo `Clientes/add`, linha/ações → `Clientes/visao360` + `edit`; KPI inadimplentes via `faturas`
