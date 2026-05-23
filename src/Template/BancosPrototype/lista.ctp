@@ -42,6 +42,10 @@
 					<?php if (!empty($b['carteira'])) : ?>
 						<div style="font-size:11px;color:var(--text-muted);margin-top:8px;"><?= h(__('Carteira')) ?>: <?= h((string)$b['carteira']) ?></div>
 					<?php endif; ?>
+					<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+						<?= $this->Html->link(__('Editar'), ['controller' => 'FinanceiroBancos', 'action' => 'edit', (int)$b['id']], ['class' => 'btn btn-ghost btn-xs']) ?>
+						<?= $this->Html->link(__('Extrato'), ['controller' => 'BancosPrototype', 'action' => 'view', 'extrato', '?' => ['conta' => (string)$b['nome']]], ['class' => 'btn btn-primary btn-xs']) ?>
+					</div>
 				</div>
 			</div>
 		<?php endforeach; ?>

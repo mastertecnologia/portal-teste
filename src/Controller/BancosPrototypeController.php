@@ -95,6 +95,9 @@ class BancosPrototypeController extends AppController {
 		if ($page === 'lista') {
 			return $this->lista();
 		}
+		if ($page === 'contas') {
+			return $this->redirect(['action' => 'lista']);
+		}
 		$allowed = ['contas', 'extrato', 'conciliacao', 'transferencias', 'fluxo-caixa'];
 		if (!in_array($page, $allowed, true)) {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));

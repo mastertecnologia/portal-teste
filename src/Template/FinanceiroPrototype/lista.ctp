@@ -13,6 +13,7 @@ $saldo = (float)($finKpis['saldo_mes'] ?? 0);
 	'title' => __('Dashboard Financeiro'),
 	'subtitle' => __('Visão consolidada do mês corrente · CR, CP e saldo operacional'),
 	'actions' => [
+		['label' => __('Módulo clássico'), 'url' => ['controller' => 'Financeiro', 'action' => 'index'], 'class' => 'btn btn-ghost btn-sm'],
 		['label' => __('Contas a Receber'), 'url' => ['controller' => 'FinanceiroPrototype', 'action' => 'titulos'], 'class' => 'btn btn-ghost btn-sm'],
 		['label' => __('Contas a Pagar'), 'url' => ['controller' => 'FinanceiroPrototype', 'action' => 'contasPagar'], 'class' => 'btn btn-ghost btn-sm'],
 		['label' => __('Bancos'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'lista'], 'class' => 'btn btn-primary'],
@@ -57,6 +58,7 @@ $saldo = (float)($finKpis['saldo_mes'] ?? 0);
 		<?= $this->Html->link(__('📈 Fluxo de Caixa'), ['controller' => 'BancosPrototype', 'action' => 'view', 'fluxo-caixa'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link(__('🧾 DRE Gerencial'), ['controller' => 'FinanceiroPrototype', 'action' => 'view', 'dre'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link(__('🧾 NF-e / NFS-e'), ['controller' => 'FinanceiroPrototype', 'action' => 'view', 'nfe'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link(__('📊 Relatórios financeiros'), ['controller' => 'FinanceiroPrototype', 'action' => 'view', 'relatorios-fin'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link(__('📦 Faturamento'), ['controller' => 'Faturamento', 'action' => 'index'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link(__('📊 Relatórios financeiros'), ['controller' => 'FinanceiroRelatorios', 'action' => 'index'], ['class' => 'btn btn-ghost btn-sm']) ?>
 	</div>
 </div>
