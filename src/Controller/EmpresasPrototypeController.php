@@ -6,6 +6,7 @@ namespace App\Controller;
 use App\Controller\Traits\ErpPrototypeRbacTrait;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
+use Cake\Http\Exception\NotFoundException;
 
 /**
  * Empresas (multi-empresa) — protótipo (mockup pg-empresas, pg-empresa-nova, pg-empresa).
@@ -14,6 +15,8 @@ use Cake\Http\Exception\NotFoundException;
  * para listagem; troca de empresa ativa continua via EmpresasusersController::switchempresa.
  */
 class EmpresasPrototypeController extends AppController {
+
+	use ErpPrototypeRbacTrait;
 
 	public function initialize() {
 		parent::initialize();
@@ -95,6 +98,13 @@ class EmpresasPrototypeController extends AppController {
 	public function view($page = 'lista') {
 		if ($page === 'lista') {
 			return $this->lista();
+		}
+		if ($page === 'nova') {
+			return $this->redirect(['controller' => 'Empresas', 'action' => 'add']);
+		}
+		$empId = (int)$this->request->getQuery('id', 0);
+		if ($empId > 0 && ($page === 'editar' || $page === 'detalhe')) {
+			return $this->redirect(['controller' => 'Empresas', 'action' => 'edit', $empId]);
 		}
 		$allowed = ['nova', 'editar', 'detalhe'];
 		if (!in_array($page, $allowed, true)) {

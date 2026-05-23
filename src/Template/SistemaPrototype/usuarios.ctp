@@ -14,7 +14,10 @@ $H = $this->ErpPrototype;
 		<h1 style="font-size:22px;font-weight:600;margin:0;">👥 <?= h(__('Usuários do ERP')) ?></h1>
 		<div style="font-size:12px;color:var(--text-muted);"><?= sprintf(h(__('%d usuários · %d equipe · %d portal')), (int)$usrKpi['total'], (int)$usrKpi['equipe'], (int)$usrKpi['portal']) ?></div>
 	</div>
-	<?= $this->Html->link('+ ' . __('Novo usuário'), ['controller' => 'Users', 'action' => 'add'], ['class' => 'btn btn-primary btn-sm']) ?>
+	<div style="display:flex;gap:8px;flex-wrap:wrap;">
+		<?= $this->Html->link(__('Módulo clássico'), ['controller' => 'Users', 'action' => 'index'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('+ ' . __('Novo usuário'), ['controller' => 'Users', 'action' => 'add'], ['class' => 'btn btn-primary btn-sm']) ?>
+	</div>
 </div>
 
 <div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
@@ -51,7 +54,10 @@ $H = $this->ErpPrototype;
 						<td><?= !empty($u['admin']) ? '👑' : '—' ?></td>
 						<td><?= $H->badge(!empty($u['inativo']) ? __('Inativo') : __('Ativo'), !empty($u['inativo']) ? 'arq' : 'paga') ?></td>
 						<td class="mu"><?= h($H->dt($u['created'])) ?></td>
-						<td class="r"><?= $this->Html->link(__('Ver'), ['controller' => 'Users', 'action' => 'view', (int)$u['id']], ['class' => 'btn btn-ghost btn-xs']) ?></td>
+						<td class="r" style="white-space:nowrap;">
+							<?= $this->Html->link(__('Editar'), ['controller' => 'Users', 'action' => 'edit', (int)$u['id']], ['class' => 'btn btn-ghost btn-xs']) ?>
+							<?= $this->Html->link(__('RBAC'), ['controller' => 'SistemaPrototype', 'action' => 'acessoUsuario', '?' => ['user_id' => (int)$u['id']]], ['class' => 'btn btn-ghost btn-xs']) ?>
+						</td>
 					</tr>
 				<?php endforeach; endif; ?>
 			</tbody>

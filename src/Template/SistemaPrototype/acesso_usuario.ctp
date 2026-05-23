@@ -27,7 +27,13 @@ $initials = $H->initials($nome !== '' ? $nome : 'U');
 			<?php endif; ?>
 		</div>
 	</div>
-	<?= $this->Html->link('← ' . __('Central'), ['controller' => 'SistemaPrototype', 'action' => 'acessoCentral'], ['class' => 'btn btn-ghost btn-sm']) ?>
+	<div style="display:flex;gap:8px;flex-wrap:wrap;">
+		<?= $this->Html->link('← ' . __('Central'), ['controller' => 'SistemaPrototype', 'action' => 'acessoCentral'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?php if ($acessoUserId > 0) : ?>
+			<?= $this->Html->link(__('Papéis (legado)'), ['controller' => 'Permissoes', 'action' => 'adminUserRoles', $acessoUserId], ['class' => 'btn btn-ghost btn-sm']) ?>
+			<?= $this->Html->link(__('Editar usuário'), ['controller' => 'Users', 'action' => 'edit', $acessoUserId], ['class' => 'btn btn-primary btn-sm']) ?>
+		<?php endif; ?>
+	</div>
 </div>
 
 <div class="summary-grid" style="margin-bottom:14px;">

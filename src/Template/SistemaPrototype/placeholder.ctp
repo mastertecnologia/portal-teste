@@ -16,10 +16,10 @@ $label = (string)($labels[$page] ?? ucfirst((string)$page));
 
 $legacyMap = [
 	'config' => ['Config', 'index'],
-	'empresa' => ['Empresas', 'edit'],
-	'acesso-usuario' => ['RbacAccessRequests', 'pedidosAcessoManager'],
-	'acesso-auditoria' => ['RbacAccessRequests', 'pedidosAcessoManager'],
-	'acesso-filiais' => ['Empresas', 'index'],
+	'empresa' => ['Empresas', 'index'],
+	'acesso-usuario' => ['Permissoes', 'adminUsers'],
+	'acesso-auditoria' => ['RbacAccessRequests', 'auditLogs'],
+	'acesso-filiais' => ['EmpresasPrototype', 'lista'],
 ];
 [$ctrl, $act] = $legacyMap[$page] ?? ['Users', 'dashboard'];
 ?>

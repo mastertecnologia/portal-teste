@@ -13,7 +13,10 @@ $H = $this->ErpPrototype;
 		<h1 style="font-size:22px;font-weight:600;margin:0;">📑 <?= h(__('Auditoria')) ?></h1>
 		<div style="font-size:12px;color:var(--text-muted);"><?= sprintf(h(__('Últimos %d eventos registrados em audit_logs')), count($audItems)) ?></div>
 	</div>
-	<?= $this->Html->link('← ' . __('Voltar'), ['controller' => 'SistemaPrototype', 'action' => 'acessoCentral'], ['class' => 'btn btn-ghost btn-sm']) ?>
+	<div style="display:flex;gap:8px;">
+		<?= $this->Html->link('← ' . __('Voltar'), ['controller' => 'SistemaPrototype', 'action' => 'acessoCentral'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link(__('Auditoria RBAC'), ['controller' => 'RbacAccessRequests', 'action' => 'auditLogs'], ['class' => 'btn btn-ghost btn-sm']) ?>
+	</div>
 </div>
 
 <div class="card" style="padding:0;overflow:hidden;">
