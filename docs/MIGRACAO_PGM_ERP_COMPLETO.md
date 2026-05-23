@@ -118,7 +118,8 @@ Controller `ServicedeskPrototypeController` já mapeia as **18 telas** via `scre
 - [x] **`contratos`** — contratos SLA + indicador de status (fase 1, hoje)
 - [x] **`problemas`** — Gestão de Problemas (ITIL) com tickets candidatos (fase 1, hoje)
 - [x] **`mudancas`** — Gestão de Mudanças (proxy via tickets P1) (fase 1, hoje)
-- [ ] `ticket` (detalhe — JÁ TEM via `screensService::screenTicket`), `grupo`, `csat`, `config`, `perm`, `fat`, `relatorios`, `templates`, `automacoes-editor`, `detalhe-kb`, `detalhe-fatura`, `integracoes` — usam `ref/generic.ctp` (funcional, sem CSS dedicado)
+- [x] Telas SD com `ref/*.ctp` e dados reais (fila, kanban, meus, cmdb, …); CSAT com link histórico/CSV e operacional clássico
+- [ ] `ticket` (detalhe dedicado), refinamentos `config`/`perm`/`integracoes` vs módulos RBAC legado
 
 ### Fase 2 — Comercial / Orçamentos · OS
 
@@ -128,10 +129,11 @@ Controller `ServicedeskPrototypeController` já mapeia as **18 telas** via `scre
 - [x] Template `placeholder.ctp` para telas wizard ainda não implementadas
 - [x] Rotas em `config/routes.php`: `/orcamentos-prototype/*` e `/ordens-prototype/*`
 - [x] Sidebar premium atualizada para apontar para essas rotas (`'url' => null` → URL Cake)
+- [x] **Bridge orçamentos:** lista → `detalhe`; `?id=` em revisao/print/esign → detalhe/PDF/view legado; wizard `novo` grava rascunho real
+- [x] **Bridge OS:** lista → `detalhe`; `?id=` em execucao…cobranca → detalhe; abertura grava OS; **Editar** → `Ordensservico/edit`
 - [ ] **Sub-fases pendentes** — cada uma vira PR isolado:
-  - `pg-novo`, `pg-revisao`, `pg-print`, `pg-esign`, `pg-sucesso` (wizard de orçamento, 5 passos)
   - `pg-orc-faturamento`, `pg-orc-cobranca` (Faturamento/Cobrança)
-  - `pg-os-abertura`, `pg-os-execucao`, `pg-os-aprovacao`, `pg-os-conclusao`, `pg-os-faturamento`, `pg-os-cobranca`, `pg-os-sucesso`, `pg-os-kanban`
+  - `pg-os-kanban` (board completo)
 
 ### Fase 3 — Clientes · Produtos · Estoque · Fornecedores
 
