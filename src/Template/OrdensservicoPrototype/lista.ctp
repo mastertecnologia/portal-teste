@@ -16,7 +16,7 @@ $clientesOpt = (array)($osClientesOptions ?? []);
 <?= $this->element('ErpPrototype/page_header', [
 	'eyebrow' => __('Operações'),
 	'title' => __('Ordens de Serviço'),
-	'subtitle' => sprintf(__('%d OS · total R$ %s no escopo da empresa ativa'), (int)$osCounts['total'], number_format((float)$osTotalValor, 2, ',', '.')),
+	'subtitle' => __('Abertura · execução · aprovação · conclusão · faturamento'),
 	'actions' => [
 		['label' => __('Exportar CSV'), 'url' => ['controller' => 'OrdensservicoPrototype', 'action' => 'exportCsv', '?' => array_filter($f)], 'class' => 'btn btn-ghost btn-sm'],
 		['label' => __('Kanban'), 'url' => ['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'kanban'], 'class' => 'btn btn-ghost btn-sm'],
@@ -95,7 +95,10 @@ $clientesOpt = (array)($osClientesOptions ?? []);
 						<td class="r"><strong><?= h($H->brl((float)$it['valor'])) ?></strong></td>
 						<td class="mu"><?= h($H->dt($it['data'])) ?></td>
 						<td><?= $H->badge((string)$it['situacao'] !== '' ? (string)$it['situacao'] : '—', str_replace('b-', '', $badge)) ?></td>
-						<td class="r"><?= $this->Html->link(__('Abrir'), ['controller' => 'OrdensservicoPrototype', 'action' => 'detalhe', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs']) ?></td>
+						<td class="r" style="white-space:nowrap;">
+							<?= $this->Html->link(__('Detalhe'), ['controller' => 'OrdensservicoPrototype', 'action' => 'detalhe', (int)$it['id']], ['class' => 'btn btn-primary btn-xs', 'data-turbo' => 'false']) ?>
+							<?= $this->Html->link(__('Editar'), ['controller' => 'Ordensservico', 'action' => 'edit', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs', 'data-turbo' => 'false']) ?>
+						</td>
 					</tr>
 				<?php endforeach; endif; ?>
 			</tbody>

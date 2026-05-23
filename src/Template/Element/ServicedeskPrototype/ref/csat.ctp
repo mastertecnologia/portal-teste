@@ -25,7 +25,14 @@ $npsDelta = $csat['nps_delta'] ?? null;
 			<h1 style="font-size:22px;font-weight:600;margin:0;">⭐ <?= h((string)($screen['title'] ?? __('CSAT & NPS · Satisfação'))) ?></h1>
 			<div style="font-size:12px;color:var(--text-muted);"><?= h((string)($screen['subtitle'] ?? '')) ?></div>
 		</div>
-		<div style="display:flex;gap:8px;flex-wrap:wrap;">
+		<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+			<?php foreach ((array)($screen['links'] ?? []) as $lnk) :
+				if (empty($lnk['label']) || empty($lnk['url'])) {
+					continue;
+				}
+				$cls = (string)($lnk['class'] ?? 'btn btn-ghost btn-sm');
+				echo $this->Html->link((string)$lnk['label'], $lnk['url'], ['class' => $cls, 'escape' => false]);
+			endforeach; ?>
 			<form method="get" action="<?= h($H->sdpPage('csat')) ?>" style="margin:0;">
 				<select name="period" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;" onchange="this.form.submit()">
 					<?php foreach ($periodOpts as $pk => $pl) : ?>

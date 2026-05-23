@@ -27,7 +27,7 @@ if (strpos($st, 'concl') !== false || strpos($st, 'fech') !== false) {
 	</div>
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
 		<?= $this->Html->link('← ' . __('Lista de OS'), ['controller' => 'OrdensservicoPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('✍ ' . __('Editar (clássico)'), ['controller' => 'Ordensservico', 'action' => 'view', (int)$os['id']], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('✍ ' . __('Editar (clássico)'), ['controller' => 'Ordensservico', 'action' => 'edit', (int)$os['id']], ['class' => 'btn btn-ghost btn-sm', 'data-turbo' => 'false']) ?>
 	</div>
 </div>
 

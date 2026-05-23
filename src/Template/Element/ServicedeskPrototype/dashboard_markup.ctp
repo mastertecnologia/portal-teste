@@ -5,6 +5,7 @@
  * @var \App\View\AppView $this
  * @var string $uFila
  * @var string $uClientes
+ * @var string $uOperacional
  * @var array<string,mixed> $proto
  */
 $snap = (array)($proto['snapshot'] ?? []);
@@ -105,6 +106,7 @@ $uRelExport = $this->Url->build(['controller' => 'ServicedeskPrototype', 'action
 				<option><?= h(__('Hoje · tempo real')) ?></option>
 			</select>
 			<a class="btn btn-ghost btn-sm" href="<?= h($uFila) ?>">📋 <?= h(__('Fila técnica')) ?></a>
+			<a class="btn btn-ghost btn-sm" href="<?= h($uOperacional ?? '/portal/tickets/operacional') ?>">⚙ <?= h(__('Operacional clássico')) ?></a>
 			<a class="btn btn-primary btn-sm" href="<?= h($uRelExport) ?>">📥 <?= h(__('Exportar relatório')) ?></a>
 		</div>
 	</div>

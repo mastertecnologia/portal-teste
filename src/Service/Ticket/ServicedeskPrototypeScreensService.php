@@ -629,6 +629,11 @@ class ServicedeskPrototypeScreensService {
 			'rows' => [],
 			'items' => [],
 			'mode' => 'csat',
+			'links' => [
+				['label' => __('Histórico completo'), 'url' => ['controller' => 'ServicedeskPrototype', 'action' => 'csatHistorico']],
+				['label' => __('Exportar CSV'), 'url' => ['controller' => 'ServicedeskPrototype', 'action' => 'csatExportCsv']],
+				['label' => __('Painel operacional'), 'url' => ['controller' => 'Tickets', 'action' => 'operacional']],
+			],
 			'empty' => __('Nenhuma resposta CSAT no período.'),
 		];
 	}

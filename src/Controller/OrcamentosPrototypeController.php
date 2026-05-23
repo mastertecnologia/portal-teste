@@ -251,6 +251,18 @@ class OrcamentosPrototypeController extends AppController {
 		if ($page === 'lista') {
 			return $this->lista();
 		}
+		$orcId = (int)$this->request->getQuery('id', 0);
+		if ($orcId > 0) {
+			if ($page === 'revisao') {
+				return $this->redirect(['action' => 'detalhe', $orcId]);
+			}
+			if ($page === 'print') {
+				return $this->redirect(['controller' => 'Orcamentos', 'action' => 'imprimirPdf', $orcId]);
+			}
+			if ($page === 'esign' || $page === 'sucesso') {
+				return $this->redirect(['controller' => 'Orcamentos', 'action' => 'view', $orcId]);
+			}
+		}
 		$wizard = ['novo' => 1, 'revisao' => 2, 'print' => 3, 'esign' => 4, 'sucesso' => 5];
 		$allowed = array_merge(array_keys($wizard), ['faturamento', 'cobranca']);
 		if (!in_array($page, $allowed, true)) {
