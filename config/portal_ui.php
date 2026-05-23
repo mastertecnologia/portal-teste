@@ -31,8 +31,8 @@ return [
         'mode' => $mode,
         'premium_modules' => $modules,
         'reference_html' => [
-            'primary' => 'docs/reference/pgm_erp_completo_2.html',
-            'fallback' => 'docs/reference/pgm_erp_completo.html',
+            'primary' => 'docs/referencias/pgm_erp_completo_2.html',
+            'fallback' => 'docs/reference/pgm_erp_completo_2.html',
         ],
     ],
 ];
