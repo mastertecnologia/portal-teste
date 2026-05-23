@@ -23,18 +23,14 @@ $label = (string)($labels[$page] ?? ucfirst((string)$page));
 </div>
 
 <div class="alert-box alert-amber">
-	<strong><?= h(__('Módulo dedicado ainda não existe no portal.')) ?></strong><br>
-	<?= h(__('Atualmente os fornecedores são gerenciados via Clientes (tipo PJ) ou pelo módulo Fiscal. A tela premium dedicada faz parte do roadmap.')) ?>
+	<strong><?= h(__('Selecione um fornecedor na lista ou cadastre um cliente PJ.')) ?></strong><br>
+	<?= h(__('Com ?id= na URL, esta tela redireciona automaticamente para a Visão 360° legada.')) ?>
 </div>
 
 <div class="card" style="text-align:center;padding:32px 22px;">
-	<div style="font-size:42px;margin-bottom:10px;">🚧</div>
-	<h2 style="font-size:16px;margin-bottom:8px;"><?= h(__('Tela em construção')) ?></h2>
-	<p style="color:var(--text-muted);margin-bottom:14px;">
-		<?= h(__('Quando o módulo de fornecedores for criado, esta interface vai mostrar a lista premium do mockup.')) ?>
-	</p>
 	<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-		<?= $this->Html->link('👥 ' . __('Clientes (PJ)'), ['controller' => 'ClientesPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('🧾 ' . __('Notas fiscais'), ['controller' => 'FiscalNotas', 'action' => 'index'], ['class' => 'btn btn-primary btn-sm']) ?>
+		<?= $this->Html->link('🏭 ' . __('Lista de fornecedores'), ['controller' => 'FornecedoresPrototype', 'action' => 'lista'], ['class' => 'btn btn-primary btn-sm']) ?>
+		<?= $this->Html->link('+ ' . __('Novo (PJ)'), ['controller' => 'Clientes', 'action' => 'add'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('👥 ' . __('Clientes'), ['controller' => 'ClientesPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
 	</div>
 </div>

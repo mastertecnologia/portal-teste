@@ -189,6 +189,22 @@ class ProdutosPrototypeController extends AppController {
 		if ($page === 'estoque') {
 			return $this->estoque();
 		}
+		if ($page === 'novo') {
+			return $this->redirect(['controller' => 'Produtos', 'action' => 'add']);
+		}
+		$prodId = (int)$this->request->getQuery('id', 0);
+		if ($prodId > 0 && $page === 'detalhe') {
+			return $this->redirect(['controller' => 'Produtos', 'action' => 'edit', $prodId]);
+		}
+		if (in_array($page, ['estoque-log', 'inventario', 'inv-historico'], true)) {
+			return $this->redirect(['controller' => 'Produtos', 'action' => 'estoque']);
+		}
+		if ($page === 'historico-precos') {
+			return $this->redirect(['controller' => 'Produtos', 'action' => 'index']);
+		}
+		if (in_array($page, ['pc-lista', 'pc-novo'], true)) {
+			return $this->redirect(['controller' => 'Produtos', 'action' => 'index']);
+		}
 		$allowed = ['novo', 'detalhe', 'precos', 'precificacao', 'estoque-log', 'historico-precos', 'import', 'pc-lista', 'pc-novo', 'inventario', 'inv-historico'];
 		if (!in_array($page, $allowed, true)) {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));

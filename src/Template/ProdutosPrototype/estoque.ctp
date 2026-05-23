@@ -15,9 +15,8 @@ $H = $this->ErpPrototype;
 		<div style="font-size:12px;color:var(--text-muted);"><?= h(__('Saldos atuais por produto · alertas para itens em baixo ou esgotados')) ?></div>
 	</div>
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
-		<?= $this->Html->link('🗒 ' . __('Log de auditoria'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'estoque-log'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('📋 ' . __('Inventário'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'inventario'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('+ ' . __('Pedido de compra'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'pc-novo'], ['class' => 'btn btn-primary btn-sm']) ?>
+		<?= $this->Html->link('📊 ' . __('Estoque ERP'), ['controller' => 'Produtos', 'action' => 'estoque'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('← ' . __('Produtos'), ['controller' => 'ProdutosPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
 	</div>
 </div>
 
@@ -57,7 +56,7 @@ $H = $this->ErpPrototype;
 						<td class="r" style="color:<?= h($colorCss) ?>;font-weight:700;"><?= number_format((float)$it['estoque'], 2, ',', '.') ?></td>
 						<td class="r"><?= h($H->brl((float)$it['preco'])) ?></td>
 						<td><span class="badge <?= h($statusBadge) ?>"><?= h($statusLbl) ?></span></td>
-						<td class="r"><?= $this->Html->link(__('Abrir'), ['controller' => 'Produtos', 'action' => 'view', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs']) ?></td>
+						<td class="r"><?= $this->Html->link(__('Abrir'), ['controller' => 'Produtos', 'action' => 'edit', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs']) ?></td>
 					</tr>
 				<?php endforeach; endif; ?>
 			</tbody>
