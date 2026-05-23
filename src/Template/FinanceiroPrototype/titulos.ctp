@@ -54,7 +54,7 @@ $H = $this->ErpPrototype;
 						<td class="r"><strong><?= h($H->brl((float)$it['valor'])) ?></strong></td>
 						<td class="mu"><?= h($H->dt($it['vencimento'])) ?></td>
 						<td><?= $H->badge($lbl, $badge) ?></td>
-						<td class="r"><?= $this->Html->link(__('Abrir'), ['controller' => 'Faturas', 'action' => 'view', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs']) ?></td>
+						<td class="r"><?= $this->Html->link(__('Abrir'), ['controller' => 'Faturas', 'action' => 'edit', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs']) ?></td>
 					</tr>
 				<?php endforeach; endif; ?>
 			</tbody>

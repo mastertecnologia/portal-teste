@@ -153,7 +153,8 @@ Controller `ServicedeskPrototypeController` já mapeia as **18 telas** via `scre
 - [x] Templates: `lista.ctp`, `titulos.ctp`, `contas_pagar.ctp`, `placeholder.ctp` (Financeiro); `lista.ctp` + `placeholder.ctp` (Bancos)
 - [x] Rotas em `config/routes.php`: `/financeiro-prototype/*` e `/bancos-prototype/*`
 - [x] Sidebar premium: itens Financeiro/Faturamento/Contas a Receber/Cobrança/Contas a Pagar/NF-e/DRE/Relatórios + Bancos/Contas/Extrato/Conciliação/Transferências/Fluxo apontam para as rotas
-- [ ] Sub-fases pendentes (PRs futuros): NF-e (carga real `fiscal_notas`), DRE Gerencial com gráficos, Conciliação bancária com matching, Fluxo de caixa projetado, Wizard de transferência/PIX
+- [x] **Bridge protótipo → legado:** `view(cobranca|orc-cobranca|orc-faturamento)` → `Faturamento/index`; `relatorios-fin` → `FinanceiroRelatorios/index`; `view(contas)` (Bancos) → `lista`; títulos → `Faturas/edit`; lançamentos CP → `Financeiro/editDespesa` ou `editReceita`; dashboard → atalho `Financeiro/index`; cards banco → `FinanceiroBancos/edit` + extrato filtrado
+- [ ] Sub-fases pendentes (PRs futuros): campos fictícios do mock (projeção de caixa avançada), wizard PIX dedicado, KPIs segmento na lista financeira
 
 ### Fase 5 — Sistema · RBAC · Multi-empresa
 

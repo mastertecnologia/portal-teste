@@ -255,6 +255,12 @@ class FinanceiroPrototypeController extends AppController {
 				return $this->titulos();
 			case 'contas-pagar':
 				return $this->contasPagar();
+			case 'cobranca':
+			case 'orc-cobranca':
+			case 'orc-faturamento':
+				return $this->redirect(['controller' => 'Faturamento', 'action' => 'index']);
+			case 'relatorios-fin':
+				return $this->redirect(['controller' => 'FinanceiroRelatorios', 'action' => 'index']);
 		}
 		$allowed = ['nfe', 'dre', 'relatorios-fin', 'orc-faturamento', 'orc-cobranca', 'cobranca'];
 		if (!in_array($page, $allowed, true)) {

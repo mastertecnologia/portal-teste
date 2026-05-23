@@ -45,6 +45,9 @@ $H = $this->ErpPrototype;
 					$state = (string)$it['status'];
 					$badge = $state === 'paga' ? 'paga' : ($state === 'vencida' ? 'vencida' : 'pendente');
 					$lbl = $state === 'paga' ? __('Paga') : ($state === 'vencida' ? __('Vencida') : __('Pendente'));
+					$lanUrl = !empty($it['is_despesa'])
+						? ['controller' => 'Financeiro', 'action' => 'editDespesa', (int)$it['id']]
+						: ['controller' => 'Financeiro', 'action' => 'editReceita', (int)$it['id']];
 				?>
 					<tr>
 						<td><?= h(\Cake\Utility\Text::truncate((string)$it['descricao'], 90, ['ellipsis' => '…'])) ?></td>
@@ -52,7 +55,7 @@ $H = $this->ErpPrototype;
 						<td class="r" style="color:<?= !empty($it['is_despesa']) ? '#7A1822' : 'var(--teal-dark)' ?>;"><strong><?= h($H->brl((float)$it['valor'])) ?></strong></td>
 						<td class="mu"><?= h($H->dt($it['vencimento'])) ?></td>
 						<td><?= $H->badge($lbl, $badge) ?></td>
-						<td class="r"><?= $this->Html->link(__('Ver'), ['controller' => 'Financeiro', 'action' => 'index'], ['class' => 'btn btn-ghost btn-xs']) ?></td>
+						<td class="r"><?= $this->Html->link(__('Abrir'), $lanUrl, ['class' => 'btn btn-ghost btn-xs']) ?></td>
 					</tr>
 				<?php endforeach; endif; ?>
 			</tbody>
