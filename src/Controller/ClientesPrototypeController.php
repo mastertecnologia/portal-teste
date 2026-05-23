@@ -80,7 +80,7 @@ class ClientesPrototypeController extends AppController {
 			$rows = [];
 		}
 
-		$counts = ['total' => 0, 'pj' => 0, 'pf' => 0, 'ativos' => 0, 'inativos' => 0];
+		$counts = ['total' => 0, 'pj' => 0, 'pf' => 0, 'ativos' => 0, 'inativos' => 0, 'inadimplentes' => 0];
 		$items = [];
 		foreach ($rows as $r) {
 			$counts['total']++;
@@ -101,6 +101,7 @@ class ClientesPrototypeController extends AppController {
 			}
 			$items[] = [
 				'id' => (int)$r->get('id'),
+				'public_code' => trim((string)($r->get('public_code') ?? '')),
 				'tipo' => $pj ? 'PJ' : 'PF',
 				'nome' => $nome,
 				'fantasia' => (string)($r->get('nomefantasia') ?? ''),
@@ -111,6 +112,8 @@ class ClientesPrototypeController extends AppController {
 				'desde' => $r->get('membrodesde'),
 			];
 		}
+
+		$counts['inadimplentes'] = $this->countClientesInadimplentes($empresa);
 
 		$this->set([
 			'title' => __('Clientes'),
@@ -218,7 +221,10 @@ class ClientesPrototypeController extends AppController {
 		if ($page === 'lista') {
 			return $this->lista();
 		}
-		$allowed = ['novo', '360', 'export', 'import'];
+		if ($page === 'novo') {
+			return $this->redirect(['controller' => 'Clientes', 'action' => 'add']);
+		}
+		$allowed = ['360', 'export', 'import'];
 		if (!in_array($page, $allowed, true)) {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));
 		}
@@ -250,8 +256,12 @@ class ClientesPrototypeController extends AppController {
 	 * pg-cliente-360 — visão 360º (KPIs + tickets + faturas + OS + contratos).
 	 */
 	protected function visao360() {
-		$empresa = (int)$this->Auth->user('idempresa');
 		$cliId = (int)$this->request->getQuery('id', 0);
+		if ($cliId > 0) {
+			return $this->redirect(['controller' => 'Clientes', 'action' => 'visao360', $cliId]);
+		}
+
+		$empresa = (int)$this->Auth->user('idempresa');
 
 		$payload = [
 			'cliente' => null,
@@ -395,6 +405,48 @@ class ClientesPrototypeController extends AppController {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
+	/**
+	 * Clientes com ao menos uma fatura vencida e não quitada (escopo empresa).
+	 */
+	protected function countClientesInadimplentes(int $empresa): int {
+		if ($empresa <= 0) {
+			return 0;
+		}
+		try {
+			$faturas = $this->loadModel('Faturas');
+		} catch (\Throwable $e) {
+			return 0;
+		}
+		$now = \Cake\I18n\FrozenTime::now();
+		$clientes = [];
+		try {
+			$rows = $faturas->find()
+				->select(['idcliente', 'status', 'vencimento', 'dtretorno'])
+				->where([
+					'Faturas.idempresa' => $empresa,
+					'Faturas.idcliente IS NOT' => null,
+					'Faturas.vencimento <' => $now,
+				])
+				->limit(5000)
+				->all();
+			foreach ($rows as $f) {
+				$cid = (int)$f->get('idcliente');
+				if ($cid <= 0) {
+					continue;
+				}
+				$status = strtolower((string)($f->get('status') ?? ''));
+				$pago = strpos($status, 'pag') !== false || $f->get('dtretorno') instanceof \DateTimeInterface;
+				if (!$pago) {
+					$clientes[$cid] = true;
+				}
+			}
+		} catch (\Throwable $e) {
+			return 0;
+		}
+
+		return count($clientes);
+	}
+
 	protected function loadEmpresasParaTopbar(): array {
 		try {
 			$tbl = $this->loadModel('Empresas');
