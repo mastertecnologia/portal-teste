@@ -1,7 +1,25 @@
-# Migração para o desenho `pgm_erp_completo.html`
+# Migração para o desenho `pgm_erp_completo.html` / `pgm_erp_completo_2.html`
 
-> Plano de reestruturação do portal para adotar o **layout, telas e fluxos** do mockup `pgm_erp_completo.html` (1 arquivo, ~25.000 linhas, 100 telas SPA em JavaScript).
-> Status: **EM EXECUÇÃO** — decisões aprovadas, Fase 0 em curso.
+> Plano de reestruturação do portal para adotar o **layout, telas e fluxos** do mockup (~100 telas SPA em JavaScript).
+> Referência preferida: **`docs/reference/pgm_erp_completo_2.html`** (copiar do `Downloads` do posto de trabalho).
+> Status: **EM EXECUÇÃO** — Fases 0–5 com protótipos lado-a-lado; legado Clientes com `clientes-layout-unificado` em produção.
+
+### Auditoria automática (após colocar o HTML no repo)
+
+```bash
+php bin/audit_pgm_erp_mock.php
+```
+
+### Switchover por módulo (sem apagar legado)
+
+`config/portal_ui.php` + `.env`:
+
+```ini
+PORTAL_UI_MODE=mixed
+PORTAL_PREMIUM_MODULES=clientes
+```
+
+Helper: `App\Utility\PortalUi::isPremiumModule('clientes')` — use em controllers só quando o módulo *-prototype estiver 100% equivalente ao legado.
 
 ## ✅ Decisões aprovadas (questionário 19/05/2026)
 
