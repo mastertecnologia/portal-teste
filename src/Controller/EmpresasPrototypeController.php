@@ -6,7 +6,6 @@ namespace App\Controller;
 use App\Controller\Traits\ErpPrototypeRbacTrait;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
-use Cake\Http\Exception\NotFoundException;
 
 /**
  * Empresas (multi-empresa) — protótipo (mockup pg-empresas, pg-empresa-nova, pg-empresa).
