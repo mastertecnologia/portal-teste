@@ -12,7 +12,8 @@
 		<h1 style="font-size:22px;font-weight:600;margin:0;">🔐 <?= h(__('Controle de Acesso')) ?></h1>
 		<div style="font-size:12px;color:var(--text-muted);"><?= h(__('Papéis, atribuições e pedidos de acesso')) ?></div>
 	</div>
-	<div style="display:flex;gap:8px;">
+	<div style="display:flex;gap:8px;flex-wrap:wrap;">
+		<?= $this->Html->link(__('Painel IAM'), ['controller' => 'Permissoes', 'action' => 'adminIndex'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('👥 ' . __('Usuários'), ['controller' => 'SistemaPrototype', 'action' => 'usuarios'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('📋 ' . __('Auditoria'), ['controller' => 'SistemaPrototype', 'action' => 'auditoria'], ['class' => 'btn btn-ghost btn-sm']) ?>
 	</div>
@@ -37,9 +38,11 @@
 	<div class="sec-title"><?= h(__('Atalhos')) ?></div>
 	<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
 		<?= $this->Html->link('🛡 ' . __('Papéis RBAC'), ['controller' => 'SistemaPrototype', 'action' => 'acessoPapeis'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('⚙ ' . __('Gerenciar papéis'), ['controller' => 'Permissoes', 'action' => 'adminRoles'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('🎭 ' . __('Simular acesso'), ['controller' => 'SistemaPrototype', 'action' => 'viewAs'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('📨 ' . __('Pedidos de acesso'), ['controller' => 'RbacAccessRequests', 'action' => 'pedidosAcessoManager'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('📑 ' . __('Auditoria de mudanças'), ['controller' => 'SistemaPrototype', 'action' => 'auditoria'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('🔍 ' . __('Auditoria RBAC'), ['controller' => 'RbacAccessRequests', 'action' => 'auditLogs'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('🏢 ' . __('Empresas & Filiais'), ['controller' => 'EmpresasPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
 	</div>
 </div>

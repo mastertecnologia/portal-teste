@@ -12,7 +12,10 @@
 		<h1 style="font-size:22px;font-weight:600;margin:0;">🛡 <?= h(__('Papéis RBAC')) ?></h1>
 		<div style="font-size:12px;color:var(--text-muted);"><?= sprintf(h(__('%d papéis ativos · ordenados por hierarquia')), count($roleItems)) ?></div>
 	</div>
-	<?= $this->Html->link('← ' . __('Central'), ['controller' => 'SistemaPrototype', 'action' => 'acessoCentral'], ['class' => 'btn btn-ghost btn-sm']) ?>
+	<div style="display:flex;gap:8px;">
+		<?= $this->Html->link('← ' . __('Central'), ['controller' => 'SistemaPrototype', 'action' => 'acessoCentral'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link(__('Gerenciar no legado'), ['controller' => 'Permissoes', 'action' => 'adminRoles'], ['class' => 'btn btn-primary btn-sm']) ?>
+	</div>
 </div>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;">

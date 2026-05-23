@@ -166,7 +166,8 @@ Controller `ServicedeskPrototypeController` já mapeia as **18 telas** via `scre
 - [x] Rotas: `/empresas-prototype/*` e `/sistema-prototype/*` (mapeando `usuarios`, `acesso-central`, `acesso-papeis`, `auditoria`, `config` para actions dedicadas)
 - [x] Sidebar premium: Empresas + Configurações + Empresa + Usuários + Controle de Acesso + Papéis + Auditoria de Acessos + Auditoria LGPD apontam para as rotas
 - [x] Acesso restrito a usuários `admin = true` (validação no `isAuthorized`)
-- [ ] Sub-fases pendentes (PRs futuros): assistente de nova empresa (5 passos), ficha de acesso de usuário (matriz de papéis × empresas), auditoria de acessos com filtros, simulador "View as user", configurações por empresa
+- [x] **Bridge protótipo → legado:** `config` → `Config/index`; `empresa` → `Empresas/edit` (empresa ativa); `acesso-filiais` → lista empresas; `acesso-auditoria` → `RbacAccessRequests/auditLogs`; empresas `nova`/`editar?id=` → `Empresas/add|edit`; usuários → `Users/edit` + ficha RBAC; papéis → `Permissoes/adminRoles`
+- [ ] Sub-fases pendentes (PRs futuros): assistente wizard nova empresa (5 passos), matriz papéis × empresas na ficha premium, filtros avançados em auditoria, view-as com impersonação real
 
 ### Fase 6 — Indústria / PCP (**MÓDULO NOVO** — 10–15 dias)
 

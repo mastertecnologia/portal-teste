@@ -15,6 +15,8 @@ use Cake\Http\Exception\NotFoundException;
  */
 class EmpresasPrototypeController extends AppController {
 
+	use ErpPrototypeRbacTrait;
+
 	public function initialize() {
 		parent::initialize();
 		$this->loadModel('Empresas');
@@ -95,6 +97,13 @@ class EmpresasPrototypeController extends AppController {
 	public function view($page = 'lista') {
 		if ($page === 'lista') {
 			return $this->lista();
+		}
+		if ($page === 'nova') {
+			return $this->redirect(['controller' => 'Empresas', 'action' => 'add']);
+		}
+		$empId = (int)$this->request->getQuery('id', 0);
+		if ($empId > 0 && ($page === 'editar' || $page === 'detalhe')) {
+			return $this->redirect(['controller' => 'Empresas', 'action' => 'edit', $empId]);
 		}
 		$allowed = ['nova', 'editar', 'detalhe'];
 		if (!in_array($page, $allowed, true)) {

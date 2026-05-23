@@ -42,7 +42,7 @@ class SistemaPrototypeController extends AppController {
 	 * pg-config — atalhos.
 	 */
 	public function config() {
-		return $this->renderSimple('config', __('Configurações'));
+		return $this->redirect(['controller' => 'Config', 'action' => 'index']);
 	}
 
 	/**
@@ -428,26 +428,37 @@ class SistemaPrototypeController extends AppController {
 			case 'view-as':
 				return $this->viewAs();
 			case 'empresa':
-			case 'acesso-auditoria':
-			case 'acesso-filiais':
-				$labels = [
-					'empresa' => __('Dados da empresa'),
-					'acesso-auditoria' => __('Auditoria de acessos'),
-					'acesso-filiais' => __('Empresas & Filiais'),
-				];
-				$this->set([
-					'title' => (string)($labels[$page] ?? ucfirst((string)$page)),
-					'erpNavActive' => $page,
-					'erpBreadcrumb' => [
-						['label' => 'PGM ERP'],
-						['label' => __('Sistema')],
-						['label' => $labels[$page] ?? ucfirst((string)$page), 'cur' => true],
-					],
-					'erpEmpresas' => $this->loadEmpresasParaTopbar(),
-					'page' => $page,
-				]);
+				$empresaId = (int)$this->Auth->user('idempresa');
+				if ($empresaId > 0) {
+					return $this->redirect(['controller' => 'Empresas', 'action' => 'edit', $empresaId]);
+				}
 
-				return $this->render('placeholder');
+				break;
+			case 'acesso-auditoria':
+				return $this->redirect(['controller' => 'RbacAccessRequests', 'action' => 'auditLogs']);
+			case 'acesso-filiais':
+				return $this->redirect(['controller' => 'EmpresasPrototype', 'action' => 'lista']);
+		}
+
+		if (in_array($page, ['empresa', 'acesso-auditoria', 'acesso-filiais'], true)) {
+			$labels = [
+				'empresa' => __('Dados da empresa'),
+				'acesso-auditoria' => __('Auditoria de acessos'),
+				'acesso-filiais' => __('Empresas & Filiais'),
+			];
+			$this->set([
+				'title' => (string)($labels[$page] ?? ucfirst((string)$page)),
+				'erpNavActive' => $page,
+				'erpBreadcrumb' => [
+					['label' => 'PGM ERP'],
+					['label' => __('Sistema')],
+					['label' => $labels[$page] ?? ucfirst((string)$page), 'cur' => true],
+				],
+				'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+				'page' => $page,
+			]);
+
+			return $this->render('placeholder');
 		}
 
 		throw new NotFoundException(__('Tela do protótipo não encontrada.'));

@@ -13,7 +13,10 @@
 		<h1 style="font-size:22px;font-weight:600;margin:0;">🏢 <?= h(__('Empresas cadastradas')) ?></h1>
 		<div style="font-size:12px;color:var(--text-muted);"><?= sprintf(h(__('%d empresas · %d ativas')), (int)$empKpi['total'], (int)$empKpi['ativas']) ?></div>
 	</div>
-	<?= $this->Html->link('+ ' . __('Nova empresa'), ['controller' => 'EmpresasPrototype', 'action' => 'view', 'nova'], ['class' => 'btn btn-primary btn-sm']) ?>
+	<div style="display:flex;gap:8px;flex-wrap:wrap;">
+		<?= $this->Html->link(__('Módulo clássico'), ['controller' => 'Empresas', 'action' => 'index'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('+ ' . __('Nova empresa'), ['controller' => 'Empresas', 'action' => 'add'], ['class' => 'btn btn-primary btn-sm']) ?>
+	</div>
 </div>
 
 <div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
@@ -67,12 +70,11 @@
 								<span class="badge b-env"><?= h(__('Pronta')) ?></span>
 							<?php endif; ?>
 						</td>
-						<td class="r">
+						<td class="r" style="white-space:nowrap;">
 							<?php if (empty($it['current']) && empty($it['inativa'])) : ?>
 								<?= $this->Html->link(__('Usar'), ['controller' => 'Empresasusers', 'action' => 'switchempresa', (int)$it['id'], '?' => ['redirect' => $this->request->getRequestTarget()]], ['class' => 'btn btn-ghost btn-xs']) ?>
-							<?php else : ?>
-								<?= $this->Html->link(__('Editar'), ['controller' => 'Empresas', 'action' => 'edit', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs']) ?>
 							<?php endif; ?>
+							<?= $this->Html->link(__('Editar'), ['controller' => 'Empresas', 'action' => 'edit', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs']) ?>
 						</td>
 					</tr>
 				<?php endforeach; endif; ?>
