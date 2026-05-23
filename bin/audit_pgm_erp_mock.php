@@ -14,6 +14,7 @@ declare(strict_types=1);
 $root = dirname(__DIR__);
 $candidates = [
     $argv[1] ?? null,
+    $root . '/docs/referencias/pgm_erp_completo_2.html',
     $root . '/docs/reference/pgm_erp_completo_2.html',
     $root . '/docs/reference/pgm_erp_completo.html',
 ];
@@ -28,7 +29,7 @@ foreach ($candidates as $c) {
 
 if ($htmlPath === null) {
     fwrite(STDERR, "Arquivo de referência não encontrado.\n");
-    fwrite(STDERR, "Copie pgm_erp_completo_2.html para docs/reference/ ou passe o caminho como argumento.\n");
+    fwrite(STDERR, "Copie pgm_erp_completo_2.html para docs/referencias/ (ou docs/reference/) ou passe o caminho.\n");
     exit(2);
 }
 

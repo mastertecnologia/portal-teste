@@ -2,7 +2,7 @@
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `pgm_erp_completo_2.html` | **Referência principal** (~100 telas SPA). Copie de `Downloads/pgm_erp_completo_2.html` para esta pasta. |
+| `pgm_erp_completo_2.html` | **Referência principal** — no repo está em **`../referencias/pgm_erp_completo_2.html`** (~124 telas `pg-*`). |
 | `pgm_erp_completo.html` | Versão anterior do mockup (fallback). |
 | `pgm_orcamentos_premium.html` | Extrato — módulo Orçamentos (`pg-lista` … `pg-sucesso`) |
 | `ordens_servico_premium.html` | Referência alternativa de OS (tema escuro; legado) |
