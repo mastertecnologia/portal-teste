@@ -21,10 +21,12 @@ $f = (array)($prodFiltros ?? ['q' => '', 'tipo' => '', 'ativo' => '']);
 	'title' => __('Produtos'),
 	'subtitle' => sprintf(__('%d itens · catálogo total %s'), (int)$prodCounts['total'], $H->brl((float)$prodValorTotal)),
 	'actions' => [
+		['label' => __('Módulo clássico'), 'url' => ['controller' => 'Produtos', 'action' => 'index'], 'class' => 'btn btn-ghost btn-sm'],
 		['label' => __('Exportar CSV'), 'url' => ['controller' => 'ProdutosPrototype', 'action' => 'exportCsv'], 'class' => 'btn btn-ghost btn-sm'],
+		['label' => __('Estoque ERP'), 'url' => ['controller' => 'Produtos', 'action' => 'estoque'], 'class' => 'btn btn-ghost btn-sm'],
 		['label' => __('Estoque'), 'url' => ['controller' => 'ProdutosPrototype', 'action' => 'estoque'], 'class' => 'btn btn-ghost btn-sm'],
 		['label' => __('Tabela de preços'), 'url' => ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'], 'class' => 'btn btn-ghost btn-sm'],
-		['label' => '+ ' . __('Novo produto'), 'url' => ['controller' => 'ProdutosPrototype', 'action' => 'view', 'novo'], 'class' => 'btn btn-primary'],
+		['label' => '+ ' . __('Novo produto'), 'url' => ['controller' => 'Produtos', 'action' => 'add'], 'class' => 'btn btn-primary'],
 	],
 ]) ?>
 
@@ -97,12 +99,7 @@ $f = (array)($prodFiltros ?? ['q' => '', 'tipo' => '', 'ativo' => '']);
 					$estCol = $est <= 0 ? '#7A1822' : ($est < 5 ? '#8A4D02' : 'var(--teal-dark)');
 				?>
 					<?php
-					$detUrl = $this->Url->build([
-						'controller' => 'ProdutosPrototype',
-						'action' => 'view',
-						'detalhe',
-						'?' => ['id' => (int)$it['id']],
-					]);
+					$detUrl = $this->Url->build(['controller' => 'Produtos', 'action' => 'edit', (int)$it['id']]);
 					?>
 					<tr data-pgm-row-href="<?= h($detUrl) ?>" tabindex="0">
 						<td style="font-family:monospace;font-size:11px;font-weight:600;"><?= h((string)$it['codigo']) ?></td>
@@ -116,7 +113,7 @@ $f = (array)($prodFiltros ?? ['q' => '', 'tipo' => '', 'ativo' => '']);
 						</td>
 						<td class="r" style="color:<?= h($estCol) ?>;font-weight:600;"><?= number_format($est, 2, ',', '.') ?></td>
 						<td><?= $H->badge($it['ativo'] ? __('Ativo') : __('Inativo'), $it['ativo'] ? 'paga' : 'arq') ?></td>
-						<td class="r"><?= $this->Html->link(__('Abrir'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'detalhe', '?' => ['id' => (int)$it['id']]], ['class' => 'btn btn-ghost btn-xs']) ?></td>
+						<td class="r"><?= $this->Html->link(__('Abrir'), ['controller' => 'Produtos', 'action' => 'edit', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs']) ?></td>
 					</tr>
 				<?php endforeach; endif; ?>
 			</tbody>

@@ -17,7 +17,7 @@ $p = $produto ?? null;
 	<div style="display:flex;gap:8px;">
 		<?= $this->Html->link('← ' . __('Lista'), ['controller' => 'ProdutosPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?php if ($p !== null) : ?>
-			<?= $this->Html->link(__('Legado'), ['controller' => 'Produtos', 'action' => 'view', (int)$p['id']], ['class' => 'btn btn-ghost btn-sm', 'target' => '_blank']) ?>
+			<?= $this->Html->link(__('Editar (clássico)'), ['controller' => 'Produtos', 'action' => 'edit', (int)$p['id']], ['class' => 'btn btn-primary btn-sm']) ?>
 		<?php endif; ?>
 	</div>
 </div>
