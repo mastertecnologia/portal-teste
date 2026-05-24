@@ -15,11 +15,18 @@ php bin/audit_pgm_erp_mock.php
 `config/portal_ui.php` + `.env`:
 
 ```ini
+# Piloto: um módulo
 PORTAL_UI_MODE=mixed
 PORTAL_PREMIUM_MODULES=clientes
+
+# Go-live equipe: todas as listagens premium (GET /clientes → /clientes-prototype/lista)
+PORTAL_UI_MODE=premium
+# PORTAL_PREMIUM_MODULES=   (vazio = todos em default_premium_modules)
+
+# Voltar ao legado: ?legacy=1 na URL ou PORTAL_UI_MODE=legacy
 ```
 
-Helper: `App\Utility\PortalUi::isPremiumModule('clientes')` — use em controllers só quando o módulo *-prototype estiver 100% equivalente ao legado.
+`App\Utility\PortalUi::legacyRedirectRoute()` é chamado em `AppController::beforeFilter` (equipe `role=0`, só GET). Aliases públicos: `/v2/clientes` (com `APP_BASE=/portal` → `/portal/v2/clientes`).
 
 ## ✅ Decisões aprovadas (questionário 19/05/2026)
 
@@ -178,9 +185,11 @@ Não existe no portal hoje. Decidir antes:
 
 ### Fase 7 — Switchover
 
-- Configuração `Portal.ui_mode = legacy|premium` por empresa (`config/portal_ui.php` + `PORTAL_PREMIUM_MODULES`)
-- Rotas `/portal/v2/*` viram default
-- Templates antigos arquivados em `app_old/` (não removidos)
+- [x] `config/portal_ui.php` + `PortalUi` (`legacy|premium|mixed`, mapa `legacy_actions`, `?legacy=1`)
+- [x] Redirect automático legado → `*Prototype` em `AppController::beforeFilter` (equipe, GET)
+- [x] Rotas alias `/v2/*` e `/portal/v2/*` (mesmos controllers que `*-prototype`)
+- [ ] Switchover **por empresa** no banco (hoje só `.env` global)
+- [ ] Templates antigos arquivados em `app_old/` (não removidos)
 
 ### Checklist bridges (fases 0–5) — concluído em `main`
 
