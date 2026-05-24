@@ -42,6 +42,8 @@ if (!defined('C_ClientesTipoFisica')) {
 }
 
 class ClientesController extends AppController {
+
+	use PremiumUiTrait;
 	public function initialize() {
 		parent::initialize();
 		$this->loadModel('Cidades');

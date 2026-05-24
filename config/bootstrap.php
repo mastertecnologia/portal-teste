@@ -165,6 +165,7 @@ if (file_exists(__DIR__ . DS . 'grid.php')) {
 if (file_exists(__DIR__ . DS . 'pgm_sidebar.php')) {
     Configure::load('pgm_sidebar', 'default', false);
     Configure::load('portal_ui', 'default', false);
+    Configure::load('portal_ui_screens', 'default', false);
 }
 
 /*

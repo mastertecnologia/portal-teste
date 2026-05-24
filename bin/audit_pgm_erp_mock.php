@@ -1,19 +1,27 @@
 #!/usr/bin/env php
 <?php
 /**
- * Inventaria telas pg-* no HTML de referência e compara com rotas *-prototype do portal.
+ * Inventaria telas pg-* no HTML de referência e compara com mapeamento/rotas do portal.
  *
  * Uso:
  *   php bin/audit_pgm_erp_mock.php
  *   php bin/audit_pgm_erp_mock.php /caminho/pgm_erp_completo_2.html
- *
- * Coloque o mock em docs/reference/pgm_erp_completo_2.html (cópia do Downloads).
+ *   php bin/audit_pgm_erp_mock.php --md
  */
 declare(strict_types=1);
 
 $root = dirname(__DIR__);
+$writeMd = in_array('--md', $argv ?? [], true);
+$pathArg = null;
+foreach (array_slice($argv ?? [], 1) as $arg) {
+    if ($arg !== '--md' && strpos($arg, '-') !== 0) {
+        $pathArg = $arg;
+        break;
+    }
+}
+
 $candidates = [
-    $argv[1] ?? null,
+    $pathArg,
     $root . '/docs/referencias/pgm_erp_completo_2.html',
     $root . '/docs/reference/pgm_erp_completo_2.html',
     $root . '/docs/reference/pgm_erp_completo.html',
@@ -49,40 +57,88 @@ preg_match_all('#/([a-z0-9-]+)-prototype#', $routesContent, $rm);
 $prototypeModules = array_values(array_unique($rm[1] ?? []));
 sort($prototypeModules);
 
-$implemented = [
-    'servicedesk' => 18,
-    'orcamentos' => 2,
-    'ordens' => 2,
-    'clientes' => 4,
-    'produtos' => 3,
-    'fornecedores' => 1,
-    'financeiro' => 4,
-    'bancos' => 2,
-    'empresas' => 2,
-    'sistema' => 5,
-    'pcp' => 1,
-];
-
-echo "=== Auditoria mock PGM ERP ===\n";
-echo "Referência: {$htmlPath}\n";
-echo "Telas pg-* no HTML: " . count($mockScreens) . "\n";
-echo "Módulos com rota *-prototype: " . implode(', ', $prototypeModules) . "\n\n";
-
-echo "--- Primeiras 30 telas do mock (amostra) ---\n";
-foreach (array_slice($mockScreens, 0, 30) as $id) {
-    echo "  {$id}\n";
-}
-if (count($mockScreens) > 30) {
-    echo "  … +" . (count($mockScreens) - 30) . " telas\n";
+$screenConfig = [];
+$switchover = [];
+$configFile = $root . '/config/portal_ui_screens.php';
+if (is_file($configFile)) {
+    $loaded = require $configFile;
+    if (is_array($loaded['PortalUiScreens']['screens'] ?? null)) {
+        $screenConfig = $loaded['PortalUiScreens']['screens'];
+    }
+    if (is_array($loaded['PortalUiScreens']['switchover'] ?? null)) {
+        $switchover = $loaded['PortalUiScreens']['switchover'];
+    }
 }
 
-echo "\n--- Módulos protótipo (rotas Cake) ---\n";
-foreach ($prototypeModules as $mod) {
-    $n = $implemented[$mod] ?? 0;
-    echo sprintf("  %-16s rotas OK · ~%d telas entregues (parcial)\n", $mod, $n);
+$mappedInRef = 0;
+$withProto = 0;
+$unmapped = [];
+foreach ($mockScreens as $id) {
+    if (isset($screenConfig[$id])) {
+        $mappedInRef++;
+        if (!empty($screenConfig[$id]['prototype'])) {
+            $withProto++;
+        }
+    } else {
+        $unmapped[] = $id;
+    }
 }
 
-echo "\nPróximo passo: docs/MIGRACAO_PGM_ERP_COMPLETO.md (fases por módulo).\n";
-echo "Switchover: PORTAL_PREMIUM_MODULES=clientes no .env após validar o módulo.\n";
+$lines = [];
+$lines[] = '=== Auditoria mock PGM ERP ===';
+$lines[] = "Referência: {$htmlPath}";
+$lines[] = 'Telas pg-* no HTML: ' . count($mockScreens);
+$lines[] = 'Mapeadas em config/portal_ui_screens.php: ' . count($screenConfig);
+$lines[] = 'Cobertura (ref ∩ config): ' . $mappedInRef . ' · com protótipo: ' . $withProto;
+$lines[] = 'Sem entrada no config: ' . count($unmapped);
+$lines[] = 'Módulos *-prototype: ' . implode(', ', $prototypeModules);
+$lines[] = '';
+$lines[] = '--- Switchover (PORTAL_PREMIUM_MODULES) ---';
+foreach ($switchover as $key => $row) {
+    $proto = $row['prototype'] ?? [];
+    $lines[] = sprintf(
+        '  %-18s → %s::%s',
+        $key,
+        $proto['controller'] ?? '?',
+        $proto['action'] ?? '?'
+    );
+}
+$lines[] = '';
+$lines[] = '--- Telas no config ---';
+foreach ($screenConfig as $pgId => $row) {
+    $leg = $row['legacy'] ?? [];
+    $pro = $row['prototype'] ?? null;
+    $legStr = isset($leg['controller']) ? $leg['controller'] . '::' . ($leg['action'] ?? '') : '—';
+    $proStr = is_array($pro) && isset($pro['controller'])
+        ? $pro['controller'] . '::' . ($pro['action'] ?? '')
+        : '—';
+    $lines[] = sprintf('  %-22s %-10s legado=%-24s proto=%s', $pgId, $row['parity'] ?? '?', $legStr, $proStr);
+}
+if ($unmapped !== []) {
+    $lines[] = '';
+    $lines[] = '--- Sem entrada no config (' . count($unmapped) . ') ---';
+    foreach (array_slice($unmapped, 0, 30) as $id) {
+        $lines[] = '  ' . $id;
+    }
+}
+$lines[] = '';
+$lines[] = 'Ativar: PORTAL_PREMIUM_MODULES=clientes,produtos,... · Legado: ?legacy_ui=1';
 
+if ($writeMd) {
+    $md = ["# Mapeamento telas pg-* ↔ Portal Cake\n\nGerado por audit --md.\n"];
+    $md[] = '| pg-* | Título | Paridade | Legado | Protótipo |';
+    $md[] = '|------|--------|----------|--------|-----------|';
+    foreach ($screenConfig as $pgId => $row) {
+        $leg = $row['legacy'] ?? [];
+        $pro = $row['prototype'] ?? null;
+        $legStr = isset($leg['controller']) ? $leg['controller'] . '/' . ($leg['action'] ?? '') : '—';
+        $proStr = is_array($pro) && isset($pro['controller']) ? $pro['controller'] . '/' . ($pro['action'] ?? '') : '—';
+        $md[] = sprintf('| `%s` | %s | %s | %s | %s |', $pgId, $row['title'] ?? '', $row['parity'] ?? '', $legStr, $proStr);
+    }
+    $out = $root . '/docs/MAPEAMENTO_TELAS_PG.md';
+    file_put_contents($out, implode("\n", $md) . "\n");
+    fwrite(STDERR, "Escrito: {$out}\n");
+}
+
+echo implode("\n", $lines) . "\n";
 exit(0);

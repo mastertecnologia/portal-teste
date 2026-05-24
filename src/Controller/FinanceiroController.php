@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\PremiumUiTrait;
 use App\Controller\AppController;
 use Cake\Event\Event;
 

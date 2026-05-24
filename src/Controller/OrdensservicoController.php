@@ -574,7 +574,7 @@ class OrdensservicoController extends AppController {
 		$this->set('locacao', $locacao);
 		$this->set('ordens',  $ordens);
 		$this->set('title', 'Ordens de Serviço');
-		$this->set('hideLayoutPageTitle', true);
+		$this->configurePgmAppShellTopbar(__('Operacional'), __('Ordens de Serviço'));
 	}
 
 	public function add() {

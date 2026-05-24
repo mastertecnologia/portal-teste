@@ -36,6 +36,23 @@ class PortalUi {
      * @param array<string,mixed> $params parâmetros passados ao redirect Cake
      * @return array<string,mixed>|null null = continuar legado
      */
+    /**
+     * Força UI legada mesmo com módulo em PORTAL_PREMIUM_MODULES (?legacy_ui=1).
+     */
+    public static function isLegacyUiForced($request): bool {
+        if ($request === null || !method_exists($request, 'getQuery')) {
+            return false;
+        }
+        $flag = (string)$request->getQuery('legacy_ui', '');
+        if ($flag === '1' || strtolower($flag) === 'true') {
+            return true;
+        }
+        // Compat: Service Desk já usa ?legacy=1
+        $legacy = (string)$request->getQuery('legacy', '');
+
+        return $legacy === '1' || strtolower($legacy) === 'true';
+    }
+
     public static function redirectToPrototypeIfEnabled(
         string $module,
         string $prototypeController,

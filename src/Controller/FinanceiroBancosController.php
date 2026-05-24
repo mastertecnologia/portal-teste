@@ -99,6 +99,9 @@ class FinanceiroBancosController extends AppController
      */
     public function index()
     {
+        if ($resp = $this->maybeRedirectPremiumPrototype('bancos', 'BancosPrototype', 'lista')) {
+            return $resp;
+        }
         $idempresa = (int) $this->Auth->user("idempresa");
 
         $totais = [

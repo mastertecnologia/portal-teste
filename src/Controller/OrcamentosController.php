@@ -737,7 +737,7 @@ class OrcamentosController extends AppController {
 			'margemBrutaPctPorOrcamentoId'
 		));
 		$this->set('title', 'Orçamentos');
-		$this->set('hideLayoutPageTitle', true);
+		$this->configurePgmAppShellTopbar(__('Comercial'), __('Orçamentos'));
 	}
 
 	/**

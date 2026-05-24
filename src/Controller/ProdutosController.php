@@ -1040,6 +1040,9 @@ class ProdutosController extends AppController {
 	}
 
 	public function estoque($opt = null) {
+		if ($resp = $this->maybeRedirectPremiumPrototype('produtos', 'ProdutosPrototype', 'estoque')) {
+			return $resp;
+		}
 		error_reporting(0);
 		$query = (array)$this->request->getQueryParams();
 		$data = $this->request->is(['post', 'put']) ? (array)$this->request->getData() : [];
