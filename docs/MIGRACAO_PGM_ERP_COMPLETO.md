@@ -119,7 +119,8 @@ Controller `ServicedeskPrototypeController` já mapeia as **18 telas** via `scre
 - [x] **`problemas`** — Gestão de Problemas (ITIL) com tickets candidatos (fase 1, hoje)
 - [x] **`mudancas`** — Gestão de Mudanças (proxy via tickets P1) (fase 1, hoje)
 - [x] Telas SD com `ref/*.ctp` e dados reais (fila, kanban, meus, cmdb, …); CSAT com link histórico/CSV e operacional clássico
-- [ ] `ticket` (detalhe dedicado), refinamentos `config`/`perm`/`integracoes` vs módulos RBAC legado
+- [x] **Bridge SD admin:** `perm`/`config`/`integracoes`/`fat`/`relatorios`/`templates` → módulos legados (`Permissoes`, `Config`, `Faturamento`, `Tickets/historico`); detalhe ticket em `/servicedesk-prototype/ticket/:id` + link `Servicedesk/view`
+- [ ] `ticket` (refinamentos UX premium vs `Servicedesk/view` completo)
 
 ### Fase 2 — Comercial / Orçamentos · OS
 
@@ -132,7 +133,8 @@ Controller `ServicedeskPrototypeController` já mapeia as **18 telas** via `scre
 - [x] **Bridge orçamentos:** lista → `detalhe`; `?id=` em revisao/print/esign → detalhe/PDF/view legado; wizard `novo` grava rascunho real
 - [x] **Bridge OS:** lista → `detalhe`; `?id=` em execucao…cobranca → detalhe; abertura grava OS; **Editar** → `Ordensservico/edit`
 - [x] **Bridge faturamento/cobrança:** rotas `orcamentos-prototype` e `ordens-prototype` (`faturamento`|`cobranca`) → `Faturamento/index`
-- [ ] **Sub-fase pendente:** `pg-os-kanban` (board completo; hoje placeholder)
+- [x] **Bridge OS kanban:** `ordens-prototype/kanban` → `Ordensservico/index` (lista legada)
+- [ ] **Sub-fase pendente:** board kanban OS dedicado no protótipo (mock completo)
 
 ### Fase 3 — Clientes · Produtos · Estoque · Fornecedores
 
@@ -176,9 +178,21 @@ Não existe no portal hoje. Decidir antes:
 
 ### Fase 7 — Switchover
 
-- Configuração `Portal.ui_mode = legacy|premium` por empresa
+- Configuração `Portal.ui_mode = legacy|premium` por empresa (`config/portal_ui.php` + `PORTAL_PREMIUM_MODULES`)
 - Rotas `/portal/v2/*` viram default
 - Templates antigos arquivados em `app_old/` (não removidos)
+
+### Checklist bridges (fases 0–5) — concluído em `main`
+
+| Módulo | Rotas protótipo | Bridge legado |
+|--------|-----------------|---------------|
+| Service Desk | `/servicedesk-prototype/*` | Fila/kanban/meus + ticket; admin → Config/Permissoes/Faturamento/histórico |
+| Orçamentos / OS | `*-prototype` comercial | Detalhe, wizard, PDF, faturamento → `Faturamento` |
+| Clientes / Produtos / Fornecedores | cadastros | CRUD legado; fornecedores = clientes PJ |
+| Financeiro / Bancos | financeiro/bancos | CR/CP/NF-e/DRE + extrato/conciliação |
+| Sistema / Empresas | sistema/empresas | Config, RBAC, usuários, multi-empresa |
+
+Validação local: `bash bin/verify_prototype_bridges.sh` e `php bin/audit_pgm_erp_mock.php`
 
 ---
 

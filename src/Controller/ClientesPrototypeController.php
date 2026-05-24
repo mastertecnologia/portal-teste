@@ -224,6 +224,9 @@ class ClientesPrototypeController extends AppController {
 		if ($page === 'novo') {
 			return $this->redirect(['controller' => 'Clientes', 'action' => 'add']);
 		}
+		if ($page === 'export') {
+			return $this->redirect(['action' => 'exportCsv']);
+		}
 		$allowed = ['360', 'export', 'import'];
 		if (!in_array($page, $allowed, true)) {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));

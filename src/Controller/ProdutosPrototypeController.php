@@ -203,7 +203,7 @@ class ProdutosPrototypeController extends AppController {
 			return $this->redirect(['controller' => 'Produtos', 'action' => 'index']);
 		}
 		if (in_array($page, ['pc-lista', 'pc-novo'], true)) {
-			return $this->redirect(['controller' => 'Produtos', 'action' => 'index']);
+			return $this->redirect(['controller' => 'Prefaturamento', 'action' => 'index']);
 		}
 		$allowed = ['novo', 'detalhe', 'precos', 'precificacao', 'estoque-log', 'historico-precos', 'import', 'pc-lista', 'pc-novo', 'inventario', 'inv-historico'];
 		if (!in_array($page, $allowed, true)) {
