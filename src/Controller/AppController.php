@@ -538,6 +538,16 @@ class AppController extends Controller
             }
         }
 
+        if ($this->Auth->user("id") > 0) {
+            $switchRoute = \App\Utility\PortalUi::legacyRedirectRoute(
+                $this->request,
+                (array)$this->Auth->user(),
+            );
+            if ($switchRoute !== null) {
+                return $this->redirect($switchRoute);
+            }
+        }
+
         if ($this->components()->has("Rbac") && $this->Auth->user("id") > 0) {
             $rbacResp = $this->Rbac->checkRequest($controller, $action);
             if ($rbacResp !== null) {

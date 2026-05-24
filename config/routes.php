@@ -906,6 +906,46 @@ Router::scope("/", function ($routes) {
         "action" => "view",
     ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
 
+    // ===== Portal v2 — aliases canónicos do shell premium (mesmos controllers que *-prototype) =====
+    // Com APP_BASE=/portal a URL pública é /portal/v2/clientes, etc.
+    $portalV2Aliases = [
+        "/v2/clientes" => ["ClientesPrototype", "lista"],
+        "/v2/produtos" => ["ProdutosPrototype", "lista"],
+        "/v2/produtos/estoque" => ["ProdutosPrototype", "estoque"],
+        "/v2/orcamentos" => ["OrcamentosPrototype", "lista"],
+        "/v2/ordens" => ["OrdensservicoPrototype", "lista"],
+        "/v2/servicedesk" => ["ServicedeskPrototype", "index"],
+        "/v2/financeiro" => ["FinanceiroPrototype", "lista"],
+        "/v2/bancos" => ["BancosPrototype", "lista"],
+        "/v2/fornecedores" => ["FornecedoresPrototype", "lista"],
+        "/v2/empresas" => ["EmpresasPrototype", "lista"],
+        "/v2/sistema/usuarios" => ["SistemaPrototype", "usuarios"],
+        "/v2/sistema/acesso-papeis" => ["SistemaPrototype", "acessoPapeis"],
+        "/v2/sistema/acesso-central" => ["SistemaPrototype", "acessoCentral"],
+        "/v2/sistema/auditoria" => ["SistemaPrototype", "auditoria"],
+    ];
+    foreach ($portalV2Aliases as $path => $target) {
+        $routes->connect($path, [
+            "controller" => $target[0],
+            "action" => $target[1],
+        ]);
+        $routes->connect($path . "/", [
+            "controller" => $target[0],
+            "action" => $target[1],
+        ]);
+    }
+    // Vhost sem APP_BASE no Cake (path completo /portal/v2/…)
+    foreach ($portalV2Aliases as $path => $target) {
+        $routes->connect("/portal" . $path, [
+            "controller" => $target[0],
+            "action" => $target[1],
+        ]);
+        $routes->connect("/portal" . $path . "/", [
+            "controller" => $target[0],
+            "action" => $target[1],
+        ]);
+    }
+
     $routes->connect("/servicedesk/sla-relatorio", [
         "controller" => "Servicedesk",
         "action" => "slaRelatorio",

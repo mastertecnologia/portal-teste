@@ -45,6 +45,11 @@ check "SD perm legado" "'perm'.*Permissoes" "src/Controller/ServicedeskPrototype
 check "Produtos novo→add" "Produtos.*add" "src/Controller/ProdutosPrototypeController.php"
 check "Clientes novo→add" "Clientes.*add" "src/Controller/ClientesPrototypeController.php"
 check "Sistema config" "Config.*index" "src/Controller/SistemaPrototypeController.php"
+check "PortalUi legacy map" "'legacy_actions'" "config/portal_ui.php"
+check "AppController switchover" "PortalUi::legacyRedirectRoute" "src/Controller/AppController.php"
+check "Rotas v2 clientes" "/v2/clientes" "config/routes.php"
+check "Migration portal_ui empresa" "portal_ui_mode" "config/Migrations/20260524120000_AddEmpresasPortalUi.php"
+check "PortalUi resolveSettings" "resolveSettings" "src/Utility/PortalUi.php"
 
 if [[ -f bin/audit_pgm_erp_mock.php ]] && [[ -n "$PHP_BIN" ]]; then
 	echo "=== Auditoria mock ==="
