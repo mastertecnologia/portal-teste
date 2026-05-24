@@ -13,6 +13,7 @@ class PortalUiTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		Configure::delete('PortalUi');
+		PortalUi::clearEmpresaCache();
 	}
 
 	public function testMixedModeRequiresExplicitModules(): void {
@@ -114,5 +115,38 @@ class PortalUiTest extends TestCase {
 		$request = $request->withParam('controller', 'Orcamentos')
 			->withParam('action', 'index');
 		$this->assertNull(PortalUi::legacyRedirectRoute($request, ['id' => 2, 'role' => 1]));
+	}
+
+	public function testEmpresaOverridesGlobalMode(): void {
+		Configure::write('PortalUi', [
+			'mode' => 'legacy',
+			'premium_modules' => [],
+			'default_premium_modules' => ['clientes' => true],
+		]);
+		$resolved = PortalUi::resolveSettings([
+			'portal_ui_mode' => 'premium',
+			'portal_ui_premium_modules' => null,
+		]);
+		$this->assertSame('premium', $resolved['mode']);
+	}
+
+	public function testEmpresaOverridesModuleList(): void {
+		Configure::write('PortalUi', [
+			'mode' => 'mixed',
+			'premium_modules' => ['clientes' => true, 'orcamentos' => true],
+			'default_premium_modules' => [],
+		]);
+		$resolved = PortalUi::resolveSettings([
+			'portal_ui_mode' => 'mixed',
+			'portal_ui_premium_modules' => 'servicedesk',
+		]);
+		$this->assertSame(['servicedesk' => true], $resolved['premium_modules']);
+	}
+
+	public function testParseModulesCsv(): void {
+		$this->assertSame(
+			['clientes' => true, 'orcamentos' => true],
+			PortalUi::parseModulesCsv(' clientes, orcamentos '),
+		);
 	}
 }

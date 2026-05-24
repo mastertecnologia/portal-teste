@@ -23,6 +23,10 @@ PORTAL_PREMIUM_MODULES=clientes
 PORTAL_UI_MODE=premium
 # PORTAL_PREMIUM_MODULES=   (vazio = todos em default_premium_modules)
 
+# Por empresa (piloto): Empresas → editar → Interface ERP
+#   portal_ui_mode = premium | mixed | legacy | (vazio = herdar .env)
+#   portal_ui_premium_modules = clientes,orcamentos (vazio = herdar .env)
+
 # Voltar ao legado: ?legacy=1 na URL ou PORTAL_UI_MODE=legacy
 ```
 
@@ -188,7 +192,7 @@ Não existe no portal hoje. Decidir antes:
 - [x] `config/portal_ui.php` + `PortalUi` (`legacy|premium|mixed`, mapa `legacy_actions`, `?legacy=1`)
 - [x] Redirect automático legado → `*Prototype` em `AppController::beforeFilter` (equipe, GET)
 - [x] Rotas alias `/v2/*` e `/portal/v2/*` (mesmos controllers que `*-prototype`)
-- [ ] Switchover **por empresa** no banco (hoje só `.env` global)
+- [x] Switchover **por empresa**: colunas `empresas.portal_ui_mode` e `empresas.portal_ui_premium_modules` (aba **Interface ERP** em Empresas → editar); `NULL` = herdar `.env`
 - [ ] Templates antigos arquivados em `app_old/` (não removidos)
 
 ### Checklist bridges (fases 0–5) — concluído em `main`

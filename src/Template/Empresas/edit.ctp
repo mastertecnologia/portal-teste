@@ -9,6 +9,7 @@ $this->Html->css('/dist/css/pages/config-admin-shell.css', ['block' => true]);
 			<ul class="nav nav-tabs customtab m-b-20" role="tablist">
                 <li class="nav-item"> <a class="nav-link active " data-toggle="tab" href="#empresa" role="tab" aria-selected="true"><span class="hidden-sm-up"><i class="ti-user"></i></span> <span class="hidden-xs-down">Empresa</span></a> </li>
                 <li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#email" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti ti-mail"></i></span> <span class="hidden-xs-down">E-mail</span></a> </li>
+                <li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#portal-ui" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-layout"></i></span> <span class="hidden-xs-down">Interface ERP</span></a> </li>
             </ul>
 			<div class="tab-content">
 				<div class="tab-pane active" id="empresa">
@@ -166,6 +167,62 @@ $this->Html->css('/dist/css/pages/config-admin-shell.css', ['block' => true]);
 							</div>
 						</div>
 					<?= $this->Form->end(); ?>					
+				</div>
+				<div class="tab-pane" id="portal-ui">
+					<?php
+					$portalUiGlobal = $portalUiGlobal ?? ['mode' => 'mixed', 'premium_modules' => []];
+					$portalUiEffective = $portalUiEffective ?? $portalUiGlobal;
+					$globalMode = h($portalUiGlobal['mode'] ?? 'mixed');
+					$effectiveMode = h($portalUiEffective['mode'] ?? 'mixed');
+					$effectiveModules = $portalUiEffective['premium_modules'] ?? [];
+					$effectiveList = $effectiveModules === []
+						? __('(nenhum — só URLs *-prototype ou modo premium com lista vazia no servidor)')
+						: h(implode(', ', array_keys($effectiveModules)));
+					?>
+					<p class="text-muted">
+						<?= __('Define se a equipe desta empresa usa o shell premium (mock PGM ERP) ao abrir /clientes, /orcamentos, etc. Valores vazios herdam o servidor (.env).') ?>
+					</p>
+					<p class="small text-muted m-b-20">
+						<?= __('Servidor: modo {0} · Efetivo para esta empresa: modo {1} · Módulos: {2}', $globalMode, $effectiveMode, $effectiveList) ?>
+					</p>
+					<?= $this->Form->create($entity, ['class' => 'form-material']) ?>
+						<div class="row">
+							<div class="col-lg-4 col-md-6">
+								<div class="form-group">
+									<label class="control-label text-muted"><?= __('Modo da interface') ?></label>
+									<?= $this->Form->control('portal_ui_mode', [
+										'type' => 'select',
+										'class' => 'form-control',
+										'label' => false,
+										'empty' => __('Herdar do servidor (.env)'),
+										'options' => [
+											'legacy' => __('Legado — sem redirect automático'),
+											'mixed' => __('Misto — só módulos listados abaixo'),
+											'premium' => __('Premium — todos os módulos migrados'),
+										],
+										'value' => $entity->portal_ui_mode,
+									]) ?>
+								</div>
+							</div>
+							<div class="col-lg-8 col-md-6">
+								<div class="form-group">
+									<label class="control-label text-muted"><?= __('Módulos premium (CSV)') ?></label>
+									<?= $this->Form->control('portal_ui_premium_modules', [
+										'type' => 'text',
+										'class' => 'form-control',
+										'label' => false,
+										'placeholder' => implode(',', $portalUiModuleKeys ?? []),
+									]) ?>
+									<small class="text-muted"><?= __('Vazio = herdar PORTAL_PREMIUM_MODULES. Ex.: clientes,orcamentos,servicedesk') ?></small>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12">
+								<?= $this->Form->button(__('Salvar interface'), ['class' => 'btn btn-pgm btn-success']) ?>
+							</div>
+						</div>
+					<?= $this->Form->end() ?>
 				</div>
 			</div>
 		</div>

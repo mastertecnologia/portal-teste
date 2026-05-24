@@ -48,6 +48,8 @@ check "Sistema config" "Config.*index" "src/Controller/SistemaPrototypeControlle
 check "PortalUi legacy map" "'legacy_actions'" "config/portal_ui.php"
 check "AppController switchover" "PortalUi::legacyRedirectRoute" "src/Controller/AppController.php"
 check "Rotas v2 clientes" "/v2/clientes" "config/routes.php"
+check "Migration portal_ui empresa" "portal_ui_mode" "config/Migrations/20260524120000_AddEmpresasPortalUi.php"
+check "PortalUi resolveSettings" "resolveSettings" "src/Utility/PortalUi.php"
 
 if [[ -f bin/audit_pgm_erp_mock.php ]] && [[ -n "$PHP_BIN" ]]; then
 	echo "=== Auditoria mock ==="

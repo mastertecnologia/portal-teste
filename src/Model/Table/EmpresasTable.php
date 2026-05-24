@@ -1,6 +1,8 @@
 <?php
 namespace App\Model\Table;
 
+use ArrayObject;
+use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -46,7 +48,24 @@ class EmpresasTable extends Table{
 						'provider' => 'table',
 						'message' => 'Já existe uma empresa com este cnpj!'
 				]
-		]);
+		])
+		->allowEmptyString('portal_ui_mode')
+		->inList('portal_ui_mode', ['legacy', 'premium', 'mixed'], true)
+		->allowEmptyString('portal_ui_premium_modules')
+		->maxLength('portal_ui_premium_modules', 2000);
+	}
+
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
+		if (array_key_exists('portal_ui_mode', $data)) {
+			$mode = $data['portal_ui_mode'];
+			if ($mode === '' || $mode === null) {
+				$data['portal_ui_mode'] = null;
+			}
+		}
+		if (array_key_exists('portal_ui_premium_modules', $data)) {
+			$mods = trim((string)$data['portal_ui_premium_modules']);
+			$data['portal_ui_premium_modules'] = $mods === '' ? null : $mods;
+		}
 	}
 	
 	public function generateToken($cnpj) {

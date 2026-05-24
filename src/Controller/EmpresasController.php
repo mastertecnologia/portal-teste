@@ -240,6 +240,13 @@ class EmpresasController extends AppController{
 		$this->set('cidades', $cidades);
 		$this->set('title', 'Empresa: ' . $empresa->razaosocial);
 		$this->set('entity', $empresa);
+		$empresaUiRow = [
+			'portal_ui_mode' => $empresa->get('portal_ui_mode'),
+			'portal_ui_premium_modules' => $empresa->get('portal_ui_premium_modules'),
+		];
+		$this->set('portalUiGlobal', \App\Utility\PortalUi::resolveSettings(null));
+		$this->set('portalUiEffective', \App\Utility\PortalUi::resolveSettings($empresaUiRow));
+		$this->set('portalUiModuleKeys', \App\Utility\PortalUi::PREMIUM_MODULE_KEYS);
     }
 
     public function updateToken() { 

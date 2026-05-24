@@ -11,6 +11,9 @@
  *
  * premium + PORTAL_PREMIUM_MODULES vazio → todos os módulos em default_premium_modules.
  * mixed + PORTAL_PREMIUM_MODULES vazio → nenhum redirect (só URLs *-prototype).
+ *
+ * Por empresa (sobrescreve .env quando preenchido): empresas.portal_ui_mode,
+ * empresas.portal_ui_premium_modules — edição em Empresas → aba Interface ERP.
  */
 
 $mode = strtolower(trim((string)env('PORTAL_UI_MODE', 'mixed')));

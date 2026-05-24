@@ -326,7 +326,10 @@ class ServicedeskController extends TicketsController {
 		if (
 			$role === 0
 			&& (string)$this->request->getQuery('legacy') !== '1'
-			&& \App\Utility\PortalUi::isPremiumModule('servicedesk')
+			&& \App\Utility\PortalUi::isPremiumModule(
+				'servicedesk',
+				(int)$this->Auth->user('idempresa'),
+			)
 		) {
 			return $this->redirect(['controller' => 'ServicedeskPrototype', 'action' => 'index']);
 		}

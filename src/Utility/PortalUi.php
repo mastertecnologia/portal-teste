@@ -5,9 +5,12 @@ namespace App\Utility;
 
 use Cake\Core\Configure;
 use Cake\Http\ServerRequest;
+use Cake\ORM\TableRegistry;
 
 /**
  * Switchover UI legado ↔ premium (mock pgm_erp_completo).
+ *
+ * Prioridade: colunas em empresas (portal_ui_*) → .env / config/portal_ui.php.
  */
 class PortalUi {
 
@@ -25,24 +28,22 @@ class PortalUi {
         'sistema',
     ];
 
-    public static function mode(): string {
-        $mode = strtolower(trim((string)Configure::read('PortalUi.mode', 'mixed')));
-        if (!in_array($mode, ['legacy', 'premium', 'mixed'], true)) {
-            return 'mixed';
-        }
+    /** @var array<int, array<string, mixed>|null> */
+    private static $empresaRowCache = [];
 
-        return $mode;
+    public static function mode(?int $idempresa = null): string {
+        return self::resolveSettings(self::empresaRow($idempresa))['mode'];
     }
 
-    public static function isPremiumModule(string $module): bool {
-        if (self::mode() === 'legacy') {
+    public static function isPremiumModule(string $module, ?int $idempresa = null): bool {
+        if (self::mode($idempresa) === 'legacy') {
             return false;
         }
         $module = strtolower(trim($module));
         if ($module === '') {
             return false;
         }
-        $enabled = self::enabledPremiumModules();
+        $enabled = self::enabledPremiumModules($idempresa);
         if ($enabled === []) {
             return false;
         }
@@ -53,12 +54,10 @@ class PortalUi {
     /**
      * @return array<string, true> módulos com UI premium ativa
      */
-    public static function enabledPremiumModules(): array {
-        $explicit = Configure::read('PortalUi.premium_modules');
-        if (!is_array($explicit)) {
-            $explicit = [];
-        }
-        if (self::mode() === 'premium') {
+    public static function enabledPremiumModules(?int $idempresa = null): array {
+        $settings = self::resolveSettings(self::empresaRow($idempresa));
+        $explicit = $settings['premium_modules'];
+        if (self::mode($idempresa) === 'premium') {
             if ($explicit !== []) {
                 return $explicit;
             }
@@ -69,7 +68,7 @@ class PortalUi {
 
             return array_fill_keys(self::PREMIUM_MODULE_KEYS, true);
         }
-        if (self::mode() === 'mixed') {
+        if (self::mode($idempresa) === 'mixed') {
             return $explicit;
         }
 
@@ -77,11 +76,89 @@ class PortalUi {
     }
 
     /**
+     * Mescla overrides da empresa sobre config global (.env).
+     *
+     * @param array{portal_ui_mode?: string|null, portal_ui_premium_modules?: string|null}|null $empresaRow
+     * @return array{mode: string, premium_modules: array<string, true>}
+     */
+    public static function resolveSettings(?array $empresaRow = null): array {
+        $mode = self::normalizeMode((string)Configure::read('PortalUi.mode', 'mixed'));
+        $premiumModules = self::modulesFromConfigure(
+            Configure::read('PortalUi.premium_modules'),
+        );
+
+        if ($empresaRow !== null) {
+            $empresaMode = $empresaRow['portal_ui_mode'] ?? null;
+            if ($empresaMode !== null && $empresaMode !== '') {
+                $mode = self::normalizeMode((string)$empresaMode);
+            }
+            if (array_key_exists('portal_ui_premium_modules', $empresaRow)
+                && $empresaRow['portal_ui_premium_modules'] !== null
+            ) {
+                $premiumModules = self::parseModulesCsv(
+                    (string)$empresaRow['portal_ui_premium_modules'],
+                );
+            }
+        }
+
+        return [
+            'mode' => $mode,
+            'premium_modules' => $premiumModules,
+        ];
+    }
+
+    /**
+     * @param array<string, true>|array<mixed>|null $fromConfigure
+     * @return array<string, true>
+     */
+    public static function modulesFromConfigure($fromConfigure): array {
+        if (!is_array($fromConfigure) || $fromConfigure === []) {
+            return [];
+        }
+        $out = [];
+        foreach ($fromConfigure as $key => $val) {
+            if (is_int($key)) {
+                $key = $val;
+            }
+            $m = strtolower(trim((string)$key));
+            if ($m !== '' && $val) {
+                $out[$m] = true;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return array<string, true>
+     */
+    public static function parseModulesCsv(string $raw): array {
+        $modules = [];
+        if (trim($raw) === '') {
+            return $modules;
+        }
+        foreach (preg_split('/\s*,\s*/', $raw) as $m) {
+            $m = strtolower(trim($m));
+            if ($m !== '') {
+                $modules[$m] = true;
+            }
+        }
+
+        return $modules;
+    }
+
+    public static function normalizeMode(string $mode): string {
+        $mode = strtolower(trim($mode));
+        if (!in_array($mode, ['legacy', 'premium', 'mixed'], true)) {
+            return 'mixed';
+        }
+
+        return $mode;
+    }
+
+    /**
      * Redireciona action legada para rota *-prototype quando o módulo está em premium.
      *
-     * @param string $module ex.: clientes, orcamentos, servicedesk
-     * @param string $prototypeController ex.: ClientesPrototype
-     * @param string $prototypeAction ex.: lista, view
      * @param array<string,mixed> $params parâmetros passados ao redirect Cake
      * @return array<string,mixed>|null null = continuar legado
      */
@@ -89,9 +166,10 @@ class PortalUi {
         string $module,
         string $prototypeController,
         string $prototypeAction,
-        array $params = []
+        array $params = [],
+        ?int $idempresa = null
     ): ?array {
-        if (!self::isPremiumModule($module)) {
+        if (!self::isPremiumModule($module, $idempresa)) {
             return null;
         }
         $route = [
@@ -122,6 +200,8 @@ class PortalUi {
         if ((string)$request->getQuery('legacy') === '1') {
             return null;
         }
+
+        $idempresa = (int)($user['idempresa'] ?? 0);
 
         $path = (string)$request->getPath();
         if (
@@ -160,7 +240,7 @@ class PortalUi {
         }
 
         $module = (string)($entry['module'] ?? $controller);
-        if (!self::isPremiumModule($module)) {
+        if (!self::isPremiumModule($module, $idempresa > 0 ? $idempresa : null)) {
             return null;
         }
 
@@ -173,7 +253,7 @@ class PortalUi {
             $route['?'] = $target['?'];
         }
         if (!empty($target['pass']) && is_array($target['pass'])) {
-            foreach ($target['pass'] as $i => $paramName) {
+            foreach ($target['pass'] as $paramName) {
                 $val = $request->getParam($paramName);
                 if ($val !== null && $val !== '') {
                     $route[$paramName] = $val;
@@ -182,5 +262,51 @@ class PortalUi {
         }
 
         return $route;
+    }
+
+    /**
+     * @return array{portal_ui_mode: string|null, portal_ui_premium_modules: string|null}|null
+     */
+    private static function empresaRow(?int $idempresa): ?array {
+        if ($idempresa === null || $idempresa <= 0) {
+            return null;
+        }
+        if (!array_key_exists($idempresa, self::$empresaRowCache)) {
+            self::$empresaRowCache[$idempresa] = self::loadEmpresaRowFromDb($idempresa);
+        }
+
+        return self::$empresaRowCache[$idempresa];
+    }
+
+    /**
+     * @return array{portal_ui_mode: string|null, portal_ui_premium_modules: string|null}|null
+     */
+    private static function loadEmpresaRowFromDb(int $idempresa): ?array {
+        try {
+            $empresas = TableRegistry::getTableLocator()->get('Empresas');
+            $schema = $empresas->getSchema();
+            if (!$schema->hasColumn('portal_ui_mode')) {
+                return null;
+            }
+            $empresa = $empresas->get($idempresa, [
+                'fields' => [
+                    'Empresas.id',
+                    'Empresas.portal_ui_mode',
+                    'Empresas.portal_ui_premium_modules',
+                ],
+            ]);
+
+            return [
+                'portal_ui_mode' => $empresa->get('portal_ui_mode'),
+                'portal_ui_premium_modules' => $empresa->get('portal_ui_premium_modules'),
+            ];
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /** Limpa cache (testes). */
+    public static function clearEmpresaCache(): void {
+        self::$empresaRowCache = [];
     }
 }
