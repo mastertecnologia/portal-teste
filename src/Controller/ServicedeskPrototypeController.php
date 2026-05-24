@@ -592,6 +592,11 @@ class ServicedeskPrototypeController extends AppController {
 	 * @return \Cake\Http\Response|null
 	 */
 	protected function screen(string $page) {
+		$legacy = $this->legacyRedirectForScreen($page);
+		if ($legacy !== null) {
+			return $this->redirect($legacy);
+		}
+
 		$defs = $this->screenDefinitions();
 		if (!isset($defs[$page])) {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));
@@ -750,6 +755,27 @@ class ServicedeskPrototypeController extends AppController {
 			'financeiro' => [],
 			'gerado_em' => date('d/m/Y H:i'),
 		];
+	}
+
+	/**
+	 * Telas SD cujo fluxo canónico permanece no módulo legado (sidebar → legado).
+	 *
+	 * @param string $page
+	 * @return array<string,mixed>|null
+	 */
+	protected function legacyRedirectForScreen(string $page): ?array {
+		$map = [
+			'perm' => ['controller' => 'Permissoes', 'action' => 'adminUsers'],
+			'config' => ['controller' => 'Config', 'action' => 'index'],
+			'integracoes' => ['controller' => 'Config', 'action' => 'index'],
+			'fat' => ['controller' => 'Faturamento', 'action' => 'index'],
+			'relatorios' => ['controller' => 'Tickets', 'action' => 'historico'],
+			'templates' => ['controller' => 'Config', 'action' => 'index'],
+			'automacoes-editor' => ['controller' => 'Config', 'action' => 'index'],
+			'detalhe-fatura' => ['controller' => 'Faturamento', 'action' => 'index'],
+		];
+
+		return $map[$page] ?? null;
 	}
 
 	/**

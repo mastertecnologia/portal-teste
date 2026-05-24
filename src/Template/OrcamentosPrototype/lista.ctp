@@ -18,11 +18,10 @@ $badgeMap = ['pend' => 'pend', 'env' => 'env', 'aprov' => 'aprov', 'recus' => 'r
 	'eyebrow' => __('Módulo comercial'),
 	'title' => __('Orçamentos'),
 	'subtitle' => __('Propostas comerciais · revisão · assinatura · faturamento'),
-	'actions' => [[
-		'label' => '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg> ' . __('Gerar Orçamento'),
-		'url' => ['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo'],
-		'class' => 'btn btn-primary',
-	]],
+	'actions' => [
+		['label' => __('Módulo clássico'), 'url' => ['controller' => 'Orcamentos', 'action' => 'index'], 'class' => 'btn btn-ghost btn-sm'],
+		['label' => '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg> ' . __('Gerar Orçamento'), 'url' => ['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo'], 'class' => 'btn btn-primary'],
+	],
 ]) ?>
 
 <div class="stats" id="orc-lista-stats">

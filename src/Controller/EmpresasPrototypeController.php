@@ -105,6 +105,9 @@ class EmpresasPrototypeController extends AppController {
 		if ($empId > 0 && ($page === 'editar' || $page === 'detalhe')) {
 			return $this->redirect(['controller' => 'Empresas', 'action' => 'edit', $empId]);
 		}
+		if ($page === 'editar' || $page === 'detalhe') {
+			return $this->redirect(['action' => 'lista']);
+		}
 		$allowed = ['nova', 'editar', 'detalhe'];
 		if (!in_array($page, $allowed, true)) {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));

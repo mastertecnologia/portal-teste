@@ -18,6 +18,7 @@ $clientesOpt = (array)($osClientesOptions ?? []);
 	'title' => __('Ordens de Serviço'),
 	'subtitle' => __('Abertura · execução · aprovação · conclusão · faturamento'),
 	'actions' => [
+		['label' => __('Módulo clássico'), 'url' => ['controller' => 'Ordensservico', 'action' => 'index'], 'class' => 'btn btn-ghost btn-sm'],
 		['label' => __('Exportar CSV'), 'url' => ['controller' => 'OrdensservicoPrototype', 'action' => 'exportCsv', '?' => array_filter($f)], 'class' => 'btn btn-ghost btn-sm'],
 		['label' => __('Kanban'), 'url' => ['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'kanban'], 'class' => 'btn btn-ghost btn-sm'],
 		['label' => '+ ' . __('Nova OS'), 'url' => ['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'abertura'], 'class' => 'btn btn-primary'],
