@@ -3,10 +3,15 @@
 	require_once (ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php');
 
 	use App\View\Sidebar\PgmSidebarStaffContext;
+	use App\Utility\PortalUi;
 
 	$__pgmSbPass = get_defined_vars();
 	unset($__pgmSbPass['this'], $__pgmSbPass['__pgmSbPass']);
 	extract(PgmSidebarStaffContext::computeFromArray($__pgmSbPass, $this->request), EXTR_OVERWRITE);
+	$clientesListRoute = PortalUi::listRoute('clientes') ?? ['controller' => 'Clientes', 'action' => 'index'];
+	$produtosListRoute = PortalUi::listRoute('produtos') ?? ['controller' => 'Produtos', 'action' => 'index'];
+	$orcamentosListRoute = PortalUi::listRoute('orcamentos') ?? ['controller' => 'Orcamentos', 'action' => 'index'];
+	$servicedeskHomeRoute = PortalUi::servicedeskHomeRoute();
 
 	$html = $this->Html;
 	/**
@@ -144,11 +149,11 @@
 					</div>
 					<div class="nav-section-items">
 						<?php if (($sg['clientes'] ?? true)) : ?>
-						<?= $pgmSbLink('users', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], ['data-turbo' => 'false'], $clientesListNavActive, '', 'Clientes') ?>
+						<?= $pgmSbLink('users', ' Clientes', $clientesListRoute, ['data-turbo' => 'false'], $clientesListNavActive, '', 'Clientes') ?>
 						<?= $pgmSbLink('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], ['data-turbo' => 'false'], $clientesAddActive, '', 'Cadastrar clientes') ?>
 						<?php endif; ?>
 						<?php if (($sg['produtos'] ?? true)) : ?>
-						<?= $pgmSbLink('package', ' Produtos', ['controller' => 'Produtos', 'action' => 'index'], ['data-turbo' => 'false'], (bool)($produtosActive ?? ''), '', 'Produtos') ?>
+						<?= $pgmSbLink('package', ' Produtos', $produtosListRoute, ['data-turbo' => 'false'], !empty($produtosListNavActive), '', 'Produtos') ?>
 						<?php endif; ?>
 						<?php if (($sg['ativos'] ?? true)) : ?>
 						<?= $pgmSbLink('cpu', ' Ativos', ['controller' => 'Ativos', 'action' => 'index'], ['data-turbo' => 'false'], $ativosActive, '', 'Ativos de TI') ?>
@@ -168,15 +173,16 @@
 					</div>
 					<div class="nav-section-items">
 						<?php if (($sg['tickets_servicedesk'] ?? true)) : ?>
-						<?= $pgmSbLink('headphones', ' Service Desk', '/servicedesk-prototype', ['data-turbo' => 'false'], $ticketsServicedeskActive, '', 'Service Desk') ?>
+						<?= $pgmSbLink('headphones', ' Service Desk', $servicedeskHomeRoute, ['data-turbo' => 'false'], !empty($ticketsServicedeskHomeActive), '', 'Service Desk') ?>
 						<?php endif; ?>
 						<?php if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) : ?>
 						<?= $pgmSbLink('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], $ticketsOperacionalActive, '', 'Dashboard operacional') ?>
 						<?= $pgmSbLink('bar-chart-2', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ticketsSlaRelatorioActive ?? false), '', 'Relatório SLA') ?>
 						<?php
-						$legacySdActive = $ticketsServicedeskActive && !($ticketsSdPrototypeActive ?? false);
+						$legacySdActive = PortalUi::isPremiumModule('servicedesk')
+							&& $ctrl === 'Servicedesk' && $act === 'index';
 						?>
-						<?= $pgmSbLink('layout-grid', ' Fila legado (React)', '/servicedesk?legacy=1', ['data-turbo' => 'false'], $legacySdActive, '', 'Service Desk legado') ?>
+						<?= $pgmSbLink('layout-grid', ' Fila legado (React)', PortalUi::servicedeskLegacyFilaRoute(), ['data-turbo' => 'false'], $legacySdActive, '', 'Service Desk legado') ?>
 						<?php endif; ?>
 						<?php
 						$incCfgChildren = [];
@@ -286,7 +292,7 @@
 						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 					</div>
 					<div class="nav-section-items">
-						<?= $pgmSbLink('file-text', ' Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['data-turbo' => 'false'], (bool)($orcamentosActive ?? ''), '', 'Orçamentos') ?>
+						<?= $pgmSbLink('file-text', ' Orçamentos', $orcamentosListRoute, ['data-turbo' => 'false'], !empty($orcamentosListNavActive), '', 'Orçamentos') ?>
 					</div>
 				</li>
 				<?php endif; ?>

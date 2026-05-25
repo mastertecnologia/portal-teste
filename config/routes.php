@@ -736,6 +736,10 @@ Router::scope("/", function ($routes) {
         "controller" => "ClientesPrototype",
         "action" => "apiAtualizarContato",
     ]);
+    $routes->connect("/clientes-prototype/visao360/:id", [
+        "controller" => "ClientesPrototype",
+        "action" => "visao360",
+    ], ["pass" => ["id"], "id" => "\d+"]);
     $routes->connect("/clientes-prototype/:page", [
         "controller" => "ClientesPrototype",
         "action" => "view",

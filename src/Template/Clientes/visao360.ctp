@@ -6,11 +6,30 @@
  * @var \App\Model\Entity\Cliente $cliente
  * @var array<string,mixed> $cli360
  * @var string $cli360Tab
+ * @var bool $cli360Proto
  */
+$cli360Proto = !empty($cli360Proto);
+$cli360ListRoute = $cli360Proto
+	? ['controller' => 'ClientesPrototype', 'action' => 'lista', 'prefix' => false]
+	: ['controller' => 'Clientes', 'action' => 'index', 'prefix' => false];
+$cli360VisaoRoute = static function (int $id, array $query = []) use ($cli360Proto) {
+	if ($cli360Proto) {
+		$r = ['controller' => 'ClientesPrototype', 'action' => 'visao360', $id, 'prefix' => false];
+	} else {
+		$r = ['action' => 'visao360', $id];
+	}
+	if ($query !== []) {
+		$r['?'] = $query;
+	}
+
+	return $r;
+};
 $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
 
-$this->Breadcrumbs->add(__('Clientes'), ['controller' => 'Clientes', 'action' => 'index'], ['class' => 'breadcrumb-item']);
-$this->Breadcrumbs->add(__('Visão 360°'), [], ['class' => 'breadcrumb-item active']);
+if (!$cli360Proto) {
+	$this->Breadcrumbs->add(__('Clientes'), $cli360ListRoute, ['class' => 'breadcrumb-item']);
+	$this->Breadcrumbs->add(__('Visão 360°'), [], ['class' => 'breadcrumb-item active']);
+}
 
 function cli360Initials($str) {
 	$parts = preg_split('/\s+/', trim((string)$str), -1, PREG_SPLIT_NO_EMPTY);
@@ -61,7 +80,7 @@ $tabs = [
 		<div class="cli-360-toolbar-back">
 			<?= $this->Html->link(
 				'<i class="fas fa-arrow-left" aria-hidden="true"></i> ' . __('Clientes'),
-				['action' => 'index'],
+				$cli360ListRoute,
 				['class' => 'cli-360-back-link', 'escape' => false, 'data-turbo' => 'false']
 			) ?>
 			<span class="cli-360-back-sep">›</span>
@@ -69,9 +88,9 @@ $tabs = [
 			<span class="cli-360-back-name"><?= h((string)$c['nome']) ?></span>
 		</div>
 		<div class="cli-360-toolbar-actions">
-			<?= $this->Html->link('<i class="fas fa-file-pdf" aria-hidden="true"></i> ' . __('Ficha PDF'), ['action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false', 'title' => __('Abrir ficha do cliente')]) ?>
+			<?= $this->Html->link('<i class="fas fa-file-pdf" aria-hidden="true"></i> ' . __('Ficha PDF'), ['controller' => 'Clientes', 'action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false', 'title' => __('Abrir ficha do cliente')]) ?>
 			<?= $this->Html->link('<i class="fas fa-paperclip" aria-hidden="true"></i> ' . __('Anexar'), ['controller' => 'Tickets', 'action' => 'index'], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
-			<?= $this->Html->link('<i class="fas fa-pen" aria-hidden="true"></i> ' . __('Editar'), ['action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
+			<?= $this->Html->link('<i class="fas fa-pen" aria-hidden="true"></i> ' . __('Editar'), ['controller' => 'Clientes', 'action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
 			<?= $this->Html->link(
 				'<i class="fas fa-plus" aria-hidden="true"></i> ' . __('Novo orçamento'),
 				['controller' => 'Orcamentos', 'action' => 'add'],
@@ -188,7 +207,7 @@ $tabs = [
 			<div class="cli-360-kpi-sub"><?= h(__('{0} disponíveis', (string)$finCrm['disponivel_fmt'])) ?></div>
 			<div class="cli-360-credito-track"><div class="cli-360-credito-fill" style="width:<?= min(100, (int)($finCrm['limite_pct'] ?? 0)) ?>%"></div></div>
 			<?php else : ?>
-			<div class="cli-360-kpi-sub"><?= $this->Html->link(__('Definir na ficha'), ['action' => 'edit', $cliente->id, '?' => ['wizard' => 3], '#' => 'cliente'], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?></div>
+			<div class="cli-360-kpi-sub"><?= $this->Html->link(__('Definir na ficha'), ['controller' => 'Clientes', 'action' => 'edit', $cliente->id, '?' => ['wizard' => 3], '#' => 'cliente'], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?></div>
 			<?php endif; ?>
 		</div>
 		<div class="cli-360-kpi cli-360-kpi--score<?= empty($finCrm['has_score']) ? ' cli-360-kpi--muted' : '' ?>">
@@ -200,7 +219,7 @@ $tabs = [
 
 	<nav class="cli-360-tabs" role="tablist">
 		<?php foreach ($tabs as $slug => $meta) :
-			$url = $this->Url->build(['action' => 'visao360', $cliente->id, '?' => ['tab' => $slug]]);
+			$url = $this->Url->build($cli360VisaoRoute((int)$cliente->id, ['tab' => $slug]));
 			$active = $tab === $slug;
 		?>
 		<a href="<?= h($url) ?>" class="cli-360-tab<?= $active ? ' active' : '' ?>" role="tab" aria-selected="<?= $active ? 'true' : 'false' ?>" data-turbo="false">
@@ -217,7 +236,7 @@ $tabs = [
 			<div class="cli-360-card">
 				<div class="cli-360-card-head">
 					<span class="cli-360-card-title"><i class="fas fa-bolt" aria-hidden="true"></i> <?= h(__('Atividade recente')) ?></span>
-					<?= $this->Html->link(__('Ver tudo'), ['action' => 'visao360', $cliente->id, '?' => ['tab' => 'historico']], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link(__('Ver tudo'), $cli360VisaoRoute((int)$cliente->id, ['tab' => 'historico']), ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?>
 				</div>
 				<?= $this->element('Cli/visao360_timeline', ['items' => (array)($c['timeline_preview'] ?? []), 'empty' => __('Sem registros recentes para este cliente.')]) ?>
 			</div>
@@ -261,7 +280,7 @@ $tabs = [
 			<div class="cli-360-card">
 				<div class="cli-360-card-head">
 					<span class="cli-360-card-title"><i class="fas fa-users" aria-hidden="true"></i> <?= h(__('Contatos')) ?></span>
-					<?= $this->Html->link(__('Adicionar'), ['action' => 'edit', $cliente->id, '?' => ['wizard' => 2, 'contato' => 1], '#' => 'cliente'], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link(__('Adicionar'), ['controller' => 'Clientes', 'action' => 'edit', $cliente->id, '?' => ['wizard' => 2, 'contato' => 1], '#' => 'cliente'], ['class' => 'cli-360-link', 'data-turbo' => 'false']) ?>
 				</div>
 				<?php if ($contatos === []) : ?>
 				<p class="cli-360-empty"><?= h(__('Nenhum contato cadastrado. Inclua responsável e e-mails na ficha.')) ?></p>
@@ -363,7 +382,7 @@ $tabs = [
 		<p class="cli-360-ficha-link mb-3">
 			<?= $this->Html->link(
 				'<i class="fas fa-external-link-alt" aria-hidden="true"></i> ' . __('Gerenciar contratos na ficha (cadastrar item, horas técnicas, situação)'),
-				['action' => 'edit', $cliente->id, '#' => 'contratos'],
+				['controller' => 'Clientes', 'action' => 'edit', $cliente->id, '#' => 'contratos'],
 				['class' => 'cli-360-link', 'escape' => false, 'data-turbo' => 'false']
 			) ?>
 		</p>
@@ -458,7 +477,7 @@ $tabs = [
 	<p class="cli-360-arq-empty"><?= h(__('Nenhum arquivo vinculado encontrado.')) ?></p>
 	<?php endif; ?>
 	<p class="mt-3 mb-0">
-		<?= $this->Html->link(__('Editar cadastro do cliente'), ['action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary', 'data-turbo' => 'false']) ?>
+		<?= $this->Html->link(__('Editar cadastro do cliente'), ['controller' => 'Clientes', 'action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary', 'data-turbo' => 'false']) ?>
 	</p>
 	<?php endif; ?>
 

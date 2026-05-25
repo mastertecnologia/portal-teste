@@ -1,14 +1,53 @@
 <?php
+use App\Utility\PortalUi;
+
 /**
- * Lista de clientes — mockup pg-clientes.
+ * Lista de clientes — pg-clientes (mock) com CRM do legado.
  *
  * @var \App\View\AppView $this
- * @var array{total:int,pj:int,pf:int,ativos:int,inativos:int} $cliCounts
- * @var array<int,array<string,mixed>> $cliItems
+ * @var array<string,mixed> $cliCrm
+ * @var array<int,array<string,mixed>> $cliRows
+ * @var array<int,string> $cliVendedores
  */
 $H = $this->ErpPrototype;
+$crm = isset($cliCrm) && is_array($cliCrm) ? $cliCrm : [];
+$top5 = $crm['top5'] ?? [];
+$segmentos = $crm['segmentos'] ?? [];
 $f = (array)($cliFiltros ?? ['q' => '', 'tipo' => '', 'status' => '']);
+$barColors = ['var(--teal)', 'var(--blue)', '#6B5B95', 'var(--amber)', 'var(--red)'];
+
+if (!function_exists('cliProtoInitials')) {
+	function cliProtoInitials($str) {
+		$parts = preg_split('/\s+/', trim((string)$str), -1, PREG_SPLIT_NO_EMPTY);
+		$a = strtoupper(substr($parts[0] ?? 'C', 0, 1));
+		$b = strtoupper(substr($parts[1] ?? '', 0, 1));
+
+		return $a . $b;
+	}
+}
+
+if (!function_exists('cliProtoRowDataAttrs')) {
+	function cliProtoRowDataAttrs($reg) {
+		$isPj = (int)$reg->tipo === (int)C_ClientesTipoJuridica;
+		$docDigits = preg_replace('/\D/', '', (string)($isPj ? ($reg->cnpj ?? '') : ($reg->cpf ?? '')));
+		$emailLower = mb_strtolower(trim((string)($reg->email ?? '')), 'UTF-8');
+		$pub = mb_strtolower(trim((string)($reg->public_code ?? '')), 'UTF-8');
+		$parts = $isPj ? [trim((string)($reg->razaosocial ?? '')), trim((string)($reg->nomefantasia ?? ''))] : [trim((string)($reg->nome ?? ''))];
+		$textBlob = mb_strtolower(trim(preg_replace('/\s+/', ' ', implode(' ', array_filter($parts)))), 'UTF-8');
+		if ($emailLower !== '') {
+			$textBlob = trim($textBlob . ' ' . $emailLower);
+		}
+		if ($pub !== '') {
+			$textBlob = trim($textBlob . ' ' . $pub);
+		}
+		$primaryLower = mb_strtolower(trim($isPj ? (string)($reg->razaosocial ?? '') : (string)($reg->nome ?? '')), 'UTF-8');
+		$primaryLower = trim(preg_replace('/\s+/', ' ', $primaryLower));
+
+		return ' data-cli-doc="' . h($docDigits) . '" data-cli-email="' . h($emailLower) . '" data-cli-text="' . h($textBlob) . '" data-cli-primary="' . h($primaryLower) . '"';
+	}
+}
 ?>
+<div id="pg-clientes-lista">
 <?= $this->element('ErpPrototype/page_header', [
 	'eyebrow' => __('Cadastros'),
 	'title' => __('Clientes'),
@@ -20,135 +59,242 @@ $f = (array)($cliFiltros ?? ['q' => '', 'tipo' => '', 'status' => '']);
 	],
 ]) ?>
 
-<div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
-	<div class="stat" style="--sc:var(--teal);"><div class="stat-l"><?= h(__('Total')) ?></div><div class="stat-n"><?= (int)$cliCounts['total'] ?></div></div>
-	<div class="stat" style="--sc:var(--blue);"><div class="stat-l"><?= h(__('PJ')) ?></div><div class="stat-n"><?= (int)$cliCounts['pj'] ?></div></div>
-	<div class="stat" style="--sc:var(--purple);"><div class="stat-l"><?= h(__('PF')) ?></div><div class="stat-n"><?= (int)$cliCounts['pf'] ?></div></div>
-	<div class="stat" style="--sc:var(--teal-dark);"><div class="stat-l"><?= h(__('Ativos')) ?></div><div class="stat-n"><?= (int)$cliCounts['ativos'] ?></div></div>
-	<div class="stat" style="--sc:var(--red);"><div class="stat-l"><?= h(__('Inativos')) ?></div><div class="stat-n"><?= (int)$cliCounts['inativos'] ?></div></div>
-	<div class="stat" style="--sc:var(--amber);"><div class="stat-l"><?= h(__('Inadimplentes')) ?></div><div class="stat-n"><?= (int)($cliCounts['inadimplentes'] ?? 0) ?></div></div>
+<div class="summary-grid" style="margin-bottom:14px;">
+	<div class="summary-card cli-kpi-card cli-kpi-active" data-cli-kpi="ativos" style="border-left:3px solid var(--teal);cursor:pointer;">
+		<div class="lbl"><?= h(__('Clientes ativos')) ?></div>
+		<div class="val" style="color:var(--teal-dark);"><?= (int)($crm['ativos'] ?? 0) ?></div>
+		<div style="font-size:11px;color:var(--text-muted);">
+			<?php if (!empty($crm['novos_mes'])) : ?>
+				↑ <?= (int)$crm['novos_mes'] ?> <?= h(__('este mês')) ?>
+			<?php else : ?>
+				<?= h(__('na carteira')) ?>
+			<?php endif; ?>
+		</div>
+	</div>
+	<div class="summary-card" data-cli-kpi="receita" style="border-left:3px solid var(--blue);">
+		<div class="lbl"><?= h(__('Receita 12 meses')) ?></div>
+		<div class="val" style="color:#0C447C;"><?= h((string)($crm['receita12_fmt'] ?? '—')) ?></div>
+		<div style="font-size:11px;color:var(--teal-dark);">
+			<?php if (!empty($crm['receita12_pct'])) : ?>
+				↑ <?= (int)$crm['receita12_pct'] ?>% <?= h(__('vs período anterior')) ?>
+			<?php else : ?>
+				<?= h(__('consolidado financeiro')) ?>
+			<?php endif; ?>
+		</div>
+	</div>
+	<div class="summary-card" style="border-left:3px solid #D946A0;">
+		<div class="lbl"><?= h(__('Ticket médio')) ?></div>
+		<div class="val" style="color:#7A1B5C;"><?= h((string)($crm['ticket_fmt'] ?? '—')) ?></div>
+		<div style="font-size:11px;color:var(--text-muted);"><?= h(__('por cliente / ano')) ?></div>
+	</div>
+	<div class="summary-card" style="background:#FAEEDA;border-left:3px solid var(--amber);">
+		<div class="lbl"><?= h(__('Inadimplentes')) ?></div>
+		<div class="val" style="color:#8A4D02;"><?= (int)($crm['inadimplentes'] ?? 0) ?></div>
+		<div style="font-size:11px;color:#8A4D02;"><?= h((string)($crm['inadimplentes_valor_fmt'] ?? '—')) ?> <?= h(__('em atraso')) ?></div>
+	</div>
+	<div class="summary-card" data-cli-kpi="bloqueados" style="background:#F8D8DA;border-left:3px solid var(--red);cursor:pointer;">
+		<div class="lbl"><?= h(__('Bloqueados')) ?></div>
+		<div class="val" style="color:#7A1822;"><?= (int)($crm['bloqueados'] ?? 0) ?></div>
+		<div style="font-size:11px;color:#7A1822;"><?= h(__('restrição interna')) ?></div>
+	</div>
+	<div class="summary-card" data-cli-kpi="aniversariantes" style="border-left:3px solid #6B5B95;cursor:pointer;">
+		<div class="lbl"><?= h(__('Aniversariantes do mês')) ?></div>
+		<div class="val" style="color:#3D2D63;"><?= (int)($crm['aniversariantes'] ?? 0) ?></div>
+		<div style="font-size:11px;color:var(--text-muted);"><?= h(__('enviar mensagem')) ?></div>
+	</div>
+</div>
+
+<div class="g2" style="margin-bottom:14px;">
+	<div class="card">
+		<div class="sec-title"><?= h(__('Top 5 clientes · receita 12 meses')) ?></div>
+		<?php if ($top5 === []) : ?>
+			<p style="font-size:12px;color:var(--text-muted);margin:0;"><?= h(__('Sem receitas lançadas no período.')) ?></p>
+		<?php else : ?>
+			<div style="display:flex;flex-direction:column;gap:8px;">
+				<?php foreach ($top5 as $i => $row) :
+					$pct = max(4, min(100, (int)($row['pct'] ?? 0)));
+					$barColor = $barColors[$i] ?? 'var(--teal)';
+				?>
+				<div>
+					<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+						<?= $this->Html->link(
+							h((string)$row['nome']),
+							PortalUi::visao360Route((int)($row['id'] ?? 0)) ?? ['controller' => 'Clientes', 'action' => 'visao360', (int)($row['id'] ?? 0)],
+							['style' => 'font-size:12px;font-weight:500;color:var(--teal-dark);', 'data-turbo' => 'false']
+						) ?>
+						<span style="font-size:12px;font-weight:600;"><?= h($this->Number->currency((float)($row['valor'] ?? 0), 'BRL')) ?> <span style="font-size:10px;color:var(--text-muted);">(<?= (int)($row['pct'] ?? 0) ?>%)</span></span>
+					</div>
+					<div style="height:8px;background:var(--bg-surface);border-radius:4px;overflow:hidden;">
+						<div style="height:100%;background:<?= h($barColor) ?>;width:<?= (int)$pct ?>%;border-radius:4px;"></div>
+					</div>
+				</div>
+				<?php endforeach; ?>
+			</div>
+			<?php if (!empty($crm['alerta_concentracao'])) : ?>
+			<div class="alert-box alert-amber" style="margin-top:10px;font-size:11px;">
+				⚠ <?= h(__('Concentração: {0} representa {1}% da carteira.', $crm['alerta_concentracao']['nome'], $crm['alerta_concentracao']['pct'])) ?>
+			</div>
+			<?php endif; ?>
+		<?php endif; ?>
+	</div>
+	<div class="card">
+		<div class="sec-title"><?= h(__('Distribuição por segmento')) ?></div>
+		<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:12px;">
+			<?php foreach ($segmentos as $seg) : ?>
+			<div style="text-align:center;padding:10px 8px;background:var(--bg-surface);border-radius:8px;border:1px solid var(--border-light);">
+				<div style="font-size:18px;font-weight:700;"><?= (int)$seg['count'] ?></div>
+				<div style="font-size:10px;color:var(--text-muted);"><?= h((string)$seg['label']) ?></div>
+				<div style="font-size:10px;color:var(--teal-dark);"><?= (int)$seg['pct'] ?>%</div>
+			</div>
+			<?php endforeach; ?>
+		</div>
+		<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;"><?= h(__('Pessoa jurídica')) ?> · <?= (int)($crm['pj_bar']['count'] ?? 0) ?> (<?= (int)($crm['pj_bar']['pct'] ?? 0) ?>%)</div>
+		<div style="height:6px;background:var(--bg-surface);border-radius:3px;overflow:hidden;margin-bottom:8px;">
+			<div style="height:100%;background:var(--teal);width:<?= (int)($crm['pj_bar']['pct'] ?? 0) ?>%;"></div>
+		</div>
+		<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;"><?= h(__('Pessoa física')) ?> · <?= (int)($crm['pf_bar']['count'] ?? 0) ?> (<?= (int)($crm['pf_bar']['pct'] ?? 0) ?>%)</div>
+		<div style="height:6px;background:var(--bg-surface);border-radius:3px;overflow:hidden;">
+			<div style="height:100%;background:var(--blue);width:<?= (int)($crm['pf_bar']['pct'] ?? 0) ?>%;"></div>
+		</div>
+	</div>
 </div>
 
 <div class="card" style="padding:0;overflow:hidden;">
-	<form method="get" style="padding:12px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border-light);">
-		<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
-			<div class="field" style="flex:1;min-width:240px;">
-				<label><?= h(__('Buscar')) ?></label>
-				<input type="search" name="q" value="<?= h((string)$f['q']) ?>" placeholder="🔍 <?= h(__('Nome, CNPJ, e-mail, telefone...')) ?>">
+	<div style="padding:12px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border-light);">
+		<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+			<div class="field" style="flex:1;min-width:220px;margin:0;">
+				<input type="search" id="cli-search" value="<?= h((string)$f['q']) ?>" placeholder="🔍 <?= h(__('Buscar por nome, CNPJ/CPF, e-mail, telefone...')) ?>" autocomplete="off" style="width:100%;">
 			</div>
-			<div class="field" style="flex:0 0 120px;">
-				<label><?= h(__('Tipo')) ?></label>
-				<select name="tipo">
-					<option value=""><?= h(__('Todos')) ?></option>
-					<option value="pj"<?= (string)$f['tipo'] === 'pj' ? ' selected' : '' ?>>PJ</option>
-					<option value="pf"<?= (string)$f['tipo'] === 'pf' ? ' selected' : '' ?>>PF</option>
-				</select>
-			</div>
-			<div class="field" style="flex:0 0 140px;">
-				<label><?= h(__('Status')) ?></label>
-				<select name="status">
-					<option value=""><?= h(__('Todos')) ?></option>
-					<option value="ativo"<?= (string)$f['status'] === 'ativo' ? ' selected' : '' ?>>Ativo</option>
-					<option value="inativo"<?= (string)$f['status'] === 'inativo' ? ' selected' : '' ?>>Inativo</option>
-				</select>
-			</div>
-			<button type="submit" class="btn btn-primary btn-sm">🔍 <?= h(__('Filtrar')) ?></button>
-			<?= $this->Html->link(__('Limpar'), ['controller' => 'ClientesPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
+			<span id="cli-search-mode" style="font-size:10px;color:var(--text-muted);min-width:48px;"></span>
 		</div>
-	</form>
+		<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+			<select id="cli-filter-status" class="field" style="min-width:140px;">
+				<option value=""><?= h(__('Todos os status')) ?></option>
+				<option value="ativos"<?= (string)$f['status'] === 'ativo' ? ' selected' : '' ?>><?= h(__('Ativos')) ?></option>
+				<option value="inativos"<?= (string)$f['status'] === 'inativo' ? ' selected' : '' ?>><?= h(__('Inativos')) ?></option>
+			</select>
+			<select id="cli-filter-segmento" style="min-width:160px;">
+				<option value=""><?= h(__('Todos os segmentos')) ?></option>
+				<?php foreach ($segmentos as $seg) : ?>
+				<option value="<?= h((string)$seg['slug']) ?>"><?= h((string)$seg['label']) ?></option>
+				<?php endforeach; ?>
+			</select>
+			<select id="cli-filter-tipo" style="min-width:130px;">
+				<option value=""><?= h(__('PJ + PF')) ?></option>
+				<option value="pj"<?= (string)$f['tipo'] === 'pj' ? ' selected' : '' ?>>PJ</option>
+				<option value="pf"<?= (string)$f['tipo'] === 'pf' ? ' selected' : '' ?>>PF</option>
+			</select>
+			<select id="cli-filter-vendedor" style="min-width:160px;">
+				<option value=""><?= h(__('Todos os vendedores')) ?></option>
+				<?php foreach ($cliVendedores as $vid => $vname) : ?>
+				<option value="<?= (int)$vid ?>"><?= h((string)$vname) ?></option>
+				<?php endforeach; ?>
+			</select>
+		</div>
+		<div style="display:flex;gap:6px;flex-wrap:wrap;">
+			<button type="button" class="btn btn-ghost btn-sm cli-proto-chip" data-chip="top-receita">★ <?= h(__('Top 10 receita')) ?></button>
+			<button type="button" class="btn btn-ghost btn-sm cli-proto-chip" data-chip="novos">🆕 <?= h(__('Novos clientes')) ?></button>
+			<button type="button" class="btn btn-ghost btn-sm cli-proto-chip" data-chip="atraso">⏰ <?= h(__('Em atraso')) ?></button>
+			<button type="button" class="btn btn-ghost btn-sm cli-proto-chip" data-chip="sem-contato">📞 <?= h(__('Sem contato 30d')) ?></button>
+			<button type="button" class="btn btn-ghost btn-sm cli-proto-chip" data-chip="vip">💎 <?= h(__('Clientes VIP')) ?></button>
+			<button type="button" class="btn btn-ghost btn-sm cli-proto-chip" data-chip="aniversariantes">🎂 <?= h(__('Aniversariantes')) ?></button>
+		</div>
+	</div>
 	<div style="overflow-x:auto;">
-		<table class="tbl" style="margin:0;">
+		<table class="tbl" id="cli-proto-table" style="margin:0;">
 			<thead>
 				<tr>
-					<th><?= h(__('Tipo')) ?></th>
-					<th><?= h(__('Nome / Razão social')) ?></th>
-					<th><?= h(__('CNPJ / CPF')) ?></th>
-					<th><?= h(__('Contato')) ?></th>
-					<th><?= h(__('Desde')) ?></th>
+					<th><?= h(__('Código')) ?></th>
+					<th><?= h(__('Cliente')) ?></th>
+					<th><?= h(__('CNPJ/CPF')) ?></th>
+					<th><?= h(__('Segmento')) ?></th>
+					<th><?= h(__('Cidade')) ?></th>
+					<th class="r"><?= h(__('Receita 12M')) ?></th>
+					<th class="r"><?= h(__('A receber')) ?></th>
 					<th><?= h(__('Status')) ?></th>
+					<th><?= h(__('Última compra')) ?></th>
 					<th></th>
 				</tr>
 			</thead>
 			<tbody>
-				<?php if ($cliItems === []) : ?>
-					<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-muted);"><?= h(__('Nenhum cliente no escopo.')) ?></td></tr>
-				<?php else : foreach ($cliItems as $it) :
-					$cliHref = $this->Url->build(['controller' => 'Clientes', 'action' => 'visao360', (int)$it['id']]);
+				<?php $idxRow = 0;
+				foreach ($cliRows as $row) :
+					$reg = $row['entity'];
+					$seg = $row['segmento'];
+					$rec12 = (float)($row['receita12'] ?? 0);
+					$aRec = (float)($row['a_receber'] ?? 0);
+					$url360 = $this->Url->build(PortalUi::visao360Route((int)$reg->id) ?? ['controller' => 'Clientes', 'action' => 'visao360', $reg->id]);
+					$stClass = (string)($row['status_class'] ?? 'on');
+					$badgeType = 'paga';
+					if ($stClass === 'warn') {
+						$badgeType = 'env';
+					} elseif ($stClass === 'blocked') {
+						$badgeType = 'arq';
+					} elseif ($stClass === 'vip') {
+						$badgeType = 'aprov';
+					}
+					$avTone = (string)($row['av_tone'] ?? 'teal');
+					$avColors = [
+						'teal' => 'var(--teal)',
+						'blue' => 'var(--blue)',
+						'navy' => '#0C447C',
+						'orange' => 'var(--amber)',
+						'wine' => '#7A1822',
+						'rose' => '#D946A0',
+						'purple' => '#6B5B95',
+					];
+					$avBg = $avColors[$avTone] ?? 'var(--teal)';
 				?>
-					<tr data-cli-row="<?= (int)$it['id'] ?>" data-pgm-row-href="<?= h($cliHref) ?>" tabindex="0">
-						<td><span class="badge <?= $it['tipo'] === 'PJ' ? 'b-aprov' : 'b-env' ?>"><?= h((string)$it['tipo']) ?></span></td>
-						<td>
-							<strong><?= h((string)$it['nome']) ?></strong>
-							<?php if (!empty($it['public_code'])) : ?>
-								<div style="font-size:10px;color:var(--teal);font-family:monospace;"><?= h((string)$it['public_code']) ?></div>
-							<?php endif; ?>
-							<?php if (!empty($it['fantasia'])) : ?>
-								<div style="font-size:11px;color:var(--text-muted);"><?= h((string)$it['fantasia']) ?></div>
-							<?php endif; ?>
-						</td>
-						<td style="font-family:monospace;font-size:11px;"><?= h((string)$it['cnpj']) ?></td>
-						<td style="font-size:11px;">
-							<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px;">
-								<span title="<?= h(__('E-mail')) ?>">📧</span>
-								<input type="email" data-cli-edit="email" data-cli-id="<?= (int)$it['id'] ?>" value="<?= h((string)$it['email']) ?>" placeholder="—" style="border:1px dashed transparent;background:transparent;font-size:11px;padding:2px 4px;border-radius:3px;flex:1;min-width:120px;">
+				<tr<?= cliProtoRowDataAttrs($reg) ?>
+					data-cli-status="<?= h((string)$row['status_key']) ?>"
+					data-cli-tipo="<?= h((string)$row['tipo_key']) ?>"
+					data-cli-segmento="<?= h((string)$row['segmento_slug']) ?>"
+					data-cli-vendedor="<?= (int)($row['vendedor_id'] ?? 0) ?>"
+					data-cli-atraso="<?= (int)($row['atraso'] ?? 0) ?>"
+					data-cli-vip="<?= (int)($row['vip'] ?? 0) ?>"
+					data-cli-novo="<?= (int)($row['novo_mes'] ?? 0) ?>"
+					data-cli-aniv="<?= (int)($row['aniversariante'] ?? 0) ?>"
+					data-cli-top10="<?= (int)($row['top_receita'] ?? 0) ?>"
+					data-cli-sem-contato="<?= (int)($row['sem_contato'] ?? 0) ?>"
+					data-cli-edit-url="<?= h($url360) ?>"
+					data-cli-ord="<?= (int)$idxRow ?>"
+					style="cursor:pointer;"
+					tabindex="0">
+					<td><span style="font-size:10px;font-family:monospace;color:var(--teal);"><?= h((string)$row['codigo']) ?></span></td>
+					<td>
+						<div style="display:flex;align-items:center;gap:8px;">
+							<span style="width:28px;height:28px;border-radius:50%;background:<?= h($avBg) ?>;color:#fff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"><?= h(cliProtoInitials((string)$row['nome'])) ?></span>
+							<div>
+								<strong style="font-size:12px;"><?= h((string)$row['nome']) ?></strong>
+								<?php if (!empty($row['subline'])) : ?>
+								<div style="font-size:10px;color:var(--text-muted);"><?= h((string)$row['subline']) ?></div>
+								<?php endif; ?>
 							</div>
-							<div style="display:flex;align-items:center;gap:4px;">
-								<span title="<?= h(__('Telefone')) ?>">📞</span>
-								<input type="tel" data-cli-edit="fone" data-cli-id="<?= (int)$it['id'] ?>" value="<?= h((string)$it['fone']) ?>" placeholder="—" style="border:1px dashed transparent;background:transparent;font-size:11px;padding:2px 4px;border-radius:3px;flex:1;min-width:120px;">
-							</div>
-						</td>
-						<td class="mu"><?= h($H->dt($it['desde'])) ?></td>
-						<td><?= $H->badge($it['inativo'] ? __('Inativo') : __('Ativo'), $it['inativo'] ? 'arq' : 'paga') ?></td>
-						<td class="r" style="white-space:nowrap;">
-							<?= $this->Html->link(__('360°'), ['controller' => 'Clientes', 'action' => 'visao360', (int)$it['id']], ['class' => 'btn btn-primary btn-xs', 'data-turbo' => 'false']) ?>
-							<?= $this->Html->link(__('Editar'), ['controller' => 'Clientes', 'action' => 'edit', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs', 'data-turbo' => 'false']) ?>
-						</td>
-					</tr>
-				<?php endforeach; endif; ?>
+						</div>
+					</td>
+					<td style="font-family:monospace;font-size:11px;"><?= h(function_exists('formatCnpjCpf') ? formatCnpjCpf((string)$row['doc']) : (string)$row['doc']) ?></td>
+					<td><span class="badge b-env" style="font-size:10px;"><?= h((string)$seg['short']) ?></span></td>
+					<td style="font-size:11px;"><?= (string)$row['cidade'] !== '' ? h((string)$row['cidade']) : '—' ?></td>
+					<td class="r" style="font-size:11px;font-weight:600;"><?= h($this->Number->currency($rec12, 'BRL')) ?></td>
+					<td class="r" style="font-size:11px;<?= $aRec <= 0 ? 'color:var(--text-muted);' : '' ?>"><?= h($this->Number->currency($aRec, 'BRL')) ?></td>
+					<td><?= $H->badge((string)$row['status_label'], $badgeType) ?></td>
+					<td class="mu" style="font-size:11px;"><?= h((string)$row['ultima']) ?></td>
+					<td class="r" style="white-space:nowrap;" onclick="event.stopPropagation()">
+						<?= $this->Html->link(__('360°'), PortalUi::visao360Route((int)$reg->id) ?? ['controller' => 'Clientes', 'action' => 'visao360', $reg->id], ['class' => 'btn btn-primary btn-xs', 'data-turbo' => 'false']) ?>
+						<?= $this->Html->link(__('Editar'), ['controller' => 'Clientes', 'action' => 'edit', $reg->id], ['class' => 'btn btn-ghost btn-xs', 'data-turbo' => 'false']) ?>
+					</td>
+				</tr>
+				<?php $idxRow++; endforeach; ?>
 			</tbody>
 		</table>
+		<p id="cli-proto-empty" style="display:none;padding:24px;text-align:center;color:var(--text-muted);margin:0;"><?= h(__('Nenhum cliente corresponde aos filtros.')) ?></p>
 	</div>
 </div>
-
-<div class="alert-box alert-blue" style="margin-top:14px;">
-	💡 <?= h(__('Você pode editar e-mail e telefone direto na tabela — basta clicar no campo, alterar e sair (Tab/clique fora).')) ?>
 </div>
 
-<?php $this->start('script'); ?>
-<script>
-(function () {
-	var csrf = <?= json_encode((string)$this->request->getAttribute('csrfToken')) ?>;
-	var url = <?= json_encode($this->Url->build(['controller' => 'ClientesPrototype', 'action' => 'apiAtualizarContato'])) ?>;
-	document.querySelectorAll('[data-cli-edit]').forEach(function (el) {
-		var orig = el.value;
-		el.addEventListener('focus', function () {
-			el.style.borderColor = '#1D9E75';
-			el.style.background = '#fff';
-		});
-		el.addEventListener('blur', function () {
-			el.style.borderColor = 'transparent';
-			el.style.background = 'transparent';
-			var v = el.value.trim();
-			if (v === orig) return;
-			var fd = new FormData();
-			fd.append('_csrfToken', csrf);
-			fd.append('cliente_id', el.getAttribute('data-cli-id'));
-			fd.append('campo', el.getAttribute('data-cli-edit'));
-			fd.append('valor', v);
-			fetch(url, {method: 'POST', body: fd, credentials: 'same-origin', headers: {'X-CSRF-Token': csrf}})
-				.then(function (r) { return r.json(); })
-				.then(function (data) {
-					if (data.ok) {
-						orig = v;
-						el.style.background = '#E1F5EE';
-						setTimeout(function () { el.style.background = 'transparent'; }, 800);
-					} else {
-						el.value = orig;
-						alert(data.error || 'Falha ao salvar');
-					}
-				});
-		});
-	});
-})();
-</script>
-<?php $this->end(); ?>
+<style>
+#pg-clientes-lista .cli-kpi-card.cli-kpi-active { box-shadow: 0 0 0 2px var(--teal-mid, var(--teal)); }
+#pg-clientes-lista .cli-proto-chip.active { background: var(--teal-light, #e8faf4); border-color: var(--teal); color: var(--teal-dark); }
+</style>
+
+<?= $this->element('ClientesPrototype/crm_lista_script') ?>

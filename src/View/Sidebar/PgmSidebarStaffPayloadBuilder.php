@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\View\Sidebar;
 
+use App\Utility\PortalUi;
 use Cake\Http\ServerRequest;
 use Cake\Routing\Router;
 
@@ -45,13 +46,15 @@ final class PgmSidebarStaffPayloadBuilder
         if ($sgCadGrp) {
             $items = [];
             if (($sg['clientes'] ?? true)) {
-                $items[] = self::item('users', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], [], $ctx['clientesListNavActive'], '', 'Clientes');
+                $clientesList = PortalUi::listRoute('clientes') ?? ['controller' => 'Clientes', 'action' => 'index'];
+                $items[] = self::item('users', ' Clientes', $clientesList, ['data-turbo' => 'false'], $ctx['clientesListNavActive'], '', 'Clientes');
             }
             if (($sg['clientes'] ?? true)) {
                 $items[] = self::item('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], [], $ctx['clientesAddActive'], '', 'Cadastrar clientes');
             }
             if (($sg['produtos'] ?? true)) {
-                $items[] = self::item('package', ' Produtos', ['controller' => 'Produtos', 'action' => 'index'], [], (bool)($v['produtosActive'] ?? ''), '', 'Produtos');
+                $produtosList = PortalUi::listRoute('produtos') ?? ['controller' => 'Produtos', 'action' => 'index'];
+                $items[] = self::item('package', ' Produtos', $produtosList, [], (bool)($ctx['produtosListNavActive'] ?? false), '', 'Produtos');
             }
             if (($sg['ativos'] ?? true)) {
                 $items[] = self::item('cpu', ' Ativos', ['controller' => 'Ativos', 'action' => 'index'], ['data-turbo' => 'false'], (bool)($ctx['ativosActive'] ?? false), '', 'Ativos de TI');
@@ -68,13 +71,22 @@ final class PgmSidebarStaffPayloadBuilder
         if ($sgIncGrp) {
             $items = [];
             if (($sg['tickets_servicedesk'] ?? true)) {
-                $items[] = self::item('headphones', ' Service Desk', '/servicedesk-prototype', ['data-turbo' => 'false'], (bool)($ctx['ticketsServicedeskActive'] ?? false), '', 'Service Desk');
+                $items[] = self::item(
+                    'headphones',
+                    ' Service Desk',
+                    PortalUi::servicedeskHomeRoute(),
+                    ['data-turbo' => 'false'],
+                    (bool)($ctx['ticketsServicedeskHomeActive'] ?? false),
+                    '',
+                    'Service Desk'
+                );
             }
             if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) {
                 $items[] = self::item('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], (bool)($ctx['ticketsOperacionalActive'] ?? false), '', 'Dashboard operacional');
                 $items[] = self::item('bar-chart-3', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ctx['ticketsSlaRelatorioActive'] ?? false), '', 'Relatório SLA');
-                $legacySdActive = ($ctx['ticketsServicedeskActive'] ?? false) && !($ctx['ticketsSdPrototypeActive'] ?? false);
-                $items[] = self::item('layout-grid', ' Fila legado (React)', '/servicedesk?legacy=1', ['data-turbo' => 'false'], $legacySdActive, '', 'Service Desk legado');
+                $legacySdActive = PortalUi::isPremiumModule('servicedesk')
+                    && ($ctx['ctrl'] ?? '') === 'Servicedesk' && ($ctx['act'] ?? '') === 'index';
+                $items[] = self::item('layout-grid', ' Fila legado (React)', PortalUi::servicedeskLegacyFilaRoute(), ['data-turbo' => 'false'], $legacySdActive, '', 'Service Desk legado');
             }
             $configChildren = [];
             if ($roleNav === 0 && (($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true))) {
@@ -189,7 +201,15 @@ final class PgmSidebarStaffPayloadBuilder
                 'title' => 'Comercial',
                 'defaultOpen' => (bool)$ctx['pgmSbOpenComercial'],
                 'items' => [
-                    self::item('file-text', ' Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], [], (bool)($v['orcamentosActive'] ?? ''), '', 'Orçamentos'),
+                    self::item(
+                        'file-text',
+                        ' Orçamentos',
+                        PortalUi::listRoute('orcamentos') ?? ['controller' => 'Orcamentos', 'action' => 'index'],
+                        [],
+                        (bool)($ctx['orcamentosListNavActive'] ?? false),
+                        '',
+                        'Orçamentos'
+                    ),
                 ],
             ];
         }

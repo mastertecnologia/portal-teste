@@ -5,6 +5,7 @@ use App\Utility\ErpIntegrationRequest;
 use App\Controller\AppController;
 use App\Utility\ErpGridUrl;
 use App\Utility\ErpSoapUrl;
+use App\Utility\PortalUi;
 use App\Utility\PortalUrlPath;
 use Cake\Event\Event;
 use Cake\View\View;
@@ -58,6 +59,10 @@ class ProdutosController extends AppController {
 	}
 
 	public function index() {
+		$prototypeLista = PortalUi::redirectToPrototypeIfEnabled('produtos', 'ProdutosPrototype', 'lista');
+		if ($prototypeLista !== null) {
+			return $this->redirect($prototypeLista);
+		}
 		$this->set('title', 'Produtos e Serviços');
         $produtos = $this->Produtos->findByTipo(1)->where(['idempresa' => $this->Auth->user('idempresa')])->toArray();
 
@@ -1040,6 +1045,9 @@ class ProdutosController extends AppController {
 	}
 
 	public function estoque($opt = null) {
+		if (PortalUi::isPremiumModule('produtos')) {
+			return $this->redirect(PortalUi::produtosEstoqueRoute());
+		}
 		error_reporting(0);
 		$query = (array)$this->request->getQueryParams();
 		$data = $this->request->is(['post', 'put']) ? (array)$this->request->getData() : [];

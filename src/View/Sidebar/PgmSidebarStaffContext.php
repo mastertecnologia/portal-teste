@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\View\Sidebar;
 
+use App\Utility\PortalUi;
 use Cake\Http\ServerRequest;
 
 /**
@@ -26,14 +27,18 @@ final class PgmSidebarStaffContext
         $osIndexActive = ($ctrl === 'Ordensservico' && $act === 'index');
         $osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
         $clientesAddActive = ($ctrl === 'Clientes' && $act === 'add');
-        $clientesListNavActive = ($ctrl === 'Clientes' && $act !== 'add');
+        $clientesListNavActive = PortalUi::isClientesListNavActive($ctrl, $act);
+        $produtosListNavActive = PortalUi::isProdutosNavActive($ctrl, $act);
+        $orcamentosListNavActive = PortalUi::isOrcamentosNavActive($ctrl, $act);
         $ativosActive = ($ctrl === 'Ativos');
         $ticketsOperacionalActive = ($ctrl === 'Servicedesk' && $act === 'operacional');
         $ticketsSlaRelatorioActive = ($ctrl === 'Servicedesk' && $act === 'slaRelatorio');
         $ticketsWorkflowSlaActive = ($ctrl === 'Servicedesk' && $act === 'workflowSlaAdmin');
-		$ticketsSdPrototypeActive = ($ctrl === 'ServicedeskPrototype');
-		$ticketsServicedeskActive = $ticketsSdPrototypeActive
-			|| ($ctrl === 'Servicedesk' && !in_array($act, ['operacional', 'workflowSlaAdmin', 'slaRelatorio'], true));
+		$ticketsSdPrototypeActive = PortalUi::isServicedeskHomeNavActive($ctrl, $act)
+			&& $ctrl === 'ServicedeskPrototype';
+		$ticketsServicedeskHomeActive = PortalUi::isServicedeskHomeNavActive($ctrl, $act);
+		$ticketsServicedeskActive = $ticketsServicedeskHomeActive
+			|| ($ctrl === 'Servicedesk' && !in_array($act, ['operacional', 'workflowSlaAdmin', 'slaRelatorio', 'index'], true));
         $ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
 
         $advMgmtAct = ($ctrl === 'ContractManagement');
@@ -91,10 +96,11 @@ final class PgmSidebarStaffContext
         $pgmSbOpenIndicadores = $relatoriosPainelActive || $relatoriosIndicadoresAdvActive;
         $pgmSbOpenPlanner = (bool)$visitasActive;
         $pgmSbOpenCofre = (bool)$senhasActive;
-        $pgmSbOpenCadastros = (bool)$clientesActive || $clientesAddActive || (bool)$produtosActive || $ativosActive;
+        $pgmSbOpenCadastros = (bool)$clientesActive || $clientesAddActive || (bool)$produtosActive
+            || $produtosListNavActive || $ativosActive;
         $ticketsIncidentesConfigOpen = $ticketsWorkflowSlaActive || ($roleNav === 0 && $ticketsHistoricoActive);
         $pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsSdPrototypeActive || $ticketsHistoricoActive || $ticketsOperacionalActive || $ticketsWorkflowSlaActive || $ticketsSlaRelatorioActive;
-        $pgmSbOpenComercial = (bool)$orcamentosActive;
+        $pgmSbOpenComercial = (bool)$orcamentosActive || $orcamentosListNavActive;
         $pgmSbOpenFaturamento = (bool)$prefaturamentoActive || (bool)$faturamentoActive;
         $pgmSbOpenFinanceiro = $finDashAct || $finRecAct || $finPagAct || $finFluxoAct || $finRecorAct || $finConcAct || $finDreAct || $finRelAct || $finPlanoAct || $finCcAct;
         $pgmSbOpenBancos = $finBancosAct || $finRemessaAct || $finRetornoAct || $finRelBancosAct;
@@ -132,9 +138,12 @@ final class PgmSidebarStaffContext
             'osAddActive' => $osAddActive,
             'clientesAddActive' => $clientesAddActive,
             'clientesListNavActive' => $clientesListNavActive,
+            'produtosListNavActive' => $produtosListNavActive,
+            'orcamentosListNavActive' => $orcamentosListNavActive,
             'ativosActive' => $ativosActive,
             'ticketsServicedeskActive' => $ticketsServicedeskActive,
             'ticketsSdPrototypeActive' => $ticketsSdPrototypeActive,
+            'ticketsServicedeskHomeActive' => $ticketsServicedeskHomeActive,
             'ticketsOperacionalActive' => $ticketsOperacionalActive,
             'ticketsSlaRelatorioActive' => $ticketsSlaRelatorioActive,
             'ticketsWorkflowSlaActive' => $ticketsWorkflowSlaActive,
