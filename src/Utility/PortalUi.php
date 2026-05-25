@@ -79,9 +79,29 @@ class PortalUi {
      */
     public static function isClientesListNavActive(string $controller, string $action): bool {
         if ($controller === 'ClientesPrototype') {
-            return true;
+            return in_array($action, ['lista', 'visao360'], true);
         }
 
         return $controller === 'Clientes' && $action !== 'add';
+    }
+
+    /**
+     * Rota Cake da Visão 360° (legado ou protótipo).
+     *
+     * @param array<string, string> $query ex.: ['tab' => 'historico']
+     * @return array<string, mixed>|null null se $clienteId inválido
+     */
+    public static function visao360Route(int $clienteId, array $query = []): ?array {
+        if ($clienteId <= 0) {
+            return null;
+        }
+        $route = self::isPremiumModule('clientes')
+            ? ['controller' => 'ClientesPrototype', 'action' => 'visao360', $clienteId, 'prefix' => false]
+            : ['controller' => 'Clientes', 'action' => 'visao360', $clienteId, 'prefix' => false];
+        if ($query !== []) {
+            $route['?'] = $query;
+        }
+
+        return $route;
     }
 }

@@ -36,7 +36,21 @@ class PortalUiTest extends TestCase {
 
 	public function testClientesListNavActiveIncludesPrototype(): void {
 		$this->assertTrue(PortalUi::isClientesListNavActive('ClientesPrototype', 'lista'));
+		$this->assertTrue(PortalUi::isClientesListNavActive('ClientesPrototype', 'visao360'));
 		$this->assertFalse(PortalUi::isClientesListNavActive('Clientes', 'add'));
 		$this->assertTrue(PortalUi::isClientesListNavActive('Clientes', 'index'));
+	}
+
+	public function testVisao360RouteSwitchesWithPremium(): void {
+		Configure::write('PortalUi.premium_modules', ['clientes' => true]);
+		$route = PortalUi::visao360Route(42, ['tab' => 'historico']);
+		$this->assertSame('ClientesPrototype', $route['controller']);
+		$this->assertSame('visao360', $route['action']);
+		$this->assertSame(42, $route[0]);
+		$this->assertSame(['tab' => 'historico'], $route['?']);
+		Configure::write('PortalUi.premium_modules', []);
+		$legacy = PortalUi::visao360Route(7);
+		$this->assertSame('Clientes', $legacy['controller']);
+		$this->assertSame(7, $legacy[0]);
 	}
 }

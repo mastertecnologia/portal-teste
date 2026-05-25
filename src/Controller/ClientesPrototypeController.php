@@ -4,7 +4,10 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Controller\Traits\ClientesCrmListaTrait;
+use App\Controller\Traits\ClientesVisao360SupportTrait;
+use App\Controller\Traits\ClientesVisao360Trait;
 use App\Controller\Traits\ErpPrototypeRbacTrait;
+use App\Utility\PortalUi;
 use App\Controller\Traits\PrototypeApiSecurityTrait;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
@@ -33,12 +36,15 @@ if (!defined('C_ClientesTipoFisica')) {
 class ClientesPrototypeController extends AppController {
 
 	use ClientesCrmListaTrait;
+	use ClientesVisao360SupportTrait;
+	use ClientesVisao360Trait;
 	use ErpPrototypeRbacTrait;
 	use PrototypeApiSecurityTrait;
 
 	public function initialize() {
 		parent::initialize();
 		$this->loadModel('Clientes');
+		$this->loadModel('Users');
 	}
 
 	public function beforeFilter(Event $event) {
@@ -213,7 +219,13 @@ class ClientesPrototypeController extends AppController {
 		]);
 
 		if ($page === '360') {
-			return $this->visao360();
+			$cliId = (int)$this->request->getQuery('id', 0);
+			if ($cliId > 0) {
+				return $this->redirect(['action' => 'visao360', $cliId]);
+			}
+			$this->Flash->warning(__('Informe o cliente para abrir a Visão 360°.'));
+
+			return $this->redirect(['action' => 'lista']);
 		}
 		if ($page === 'import') {
 			return $this->render('import');
@@ -223,153 +235,56 @@ class ClientesPrototypeController extends AppController {
 	}
 
 	/**
-	 * pg-cliente-360 — visão 360º (KPIs + tickets + faturas + OS + contratos).
+	 * pg-cliente-360 — paridade com Clientes/visao360 no shell erp_prototype.
+	 *
+	 * @param int|string|null $id
 	 */
-	protected function visao360() {
-		$cliId = (int)$this->request->getQuery('id', 0);
-		if ($cliId > 0) {
-			return $this->redirect(['controller' => 'Clientes', 'action' => 'visao360', $cliId]);
+	public function visao360($id = null) {
+		if ((int)($this->Auth->user('role') ?? -1) === 1) {
+			$this->Flash->error(__('Você não possui permissões para acessar esta página.'));
+
+			return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
 		}
+		$cid = (int)$id;
+		if ($cid <= 0) {
+			$this->Flash->warning(__('Cliente inválido.'));
 
-		$empresa = (int)$this->Auth->user('idempresa');
-
-		$payload = [
-			'cliente' => null,
-			'tickets_abertos' => 0,
-			'os_andamento' => 0,
-			'contratos' => 0,
-			'faturas_vencidas' => 0,
-			'ltv' => 0.0,
-		];
-
-		try {
-			if ($cliId > 0) {
-				$cli = $this->Clientes->find()
-					->where(['Clientes.id' => $cliId, 'Clientes.idempresa' => $empresa])
-					->first();
-				if ($cli) {
-					$payload['cliente'] = [
-						'id' => (int)$cli->get('id'),
-						'nome' => (int)$cli->get('tipo') === 2
-							? (string)($cli->get('razaosocial') ?? $cli->get('nome'))
-							: (string)$cli->get('nome'),
-						'fantasia' => (string)($cli->get('nomefantasia') ?? ''),
-						'cnpj' => (string)($cli->get('cnpj') ?? $cli->get('cpf') ?? ''),
-						'email' => (string)($cli->get('email') ?? ''),
-						'fone' => (string)($cli->get('fone') ?? $cli->get('fone2') ?? ''),
-						'desde' => $cli->get('membrodesde'),
-						'endereco' => trim(
-							(string)$cli->get('endereco') . ', ' .
-							(string)$cli->get('nroendereco') . ' · ' .
-							(string)$cli->get('bairro') . ' · ' .
-							(string)$cli->get('estado')
-						),
-					];
-				}
-			}
-		} catch (\Throwable $e) {
+			return $this->redirect(['action' => 'lista']);
 		}
+		$q = $this->Clientes->find()
+			->contain(['Cidades.Estados'])
+			->where(['Clientes.id' => $cid]);
+		$this->Abac->applyToQuery($q, 'Clientes');
+		$cliente = $q->first();
+		if (empty($cliente)) {
+			$this->Flash->error(__('Cliente não encontrado ou sem permissão.'));
 
-		$payload['timeline'] = [];
-
-		try {
-			$tickets = $this->loadModel('Tickets');
-			$closed = [];
-			if (defined('C_TicketSituacaoFechado')) {
-				$closed[] = (int)C_TicketSituacaoFechado;
-			}
-			if (defined('C_TicketSituacaoResolvido')) {
-				$closed[] = (int)C_TicketSituacaoResolvido;
-			}
-			$where = ['Tickets.idempresa' => $empresa];
-			if ($cliId > 0) {
-				$where['Tickets.idcliente'] = $cliId;
-			}
-			$wAbertos = $where;
-			if ($closed !== []) {
-				$wAbertos['Tickets.situacao NOT IN'] = $closed;
-			}
-			$payload['tickets_abertos'] = (int)$tickets->find()->where($wAbertos)->count();
-			// Timeline: últimos 5 tickets
-			foreach ($tickets->find()->where($where)->order(['Tickets.created' => 'DESC'])->limit(5)->all() as $t) {
-				$payload['timeline'][] = [
-					'kind' => 'ticket',
-					'icon' => '🎟',
-					'label' => '#' . (int)$t->get('id') . ' · ' . \Cake\Utility\Text::truncate((string)$t->get('solicitacao'), 60, ['ellipsis' => '…']),
-					'sub' => (string)$t->get('situacao'),
-					'data' => $t->get('created'),
-					'url' => ['controller' => 'ServicedeskPrototype', 'action' => 'ticket', (int)$t->get('id')],
-				];
-			}
-		} catch (\Throwable $e) {
+			return $this->redirect(['action' => 'lista']);
 		}
-
-		try {
-			$os = $this->loadModel('Ordensservico');
-			$w = ['Ordensservico.idempresa' => $empresa];
-			if ($cliId > 0) {
-				$w['Ordensservico.idcliente'] = $cliId;
-			}
-			foreach ($os->find()->where($w)->order(['Ordensservico.id' => 'DESC'])->limit(5)->all() as $o) {
-				$payload['timeline'][] = [
-					'kind' => 'os',
-					'icon' => '🛠',
-					'label' => sprintf('OS-%05d', (int)$o->get('id')) . ' · ' . \Cake\Utility\Text::truncate((string)($o->get('relato') ?? $o->get('descricao') ?? ''), 60, ['ellipsis' => '…']),
-					'sub' => (string)$o->get('situacao'),
-					'data' => $o->get('dataabertura') ?? $o->get('created'),
-					'url' => ['controller' => 'OrdensservicoPrototype', 'action' => 'detalhe', (int)$o->get('id')],
-				];
-			}
-		} catch (\Throwable $e) {
+		$nome = $this->_clientesIndexNomeExibicao($cliente);
+		$tab = trim((string)$this->request->getQuery('tab', 'geral'));
+		$allowedTabs = ['geral', 'orcamentos', 'os', 'financeiro', 'contratos', 'historico', 'arquivos'];
+		if (!in_array($tab, $allowedTabs, true)) {
+			$tab = 'geral';
 		}
-
-		try {
-			$faturas = $this->loadModel('Faturas');
-			$w = ['Faturas.idempresa' => $empresa];
-			if ($cliId > 0) {
-				$w['Faturas.idcliente'] = $cliId;
-			}
-			$rows = $faturas->find()->where($w)->order(['Faturas.vencimento' => 'DESC'])->limit(50)->all();
-			$now = \Cake\I18n\Time::now();
-			$ltv = 0.0;
-			$timelineFat = 0;
-			foreach ($rows as $f) {
-				$v = (float)($f->get('valor') ?? 0);
-				$ltv += $v;
-				$status = strtolower((string)($f->get('status') ?? ''));
-				$pago = strpos($status, 'pag') !== false || $f->get('dtretorno') instanceof \DateTimeInterface;
-				$venc = $f->get('vencimento');
-				if (!$pago && $venc instanceof \DateTimeInterface && $venc < $now) {
-					$payload['faturas_vencidas']++;
-				}
-				if ($timelineFat < 5) {
-					$payload['timeline'][] = [
-						'kind' => 'fatura',
-						'icon' => '💵',
-						'label' => 'Fatura ' . (string)($f->get('nro') ?? '#' . (int)$f->get('id')) . ' · ' . ($pago ? 'paga' : ($venc instanceof \DateTimeInterface && $venc < $now ? 'vencida' : 'pendente')),
-						'sub' => 'R$ ' . number_format($v, 2, ',', '.'),
-						'data' => $venc,
-						'url' => ['controller' => 'Faturas', 'action' => 'view', (int)$f->get('id')],
-					];
-					$timelineFat++;
-				}
-			}
-			$payload['ltv'] = $ltv;
-		} catch (\Throwable $e) {
-		}
-
-		// Ordena timeline por data desc (mais recentes primeiro)
-		usort($payload['timeline'], static function ($a, $b) {
-			$ta = $a['data'] instanceof \DateTimeInterface ? $a['data']->getTimestamp() : 0;
-			$tb = $b['data'] instanceof \DateTimeInterface ? $b['data']->getTimestamp() : 0;
-
-			return $tb <=> $ta;
-		});
-		$payload['timeline'] = array_slice($payload['timeline'], 0, 15);
-
-		$this->set('payload360', $payload);
-
-		return $this->render('cliente_360');
+		$this->set([
+			'title' => __('Visão 360° — {0}', $nome),
+			'erpNavActive' => 'clientes',
+			'erpBreadcrumb' => [
+				['label' => 'PGM ERP'],
+				['label' => __('Cadastros')],
+				['label' => __('Clientes'), 'url' => ['controller' => 'ClientesPrototype', 'action' => 'lista']],
+				['label' => __('Visão 360°'), 'cur' => true],
+			],
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+			'cli360Proto' => true,
+			'cli360Tab' => $tab,
+			'cliente' => $cliente,
+			'cliContatosReady' => $this->_clientesContatosReady(),
+			'cli360' => $this->_clientesVisao360Payload($cliente),
+		]);
+		$this->viewBuilder()->setTemplate('visao360');
+		$this->viewBuilder()->setTemplatePath('Clientes');
 	}
 
 	/**

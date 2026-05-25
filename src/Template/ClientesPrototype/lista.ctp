@@ -1,4 +1,6 @@
 <?php
+use App\Utility\PortalUi;
+
 /**
  * Lista de clientes — pg-clientes (mock) com CRM do legado.
  *
@@ -117,7 +119,7 @@ if (!function_exists('cliProtoRowDataAttrs')) {
 					<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
 						<?= $this->Html->link(
 							h((string)$row['nome']),
-							['controller' => 'Clientes', 'action' => 'visao360', (int)($row['id'] ?? 0)],
+							PortalUi::visao360Route((int)($row['id'] ?? 0)) ?? ['controller' => 'Clientes', 'action' => 'visao360', (int)($row['id'] ?? 0)],
 							['style' => 'font-size:12px;font-weight:500;color:var(--teal-dark);', 'data-turbo' => 'false']
 						) ?>
 						<span style="font-size:12px;font-weight:600;"><?= h($this->Number->currency((float)($row['valor'] ?? 0), 'BRL')) ?> <span style="font-size:10px;color:var(--text-muted);">(<?= (int)($row['pct'] ?? 0) ?>%)</span></span>
@@ -221,7 +223,7 @@ if (!function_exists('cliProtoRowDataAttrs')) {
 					$seg = $row['segmento'];
 					$rec12 = (float)($row['receita12'] ?? 0);
 					$aRec = (float)($row['a_receber'] ?? 0);
-					$url360 = $this->Url->build(['controller' => 'Clientes', 'action' => 'visao360', $reg->id]);
+					$url360 = $this->Url->build(PortalUi::visao360Route((int)$reg->id) ?? ['controller' => 'Clientes', 'action' => 'visao360', $reg->id]);
 					$stClass = (string)($row['status_class'] ?? 'on');
 					$badgeType = 'paga';
 					if ($stClass === 'warn') {
@@ -278,7 +280,7 @@ if (!function_exists('cliProtoRowDataAttrs')) {
 					<td><?= $H->badge((string)$row['status_label'], $badgeType) ?></td>
 					<td class="mu" style="font-size:11px;"><?= h((string)$row['ultima']) ?></td>
 					<td class="r" style="white-space:nowrap;" onclick="event.stopPropagation()">
-						<?= $this->Html->link(__('360°'), ['controller' => 'Clientes', 'action' => 'visao360', $reg->id], ['class' => 'btn btn-primary btn-xs', 'data-turbo' => 'false']) ?>
+						<?= $this->Html->link(__('360°'), PortalUi::visao360Route((int)$reg->id) ?? ['controller' => 'Clientes', 'action' => 'visao360', $reg->id], ['class' => 'btn btn-primary btn-xs', 'data-turbo' => 'false']) ?>
 						<?= $this->Html->link(__('Editar'), ['controller' => 'Clientes', 'action' => 'edit', $reg->id], ['class' => 'btn btn-ghost btn-xs', 'data-turbo' => 'false']) ?>
 					</td>
 				</tr>
