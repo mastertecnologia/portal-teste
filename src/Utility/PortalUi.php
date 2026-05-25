@@ -63,9 +63,13 @@ class PortalUi {
         $module = strtolower(trim($module));
         $legacy = [
             'clientes' => ['controller' => 'Clientes', 'action' => 'index', 'prefix' => false],
+            'orcamentos' => ['controller' => 'Orcamentos', 'action' => 'index', 'prefix' => false],
+            'produtos' => ['controller' => 'Produtos', 'action' => 'index', 'prefix' => false],
         ];
         $prototype = [
             'clientes' => ['controller' => 'ClientesPrototype', 'action' => 'lista', 'prefix' => false],
+            'orcamentos' => ['controller' => 'OrcamentosPrototype', 'action' => 'lista', 'prefix' => false],
+            'produtos' => ['controller' => 'ProdutosPrototype', 'action' => 'lista', 'prefix' => false],
         ];
         if (!isset($legacy[$module])) {
             return null;
@@ -103,5 +107,54 @@ class PortalUi {
         }
 
         return $route;
+    }
+
+    /**
+     * Rota do detalhe/revisão de orçamento (legado view ou protótipo detalhe).
+     */
+    public static function orcamentosDetalheRoute(int $orcamentoId): ?array {
+        if ($orcamentoId <= 0) {
+            return null;
+        }
+        if (self::isPremiumModule('orcamentos')) {
+            return ['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', $orcamentoId, 'prefix' => false];
+        }
+
+        return ['controller' => 'Orcamentos', 'action' => 'view', $orcamentoId, 'prefix' => false];
+    }
+
+    /**
+     * Rota da tela de estoque de produtos (legado ou protótipo).
+     *
+     * @return array<string, mixed>
+     */
+    public static function produtosEstoqueRoute(): array {
+        if (self::isPremiumModule('produtos')) {
+            return ['controller' => 'ProdutosPrototype', 'action' => 'estoque', 'prefix' => false];
+        }
+
+        return ['controller' => 'Produtos', 'action' => 'estoque', 'prefix' => false];
+    }
+
+    /**
+     * Item Orçamentos ativo na sidebar legado (inclui OrcamentosPrototype).
+     */
+    public static function isOrcamentosNavActive(string $controller, string $action): bool {
+        if ($controller === 'OrcamentosPrototype') {
+            return in_array($action, ['lista', 'detalhe', 'view', 'exportcsv'], true);
+        }
+
+        return $controller === 'Orcamentos';
+    }
+
+    /**
+     * Item Produtos ativo na sidebar legado (inclui ProdutosPrototype).
+     */
+    public static function isProdutosNavActive(string $controller, string $action): bool {
+        if ($controller === 'ProdutosPrototype') {
+            return in_array($action, ['lista', 'estoque', 'view', 'exportcsv', 'precosave'], true);
+        }
+
+        return $controller === 'Produtos';
     }
 }

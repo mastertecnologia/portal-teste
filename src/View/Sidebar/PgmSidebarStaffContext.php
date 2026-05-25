@@ -28,6 +28,8 @@ final class PgmSidebarStaffContext
         $osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
         $clientesAddActive = ($ctrl === 'Clientes' && $act === 'add');
         $clientesListNavActive = PortalUi::isClientesListNavActive($ctrl, $act);
+        $produtosListNavActive = PortalUi::isProdutosNavActive($ctrl, $act);
+        $orcamentosListNavActive = PortalUi::isOrcamentosNavActive($ctrl, $act);
         $ativosActive = ($ctrl === 'Ativos');
         $ticketsOperacionalActive = ($ctrl === 'Servicedesk' && $act === 'operacional');
         $ticketsSlaRelatorioActive = ($ctrl === 'Servicedesk' && $act === 'slaRelatorio');
@@ -92,10 +94,11 @@ final class PgmSidebarStaffContext
         $pgmSbOpenIndicadores = $relatoriosPainelActive || $relatoriosIndicadoresAdvActive;
         $pgmSbOpenPlanner = (bool)$visitasActive;
         $pgmSbOpenCofre = (bool)$senhasActive;
-        $pgmSbOpenCadastros = (bool)$clientesActive || $clientesAddActive || (bool)$produtosActive || $ativosActive;
+        $pgmSbOpenCadastros = (bool)$clientesActive || $clientesAddActive || (bool)$produtosActive
+            || $produtosListNavActive || $ativosActive;
         $ticketsIncidentesConfigOpen = $ticketsWorkflowSlaActive || ($roleNav === 0 && $ticketsHistoricoActive);
         $pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsSdPrototypeActive || $ticketsHistoricoActive || $ticketsOperacionalActive || $ticketsWorkflowSlaActive || $ticketsSlaRelatorioActive;
-        $pgmSbOpenComercial = (bool)$orcamentosActive;
+        $pgmSbOpenComercial = (bool)$orcamentosActive || $orcamentosListNavActive;
         $pgmSbOpenFaturamento = (bool)$prefaturamentoActive || (bool)$faturamentoActive;
         $pgmSbOpenFinanceiro = $finDashAct || $finRecAct || $finPagAct || $finFluxoAct || $finRecorAct || $finConcAct || $finDreAct || $finRelAct || $finPlanoAct || $finCcAct;
         $pgmSbOpenBancos = $finBancosAct || $finRemessaAct || $finRetornoAct || $finRelBancosAct;
@@ -133,6 +136,8 @@ final class PgmSidebarStaffContext
             'osAddActive' => $osAddActive,
             'clientesAddActive' => $clientesAddActive,
             'clientesListNavActive' => $clientesListNavActive,
+            'produtosListNavActive' => $produtosListNavActive,
+            'orcamentosListNavActive' => $orcamentosListNavActive,
             'ativosActive' => $ativosActive,
             'ticketsServicedeskActive' => $ticketsServicedeskActive,
             'ticketsSdPrototypeActive' => $ticketsSdPrototypeActive,

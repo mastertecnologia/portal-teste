@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Utility\PortalUi;
 use App\Utility\RbacChecker;
 use Cake\Event\Event;
 use Cake\Mailer\Email;
@@ -651,6 +652,12 @@ class OrcamentosController extends AppController {
 	}
 
 	public function index() {
+		if ((int)$this->Auth->user('role') !== (int)C_RoleCliente) {
+			$prototypeLista = PortalUi::redirectToPrototypeIfEnabled('orcamentos', 'OrcamentosPrototype', 'lista');
+			if ($prototypeLista !== null) {
+				return $this->redirect($prototypeLista);
+			}
+		}
 		$idempresa = $this->Auth->user('idempresa');
 		$idcliente = $this->Auth->user('idcliente');
 		$orcamentosCliente = $this->Orcamentos->find('all', ['contain' => 'Users'
@@ -1016,6 +1023,13 @@ class OrcamentosController extends AppController {
 	}
 
 	public function view($id = null, $idempresa = null) {
+		$orcId = (int)$id;
+		if ((int)$this->Auth->user('role') !== (int)C_RoleCliente && $orcId > 0 && PortalUi::isPremiumModule('orcamentos')) {
+			$protoRoute = PortalUi::orcamentosDetalheRoute($orcId);
+			if ($protoRoute !== null) {
+				return $this->redirect($protoRoute);
+			}
+		}
 		if(!empty($idempresa)) {
 			$user = $this->Users->get($this->Auth->user('id'));
 			$user->idempresa = $idempresa;

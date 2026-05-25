@@ -9,6 +9,8 @@
 	unset($__pgmSbPass['this'], $__pgmSbPass['__pgmSbPass']);
 	extract(PgmSidebarStaffContext::computeFromArray($__pgmSbPass, $this->request), EXTR_OVERWRITE);
 	$clientesListRoute = PortalUi::listRoute('clientes') ?? ['controller' => 'Clientes', 'action' => 'index'];
+	$produtosListRoute = PortalUi::listRoute('produtos') ?? ['controller' => 'Produtos', 'action' => 'index'];
+	$orcamentosListRoute = PortalUi::listRoute('orcamentos') ?? ['controller' => 'Orcamentos', 'action' => 'index'];
 
 	$html = $this->Html;
 	/**
@@ -150,7 +152,7 @@
 						<?= $pgmSbLink('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], ['data-turbo' => 'false'], $clientesAddActive, '', 'Cadastrar clientes') ?>
 						<?php endif; ?>
 						<?php if (($sg['produtos'] ?? true)) : ?>
-						<?= $pgmSbLink('package', ' Produtos', ['controller' => 'Produtos', 'action' => 'index'], ['data-turbo' => 'false'], (bool)($produtosActive ?? ''), '', 'Produtos') ?>
+						<?= $pgmSbLink('package', ' Produtos', $produtosListRoute, ['data-turbo' => 'false'], !empty($produtosListNavActive), '', 'Produtos') ?>
 						<?php endif; ?>
 						<?php if (($sg['ativos'] ?? true)) : ?>
 						<?= $pgmSbLink('cpu', ' Ativos', ['controller' => 'Ativos', 'action' => 'index'], ['data-turbo' => 'false'], $ativosActive, '', 'Ativos de TI') ?>
@@ -288,7 +290,7 @@
 						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 					</div>
 					<div class="nav-section-items">
-						<?= $pgmSbLink('file-text', ' Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['data-turbo' => 'false'], (bool)($orcamentosActive ?? ''), '', 'Orçamentos') ?>
+						<?= $pgmSbLink('file-text', ' Orçamentos', $orcamentosListRoute, ['data-turbo' => 'false'], !empty($orcamentosListNavActive), '', 'Orçamentos') ?>
 					</div>
 				</li>
 				<?php endif; ?>

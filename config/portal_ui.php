@@ -4,7 +4,10 @@
  *
  * Enquanto um módulo não estiver em premium_modules, as rotas legadas
  * (/clientes, /orcamentos, …) permanecem. Rotas *-prototype convivem.
- * Com `clientes` em PORTAL_PREMIUM_MODULES: /clientes → lista protótipo; Visão 360° → /clientes-prototype/visao360/:id.
+ * Com módulos em PORTAL_PREMIUM_MODULES (ex.: clientes, orcamentos, produtos):
+ *   clientes — /clientes → lista protótipo; Visão 360° → /clientes-prototype/visao360/:id
+ *   orcamentos — /orcamentos → lista protótipo (equipe); view → detalhe protótipo
+ *   produtos — /produtos → lista protótipo; /produtos/estoque → estoque protótipo
  *
  * .env (opcional):
  *   PORTAL_UI_MODE=legacy|premium|mixed   (default mixed)

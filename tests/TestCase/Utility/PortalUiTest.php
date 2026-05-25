@@ -28,10 +28,14 @@ class PortalUiTest extends TestCase {
 	}
 
 	public function testListRouteSwitchesWithPremium(): void {
-		Configure::write('PortalUi.premium_modules', ['clientes' => true]);
+		Configure::write('PortalUi.premium_modules', ['clientes' => true, 'orcamentos' => true, 'produtos' => true]);
 		$this->assertSame('ClientesPrototype', PortalUi::listRoute('clientes')['controller']);
+		$this->assertSame('OrcamentosPrototype', PortalUi::listRoute('orcamentos')['controller']);
+		$this->assertSame('ProdutosPrototype', PortalUi::listRoute('produtos')['controller']);
 		Configure::write('PortalUi.premium_modules', []);
 		$this->assertSame('Clientes', PortalUi::listRoute('clientes')['controller']);
+		$this->assertSame('Orcamentos', PortalUi::listRoute('orcamentos')['controller']);
+		$this->assertSame('Produtos', PortalUi::listRoute('produtos')['controller']);
 	}
 
 	public function testClientesListNavActiveIncludesPrototype(): void {
@@ -39,6 +43,25 @@ class PortalUiTest extends TestCase {
 		$this->assertTrue(PortalUi::isClientesListNavActive('ClientesPrototype', 'visao360'));
 		$this->assertFalse(PortalUi::isClientesListNavActive('Clientes', 'add'));
 		$this->assertTrue(PortalUi::isClientesListNavActive('Clientes', 'index'));
+	}
+
+	public function testOrcamentosDetalheRouteSwitchesWithPremium(): void {
+		Configure::write('PortalUi.premium_modules', ['orcamentos' => true]);
+		$route = PortalUi::orcamentosDetalheRoute(99);
+		$this->assertSame('OrcamentosPrototype', $route['controller']);
+		$this->assertSame('detalhe', $route['action']);
+		$this->assertSame(99, $route[0]);
+		Configure::write('PortalUi.premium_modules', []);
+		$legacy = PortalUi::orcamentosDetalheRoute(5);
+		$this->assertSame('Orcamentos', $legacy['controller']);
+		$this->assertSame('view', $legacy['action']);
+	}
+
+	public function testProdutosEstoqueRouteSwitchesWithPremium(): void {
+		Configure::write('PortalUi.premium_modules', ['produtos' => true]);
+		$this->assertSame('ProdutosPrototype', PortalUi::produtosEstoqueRoute()['controller']);
+		Configure::write('PortalUi.premium_modules', []);
+		$this->assertSame('Produtos', PortalUi::produtosEstoqueRoute()['controller']);
 	}
 
 	public function testVisao360RouteSwitchesWithPremium(): void {

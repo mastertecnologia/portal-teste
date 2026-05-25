@@ -53,7 +53,8 @@ final class PgmSidebarStaffPayloadBuilder
                 $items[] = self::item('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], [], $ctx['clientesAddActive'], '', 'Cadastrar clientes');
             }
             if (($sg['produtos'] ?? true)) {
-                $items[] = self::item('package', ' Produtos', ['controller' => 'Produtos', 'action' => 'index'], [], (bool)($v['produtosActive'] ?? ''), '', 'Produtos');
+                $produtosList = PortalUi::listRoute('produtos') ?? ['controller' => 'Produtos', 'action' => 'index'];
+                $items[] = self::item('package', ' Produtos', $produtosList, [], (bool)($ctx['produtosListNavActive'] ?? false), '', 'Produtos');
             }
             if (($sg['ativos'] ?? true)) {
                 $items[] = self::item('cpu', ' Ativos', ['controller' => 'Ativos', 'action' => 'index'], ['data-turbo' => 'false'], (bool)($ctx['ativosActive'] ?? false), '', 'Ativos de TI');
@@ -191,7 +192,15 @@ final class PgmSidebarStaffPayloadBuilder
                 'title' => 'Comercial',
                 'defaultOpen' => (bool)$ctx['pgmSbOpenComercial'],
                 'items' => [
-                    self::item('file-text', ' Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], [], (bool)($v['orcamentosActive'] ?? ''), '', 'Orçamentos'),
+                    self::item(
+                        'file-text',
+                        ' Orçamentos',
+                        PortalUi::listRoute('orcamentos') ?? ['controller' => 'Orcamentos', 'action' => 'index'],
+                        [],
+                        (bool)($ctx['orcamentosListNavActive'] ?? false),
+                        '',
+                        'Orçamentos'
+                    ),
                 ],
             ];
         }
