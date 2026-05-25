@@ -10,7 +10,7 @@ use Cake\Routing\Router;
  * Contatos, arquivos e flags CRM usados pela Visão 360° (legado + protótipo).
  */
 trait ClientesVisao360SupportTrait {
-	 */
+
 	protected function _clientesListarArquivosCliente(int $idcliente, int $idempresa): array {
 		$items = [];
 		try {
