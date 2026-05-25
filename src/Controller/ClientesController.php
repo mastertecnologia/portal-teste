@@ -9,6 +9,7 @@ use App\Service\ClienteDomain\InfrastructureGuard;
 use App\Service\ClienteIntegration\ClienteErpSyncService;
 use App\Model\Table\ClientesTable;
 use App\Utility\ClienteDomainEventType;
+use App\Utility\PortalUi;
 use App\Utility\RbacChecker;
 use Cake\Event\Event;
 use Cake\I18n\FrozenDate;
@@ -149,6 +150,10 @@ class ClientesController extends AppController {
 		if ($this->Auth->user('role') == 1) {
 			$this->Flash->error('Você não possui permissões para acessar esta página.');
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+		$prototypeLista = PortalUi::redirectToPrototypeIfEnabled('clientes', 'ClientesPrototype', 'lista');
+		if ($prototypeLista !== null) {
+			return $this->redirect($prototypeLista);
 		}
 		$this->set('title', 'Clientes');
 		$this->set('hideLayoutPageTitle', true);

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\View\Sidebar;
 
+use App\Utility\PortalUi;
 use Cake\Http\ServerRequest;
 use Cake\Routing\Router;
 
@@ -45,7 +46,8 @@ final class PgmSidebarStaffPayloadBuilder
         if ($sgCadGrp) {
             $items = [];
             if (($sg['clientes'] ?? true)) {
-                $items[] = self::item('users', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], [], $ctx['clientesListNavActive'], '', 'Clientes');
+                $clientesList = PortalUi::listRoute('clientes') ?? ['controller' => 'Clientes', 'action' => 'index'];
+                $items[] = self::item('users', ' Clientes', $clientesList, ['data-turbo' => 'false'], $ctx['clientesListNavActive'], '', 'Clientes');
             }
             if (($sg['clientes'] ?? true)) {
                 $items[] = self::item('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], [], $ctx['clientesAddActive'], '', 'Cadastrar clientes');

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\View\Sidebar;
 
+use App\Utility\PortalUi;
 use Cake\Http\ServerRequest;
 
 /**
@@ -26,7 +27,7 @@ final class PgmSidebarStaffContext
         $osIndexActive = ($ctrl === 'Ordensservico' && $act === 'index');
         $osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
         $clientesAddActive = ($ctrl === 'Clientes' && $act === 'add');
-        $clientesListNavActive = ($ctrl === 'Clientes' && $act !== 'add');
+        $clientesListNavActive = PortalUi::isClientesListNavActive($ctrl, $act);
         $ativosActive = ($ctrl === 'Ativos');
         $ticketsOperacionalActive = ($ctrl === 'Servicedesk' && $act === 'operacional');
         $ticketsSlaRelatorioActive = ($ctrl === 'Servicedesk' && $act === 'slaRelatorio');

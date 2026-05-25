@@ -4,6 +4,7 @@
  *
  * Enquanto um módulo não estiver em premium_modules, as rotas legadas
  * (/clientes, /orcamentos, …) permanecem. Rotas *-prototype convivem.
+ * Com `clientes` em PORTAL_PREMIUM_MODULES: /clientes → /clientes-prototype e menu Cadastros → lista protótipo.
  *
  * .env (opcional):
  *   PORTAL_UI_MODE=legacy|premium|mixed   (default mixed)

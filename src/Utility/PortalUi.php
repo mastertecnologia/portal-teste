@@ -53,4 +53,35 @@ class PortalUi {
 
         return $params === [] ? $route : array_merge($route, $params);
     }
+
+    /**
+     * Rota Cake da listagem principal do módulo (legado ou *-prototype).
+     *
+     * @return array<string, mixed>|null null se o módulo não estiver mapeado
+     */
+    public static function listRoute(string $module): ?array {
+        $module = strtolower(trim($module));
+        $legacy = [
+            'clientes' => ['controller' => 'Clientes', 'action' => 'index', 'prefix' => false],
+        ];
+        $prototype = [
+            'clientes' => ['controller' => 'ClientesPrototype', 'action' => 'lista', 'prefix' => false],
+        ];
+        if (!isset($legacy[$module])) {
+            return null;
+        }
+
+        return self::isPremiumModule($module) ? $prototype[$module] : $legacy[$module];
+    }
+
+    /**
+     * Item “Clientes” ativo na sidebar (legado ou protótipo premium).
+     */
+    public static function isClientesListNavActive(string $controller, string $action): bool {
+        if ($controller === 'ClientesPrototype') {
+            return true;
+        }
+
+        return $controller === 'Clientes' && $action !== 'add';
+    }
 }

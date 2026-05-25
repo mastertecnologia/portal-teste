@@ -3,10 +3,12 @@
 	require_once (ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php');
 
 	use App\View\Sidebar\PgmSidebarStaffContext;
+	use App\Utility\PortalUi;
 
 	$__pgmSbPass = get_defined_vars();
 	unset($__pgmSbPass['this'], $__pgmSbPass['__pgmSbPass']);
 	extract(PgmSidebarStaffContext::computeFromArray($__pgmSbPass, $this->request), EXTR_OVERWRITE);
+	$clientesListRoute = PortalUi::listRoute('clientes') ?? ['controller' => 'Clientes', 'action' => 'index'];
 
 	$html = $this->Html;
 	/**
@@ -144,7 +146,7 @@
 					</div>
 					<div class="nav-section-items">
 						<?php if (($sg['clientes'] ?? true)) : ?>
-						<?= $pgmSbLink('users', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], ['data-turbo' => 'false'], $clientesListNavActive, '', 'Clientes') ?>
+						<?= $pgmSbLink('users', ' Clientes', $clientesListRoute, ['data-turbo' => 'false'], $clientesListNavActive, '', 'Clientes') ?>
 						<?= $pgmSbLink('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], ['data-turbo' => 'false'], $clientesAddActive, '', 'Cadastrar clientes') ?>
 						<?php endif; ?>
 						<?php if (($sg['produtos'] ?? true)) : ?>
