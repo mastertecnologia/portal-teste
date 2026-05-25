@@ -11,6 +11,7 @@
 	$clientesListRoute = PortalUi::listRoute('clientes') ?? ['controller' => 'Clientes', 'action' => 'index'];
 	$produtosListRoute = PortalUi::listRoute('produtos') ?? ['controller' => 'Produtos', 'action' => 'index'];
 	$orcamentosListRoute = PortalUi::listRoute('orcamentos') ?? ['controller' => 'Orcamentos', 'action' => 'index'];
+	$servicedeskHomeRoute = PortalUi::servicedeskHomeRoute();
 
 	$html = $this->Html;
 	/**
@@ -172,15 +173,16 @@
 					</div>
 					<div class="nav-section-items">
 						<?php if (($sg['tickets_servicedesk'] ?? true)) : ?>
-						<?= $pgmSbLink('headphones', ' Service Desk', '/servicedesk-prototype', ['data-turbo' => 'false'], $ticketsServicedeskActive, '', 'Service Desk') ?>
+						<?= $pgmSbLink('headphones', ' Service Desk', $servicedeskHomeRoute, ['data-turbo' => 'false'], !empty($ticketsServicedeskHomeActive), '', 'Service Desk') ?>
 						<?php endif; ?>
 						<?php if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) : ?>
 						<?= $pgmSbLink('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], $ticketsOperacionalActive, '', 'Dashboard operacional') ?>
 						<?= $pgmSbLink('bar-chart-2', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ticketsSlaRelatorioActive ?? false), '', 'Relatório SLA') ?>
 						<?php
-						$legacySdActive = $ticketsServicedeskActive && !($ticketsSdPrototypeActive ?? false);
+						$legacySdActive = PortalUi::isPremiumModule('servicedesk')
+							&& $ctrl === 'Servicedesk' && $act === 'index';
 						?>
-						<?= $pgmSbLink('layout-grid', ' Fila legado (React)', '/servicedesk?legacy=1', ['data-turbo' => 'false'], $legacySdActive, '', 'Service Desk legado') ?>
+						<?= $pgmSbLink('layout-grid', ' Fila legado (React)', PortalUi::servicedeskLegacyFilaRoute(), ['data-turbo' => 'false'], $legacySdActive, '', 'Service Desk legado') ?>
 						<?php endif; ?>
 						<?php
 						$incCfgChildren = [];

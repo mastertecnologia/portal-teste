@@ -65,11 +65,13 @@ class PortalUi {
             'clientes' => ['controller' => 'Clientes', 'action' => 'index', 'prefix' => false],
             'orcamentos' => ['controller' => 'Orcamentos', 'action' => 'index', 'prefix' => false],
             'produtos' => ['controller' => 'Produtos', 'action' => 'index', 'prefix' => false],
+            'servicedesk' => ['controller' => 'Servicedesk', 'action' => 'index', 'prefix' => false],
         ];
         $prototype = [
             'clientes' => ['controller' => 'ClientesPrototype', 'action' => 'lista', 'prefix' => false],
             'orcamentos' => ['controller' => 'OrcamentosPrototype', 'action' => 'lista', 'prefix' => false],
             'produtos' => ['controller' => 'ProdutosPrototype', 'action' => 'lista', 'prefix' => false],
+            'servicedesk' => ['controller' => 'ServicedeskPrototype', 'action' => 'index', 'prefix' => false],
         ];
         if (!isset($legacy[$module])) {
             return null;
@@ -124,6 +126,66 @@ class PortalUi {
     }
 
     /**
+     * Wizard “novo orçamento” (protótipo pg-novo ou legado add).
+     *
+     * @return array<string, mixed>
+     */
+    public static function orcamentosNovoRoute(): array {
+        if (self::isPremiumModule('orcamentos')) {
+            return ['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo', 'prefix' => false];
+        }
+
+        return ['controller' => 'Orcamentos', 'action' => 'add', 'prefix' => false];
+    }
+
+    /**
+     * Home do Service Desk para equipe (dashboard protótipo ou fila React legado).
+     *
+     * @return array<string, mixed>
+     */
+    public static function servicedeskHomeRoute(): array {
+        if (self::isPremiumModule('servicedesk')) {
+            return ['controller' => 'ServicedeskPrototype', 'action' => 'index', 'prefix' => false];
+        }
+
+        return ['controller' => 'Servicedesk', 'action' => 'index', 'prefix' => false];
+    }
+
+    /**
+     * Fila React legada (equipe) — uso explícito com ?legacy=1 no index.
+     *
+     * @return array<string, mixed>
+     */
+    public static function servicedeskLegacyFilaRoute(): array {
+        return [
+            'controller' => 'Servicedesk',
+            'action' => 'index',
+            'prefix' => false,
+            '?' => ['legacy' => '1'],
+        ];
+    }
+
+    /**
+     * Detalhe de ticket (protótipo ou edição legada).
+     */
+    public static function servicedeskTicketRoute(int $ticketId): ?array {
+        if ($ticketId <= 0) {
+            return null;
+        }
+        if (self::isPremiumModule('servicedesk')) {
+            return ['controller' => 'ServicedeskPrototype', 'action' => 'ticket', $ticketId, 'prefix' => false];
+        }
+
+        return [
+            'controller' => 'Servicedesk',
+            'action' => 'edit',
+            $ticketId,
+            'prefix' => false,
+            '?' => ['sd' => '1'],
+        ];
+    }
+
+    /**
      * Rota da tela de estoque de produtos (legado ou protótipo).
      *
      * @return array<string, mixed>
@@ -156,5 +218,20 @@ class PortalUi {
         }
 
         return $controller === 'Produtos';
+    }
+
+    /**
+     * Item principal Service Desk na sidebar (protótipo só com premium).
+     */
+    public static function isServicedeskHomeNavActive(string $controller, string $action): bool {
+        if ($controller === 'ServicedeskPrototype') {
+            return self::isPremiumModule('servicedesk')
+                && in_array($action, ['index', 'fila', 'ticket', 'view', 'ci', 'csathistorico', 'csatexportcsv'], true);
+        }
+        if ($controller === 'Servicedesk' && $action === 'index') {
+            return !self::isPremiumModule('servicedesk');
+        }
+
+        return false;
     }
 }

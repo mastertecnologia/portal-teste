@@ -8,6 +8,8 @@
  *   clientes — /clientes → lista protótipo; Visão 360° → /clientes-prototype/visao360/:id
  *   orcamentos — /orcamentos → lista protótipo (equipe); view → detalhe protótipo
  *   produtos — /produtos → lista protótipo; /produtos/estoque → estoque protótipo
+ *   servicedesk — /servicedesk (equipe) → dashboard protótipo; edit/view ticket → ticket protótipo
+ *   orcamentos add/edit (equipe) — add → wizard novo; edit → detalhe protótipo
  *
  * .env (opcional):
  *   PORTAL_UI_MODE=legacy|premium|mixed   (default mixed)

@@ -870,6 +870,10 @@ class OrcamentosController extends AppController {
 		// Permissão para o cliente
 		if ($this->Auth->user('role') == 1) return $this->redirect(['action' => 'solicitar']);
 
+		if (!$this->request->is('post') && PortalUi::isPremiumModule('orcamentos')) {
+			return $this->redirect(PortalUi::orcamentosNovoRoute());
+		}
+
 		$orcamento = $this->Orcamentos->newEntity();
         $ticket = $this->Tickets->findById($idticket)->first();
 		if(!empty($ticket)) $orcamento->solicitacao = $ticket->solicitacao;
@@ -905,7 +909,11 @@ class OrcamentosController extends AppController {
 					$this->limpasession();
 					$this->Flash->success(__('Orçamento gerado com sucesso!'));
 					$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $orcamento->id);
-					return $this->redirect(['action' => 'edit', $orcamento->id]);
+					$next = PortalUi::isPremiumModule('orcamentos')
+						? PortalUi::orcamentosDetalheRoute((int)$orcamento->id)
+						: ['action' => 'edit', $orcamento->id];
+
+					return $this->redirect($next ?? ['action' => 'edit', $orcamento->id]);
 				}
 				$this->Orcamentos->delete($orcamento);
 				$this->Empresas->decrementOrcamento($this->Auth->user('idempresa'));
@@ -965,6 +973,13 @@ class OrcamentosController extends AppController {
 		if ($this->Auth->user('role') == 1) {
 			$this->Flash->error('Você não possui permissões para acessar esta página.');
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+
+		if (!$this->request->is(['post', 'put', 'patch']) && PortalUi::isPremiumModule('orcamentos')) {
+			$protoRoute = PortalUi::orcamentosDetalheRoute((int)$id);
+			if ($protoRoute !== null) {
+				return $this->redirect($protoRoute);
+			}
 		}
 
 		$orcamento = $this->Orcamentos->find('all')

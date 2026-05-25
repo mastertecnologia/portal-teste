@@ -28,7 +28,13 @@ class PortalUiTest extends TestCase {
 	}
 
 	public function testListRouteSwitchesWithPremium(): void {
-		Configure::write('PortalUi.premium_modules', ['clientes' => true, 'orcamentos' => true, 'produtos' => true]);
+		Configure::write('PortalUi.premium_modules', [
+			'clientes' => true,
+			'orcamentos' => true,
+			'produtos' => true,
+			'servicedesk' => true,
+		]);
+		$this->assertSame('ServicedeskPrototype', PortalUi::listRoute('servicedesk')['controller']);
 		$this->assertSame('ClientesPrototype', PortalUi::listRoute('clientes')['controller']);
 		$this->assertSame('OrcamentosPrototype', PortalUi::listRoute('orcamentos')['controller']);
 		$this->assertSame('ProdutosPrototype', PortalUi::listRoute('produtos')['controller']);
@@ -55,6 +61,26 @@ class PortalUiTest extends TestCase {
 		$legacy = PortalUi::orcamentosDetalheRoute(5);
 		$this->assertSame('Orcamentos', $legacy['controller']);
 		$this->assertSame('view', $legacy['action']);
+	}
+
+	public function testServicedeskRoutesSwitchWithPremium(): void {
+		Configure::write('PortalUi.premium_modules', ['servicedesk' => true]);
+		$this->assertSame('ServicedeskPrototype', PortalUi::servicedeskHomeRoute()['controller']);
+		$this->assertSame('ticket', PortalUi::servicedeskTicketRoute(12)['action']);
+		$this->assertSame(12, PortalUi::servicedeskTicketRoute(12)[0]);
+		$this->assertSame('1', PortalUi::servicedeskLegacyFilaRoute()['?']['legacy']);
+		Configure::write('PortalUi.premium_modules', []);
+		$this->assertSame('Servicedesk', PortalUi::servicedeskHomeRoute()['controller']);
+		$this->assertSame('edit', PortalUi::servicedeskTicketRoute(3)['action']);
+	}
+
+	public function testOrcamentosNovoRouteSwitchesWithPremium(): void {
+		Configure::write('PortalUi.premium_modules', ['orcamentos' => true]);
+		$this->assertSame('OrcamentosPrototype', PortalUi::orcamentosNovoRoute()['controller']);
+		$this->assertSame('view', PortalUi::orcamentosNovoRoute()['action']);
+		Configure::write('PortalUi.premium_modules', []);
+		$this->assertSame('Orcamentos', PortalUi::orcamentosNovoRoute()['controller']);
+		$this->assertSame('add', PortalUi::orcamentosNovoRoute()['action']);
 	}
 
 	public function testProdutosEstoqueRouteSwitchesWithPremium(): void {

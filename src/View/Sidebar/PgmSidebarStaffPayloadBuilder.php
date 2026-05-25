@@ -71,13 +71,22 @@ final class PgmSidebarStaffPayloadBuilder
         if ($sgIncGrp) {
             $items = [];
             if (($sg['tickets_servicedesk'] ?? true)) {
-                $items[] = self::item('headphones', ' Service Desk', '/servicedesk-prototype', ['data-turbo' => 'false'], (bool)($ctx['ticketsServicedeskActive'] ?? false), '', 'Service Desk');
+                $items[] = self::item(
+                    'headphones',
+                    ' Service Desk',
+                    PortalUi::servicedeskHomeRoute(),
+                    ['data-turbo' => 'false'],
+                    (bool)($ctx['ticketsServicedeskHomeActive'] ?? false),
+                    '',
+                    'Service Desk'
+                );
             }
             if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) {
                 $items[] = self::item('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], (bool)($ctx['ticketsOperacionalActive'] ?? false), '', 'Dashboard operacional');
                 $items[] = self::item('bar-chart-3', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ctx['ticketsSlaRelatorioActive'] ?? false), '', 'Relatório SLA');
-                $legacySdActive = ($ctx['ticketsServicedeskActive'] ?? false) && !($ctx['ticketsSdPrototypeActive'] ?? false);
-                $items[] = self::item('layout-grid', ' Fila legado (React)', '/servicedesk?legacy=1', ['data-turbo' => 'false'], $legacySdActive, '', 'Service Desk legado');
+                $legacySdActive = PortalUi::isPremiumModule('servicedesk')
+                    && ($ctx['ctrl'] ?? '') === 'Servicedesk' && ($ctx['act'] ?? '') === 'index';
+                $items[] = self::item('layout-grid', ' Fila legado (React)', PortalUi::servicedeskLegacyFilaRoute(), ['data-turbo' => 'false'], $legacySdActive, '', 'Service Desk legado');
             }
             $configChildren = [];
             if ($roleNav === 0 && (($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true))) {

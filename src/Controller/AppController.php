@@ -435,6 +435,7 @@ class AppController extends Controller
             "fiscalrelatorios" => "fiscalModuleActive",
             "tickets" => "ticketsActive",
             "servicedesk" => "ticketsActive",
+            "servicedeskprototype" => "ticketsActive",
             "portaladvancedattendance" => "ticketsActive",
             "queues" => "queuesAtendimentoActive",
             "advancedcontracts" => "advancedModuleActive",

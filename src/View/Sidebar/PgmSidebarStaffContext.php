@@ -34,9 +34,11 @@ final class PgmSidebarStaffContext
         $ticketsOperacionalActive = ($ctrl === 'Servicedesk' && $act === 'operacional');
         $ticketsSlaRelatorioActive = ($ctrl === 'Servicedesk' && $act === 'slaRelatorio');
         $ticketsWorkflowSlaActive = ($ctrl === 'Servicedesk' && $act === 'workflowSlaAdmin');
-		$ticketsSdPrototypeActive = ($ctrl === 'ServicedeskPrototype');
-		$ticketsServicedeskActive = $ticketsSdPrototypeActive
-			|| ($ctrl === 'Servicedesk' && !in_array($act, ['operacional', 'workflowSlaAdmin', 'slaRelatorio'], true));
+		$ticketsSdPrototypeActive = PortalUi::isServicedeskHomeNavActive($ctrl, $act)
+			&& $ctrl === 'ServicedeskPrototype';
+		$ticketsServicedeskHomeActive = PortalUi::isServicedeskHomeNavActive($ctrl, $act);
+		$ticketsServicedeskActive = $ticketsServicedeskHomeActive
+			|| ($ctrl === 'Servicedesk' && !in_array($act, ['operacional', 'workflowSlaAdmin', 'slaRelatorio', 'index'], true));
         $ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
 
         $advMgmtAct = ($ctrl === 'ContractManagement');
@@ -141,6 +143,7 @@ final class PgmSidebarStaffContext
             'ativosActive' => $ativosActive,
             'ticketsServicedeskActive' => $ticketsServicedeskActive,
             'ticketsSdPrototypeActive' => $ticketsSdPrototypeActive,
+            'ticketsServicedeskHomeActive' => $ticketsServicedeskHomeActive,
             'ticketsOperacionalActive' => $ticketsOperacionalActive,
             'ticketsSlaRelatorioActive' => $ticketsSlaRelatorioActive,
             'ticketsWorkflowSlaActive' => $ticketsWorkflowSlaActive,

@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Service\Ticket\SlaReportingService;
+use App\Utility\PortalUi;
 use Cake\Event\Event;
 use Cake\Routing\Router;
 
@@ -323,8 +324,8 @@ class ServicedeskController extends TicketsController {
 			return;
 		}
 		$role = (int)$this->Auth->user('role');
-		if ($role === 0 && (string)$this->request->getQuery('legacy') !== '1') {
-			return $this->redirect(['controller' => 'ServicedeskPrototype', 'action' => 'index']);
+		if ($role === 0 && PortalUi::isPremiumModule('servicedesk') && (string)$this->request->getQuery('legacy') !== '1') {
+			return $this->redirect(PortalUi::servicedeskHomeRoute());
 		}
 		$this->viewBuilder()->setLayout('servicedesk');
 		// react_app.ctp fica em Template/Tickets/ — sem isso o Cake busca Servicedesk/react_app.ctp e quebra.
@@ -346,6 +347,32 @@ class ServicedeskController extends TicketsController {
 			return;
 		}
 		$this->set('reactBoot', $this->_reactBoot('tech_index', null, $extra));
+	}
+
+	/**
+	 * Equipe + premium: ticket no shell protótipo (salvo ?classic=1 ou POST).
+	 *
+	 * @return \Cake\Http\Response|null
+	 */
+	protected function _servicedeskRedirectTicketToPrototype(int $ticketId) {
+		if ($ticketId <= 0 || (int)$this->Auth->user('role') !== 0) {
+			return null;
+		}
+		if (!PortalUi::isPremiumModule('servicedesk')) {
+			return null;
+		}
+		if ((string)$this->request->getQuery('classic') === '1') {
+			return null;
+		}
+		if ($this->request->is(['post', 'put', 'patch', 'delete'])) {
+			return null;
+		}
+		$route = PortalUi::servicedeskTicketRoute($ticketId);
+		if ($route === null) {
+			return null;
+		}
+
+		return $this->redirect($route);
 	}
 
 	protected function _servicedeskBootExtra(): array {
@@ -397,12 +424,20 @@ class ServicedeskController extends TicketsController {
 	}
 
 	public function view($idticket = null) {
+		$tid = (int)$idticket;
+		if ($redirect = $this->_servicedeskRedirectTicketToPrototype($tid)) {
+			return $redirect;
+		}
 		$this->_servicedeskUseTicketsTemplates();
 		parent::view($idticket);
 		$this->_servicedeskShellLayoutIfRendering();
 	}
 
 	public function edit($idticket = null) {
+		$tid = (int)$idticket;
+		if ($redirect = $this->_servicedeskRedirectTicketToPrototype($tid)) {
+			return $redirect;
+		}
 		$this->_servicedeskUseTicketsTemplates();
 		parent::edit($idticket);
 		if ($this->request->getQuery('classic') !== '1' && !$this->request->is(['post', 'put'])) {
