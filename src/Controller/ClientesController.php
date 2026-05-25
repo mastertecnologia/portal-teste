@@ -748,7 +748,6 @@ class ClientesController extends AppController {
 
 		return is_numeric($s) ? $s : null;
 	}
-	}
 
 	public function cidadesestado($idcidade){
 		$this->autoRender = false;
