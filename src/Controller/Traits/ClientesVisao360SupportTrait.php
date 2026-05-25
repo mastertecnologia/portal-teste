@@ -139,6 +139,7 @@ trait ClientesVisao360SupportTrait {
 		}
 
 		return ['icon' => 'fa-file-alt', 'tone' => 'doc', 'filtro' => 'doc'];
+	}
 
 	protected function _clientesCrmFinanceReady(): bool {
 		try {
@@ -304,4 +305,5 @@ trait ClientesVisao360SupportTrait {
 			'iniciais' => $ini !== '' ? $ini : 'C',
 			'av_tone' => $tones[(int)$c->id % count($tones)],
 		];
+	}
 }
