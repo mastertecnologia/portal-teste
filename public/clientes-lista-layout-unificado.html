@@ -15,9 +15,10 @@
     • inativar / reativar — alteração de status
     • cadastrar, view, eventos, contrato, APIs — demais fluxos do mesmo controller
   CSS produção (não alterado aqui): webroot/css/clientes-premium.css
-  Este arquivo é apenas mock HTML/CSS para validar visual “uma tela”, sem mudar JS de produção.
-  Paleta / ritmo visual: webroot/mockup-orcamentos-modulo.html + webroot/css/orcamentos-premium.css (.orc-premium-wrap).
-  Mock de navegação: lista em “Clientes” (comercial); formulário “Cadastrar cliente” sob menu “Cadastros”.
+  Este arquivo é mock HTML/CSS para validar visual “uma tela”, sem mudar JS de produção.
+  Lista CRM (index.ctp): paridade com docs/referencias/pgm_erp_completo_2.html#pg-clientes (não usar layout legado com pills PJ/PF).
+  Paleta / ritmo: clientes-layout-unificado.css + orcamentos-premium (shell).
+  Mock de navegação: lista em “Clientes”; cadastro wizard sob “Cadastrar clientes”.
 -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
@@ -899,141 +900,149 @@ body { background: var(--mock-erp-shell); font-family: var(--pgm-font-sans); }
 
     <!-- Módulo comercial · lista de clientes -->
     <div class="pv-module pv-module--active" id="pv-mod-clientes">
-    <div class="cli-root cli-layout-unificado">
-      <div class="cli-kpi-strip cli-kpi-strip--list-lead">
-        <div class="cli-kpi active">
-          <div class="cli-kpi-label">Ativos · PJ</div>
-          <div class="cli-kpi-val teal">214</div>
-          <div class="cli-kpi-sub">Pessoa Jurídica</div>
+    <div class="cli-root cli-layout-unificado cli-crm-lista">
+      <header class="cli-crm-page-head cli-crm-page-head--bar">
+        <div class="cli-crm-page-head-text">
+          <p class="cli-crm-subtitle">Cadastro mestre · CRM básico · Histórico financeiro consolidado</p>
         </div>
-        <div class="cli-kpi">
-          <div class="cli-kpi-label">Ativos · PF</div>
-          <div class="cli-kpi-val teal">150</div>
-          <div class="cli-kpi-sub">Pessoa Física</div>
+        <div class="cli-crm-page-actions">
+          <button type="button" class="btn-cli-secondary"><i class="fas fa-file-excel" aria-hidden="true"></i> Exportar Excel</button>
+          <button type="button" class="btn-cli-secondary"><i class="fas fa-upload" aria-hidden="true"></i> Importar</button>
+          <button type="button" class="btn-cli-primary" data-switch="cadastro-cliente"><i class="fas fa-plus" aria-hidden="true"></i> Novo cliente</button>
         </div>
-        <div class="cli-kpi">
-          <div class="cli-kpi-label">Inativos</div>
-          <div class="cli-kpi-val muted">37</div>
-          <div class="cli-kpi-sub">PJ + PF</div>
+      </header>
+      <div class="cli-kpi-strip cli-kpi-strip--crm">
+        <div class="cli-kpi cli-kpi--blue active">
+          <div class="cli-kpi-label">Clientes Ativos</div>
+          <div class="cli-kpi-val teal">142</div>
+          <div class="cli-kpi-sub">↑ 8 este mês</div>
         </div>
-        <div class="cli-kpi">
-          <div class="cli-kpi-label">Total cadastros</div>
-          <div class="cli-kpi-val">401</div>
-          <div class="cli-kpi-sub">Todos</div>
+        <div class="cli-kpi cli-kpi--blue">
+          <div class="cli-kpi-label">Receita 12 Meses</div>
+          <div class="cli-kpi-val">R$ 1,42M</div>
+          <div class="cli-kpi-sub">↑ 23% vs período anterior</div>
         </div>
+        <div class="cli-kpi cli-kpi--rose">
+          <div class="cli-kpi-label">Ticket Médio</div>
+          <div class="cli-kpi-val">R$ 8.420</div>
+          <div class="cli-kpi-sub">por cliente / ano</div>
+        </div>
+        <div class="cli-kpi cli-kpi--orange">
+          <div class="cli-kpi-label">Inadimplentes</div>
+          <div class="cli-kpi-val">3</div>
+          <div class="cli-kpi-sub">R$ 11.480 em atraso</div>
+        </div>
+        <div class="cli-kpi cli-kpi--blocked">
+          <div class="cli-kpi-label">Bloqueados</div>
+          <div class="cli-kpi-val">2</div>
+          <div class="cli-kpi-sub">restrição interna</div>
+        </div>
+        <div class="cli-kpi cli-kpi--birthday">
+          <div class="cli-kpi-label">Aniversariantes do Mês</div>
+          <div class="cli-kpi-val">5</div>
+          <div class="cli-kpi-sub">enviar mensagem</div>
+        </div>
+      </div>
+      <div class="cli-crm-insights">
+        <section class="cli-crm-panel cli-crm-panel--top">
+          <h2 class="cli-crm-panel-title">TOP 5 CLIENTES · RECEITA 12 MESES</h2>
+          <ol class="cli-crm-top-list">
+            <li class="cli-crm-top-item">
+              <span class="cli-crm-top-rank">1</span>
+              <div class="cli-crm-top-body">
+                <div class="cli-crm-top-row">
+                  <span class="cli-crm-top-name">Mobles Ambientes Pensados</span>
+                  <span class="cli-crm-top-val">R$ 524.180 · 37%</span>
+                </div>
+                <div class="cli-crm-top-bar"><span class="cli-crm-top-bar-fill cli-crm-top-bar-fill--teal" style="width:37%"></span></div>
+              </div>
+            </li>
+            <li class="cli-crm-top-item">
+              <span class="cli-crm-top-rank">2</span>
+              <div class="cli-crm-top-body">
+                <div class="cli-crm-top-row">
+                  <span class="cli-crm-top-name">Engemed Assessoria</span>
+                  <span class="cli-crm-top-val">R$ 218.450 · 15%</span>
+                </div>
+                <div class="cli-crm-top-bar"><span class="cli-crm-top-bar-fill cli-crm-top-bar-fill--blue" style="width:15%"></span></div>
+              </div>
+            </li>
+          </ol>
+          <div class="cli-crm-alert" role="status">
+            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+            <span>Concentração: Mobles representa 37% da carteira.</span>
+          </div>
+        </section>
+        <section class="cli-crm-panel cli-crm-panel--seg">
+          <h2 class="cli-crm-panel-title">DISTRIBUIÇÃO POR SEGMENTO</h2>
+          <div class="cli-crm-seg-grid cli-crm-seg-grid--5">
+            <div class="cli-crm-seg-tile cli-crm-seg-tile--teal"><span class="cli-crm-seg-n">58</span><span class="cli-crm-seg-l">Móveis</span><span class="cli-crm-seg-p">41% da carteira</span></div>
+            <div class="cli-crm-seg-tile cli-crm-seg-tile--blue"><span class="cli-crm-seg-n">32</span><span class="cli-crm-seg-l">Saúde</span><span class="cli-crm-seg-p">23%</span></div>
+            <div class="cli-crm-seg-tile cli-crm-seg-tile--rose"><span class="cli-crm-seg-n">25</span><span class="cli-crm-seg-l">Imobiliário</span><span class="cli-crm-seg-p">18%</span></div>
+            <div class="cli-crm-seg-tile cli-crm-seg-tile--orange"><span class="cli-crm-seg-n">17</span><span class="cli-crm-seg-l">Indústria</span><span class="cli-crm-seg-p">12%</span></div>
+            <div class="cli-crm-seg-tile cli-crm-seg-tile--purple"><span class="cli-crm-seg-n">10</span><span class="cli-crm-seg-l">Outros</span><span class="cli-crm-seg-p">6%</span></div>
+          </div>
+        </section>
       </div>
       <div class="cli-list-card">
-      <div class="cli-filter-bar">
-        <div class="cli-pill-group">
-          <button class="cli-pill active"><i class="fas fa-circle" style="font-size:6px;"></i> Ativos <span class="cnt">364</span></button>
-          <button class="cli-pill"><i class="fas fa-circle cli-pill-dot--danger" style="font-size:6px;" aria-hidden="true"></i> Inativos <span class="cnt">37</span></button>
-        </div>
-        <div class="cli-filter-divider"></div>
-        <div class="cli-pill-group">
-          <button class="cli-pill active"><i class="fas fa-building" style="font-size:10px;"></i> Pessoa Jurídica <span class="cnt">214</span></button>
-          <button class="cli-pill"><i class="fas fa-user" style="font-size:10px;"></i> Pessoa Física <span class="cnt">150</span></button>
-        </div>
-        <div class="cli-filter-divider"></div>
-        <div class="cli-filter-search">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          <input type="text" placeholder="Buscar por nome, CNPJ, e-mail…">
-        </div>
-      </div>
-      <div class="cli-table-wrap">
-        <div class="cli-table-card">
-          <table class="cli-table">
-            <thead><tr>
-              <th style="width:42%">Razão Social</th>
-              <th style="width:18%">CNPJ</th>
-              <th style="width:24%">E-mail</th>
-              <th style="width:14%">Telefone</th>
-              <th style="width:2%"></th>
-            </tr></thead>
-            <tbody>
-              <tr>
-                <td><div class="cli-td-name"><div class="cli-av">TR</div><span class="cli-name-main">TRIANON IND E COM LTDA</span></div></td>
-                <td class="cli-td-doc">50.187.817/0001-99</td>
-                <td class="cli-td-email">financeiro@trianon.com.br</td>
-                <td class="cli-td-phone">(054) 9198-6775</td>
-                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
-              </tr>
-              <tr>
-                <td><div class="cli-td-name"><div class="cli-av">MB</div><span class="cli-name-main">MOBLES FAB DE MOV LTDA</span></div></td>
-                <td class="cli-td-doc">50.674.210/0001-33</td>
-                <td class="cli-td-email">alexandrezattera@hotmail.com</td>
-                <td class="cli-td-phone">(054) 9198-6775</td>
-                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
-              </tr>
-              <tr>
-                <td><div class="cli-td-name"><div class="cli-av">AC</div><span class="cli-name-main">A. CARLOS BRANDELLI LTDA</span></div></td>
-                <td class="cli-td-doc">63.336.965/0001-70</td>
-                <td class="cli-td-email">despachantebrandelli@gmail.com</td>
-                <td class="cli-td-phone">(054) 3451-5033</td>
-                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
-              </tr>
-              <tr>
-                <td><div class="cli-td-name"><div class="cli-av">AG</div><span class="cli-name-main">AGROPEC COM E ELETRICIDADE HENZEL LTDA.</span></div></td>
-                <td class="cli-td-doc">41.627.074/0001-30</td>
-                <td class="cli-td-email">magnojairhenzel@gmail.com</td>
-                <td class="cli-td-phone">(054) 9600-7241</td>
-                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
-              </tr>
-              <tr>
-                <td><div class="cli-td-name"><div class="cli-av">AL</div><span class="cli-name-main">ALEPLAST EMBALAGENS PLASTICAS LTDA</span></div></td>
-                <td class="cli-td-doc">01.737.383/0001-48</td>
-                <td class="cli-td-email">financeiro@aleplast.com.br</td>
-                <td class="cli-td-phone">(054) 9965-6415</td>
-                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
-              </tr>
-              <tr>
-                <td><div class="cli-td-name"><div class="cli-av">AF</div><span class="cli-name-main">ALFEMA IND DE MODELOS LTDA</span></div></td>
-                <td class="cli-td-doc">93.108.199/0001-57</td>
-                <td class="cli-td-email">fiscal@alfema.com.br</td>
-                <td class="cli-td-phone">(054) 3452-1048</td>
-                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
-              </tr>
-              <tr>
-                <td><div class="cli-td-name"><div class="cli-av">AL</div><span class="cli-name-main">ALLTEX SOLUCOES INDUSTRIAIS LTDA ME</span></div></td>
-                <td class="cli-td-doc">13.464.230/0001-53</td>
-                <td class="cli-td-email">financeiro@alltex.com.br</td>
-                <td class="cli-td-phone">(054) 9148-5866</td>
-                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
-              </tr>
-              <tr>
-                <td><div class="cli-td-name"><div class="cli-av">AM</div><span class="cli-name-main">AMX FABRICACAO DE ACESSORIOS PARA MOTOCICLETAS</span></div></td>
-                <td class="cli-td-doc">33.563.720/0001-14</td>
-                <td class="cli-td-email">financeiro@amxacessorios.com.br</td>
-                <td class="cli-td-phone">(054) 9156-4228</td>
-                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
-              </tr>
-              <tr>
-                <td><div class="cli-td-name"><div class="cli-av">AN</div><span class="cli-name-main">ANDRESA PROVENZI SOCIEDADE INDIVIDUAL DE ADVOCACIA</span></div></td>
-                <td class="cli-td-doc">33.144.658/0001-26</td>
-                <td class="cli-td-email">andresa@provenziadvocacia.com.br</td>
-                <td class="cli-td-phone">(054) 3702-7717</td>
-                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
-              </tr>
-              <tr>
-                <td><div class="cli-td-name"><div class="cli-av">UA</div><span class="cli-name-main">UFFICIO ASSESSORIA CONTABIL LTDA</span></div></td>
-                <td class="cli-td-doc">00.521.874/0001-22</td>
-                <td class="cli-td-email">financeiro@ufficio.com.br</td>
-                <td class="cli-td-phone">(054) 3321-4400</td>
-                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="cli-table-footer">
-          <span>Mostrando 1 a 10 de 214 registros</span>
-          <div style="display:flex;gap:4px;">
-            <button type="button" class="cli-page-btn">&lt;&lt;</button>
-            <button type="button" class="cli-page-btn is-current">1</button>
-            <button type="button" class="cli-page-btn">2</button>
-            <button type="button" class="cli-page-btn">3</button>
-            <button type="button" class="cli-page-btn">&gt;&gt;</button>
+        <div class="cli-crm-toolbar">
+          <div class="cli-crm-search-wide">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <input type="text" id="cli-search" placeholder="Buscar por nome, CNPJ/CPF, e-mail, telefone..." autocomplete="off">
+          </div>
+          <div class="cli-crm-toolbar-filters cli-crm-toolbar-filters--ref">
+            <div class="cli-crm-filter-box"><select class="cli-crm-select"><option>Todos os status</option><option>Ativos</option><option>Inativos</option></select><i class="fas fa-chevron-down cli-crm-filter-chev" aria-hidden="true"></i></div>
+            <div class="cli-crm-filter-box"><select class="cli-crm-select"><option>Todos os segmentos</option><option>Móveis</option></select><i class="fas fa-chevron-down cli-crm-filter-chev" aria-hidden="true"></i></div>
+            <div class="cli-crm-filter-box"><select class="cli-crm-select"><option>PJ + PF</option></select><i class="fas fa-chevron-down cli-crm-filter-chev" aria-hidden="true"></i></div>
+            <div class="cli-crm-filter-box"><select class="cli-crm-select"><option>Todos os vendedores</option></select><i class="fas fa-chevron-down cli-crm-filter-chev" aria-hidden="true"></i></div>
           </div>
         </div>
-      </div>
+        <div class="cli-crm-chips" role="group" aria-label="Filtros rápidos">
+          <button type="button" class="cli-crm-chip cli-crm-chip--teal"><span class="cli-crm-chip-ic" aria-hidden="true">★</span> Top 10 receita</button>
+          <button type="button" class="cli-crm-chip cli-crm-chip--blue"><span class="cli-crm-chip-ic" aria-hidden="true">🆕</span> Novos clientes</button>
+          <button type="button" class="cli-crm-chip cli-crm-chip--red"><span class="cli-crm-chip-ic" aria-hidden="true">⏰</span> Em atraso</button>
+          <button type="button" class="cli-crm-chip cli-crm-chip--purple"><span class="cli-crm-chip-ic" aria-hidden="true">📞</span> Sem contato 30d</button>
+          <button type="button" class="cli-crm-chip cli-crm-chip--indigo"><span class="cli-crm-chip-ic" aria-hidden="true">💎</span> Clientes VIP</button>
+          <button type="button" class="cli-crm-chip cli-crm-chip--orange"><span class="cli-crm-chip-ic" aria-hidden="true">🎂</span> Aniversariantes</button>
+        </div>
+        <div class="cli-table-wrap">
+          <div class="cli-table-card">
+            <table class="cli-table cli-table--crm">
+              <thead>
+                <tr>
+                  <th>Código</th><th>Cliente</th><th>CNPJ/CPF</th><th>Segmento</th><th>Cidade</th>
+                  <th class="cli-col-num">Receita 12M</th><th class="cli-col-num">A receber</th><th>Status</th><th>Última compra</th><th class="cli-col-act">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="cli-row--vip">
+                  <td class="cli-td-code"><span class="cli-code-badge">CLI-0042</span></td>
+                  <td><div class="cli-td-name"><div class="cli-av cli-av--teal">MA</div><div class="cli-td-name-text"><span class="cli-name-main">Mobles Ambientes Pensados</span><span class="cli-name-sub">João Silva</span></div></div></td>
+                  <td class="cli-td-doc">10.630.396/0001-04</td>
+                  <td class="cli-td-seg"><span class="cli-seg-pill cli-seg-pill--teal">Móv</span></td>
+                  <td class="cli-td-city">Bento Gonçalves/RS</td>
+                  <td class="cli-td-num cli-td-receita">R$ 524.180,00</td>
+                  <td class="cli-td-num cli-td-areceber">R$ 16.791,67</td>
+                  <td><span class="cli-status-badge cli-status-badge--vip"><i class="fas fa-star" aria-hidden="true"></i> VIP · Ativo</span></td>
+                  <td class="cli-td-muted">04/06/2026</td>
+                  <td class="cli-td-act"><button type="button" class="cli-btn-act cli-btn-act--chart" title="Visão 360°"><i class="fas fa-chart-bar" aria-hidden="true"></i></button><button type="button" class="cli-btn-act cli-btn-act--more"><i class="fas fa-ellipsis-h" aria-hidden="true"></i></button></td>
+                </tr>
+                <tr class="cli-row--on">
+                  <td class="cli-td-code"><span class="cli-code-badge">CLI-0038</span></td>
+                  <td><div class="cli-td-name"><div class="cli-av cli-av--blue">EA</div><div class="cli-td-name-text"><span class="cli-name-main">Engemed Assessoria Médica</span></div></div></td>
+                  <td class="cli-td-doc">23.487.512/0001-66</td>
+                  <td class="cli-td-seg"><span class="cli-seg-pill cli-seg-pill--blue">Saú</span></td>
+                  <td class="cli-td-city">Caxias do Sul/RS</td>
+                  <td class="cli-td-num cli-td-receita">R$ 218.450,00</td>
+                  <td class="cli-td-num cli-td-areceber cli-td-areceber--zero">R$ 0,00</td>
+                  <td><span class="cli-status-badge cli-status-badge--on"><i class="fas fa-check" aria-hidden="true"></i> Ativo</span></td>
+                  <td class="cli-td-muted">22/05/2026</td>
+                  <td class="cli-td-act"><button type="button" class="cli-btn-act cli-btn-act--chart"><i class="fas fa-chart-bar" aria-hidden="true"></i></button><button type="button" class="cli-btn-act cli-btn-act--more"><i class="fas fa-ellipsis-h" aria-hidden="true"></i></button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
     </div>

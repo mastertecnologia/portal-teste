@@ -3,6 +3,7 @@
 | Arquivo | Descrição |
 |---------|-----------|
 | `pgm_erp_completo_2.html` | Mock SPA completo (~2,2 MB, 124 telas `pg-*`). **Arquivo canônico no repositório.** |
+| `public/clientes-lista-layout-unificado.html` | Mock shell + sidebar; lista CRM espelha `src/Template/Clientes/index.ctp` (`cli-crm-lista`). Conteúdo canônico da lista: `#pg-clientes` no ERP completo. |
 
 ## Auditoria
 
