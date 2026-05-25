@@ -3,10 +3,26 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Traits\ClientesCrmListaTrait;
 use App\Controller\Traits\ErpPrototypeRbacTrait;
 use App\Controller\Traits\PrototypeApiSecurityTrait;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
+
+$__pgmUserConstants = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
+if (is_file($__pgmUserConstants)) {
+	require_once $__pgmUserConstants;
+}
+$__pgmUtilities = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'Utilities.php';
+if (is_file($__pgmUtilities)) {
+	require_once $__pgmUtilities;
+}
+if (!defined('C_ClientesTipoJuridica')) {
+	define('C_ClientesTipoJuridica', 2);
+}
+if (!defined('C_ClientesTipoFisica')) {
+	define('C_ClientesTipoFisica', 1);
+}
 
 /**
  * Clientes — protótipo (mockup pg-clientes, pg-cliente-novo, pg-cliente-360).
@@ -16,6 +32,7 @@ use Cake\Http\Exception\NotFoundException;
  */
 class ClientesPrototypeController extends AppController {
 
+	use ClientesCrmListaTrait;
 	use ErpPrototypeRbacTrait;
 	use PrototypeApiSecurityTrait;
 
@@ -39,81 +56,30 @@ class ClientesPrototypeController extends AppController {
 	}
 
 	/**
-	 * pg-clientes — lista com KPIs (jurídica/física, ativos/inativos) + busca.
+	 * pg-clientes — lista CRM (KPIs, top 5, segmentos, tabela rica — paridade legado / mock).
 	 */
 	public function lista() {
-		$empresa = (int)$this->Auth->user('idempresa');
 		$busca = trim((string)$this->request->getQuery('q', ''));
 		$filtroTipo = (string)$this->request->getQuery('tipo', '');
 		$filtroStatus = (string)$this->request->getQuery('status', '');
-		$where = ['Clientes.idempresa' => $empresa];
-		if ($busca !== '') {
-			$where['OR'] = [
-				'Clientes.nome ILIKE' => '%' . $busca . '%',
-				'Clientes.razaosocial ILIKE' => '%' . $busca . '%',
-				'Clientes.nomefantasia ILIKE' => '%' . $busca . '%',
-				'Clientes.cnpj ILIKE' => '%' . $busca . '%',
-				'Clientes.cpf ILIKE' => '%' . $busca . '%',
-				'Clientes.email ILIKE' => '%' . $busca . '%',
-				'Clientes.fone ILIKE' => '%' . $busca . '%',
-			];
-		}
-		if ($filtroTipo === 'pj') {
-			$where['Clientes.tipo'] = 2;
-		} elseif ($filtroTipo === 'pf') {
-			$where['Clientes.tipo IS NOT'] = 2;
-		}
-		if ($filtroStatus === 'ativo') {
-			$where['Clientes.inativo'] = 0;
-		} elseif ($filtroStatus === 'inativo') {
-			$where['Clientes.inativo'] = 1;
-		}
-		$rows = [];
+
+		$todos = [];
 		try {
-			$rows = $this->Clientes->find()
-				->where($where)
-				->order(['Clientes.id' => 'DESC'])
-				->limit(200)
-				->all()
-				->toArray();
+			$qAll = $this->Clientes->find('all')
+				->contain(['Cidades.Estados'])
+				->order(['Clientes.id' => 'DESC']);
+			$this->Abac->applyToQuery($qAll, 'Clientes');
+			$todos = $qAll->toArray();
 		} catch (\Throwable $e) {
-			$rows = [];
+			$this->log('ClientesPrototype::lista: ' . $e->getMessage(), 'warning');
 		}
 
-		$counts = ['total' => 0, 'pj' => 0, 'pf' => 0, 'ativos' => 0, 'inativos' => 0, 'inadimplentes' => 0];
-		$items = [];
-		foreach ($rows as $r) {
-			$counts['total']++;
-			$tipo = (int)$r->get('tipo');
-			$pj = $tipo === 2 || $tipo === (defined('C_ClientesTipoJuridica') ? (int)C_ClientesTipoJuridica : 2);
-			if ($pj) {
-				$counts['pj']++;
-				$nome = (string)($r->get('razaosocial') ?? $r->get('nome') ?? '');
-			} else {
-				$counts['pf']++;
-				$nome = (string)($r->get('nome') ?? '');
-			}
-			$inativo = (int)$r->get('inativo') === 1;
-			if ($inativo) {
-				$counts['inativos']++;
-			} else {
-				$counts['ativos']++;
-			}
-			$items[] = [
-				'id' => (int)$r->get('id'),
-				'public_code' => trim((string)($r->get('public_code') ?? '')),
-				'tipo' => $pj ? 'PJ' : 'PF',
-				'nome' => $nome,
-				'fantasia' => (string)($r->get('nomefantasia') ?? ''),
-				'cnpj' => (string)($r->get('cnpj') ?? $r->get('cpf') ?? ''),
-				'email' => (string)($r->get('email') ?? ''),
-				'fone' => (string)($r->get('fone') ?? $r->get('fone2') ?? ''),
-				'inativo' => $inativo,
-				'desde' => $r->get('membrodesde'),
-			];
-		}
-
-		$counts['inadimplentes'] = $this->countClientesInadimplentes($empresa);
+		$clientesAtivos = array_values(array_filter($todos, function ($c) {
+			return (int)$c->inativo === 0;
+		}));
+		$crm = $this->_clientesIndexCrmMetrics($todos, count($clientesAtivos));
+		$cliRows = $this->_clientesIndexRows($todos, $crm);
+		$cliVendedores = $this->_clientesIndexVendedoresLista();
 
 		$this->set([
 			'title' => __('Clientes'),
@@ -124,8 +90,9 @@ class ClientesPrototypeController extends AppController {
 				['label' => __('Clientes'), 'cur' => true],
 			],
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
-			'cliCounts' => $counts,
-			'cliItems' => $items,
+			'cliCrm' => $crm,
+			'cliRows' => $cliRows,
+			'cliVendedores' => $cliVendedores,
 			'cliFiltros' => ['q' => $busca, 'tipo' => $filtroTipo, 'status' => $filtroStatus],
 		]);
 	}
