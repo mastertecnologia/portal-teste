@@ -26,4 +26,25 @@ class OrcamentoDescontoUtilTest extends TestCase
 		];
 		$this->assertSame(90.0, OrcamentoDescontoUtil::linhaLiquido($row));
 	}
+
+	public function testLinhaLiquidoCincoPorcento(): void
+	{
+		$row = (object)[
+			'valordoservico' => 1250.0,
+			'valormensal' => 0,
+			'desconto_valor' => 5.0,
+			'desconto_tipo' => 'pct',
+		];
+		$this->assertSame(1187.5, OrcamentoDescontoUtil::linhaLiquido($row));
+	}
+
+	public function testLinhaBrutoUsaValordoservico(): void
+	{
+		$row = (object)[
+			'valordoservico' => 500.0,
+			'valormensal' => 0,
+			'valoruni' => 0,
+		];
+		$this->assertSame(500.0, OrcamentoDescontoUtil::linhaBruto($row));
+	}
 }

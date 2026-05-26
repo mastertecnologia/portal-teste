@@ -418,8 +418,42 @@
 		}
 	});
 
+	function orcCalcLineDiscountLiquido(bruto, discVal, discTipo) {
+		var b = parseFloat(bruto);
+		if (isNaN(b) || b <= 0) {
+			return 0;
+		}
+		var dv = parseFloat(discVal);
+		if (isNaN(dv) || dv <= 0) {
+			return b;
+		}
+		var abs = discTipo === 'fix' ? dv : b * (dv / 100);
+		if (abs > b) {
+			abs = b;
+		}
+		if (abs < 0) {
+			abs = 0;
+		}
+		return b - abs;
+	}
+
+	function orcPreviewLineDiscount($row) {
+		var bruto = parseFloat($row.attr('data-linha-bruto'));
+		if (isNaN(bruto) || bruto <= 0) {
+			bruto = parseBrFloat($row.find('.valorunit').first().text()) * (parseFloat($row.find('.orc-col-qtd').text()) || 0);
+		}
+		if (bruto <= 0) {
+			return;
+		}
+		var discVal = $row.find('.orc-line-disc-val').val() || 0;
+		var discTipo = $row.find('.orc-line-disc-tipo').val() || 'pct';
+		var liquido = orcCalcLineDiscountLiquido(bruto, discVal, discTipo);
+		$row.find('.valordoservico').text('R$ ' + numberToReal(liquido));
+	}
+
 	$('#btn-addservico').click(function (e) {
 		e.preventDefault();
+		calcularValorTotal();
 		var servico = $('#servico').val();
 		var quantidade = $('#quantidade').val();
 		var valoruni = $('#valoruni').val();
@@ -776,6 +810,7 @@
 		if (!id) {
 			return;
 		}
+		orcPreviewLineDiscount($row);
 		$.ajax({
 			type: 'POST',
 			url: cfg.salvarDescontoItemUrl,
@@ -787,6 +822,10 @@
 			},
 			success: function (res) {
 				if (!res || !res.ok) {
+					if (res && res.mensagem && typeof bootbox !== 'undefined') {
+						bootbox.alert(res.mensagem);
+					}
+					window.carrinho();
 					return;
 				}
 				if (res.vlLiquido != null) {
@@ -797,6 +836,9 @@
 				} else if (typeof window.orcNovoAfterCarrinhoTotals === 'function') {
 					window.orcNovoAfterCarrinhoTotals();
 				}
+			},
+			error: function () {
+				window.carrinho();
 			}
 		});
 	}
@@ -807,6 +849,7 @@
 		}
 		$('#carrinho .orc-line-disc-val, #carrinho .orc-line-disc-tipo').off('change.orcDisc input.orcDisc').on('change.orcDisc input.orcDisc', function () {
 			var $row = $(this).closest('tr');
+			orcPreviewLineDiscount($row);
 			clearTimeout(orcLineDiscSaveTimer);
 			orcLineDiscSaveTimer = setTimeout(function () {
 				orcSalvarDescontoLinha($row);

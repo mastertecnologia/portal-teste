@@ -60,6 +60,8 @@ $badgeCls = ['prod' => 'orc-badge-tipo--prod', 'srv' => 'orc-badge-tipo--serv', 
 						'descontoValor' => 0.0,
 						'descontoTipo' => 'pct',
 						'vlLiquido' => OrcamentoDescontoUtil::linhaLiquido($reg, $orcItemDescontoEnabled),
+						'valorUnitDisplay' => (float)($reg->valoruni ?? 0),
+						'linhaBruto' => OrcamentoDescontoUtil::linhaBruto($reg),
 					];
 					$custoLinha = (float)($ex['custoLinha'] ?? 0);
 					$margemPct = $ex['margemPct'] ?? null;
@@ -67,13 +69,15 @@ $badgeCls = ['prod' => 'orc-badge-tipo--prod', 'srv' => 'orc-badge-tipo--serv', 
 					$tipoLbl = (string)($ex['tipoLabel'] ?? 'Serviço');
 					$tipoClass = $badgeCls[$tipoBadge] ?? 'orc-badge-tipo--serv';
 					$vlTotal = (float)($ex['vlLiquido'] ?? OrcamentoDescontoUtil::linhaLiquido($reg, $orcItemDescontoEnabled));
+					$vuDisplay = (float)($ex['valorUnitDisplay'] ?? ($reg->valoruni ?? 0));
+					$linhaBruto = (float)($ex['linhaBruto'] ?? OrcamentoDescontoUtil::linhaBruto($reg));
 					$discVal = (float)($ex['descontoValor'] ?? ($reg->desconto_valor ?? 0));
 					$discTipo = (string)($ex['descontoTipo'] ?? ($reg->desconto_tipo ?? 'pct'));
 					if (!in_array($discTipo, ['pct', 'fix'], true)) {
 						$discTipo = 'pct';
 					}
 					?>
-					<tr id="<?= (int)$reg->id ?>" data-item-id="<?= (int)$reg->id ?>">
+					<tr id="<?= (int)$reg->id ?>" data-item-id="<?= (int)$reg->id ?>" data-linha-bruto="<?= h((string)$linhaBruto) ?>">
 						<?php if (!$isRevisao) : ?>
 						<td><?= h($reg->idproduto) ?></td>
 						<?php endif; ?>
@@ -85,7 +89,7 @@ $badgeCls = ['prod' => 'orc-badge-tipo--prod', 'srv' => 'orc-badge-tipo--serv', 
 						</td>
 						<td><span class="orc-badge-tipo <?= h($tipoClass) ?>"><?= h($tipoLbl) ?></span></td>
 						<td class="r orc-col-qtd"><?= h($reg->quantidade) ?></td>
-						<td class="r valorunit"><?= 'R$ ' . number_format((float)$reg->valoruni, 2, ',', '.') ?></td>
+						<td class="r valorunit"><?= 'R$ ' . number_format($vuDisplay, 2, ',', '.') ?></td>
 						<td class="r orc-line-custo" data-custo="<?= h((string)$custoLinha) ?>"><?= 'R$ ' . number_format($custoLinha, 2, ',', '.') ?></td>
 						<td class="r orc-line-margem"><?= $margemPct !== null ? h((string)$margemPct) . '%' : '—' ?></td>
 						<?php if ($orcItemDescontoEnabled) : ?>
@@ -113,7 +117,7 @@ $badgeCls = ['prod' => 'orc-badge-tipo--prod', 'srv' => 'orc-badge-tipo--serv', 
 									'data-id' => $reg->id,
 									'data-servico' => $reg->servico,
 									'data-quantidade' => $reg->quantidade,
-									'data-valoruni' => $reg->valoruni,
+									'data-valoruni' => $vuDisplay,
 									'data-observacao' => $reg->observacao,
 									'data-valormensal' => $reg->valormensal,
 									'data-idproduto' => $reg->idproduto,

@@ -620,6 +620,103 @@ class OrcamentosController extends AppController {
 		return (float)str_replace(['.', ','], ['', '.'], preg_replace('/[^\d.,-]/', '', $str));
 	}
 
+	protected function _orcParseDecimalBr($value): float {
+		if ($value === null || $value === '') {
+			return 0.0;
+		}
+		if (is_int($value) || is_float($value)) {
+			return (float)$value;
+		}
+		if (is_numeric($value) && strpos((string)$value, ',') === false) {
+			return (float)$value;
+		}
+		$str = trim((string)$value);
+		if ($str === '') {
+			return 0.0;
+		}
+		$str = preg_replace('/[^\d.,-]/', '', $str);
+		if ($str === '' || $str === '-') {
+			return 0.0;
+		}
+		if (strpos($str, ',') !== false) {
+			$str = str_replace('.', '', $str);
+			$str = str_replace(',', '.', $str);
+		}
+
+		return (float)$str;
+	}
+
+	/**
+	 * @return \Cake\Datasource\EntityInterface|null
+	 */
+	protected function _orcFindProdutoByIdprodutoCampo($idprodutoVal, $idempresa) {
+		$idprodutoVal = trim((string)$idprodutoVal);
+		if ($idprodutoVal === '' || $idprodutoVal === '0') {
+			return null;
+		}
+		$produto = $this->Produtos->findByCodigo($idprodutoVal)->where(['idempresa' => $idempresa])->first();
+		if ($produto === null && is_numeric($idprodutoVal) && (int)$idprodutoVal > 0) {
+			$produto = $this->Produtos->findById((int)$idprodutoVal)->where(['idempresa' => $idempresa])->first();
+		}
+
+		return $produto;
+	}
+
+	/**
+	 * Preenche valoruni / valordoservico a partir do cadastro quando a linha está sem bruto.
+	 */
+	protected function _orcSincronizarPrecoProdutoNaLinhaSeBrutoZero($item, $idempresa): void {
+		if ($item === null || \App\Utility\OrcamentoDescontoUtil::linhaBruto($item) > 0.0001) {
+			return;
+		}
+		$produto = $this->_orcFindProdutoByIdprodutoCampo($item->idproduto ?? '', $idempresa);
+		if ($produto === null) {
+			return;
+		}
+		$preco = (float)($produto->vlunitario ?? 0);
+		if ($preco <= 0) {
+			return;
+		}
+		$qtd = $this->_parseQuantidadeOrcamentoLinha($item->quantidade ?? 0);
+		if ($qtd <= 0) {
+			$qtd = 1.0;
+		}
+		$item->valoruni = $preco;
+		$item->valormensal = 0;
+		$item->valordoservico = $preco * $qtd;
+	}
+
+	/**
+	 * @param \Cake\Datasource\EntityInterface $item
+	 */
+	protected function _orcAplicarPrecosLinhaServicoFromRequest($item, array $data): void {
+		$vlMensalUnit = $this->_orcParseDecimalBr($data['valormensal'] ?? 0);
+		$qtd = $this->_parseQuantidadeOrcamentoLinha($data['quantidade'] ?? ($item->quantidade ?? 0));
+		if ($qtd <= 0) {
+			$qtd = 1.0;
+		}
+
+		if ($vlMensalUnit > 0.0001) {
+			$item->valormensal = $vlMensalUnit * $qtd;
+			$item->valoruni = 0;
+			$item->valordoservico = 0;
+
+			return;
+		}
+
+		$valoruni = $this->_orcParseDecimalBr($data['valoruni'] ?? ($item->valoruni ?? 0));
+		$valordoservico = $this->_orcParseDecimalBr($data['valordoservico'] ?? 0);
+		$item->valormensal = 0;
+		$item->valoruni = $valoruni;
+		if ($valordoservico > 0.0001) {
+			$item->valordoservico = $valordoservico;
+		} elseif ($valoruni > 0.0001) {
+			$item->valordoservico = $valoruni * $qtd;
+		} else {
+			$item->valordoservico = 0;
+		}
+	}
+
 	/**
 	 * Custo unitário por código de produto (mesma coluna usada em _carrinhoLinhasCustoMargem).
 	 *
@@ -710,6 +807,11 @@ class OrcamentosController extends AppController {
 					$tipoLabel = $tipoMeta[(string)(int)$keyTipo]['tipoLabel'];
 				}
 			}
+			$brutoLinha = \App\Utility\OrcamentoDescontoUtil::linhaBruto($reg);
+			$vuDisplay = (float)($reg->valoruni ?? 0);
+			if ($vuDisplay <= 0.0001 && $brutoLinha > 0.0001 && $q > 0.0001) {
+				$vuDisplay = $brutoLinha / $q;
+			}
 			$out[$rid] = [
 				'custoLinha' => $custoLinha,
 				'margemPct' => $margemPct,
@@ -719,6 +821,8 @@ class OrcamentosController extends AppController {
 				'descontoValor' => $temDescItem ? (float)($reg->desconto_valor ?? 0) : 0.0,
 				'descontoTipo' => $temDescItem ? (string)($reg->desconto_tipo ?? 'pct') : 'pct',
 				'vlLiquido' => $venda,
+				'valorUnitDisplay' => $vuDisplay,
+				'linhaBruto' => $brutoLinha,
 			];
 		}
 
@@ -1465,6 +1569,8 @@ class OrcamentosController extends AppController {
 		if ($item === null) {
 			return $this->jsonResponse(['ok' => false, 'mensagem' => __('Item não encontrado.')], 404);
 		}
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$this->_orcSincronizarPrecoProdutoNaLinhaSeBrutoZero($item, $idempresa);
 		$this->_orcPatchItemDescontoFromRequest($item, $this->request->getData());
 		if (!$this->Orcamentosservicos->save($item)) {
 			return $this->jsonResponse(['ok' => false, 'mensagem' => __('Não foi possível salvar.')], 422);
@@ -2038,37 +2144,39 @@ class OrcamentosController extends AppController {
 				}
 			}
 
-			$valoruni = function_exists('formatNumber') ? formatNumber($data['valoruni'] ?? 0) : (float) str_replace([',', '.'], ['', '.'], $data['valoruni'] ?? '0');
-			$valordoservico = function_exists('formatNumber') ? formatNumber($data['valordoservico'] ?? 0) : (float) str_replace([',', '.'], ['', '.'], $data['valordoservico'] ?? '0');
-
-			// Sempre buscar preço atual do produto no BD (form envia código no select, não id)
-			if (!empty($data['idproduto']) && $data['idproduto'] != '0') {
-				$idprodutoVal = trim((string) $data['idproduto']);
-				$produto = $this->Produtos->findByCodigo($idprodutoVal)->where(['idempresa' => $idempresa])->first();
-				if (!$produto && is_numeric($idprodutoVal) && (int)$idprodutoVal > 0) {
-					$produto = $this->Produtos->findById((int)$idprodutoVal)->where(['idempresa' => $idempresa])->first();
-				}
-				if ($produto) {
-					$valoruni = (float) ($produto->vlunitario ?? 0);
-					$valordoservico = $valoruni * (float) ($data['quantidade'] ?? 1);
-				}
-			}
-
 			$orcamentond = $this->Orcamentosservicos->newEntity();
 			if (!empty($data['idproduto']) && $data['idproduto'] != '0') {
-				$orcamentond->idproduto = is_numeric($data['idproduto']) ? (int) $data['idproduto'] : 0;
+				$orcamentond->idproduto = trim((string)$data['idproduto']);
 			}
 			$orcamentond->servico = $servico;
 			$orcamentond->quantidade = $data['quantidade'] ?? 0;
 			$orcamentond->observacao = isset($data['observacao']) ? $data['observacao'] : '';
-			$orcamentond->valoruni = $valoruni;
 			$orcamentond->tipo = isset($data['tipo']) ? $data['tipo'] : 0;
-			$valormensal = isset($data['valormensal']) ? (function_exists('formatNumber') ? formatNumber($data['valormensal']) : (float) str_replace([',', '.'], ['', '.'], $data['valormensal'])) : 0;
-			if ($valormensal != 0) {
-				$qtd = function_exists('formatNumber') ? formatNumber($data['quantidade'] ?? 1) : (float) ($data['quantidade'] ?? 1);
-				$orcamentond->valormensal = $qtd * $valormensal;
+			$this->_orcAplicarPrecosLinhaServicoFromRequest($orcamentond, $data);
+
+			if (!empty($data['idproduto']) && $data['idproduto'] != '0') {
+				$produto = $this->_orcFindProdutoByIdprodutoCampo($data['idproduto'], $idempresa);
+				if ($produto !== null) {
+					$dbPreco = (float)($produto->vlunitario ?? 0);
+					$qtd = $this->_parseQuantidadeOrcamentoLinha($data['quantidade'] ?? 1);
+					if ($qtd <= 0) {
+						$qtd = 1.0;
+					}
+					$formVu = (float)($orcamentond->valoruni ?? 0);
+					$formBruto = \App\Utility\OrcamentoDescontoUtil::linhaBruto($orcamentond);
+					if ($formVu <= 0.0001 && $dbPreco > 0.0001) {
+						$orcamentond->valoruni = $dbPreco;
+						$orcamentond->valormensal = 0;
+						$orcamentond->valordoservico = $dbPreco * $qtd;
+					} elseif ($formBruto <= 0.0001 && $dbPreco > 0.0001) {
+						$orcamentond->valoruni = $dbPreco;
+						$orcamentond->valormensal = 0;
+						$orcamentond->valordoservico = $dbPreco * $qtd;
+					} elseif ($formVu > 0.0001 && $formBruto <= 0.0001) {
+						$orcamentond->valordoservico = $formVu * $qtd;
+					}
+				}
 			}
-			$orcamentond->valordoservico = $valordoservico;
 			$orcamentond->idempresa = $idempresa;
 			$orcamentond->idorcamento = $idorcamento;
 			$this->_orcPatchItemDescontoFromRequest($orcamentond, $data);
@@ -2927,22 +3035,15 @@ class OrcamentosController extends AppController {
 				->first();
 				
 			if ($item) {
-				function formatNumber($value) {
-					if (empty($value)) return 0;
-					$value = str_replace('.', '', $value);
-					$value = str_replace(',', '.', $value);
-					return floatval($value);
-				}
-				
-				// Atualiza os dados do item
 				$item->servico = $data['servico'];
 				$item->quantidade = $data['quantidade'];
 				$item->observacao = $data['observacao'];
-				$item->valoruni = formatNumber($data['valoruni']);
-				$item->valormensal = formatNumber($data['valormensal']);
-				$item->valordoservico = formatNumber($data['valordoservico']);
-				$item->idproduto = $data['idproduto'];
+				$item->idproduto = !empty($data['idproduto']) && $data['idproduto'] != '0'
+					? trim((string)$data['idproduto'])
+					: $item->idproduto;
 				$item->tipo = $data['tipo'];
+				$this->_orcAplicarPrecosLinhaServicoFromRequest($item, $data);
+				$this->_orcSincronizarPrecoProdutoNaLinhaSeBrutoZero($item, (int)$this->Auth->user('idempresa'));
 				$discPost = $data['desconto_valor'] ?? $data['item_desconto_valor'] ?? 0;
 				$discPostNum = is_numeric($discPost) ? (float)$discPost : (float)preg_replace('/[^\d.,-]/', '', (string)$discPost);
 				$this->_orcPatchItemDescontoFromRequest($item, $data);
