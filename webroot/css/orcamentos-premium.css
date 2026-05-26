@@ -3491,6 +3491,7 @@ body.layout-no-topbar .orc-premium-form .orc-wf-pend {
   margin-top: 12px;
   align-items: center;
 }
+.orc-premium-view .orc-wf-aprovar-form,
 .orc-premium-view .orc-wf-reprovar-form {
   display: flex;
   flex-wrap: wrap;

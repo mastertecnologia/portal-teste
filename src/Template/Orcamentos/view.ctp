@@ -127,6 +127,7 @@ $versaoStatusBadge = function ($versaoEnt) {
 						'class' => 'btn btn-orc-form-secondary btn-orc-compact orc-btn-nova-versao',
 						'escape' => false,
 						'confirm' => 'Duplicar esta proposta como nova versão? O orçamento atual permanece no histórico.',
+						'data-turbo' => 'false',
 					]
 				) ?>
 			<?php endif; ?>
@@ -222,14 +223,17 @@ $versaoStatusBadge = function ($versaoEnt) {
 					</div>
 					<?php if ($mostrarBotoesAi) : ?>
 						<div class="orc-wf-actions">
-							<?= $this->Form->postLink(
-								'✓ Aprovar (gerente)',
-								['action' => 'aprovarInterno', $orcamento->id],
-								['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]
-							) ?>
+							<?= $this->Form->create(null, [
+								'url' => ['action' => 'aprovarInterno', $orcamento->id],
+								'class' => 'orc-wf-aprovar-form',
+								'data-turbo' => 'false',
+							]) ?>
+								<button type="submit" class="btn btn-orc-premium-primary btn-orc-compact">✓ Aprovar (gerente)</button>
+							<?= $this->Form->end() ?>
 							<?= $this->Form->create(null, [
 								'url' => ['action' => 'reprovarInterno', $orcamento->id],
 								'class' => 'orc-wf-reprovar-form',
+								'data-turbo' => 'false',
 							]) ?>
 								<input type="text" name="motivo" class="form-control orc-wf-motivo-inp" placeholder="Motivo (opcional)" maxlength="500" />
 								<button type="submit" class="btn btn-orc-outline-danger btn-orc-compact">✗ Reprovar</button>
@@ -255,6 +259,7 @@ $versaoStatusBadge = function ($versaoEnt) {
 				<?= $this->Form->create(null, [
 					'url' => ['action' => 'salvarDesconto', $orcamento->id],
 					'class' => 'orc-discount-form-revisao',
+					'data-turbo' => 'false',
 				]) ?>
 				<input type="hidden" name="redirect" value="view" />
 				<div class="orc-discount-row">
