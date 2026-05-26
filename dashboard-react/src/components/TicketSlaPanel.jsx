@@ -20,6 +20,17 @@ function formatTs(iso) {
   }
 }
 
+/** Cartão do modal — usa tokens do tema (evita fundo #222834 fixo + texto escuro ilegível no tema claro). */
+const SLA_MODAL_CARD =
+  'max-h-[85vh] overflow-y-auto rounded-xl border border-[var(--pgm-border,#cbd5e1)] bg-[var(--pgm-bg-surface,#ffffff)] p-4 text-sm text-[var(--pgm-text,#0f172a)] shadow-xl';
+const SLA_MODAL_TITLE = 'font-semibold text-[var(--pgm-primary,#1d9e75)]';
+const SLA_MODAL_DT = 'text-[10px] font-semibold uppercase tracking-wide text-[var(--pgm-text-muted,#64748b)]';
+const SLA_MODAL_DD = 'mt-0.5 font-medium text-[var(--pgm-text,#0f172a)]';
+const SLA_MODAL_BTN_CLOSE =
+  'text-[var(--pgm-text-muted,#64748b)] hover:text-[var(--pgm-text,#0f172a)]';
+const SLA_MODAL_BTN_FOOTER =
+  'mt-4 w-full rounded border border-[var(--pgm-border,#cbd5e1)] bg-[var(--pgm-bg-elevated,#f8fafc)] py-2 text-xs font-medium text-[var(--pgm-text,#0f172a)] hover:bg-[var(--pgm-bg-overlay,#f1f5f9)]';
+
 /** @param {{ ticket: object, boot: object, onSlaUpdated?: (snap: object) => void }} props */
 export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
   const d = ticket?.slaDetail;
@@ -269,12 +280,12 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
           aria-modal="true"
           aria-label="Logs de SLA"
         >
-          <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--pgm-border)] bg-[#222834] p-4 text-sm shadow-xl">
+          <div className={`w-full max-w-2xl ${SLA_MODAL_CARD}`}>
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h4 className="font-semibold text-[var(--pgm-accent)]">
+              <h4 className={SLA_MODAL_TITLE}>
                 Logs de SLA {ticket?.id ? `· ticket #${ticket.id}` : ''}
               </h4>
-              <button type="button" className="text-[var(--pgm-text-muted)] hover:text-white" onClick={() => setLogsOpen(false)}>
+              <button type="button" className={SLA_MODAL_BTN_CLOSE} onClick={() => setLogsOpen(false)}>
                 ✕
               </button>
             </div>
@@ -338,11 +349,7 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
               )}
             </section>
 
-            <button
-              type="button"
-              className="mt-4 w-full rounded border border-[var(--pgm-border)] py-2 text-xs text-[var(--pgm-text-muted)] hover:bg-white/5"
-              onClick={() => setLogsOpen(false)}
-            >
+            <button type="button" className={SLA_MODAL_BTN_FOOTER} onClick={() => setLogsOpen(false)}>
               Fechar
             </button>
           </div>
@@ -356,50 +363,46 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
           aria-modal="true"
           aria-label="Política SLA"
         >
-          <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-xl border border-[var(--pgm-border)] bg-[#222834] p-4 text-sm shadow-xl">
+          <div className={`w-full max-w-lg ${SLA_MODAL_CARD}`}>
             <div className="mb-2 flex items-center justify-between">
-              <h4 className="font-semibold text-[var(--pgm-accent)]">Política #{pol.id}</h4>
-              <button type="button" className="text-[var(--pgm-text-muted)] hover:text-white" onClick={() => setPolicyOpen(false)}>
+              <h4 className={SLA_MODAL_TITLE}>Política #{pol.id}</h4>
+              <button type="button" className={SLA_MODAL_BTN_CLOSE} onClick={() => setPolicyOpen(false)}>
                 ✕
               </button>
             </div>
-            <dl className="space-y-1 text-[13px]">
+            <dl className="space-y-2 text-[13px]">
               <div>
-                <dt className="text-[10px] uppercase text-[var(--pgm-text-muted)]">Estado</dt>
-                <dd>{pol.estado_nome || pol.workflow_state_id}</dd>
+                <dt className={SLA_MODAL_DT}>Estado</dt>
+                <dd className={SLA_MODAL_DD}>{pol.estado_nome || pol.workflow_state_id}</dd>
               </div>
               <div>
-                <dt className="text-[10px] uppercase text-[var(--pgm-text-muted)]">Resposta / resolução (min)</dt>
-                <dd>
+                <dt className={SLA_MODAL_DT}>Resposta / resolução (min)</dt>
+                <dd className={SLA_MODAL_DD}>
                   {pol.resposta_minutos ?? '—'} / {pol.resolucao_minutos ?? '—'}
                 </dd>
               </div>
               <div>
-                <dt className="text-[10px] uppercase text-[var(--pgm-text-muted)]">Pausa automática no estado</dt>
-                <dd>{pol.pausa_sla ? 'Sim' : 'Não'}</dd>
+                <dt className={SLA_MODAL_DT}>Pausa automática no estado</dt>
+                <dd className={SLA_MODAL_DD}>{pol.pausa_sla ? 'Sim' : 'Não'}</dd>
               </div>
               <div>
-                <dt className="text-[10px] uppercase text-[var(--pgm-text-muted)]">Estado final</dt>
-                <dd>{pol.is_final ? 'Sim' : 'Não'}</dd>
+                <dt className={SLA_MODAL_DT}>Estado final</dt>
+                <dd className={SLA_MODAL_DD}>{pol.is_final ? 'Sim' : 'Não'}</dd>
               </div>
               <div>
-                <dt className="text-[10px] uppercase text-[var(--pgm-text-muted)]">Autoescalar</dt>
-                <dd>{pol.auto_escalar ? 'Sim' : 'Não'}</dd>
+                <dt className={SLA_MODAL_DT}>Autoescalar</dt>
+                <dd className={SLA_MODAL_DD}>{pol.auto_escalar ? 'Sim' : 'Não'}</dd>
               </div>
               {(pol.contract_id || pol.contract_service_id) && (
                 <div>
-                  <dt className="text-[10px] uppercase text-[var(--pgm-text-muted)]">Escopo contrato</dt>
-                  <dd>
+                  <dt className={SLA_MODAL_DT}>Escopo contrato</dt>
+                  <dd className={SLA_MODAL_DD}>
                     contrato {pol.contract_id ?? '—'} · serviço {pol.contract_service_id ?? '—'}
                   </dd>
                 </div>
               )}
             </dl>
-            <button
-              type="button"
-              className="mt-4 w-full rounded border border-[var(--pgm-border)] py-2 text-xs text-[var(--pgm-text-muted)] hover:bg-white/5"
-              onClick={() => setPolicyOpen(false)}
-            >
+            <button type="button" className={SLA_MODAL_BTN_FOOTER} onClick={() => setPolicyOpen(false)}>
               Fechar
             </button>
           </div>
