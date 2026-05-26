@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace App\Controller\Traits;
 
+use App\Service\ClienteDomain\InfrastructureGuard;
+use Cake\I18n\FrozenDate;
+use Cake\ORM\TableRegistry;
+
 /**
  * Payload e helpers da Visão 360° (legado + protótipo).
  */
