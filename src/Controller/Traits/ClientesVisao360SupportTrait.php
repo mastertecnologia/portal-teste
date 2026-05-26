@@ -42,7 +42,7 @@ trait ClientesVisao360SupportTrait {
 					'icon' => $meta['icon'],
 					'icon_tone' => $meta['tone'],
 					'data_fmt' => '',
-					'url' => $tid > 0 ? Router::url(['controller' => 'Tickets', 'action' => 'view', $tid]) : null,
+					'url' => $tid > 0 ? Router::url(['controller' => 'Servicedesk', 'action' => 'view', $tid]) : null,
 					'sort_ts' => (int)$reg->id,
 				];
 			}
