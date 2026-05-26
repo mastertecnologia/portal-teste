@@ -83,6 +83,18 @@
 		}
 		var t = data && data.tipo !== undefined && data.tipo !== null ? parseInt(data.tipo, 10) : NaN;
 		if (!isNaN(t)) {
+			if (typeof cfg.tipoProdutoLegacy !== 'undefined' && t === cfg.tipoProdutoLegacy) {
+				return 'prod';
+			}
+			if (typeof cfg.tipoServicoLegacy !== 'undefined' && t === cfg.tipoServicoLegacy) {
+				return 'serv';
+			}
+			if (typeof cfg.tipoLicencaLegacy !== 'undefined' && t === cfg.tipoLicencaLegacy) {
+				return 'lic';
+			}
+			if (typeof cfg.tipoLocacaoLegacy !== 'undefined' && t === cfg.tipoLocacaoLegacy) {
+				return 'loc';
+			}
 			if (t === cfg.tipoProduto) {
 				return 'prod';
 			}

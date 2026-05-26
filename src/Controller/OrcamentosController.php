@@ -706,33 +706,18 @@ class OrcamentosController extends AppController {
 	 * @return array<string,array{tipoBadge:string,tipoLabel:string}>
 	 */
 	protected function _produtoTipoMetaPorCodigo($idempresa): array {
-		$tipoMap = [];
-		if (defined('C_ProdutosTipo')) {
-			$tc = constant('C_ProdutosTipo');
-			$tipoMap = is_array($tc) ? $tc : [];
-		}
 		$out = [];
 		foreach ($this->Produtos->find()
 			->select(['id', 'codigo', 'tipo'])
 			->where(['idempresa' => $idempresa])
 			->enableHydration(false) as $p) {
-			$tipoInt = (int)($p['tipo'] ?? 0);
-			$tipoLabel = $tipoMap[$tipoInt] ?? 'Serviço';
-			$tipoBadge = 'serv';
-			if (defined('C_ProdutosTipoProduto') && $tipoInt === (int)C_ProdutosTipoProduto) {
-				$tipoBadge = 'prod';
-			} elseif (defined('C_ProdutosTipoServico') && $tipoInt === (int)C_ProdutosTipoServico) {
-				$tipoBadge = 'serv';
-			} elseif (stripos((string)$tipoLabel, 'licen') !== false) {
-				$tipoBadge = 'lic';
-			} elseif (stripos((string)$tipoLabel, 'loca') !== false) {
-				$tipoBadge = 'loc';
-			}
+			$meta = \App\Utility\ProdutoTipoOrcamentoUtil::labelAndBadge($p['tipo'] ?? 0);
+			$tipoBadge = $meta['badge'] === 'srv' ? 'serv' : $meta['badge'];
 			$key = trim((string)($p['codigo'] ?? ''));
 			if ($key !== '') {
-				$out[$key] = ['tipoBadge' => $tipoBadge, 'tipoLabel' => $tipoLabel];
+				$out[$key] = ['tipoBadge' => $tipoBadge, 'tipoLabel' => $meta['tipoLabel']];
 			}
-			$out[(string)(int)$p['id']] = ['tipoBadge' => $tipoBadge, 'tipoLabel' => $tipoLabel];
+			$out[(string)(int)$p['id']] = ['tipoBadge' => $tipoBadge, 'tipoLabel' => $meta['tipoLabel']];
 		}
 
 		return $out;
@@ -823,26 +808,13 @@ class OrcamentosController extends AppController {
 	 */
 	protected function _orcamentoProdutosCatalogoJson(array $produtosOpt1): string {
 		$produtosCatalogoLista = [];
-		$tipoMap = [];
-		if (defined('C_ProdutosTipo')) {
-			$tc = constant('C_ProdutosTipo');
-			$tipoMap = is_array($tc) ? $tc : [];
-		}
 		$idempresaCat = (int) $this->Auth->user('idempresa');
 		$custoPorCodigo = $this->_produtosCustoUnitPorCodigo($idempresaCat);
 		foreach ($produtosOpt1 as $reg) {
 			$tipoInt = (int)($reg->tipo ?? 0);
-			$tipoLabel = $tipoMap[$tipoInt] ?? 'Item';
-			$badge = 'outro';
-			if (defined('C_ProdutosTipoProduto') && $tipoInt === (int) C_ProdutosTipoProduto) {
-				$badge = 'prod';
-			} elseif (defined('C_ProdutosTipoServico') && $tipoInt === (int) C_ProdutosTipoServico) {
-				$badge = 'srv';
-			} elseif (stripos((string) $tipoLabel, 'licen') !== false) {
-				$badge = 'lic';
-			} elseif (stripos((string) $tipoLabel, 'loca') !== false) {
-				$badge = 'loc';
-			}
+			$tipoMeta = \App\Utility\ProdutoTipoOrcamentoUtil::labelAndBadge($tipoInt);
+			$tipoLabel = $tipoMeta['tipoLabel'];
+			$badge = $tipoMeta['badge'];
 			$codKey = trim((string) $reg->codigo);
 			$custoU = $custoPorCodigo[$codKey] ?? 0.0;
 			$vendaU = (float) ($reg->vlunitario ?? 0);

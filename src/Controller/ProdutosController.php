@@ -529,21 +529,9 @@ class ProdutosController extends AppController {
 	 */
 	protected function _produtoOrcamentoPayload($produto): array {
 		$data = $produto->toArray();
-		$tipoInt = (int)($produto->tipo ?? 0);
-		$tipoMap = (defined('C_ProdutosTipo') && is_array(constant('C_ProdutosTipo'))) ? constant('C_ProdutosTipo') : [];
-		$tipoLabel = $tipoMap[$tipoInt] ?? 'Item';
-		$badge = 'serv';
-		if (defined('C_ProdutosTipoProduto') && $tipoInt === (int)C_ProdutosTipoProduto) {
-			$badge = 'prod';
-		} elseif (defined('C_ProdutosTipoServico') && $tipoInt === (int)C_ProdutosTipoServico) {
-			$badge = 'serv';
-		} elseif (stripos((string)$tipoLabel, 'licen') !== false) {
-			$badge = 'lic';
-		} elseif (stripos((string)$tipoLabel, 'loca') !== false) {
-			$badge = 'loc';
-		}
-		$data['tipoLabel'] = $tipoLabel;
-		$data['badge'] = $badge;
+		$tipoMeta = \App\Utility\ProdutoTipoOrcamentoUtil::labelAndBadge($produto->tipo ?? 0);
+		$data['tipoLabel'] = $tipoMeta['tipoLabel'];
+		$data['badge'] = $tipoMeta['badge'] === 'srv' ? 'serv' : $tipoMeta['badge'];
 
 		return $data;
 	}
