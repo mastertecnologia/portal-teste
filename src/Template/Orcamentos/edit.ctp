@@ -95,8 +95,16 @@
 
 	<?= $this->element('orcamentos_stepper') ?>
 
-	<?= $this->Form->create($orcamento, ['class' => 'form-material']); ?>
+	<?= $this->Form->create($orcamento, ['class' => 'form-material', 'id' => 'form-orc-edit']); ?>
 	<?= $this->Form->hidden('item_edit_id', ['id' => 'item_edit_id']); ?>
+	<?= $this->Form->hidden('desconto_valor', [
+		'id' => 'orc-desconto-valor-hidden',
+		'value' => (string)(float)($orcamento->desconto_valor ?? 0),
+	]) ?>
+	<?= $this->Form->hidden('desconto_tipo', [
+		'id' => 'orc-desconto-tipo-hidden',
+		'value' => (string)($orcamento->desconto_tipo ?? 'pct'),
+	]) ?>
 
 	<!-- Card: Dados do cliente -->
 	<div class="card orc-premium-card-inner orc-card-mb-14">
@@ -203,10 +211,14 @@
 		<div class="card-body">
 			<div class="orc-sec-title orc-sec-title--split">
 				<span>Controle de versões</span>
-				<?= $this->Html->link(
+				<?= $this->Form->postLink(
 					'<i class="fa fa-plus"></i> Criar nova versão',
 					['action' => 'novaversao', $orcamento->id],
-					['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]
+					[
+						'class' => 'btn btn-orc-form-secondary btn-orc-compact',
+						'escape' => false,
+						'confirm' => 'Duplicar esta proposta como nova versão?',
+					]
 				) ?>
 			</div>
 			<div class="orc-version-panel orc-version-panel-mb">

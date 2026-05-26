@@ -3345,3 +3345,43 @@ body.layout-no-topbar .orc-premium-form .orc-wf-pend {
 .orc-premium-view .orc-tot-rd {
   color: var(--orc-red);
 }
+
+.orc-premium-view .orc-wf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  align-items: center;
+}
+.orc-premium-view .orc-wf-reprovar-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 0;
+}
+.orc-premium-view .orc-wf-motivo-inp {
+  max-width: 200px;
+  font-size: 12px;
+  padding: 5px 8px;
+  height: auto;
+}
+.orc-premium-view .orc-wf-hint-reprov {
+  font-size: 12px;
+  color: var(--orc-text-muted);
+  margin: 10px 0 0;
+}
+.orc-premium-view .orc-btn-nova-versao {
+  margin-top: 10px;
+}
+.orc-premium-view .orc-version-link {
+  color: var(--orc-teal-dark);
+  text-decoration: none;
+  font-weight: 500;
+}
+.orc-premium-view .orc-version-link:hover {
+  text-decoration: underline;
+}
+.orc-premium-view .orc-discount-form-revisao {
+  margin-top: 12px;
+}

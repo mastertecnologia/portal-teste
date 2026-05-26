@@ -1630,7 +1630,7 @@ return [
         "module" => "Orçamentos",
         "controller" => "Orcamentos",
         "action" =>
-            "add,addservico,carrinho,carrinhoedit,carrinho_edit,limpacarrinho,limpa_carrinho,excluiitemcarrinho,getitemcarrinho,edititemcarrinho,edit_item_carrinho,editaitemcarrinho,editaitem_carrinho,limpasession,limpa_session,novaordem,nova_ordem",
+            "add,addservico,carrinho,carrinhoedit,carrinho_edit,limpacarrinho,limpa_carrinho,excluiitemcarrinho,getitemcarrinho,edititemcarrinho,edit_item_carrinho,editaitemcarrinho,editaitem_carrinho,limpasession,limpa_session,novaordem,nova_ordem,novaversao,nova_versao,salvarDesconto,salvar_desconto",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
@@ -1643,7 +1643,7 @@ return [
         "module" => "Orçamentos",
         "controller" => "Orcamentos",
         "action" =>
-            "edit,alterarsituacao,alterar_situacao,arquivar,enviar,envioassinatura,envio_assinatura,email,criarMov,criar_mov,mudarstatus,apiatualizaritem,apiexcluiritem,apiadicionaritem,salvarrascunho",
+            "edit,alterarsituacao,alterar_situacao,arquivar,enviar,envioassinatura,envio_assinatura,email,criarMov,criar_mov,mudarstatus,apiatualizaritem,apiexcluiritem,apiadicionaritem,salvarrascunho,novaversao,nova_versao,salvarDesconto,salvar_desconto",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
@@ -1655,7 +1655,7 @@ return [
         "name" => "Orçamentos — aprovar / recusar",
         "module" => "Orçamentos",
         "controller" => "Orcamentos",
-        "action" => "aprovar,aprovarhash,aprovar_hash,recusar",
+        "action" => "aprovar,aprovarhash,aprovar_hash,recusar,aprovarInterno,aprovar_interno,reprovarInterno,reprovar_interno",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" => "Decisão de proposta (hash com underscore opcional).",

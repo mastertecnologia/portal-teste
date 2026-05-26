@@ -14,6 +14,8 @@
 <div class="orc-premium-wrap orc-premium-form">
 	<?= $this->Form->create($orcamento, ['url' => ['action' => 'add'], 'enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material', 'id' => 'form-orc-add']); ?>
 	<?= $this->Form->hidden('item_edit_id', ['id' => 'item_edit_id']); ?>
+	<?= $this->Form->hidden('desconto_valor', ['id' => 'orc-desconto-valor-hidden', 'value' => '0']) ?>
+	<?= $this->Form->hidden('desconto_tipo', ['id' => 'orc-desconto-tipo-hidden', 'value' => 'pct']) ?>
 
 	<div class="orc-page-head">
 		<div>

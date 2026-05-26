@@ -35,6 +35,15 @@ if (!defined('C_OrcamentoStatusRecusado')) {
 if (!defined('C_OrcamentoStatusArquivado')) {
 	define('C_OrcamentoStatusArquivado', 4);
 }
+if (!defined('C_OrcamentoAprovacaoInternaPendente')) {
+	define('C_OrcamentoAprovacaoInternaPendente', 'pendente');
+}
+if (!defined('C_OrcamentoAprovacaoInternaAprovado')) {
+	define('C_OrcamentoAprovacaoInternaAprovado', 'aprovado');
+}
+if (!defined('C_OrcamentoAprovacaoInternaReprovado')) {
+	define('C_OrcamentoAprovacaoInternaReprovado', 'reprovado');
+}
 
 class OrcamentosController extends AppController {
 	public function initialize() {
@@ -163,8 +172,7 @@ class OrcamentosController extends AppController {
 	}
 
 	/**
-	 * Rótulo de versão para lista (ex.: v1): 1 + quantidade de registros em orcamentosnovosdesmovs.
-	 * Não existe coluna dedicada de revisão no legado; movimentações aproximam “ciclos” do orçamento.
+	 * Rótulo de versão (ex.: v1) — coluna `versao` quando migrada; senão movimentações legado.
 	 *
 	 * @param int|string $idempresa
 	 * @param int[]      $orcamentoIds
@@ -177,6 +185,19 @@ class OrcamentosController extends AppController {
 			$out[$oid] = 'v1';
 		}
 		if ($orcamentoIds === []) {
+			return $out;
+		}
+		if ($this->_orcSchemaHasColumn('versao')) {
+			foreach ($this->Orcamentos->find()
+				->select(['id', 'versao'])
+				->where(['idempresa' => $idempresa, 'id IN' => $orcamentoIds])
+				->enableHydration(false) as $row) {
+				$oid = (int)($row['id'] ?? 0);
+				if ($oid > 0) {
+					$out[$oid] = 'v' . max(1, (int)($row['versao'] ?? 1));
+				}
+			}
+
 			return $out;
 		}
 		$movRows = $this->Orcamentosmovs->find()
@@ -196,6 +217,130 @@ class OrcamentosController extends AppController {
 		}
 
 		return $out;
+	}
+
+	protected function _orcSchemaHasColumn(string $column): bool {
+		return $this->Orcamentos->getSchema()->hasColumn($column);
+	}
+
+	protected function _orcGrupoVersaoId($orcamento): int {
+		if ($orcamento === null) {
+			return 0;
+		}
+		if ($this->_orcSchemaHasColumn('idgrupoversao') && !empty($orcamento->idgrupoversao)) {
+			return (int)$orcamento->idgrupoversao;
+		}
+
+		return (int)$orcamento->id;
+	}
+
+	/**
+	 * @return \Cake\Datasource\EntityInterface[]
+	 */
+	protected function _orcVersoesDoGrupo($idempresa, int $grupoId): array {
+		if ($grupoId <= 0 || !$this->_orcSchemaHasColumn('idgrupoversao')) {
+			return [];
+		}
+
+		return $this->Orcamentos->find()
+			->where(['Orcamentos.idempresa' => $idempresa, 'Orcamentos.idgrupoversao' => $grupoId])
+			->contain(['Users' => ['fields' => ['Users.id', 'Users.name']]])
+			->order(['Orcamentos.versao' => 'DESC', 'Orcamentos.id' => 'DESC'])
+			->toArray();
+	}
+
+	protected function _orcDescontoAbsoluto($orcamento, float $subVenda): float {
+		if (!$this->_orcSchemaHasColumn('desconto_valor') || $orcamento === null) {
+			return 0.0;
+		}
+		$dv = (float)($orcamento->desconto_valor ?? 0);
+		if ($dv <= 0 || $subVenda <= 0) {
+			return 0.0;
+		}
+		$tipo = (string)($orcamento->desconto_tipo ?? 'pct');
+		if ($tipo === 'fix') {
+			return min($subVenda, $dv);
+		}
+
+		return min($subVenda, max(0.0, $subVenda * ($dv / 100)));
+	}
+
+	protected function _orcPatchDescontoFromRequest($orcamento, array $data): void {
+		if (!$this->_orcSchemaHasColumn('desconto_valor') || $orcamento === null) {
+			return;
+		}
+		$rawVal = $data['desconto_valor'] ?? $data['disc_val'] ?? 0;
+		$val = is_numeric($rawVal)
+			? (float)$rawVal
+			: (float)str_replace(['.', ','], ['', '.'], preg_replace('/[^\d.,-]/', '', (string)$rawVal));
+		if ($val < 0) {
+			$val = 0.0;
+		}
+		$tipo = (string)($data['desconto_tipo'] ?? $data['disc_tipo'] ?? 'pct');
+		if (!in_array($tipo, ['pct', 'fix'], true)) {
+			$tipo = 'pct';
+		}
+		$orcamento->set('desconto_valor', round($val, 2));
+		$orcamento->set('desconto_tipo', $tipo);
+	}
+
+	protected function _orcEnsureGrupoVersaoOnSave($orcamento): void {
+		if ($orcamento === null) {
+			return;
+		}
+		if ($this->_orcSchemaHasColumn('idgrupoversao') && empty($orcamento->idgrupoversao) && !empty($orcamento->id)) {
+			$orcamento->set('idgrupoversao', (int)$orcamento->id);
+		}
+		if ($this->_orcSchemaHasColumn('versao') && (empty($orcamento->versao) || (int)$orcamento->versao < 1)) {
+			$orcamento->set('versao', 1);
+		}
+		if ($this->_orcSchemaHasColumn('aprovacao_interna') && ($orcamento->aprovacao_interna === null || $orcamento->aprovacao_interna === '')) {
+			$orcamento->set('aprovacao_interna', C_OrcamentoAprovacaoInternaPendente);
+		}
+	}
+
+	protected function _orcPodeAprovarInterno(): bool {
+		if ((int)$this->Auth->user('role') !== 0) {
+			return false;
+		}
+		if (!empty($this->Auth->user('admin'))) {
+			return true;
+		}
+
+		return RbacChecker::userHasPermissionCode((int)$this->Auth->user('id'), 'orcamentos.approve');
+	}
+
+	/**
+	 * @return \Cake\Datasource\EntityInterface|null
+	 */
+	protected function _orcamentoEquipe($id, $idempresa) {
+		$id = (int)$id;
+		if ($id <= 0) {
+			return null;
+		}
+
+		return $this->Orcamentos->find()
+			->where(['Orcamentos.idempresa' => $idempresa, 'Orcamentos.id' => $id])
+			->first();
+	}
+
+	protected function _orcCopiarCarrinhoParaIditem($idempresa, $iditemOrigem, $iditemDestino): bool {
+		$servicos = $this->Orcamentosservicos->find()
+			->where(['idempresa' => $idempresa, 'idorcamento' => $iditemOrigem])
+			->order(['id' => 'ASC'])
+			->toArray();
+		foreach ($servicos as $s) {
+			$data = $s->toArray();
+			unset($data['id'], $data['created'], $data['modified']);
+			$data['idorcamento'] = $iditemDestino;
+			$data['idempresa'] = $idempresa;
+			$novo = $this->Orcamentosservicos->newEntity($data, ['validate' => false]);
+			if (!$this->Orcamentosservicos->save($novo)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -956,8 +1101,10 @@ class OrcamentosController extends AppController {
 		}
 
 		if ($this->request->is('post')) { 
-			$orcamento = $this->Orcamentos->patchEntity($orcamento, $this->request->getData());
+			$postData = $this->request->getData();
+			$orcamento = $this->Orcamentos->patchEntity($orcamento, $postData);
 			$this->_orcNormalizeFormaPagamento($orcamento);
+			$this->_orcPatchDescontoFromRequest($orcamento, $postData);
 			$orcamento->created = date("Y-m-d H:i:s");
 			$orcamento->idautor = $this->Auth->user('id');
 			$orcamento->id = $this->Empresas->incrementOrcamento($this->Auth->user('idempresa'));
@@ -965,6 +1112,10 @@ class OrcamentosController extends AppController {
 			$orcamento->hash = $orcamento->idautor . $orcamento->id . $orcamento->idempresa . sequenciaAleatoria();
 			// cria status por padrao como pendente
 			$orcamento->status = C_OrcamentoStatusPendente;
+			$this->_orcEnsureGrupoVersaoOnSave($orcamento);
+			if ($this->_orcSchemaHasColumn('idgrupoversao')) {
+				$orcamento->set('idgrupoversao', (int)$orcamento->id);
+			}
 
 			if ($this->Orcamentos->save($orcamento)) {
 				if(isset($idcarrinhoorcamento)) $_SESSION['idcarrinhoadd'] = $idcarrinhoorcamento;
@@ -1069,13 +1220,26 @@ class OrcamentosController extends AppController {
 
 
 		if ($this->request->is(['post', 'put'])) {
-			$orcamento = $this->Orcamentos->patchEntity($orcamento, $this->request->getData());
+			$postData = $this->request->getData();
+			$orcamento = $this->Orcamentos->patchEntity($orcamento, $postData);
 			$this->_orcNormalizeFormaPagamento($orcamento);
+			$this->_orcPatchDescontoFromRequest($orcamento, $postData);
+			$this->_orcEnsureGrupoVersaoOnSave($orcamento);
+			if ($this->_orcSchemaHasColumn('aprovacao_interna')
+				&& (string)$orcamento->aprovacao_interna === C_OrcamentoAprovacaoInternaReprovado) {
+				$orcamento->set('aprovacao_interna', C_OrcamentoAprovacaoInternaPendente);
+				$orcamento->set('aprovacao_interna_em', null);
+				$orcamento->set('aprovacao_interna_por', null);
+				$orcamento->set('aprovacao_interna_motivo', null);
+			}
 
 			if ($this->Orcamentos->save($orcamento)) {
 				$this->Flash->success(__('Orçamento alterado com sucesso!'));
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $orcamento->id);
-			} else $this->Flash->error(__('Não foi possível alterar o orçamento.'));
+			} else {
+				$this->Flash->error(__('Não foi possível alterar o orçamento.'));
+			}
+
 			return $this->redirect(['action' => 'edit', $orcamento->id]);
 		}
 
@@ -1097,6 +1261,217 @@ class OrcamentosController extends AppController {
 		$this->set('orcamento', $orcamento);
 		$this->set('idcarrinho', $_SESSION['idcarrinho']);
 		$this->set('orcFormaPagamentoOpcoes', $this->_orcFormaPagamentoOpcoes());
+	}
+
+	/**
+	 * Duplica proposta como nova versão (novo id de orçamento, mesmo grupo).
+	 */
+	public function novaversao($id = null) {
+		if ((int)$this->Auth->user('role') === 1) {
+			$this->Flash->error(__('Sem permissão.'));
+
+			return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+		}
+		$this->request->allowMethod(['post', 'get']);
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$origem = $this->_orcamentoEquipe($id, $idempresa);
+		if ($origem === null) {
+			$this->Flash->error(__('Orçamento não encontrado.'));
+
+			return $this->redirect(['action' => 'index']);
+		}
+		if (!$this->_orcSchemaHasColumn('idgrupoversao')) {
+			$this->Flash->error(__('Execute as migrations do módulo de orçamentos (versão/aprovação).'));
+
+			return $this->redirect(['action' => 'view', $origem->id]);
+		}
+		if ((int)$origem->status === (int)C_OrcamentoStatusAprovado) {
+			$this->Flash->error(__('Não é possível criar revisão de orçamento já aprovado pelo cliente.'));
+
+			return $this->redirect(['action' => 'view', $origem->id]);
+		}
+
+		$grupoId = $this->_orcGrupoVersaoId($origem);
+		$maxVersao = (int)$this->Orcamentos->find()
+			->select(['versao'])
+			->where(['idempresa' => $idempresa, 'idgrupoversao' => $grupoId])
+			->order(['versao' => 'DESC'])
+			->enableHydration(false)
+			->first()['versao'] ?? 1;
+
+		$link = $this->Orcamentositens->find()
+			->where(['idempresa' => $idempresa, 'idorcamento' => (int)$origem->id])
+			->order(['id' => 'ASC'])
+			->first();
+		if ($link === null || empty($link->iditem)) {
+			$this->Flash->error(__('Orçamento sem itens para duplicar.'));
+
+			return $this->redirect(['action' => 'view', $origem->id]);
+		}
+		$iditemOrigem = $link->iditem;
+
+		$novo = $this->Orcamentos->newEntity($origem->toArray(), ['validate' => false]);
+		unset($novo->id, $novo->created, $novo->modified);
+		$novoId = $this->Empresas->incrementOrcamento($idempresa);
+		$novo->set('id', $novoId);
+		$novo->set('idempresa', $idempresa);
+		$novo->set('idautor', $this->Auth->user('id'));
+		$novo->set('created', date('Y-m-d H:i:s'));
+		$novo->set('status', C_OrcamentoStatusPendente);
+		$novo->set('hash', $this->Auth->user('id') . $novoId . $idempresa . sequenciaAleatoria());
+		$novo->set('versao', $maxVersao + 1);
+		$novo->set('idgrupoversao', $grupoId);
+		$novo->set('aprovacao_interna', C_OrcamentoAprovacaoInternaPendente);
+		$novo->set('aprovacao_interna_em', null);
+		$novo->set('aprovacao_interna_por', null);
+		$novo->set('aprovacao_interna_motivo', null);
+		if ($this->_orcSchemaHasColumn('pdfgerado')) {
+			$novo->set('pdfgerado', 0);
+		}
+
+		if (!$this->Orcamentos->save($novo)) {
+			$this->Empresas->decrementOrcamento($idempresa);
+			$this->Flash->error(__('Não foi possível criar a nova versão.'));
+
+			return $this->redirect(['action' => 'view', $origem->id]);
+		}
+
+		$iditemNovo = $novoId . $this->Auth->user('id');
+		if (!$this->_orcCopiarCarrinhoParaIditem($idempresa, $iditemOrigem, $iditemNovo)) {
+			$this->Orcamentos->delete($novo);
+			$this->Empresas->decrementOrcamento($idempresa);
+			$this->Flash->error(__('Falha ao copiar itens da proposta.'));
+
+			return $this->redirect(['action' => 'view', $origem->id]);
+		}
+		if (!$this->_saveOrcamentositensNovoOrcamento($iditemNovo, $novoId, $idempresa)) {
+			$this->Orcamentos->delete($novo);
+			$this->Empresas->decrementOrcamento($idempresa);
+			$this->Flash->error(__('Falha ao vincular itens da nova versão.'));
+
+			return $this->redirect(['action' => 'view', $origem->id]);
+		}
+
+		$this->criarMov(
+			$novoId,
+			null,
+			C_OrcamentoStatusPendente,
+			'Nova versão v' . ($maxVersao + 1) . ' criada a partir do #' . (int)$origem->id,
+			$idempresa
+		);
+		$this->Flash->success(__('Versão v{0} criada. Edite os itens e envie para revisão.', $maxVersao + 1));
+		$this->Atividades->registrar($this->Auth->user('id'), 'Orcamentos', 'novaversao', $novoId);
+
+		return $this->redirect(['action' => 'edit', $novoId]);
+	}
+
+	public function aprovarInterno($id = null) {
+		$this->request->allowMethod(['post']);
+		if (!$this->_orcPodeAprovarInterno()) {
+			$this->Flash->error(__('Sem permissão para aprovar internamente.'));
+
+			return $this->redirect(['action' => 'view', $id]);
+		}
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$orcamento = $this->_orcamentoEquipe($id, $idempresa);
+		if ($orcamento === null || !$this->_orcSchemaHasColumn('aprovacao_interna')) {
+			$this->Flash->error(__('Orçamento não encontrado ou migration pendente.'));
+
+			return $this->redirect(['action' => 'index']);
+		}
+		if ((int)$orcamento->status !== (int)C_OrcamentoStatusPendente) {
+			$this->Flash->error(__('Aprovação interna só se aplica a propostas pendentes.'));
+
+			return $this->redirect(['action' => 'view', $orcamento->id]);
+		}
+		$orcamento->set('aprovacao_interna', C_OrcamentoAprovacaoInternaAprovado);
+		$orcamento->set('aprovacao_interna_em', date('Y-m-d H:i:s'));
+		$orcamento->set('aprovacao_interna_por', (int)$this->Auth->user('id'));
+		$orcamento->set('aprovacao_interna_motivo', null);
+		if ($this->Orcamentos->save($orcamento)) {
+			$this->criarMov(
+				$orcamento->id,
+				(int)$orcamento->status,
+				(int)$orcamento->status,
+				'Aprovação interna (gerente comercial)',
+				$idempresa
+			);
+			$this->Flash->success(__('Proposta aprovada internamente.'));
+			$this->Atividades->registrar($this->Auth->user('id'), 'Orcamentos', 'aprovarInterno', $orcamento->id);
+		} else {
+			$this->Flash->error(__('Não foi possível registrar a aprovação.'));
+		}
+
+		return $this->redirect(['action' => 'view', $orcamento->id]);
+	}
+
+	public function reprovarInterno($id = null) {
+		$this->request->allowMethod(['post']);
+		if (!$this->_orcPodeAprovarInterno()) {
+			$this->Flash->error(__('Sem permissão para reprovar internamente.'));
+
+			return $this->redirect(['action' => 'view', $id]);
+		}
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$orcamento = $this->_orcamentoEquipe($id, $idempresa);
+		if ($orcamento === null || !$this->_orcSchemaHasColumn('aprovacao_interna')) {
+			$this->Flash->error(__('Orçamento não encontrado ou migration pendente.'));
+
+			return $this->redirect(['action' => 'index']);
+		}
+		$motivo = trim((string)$this->request->getData('motivo'));
+		if ($motivo === '') {
+			$motivo = trim((string)$this->request->getData('aprovacao_interna_motivo'));
+		}
+		$orcamento->set('aprovacao_interna', C_OrcamentoAprovacaoInternaReprovado);
+		$orcamento->set('aprovacao_interna_em', date('Y-m-d H:i:s'));
+		$orcamento->set('aprovacao_interna_por', (int)$this->Auth->user('id'));
+		$orcamento->set('aprovacao_interna_motivo', $motivo !== '' ? $motivo : null);
+		if ($this->Orcamentos->save($orcamento)) {
+			$this->criarMov(
+				$orcamento->id,
+				(int)$orcamento->status,
+				(int)$orcamento->status,
+				'Reprovação interna' . ($motivo !== '' ? ': ' . $motivo : ''),
+				$idempresa
+			);
+			$this->Flash->warning(__('Proposta reprovada internamente. Ajuste e reenvie para aprovação.'));
+			$this->Atividades->registrar($this->Auth->user('id'), 'Orcamentos', 'reprovarInterno', $orcamento->id);
+		} else {
+			$this->Flash->error(__('Não foi possível registrar a reprovação.'));
+		}
+
+		return $this->redirect(['action' => 'view', $orcamento->id]);
+	}
+
+	public function salvarDesconto($id = null) {
+		$this->request->allowMethod(['post']);
+		if ((int)$this->Auth->user('role') === 1) {
+			$this->Flash->error(__('Sem permissão.'));
+
+			return $this->redirect(['action' => 'view', $id]);
+		}
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$orcamento = $this->_orcamentoEquipe($id, $idempresa);
+		if ($orcamento === null) {
+			$this->Flash->error(__('Orçamento não encontrado.'));
+
+			return $this->redirect(['action' => 'index']);
+		}
+		$this->_orcPatchDescontoFromRequest($orcamento, $this->request->getData());
+		if ($this->Orcamentos->save($orcamento)) {
+			$this->Flash->success(__('Desconto atualizado.'));
+			$this->Atividades->registrar($this->Auth->user('id'), 'Orcamentos', 'salvarDesconto', $orcamento->id);
+		} else {
+			$this->Flash->error(__('Não foi possível salvar o desconto.'));
+		}
+
+		$redirect = $this->request->getData('redirect');
+		if ($redirect === 'edit') {
+			return $this->redirect(['action' => 'edit', $orcamento->id]);
+		}
+
+		return $this->redirect(['action' => 'view', $orcamento->id]);
 	}
 
 	public function view($id = null, $idempresa = null) {
@@ -1147,13 +1522,32 @@ class OrcamentosController extends AppController {
 		$margemMap = $this->_margemBrutaPctPorOrcamentoIds($empresaId, [$orcId], $valorMap);
 		$subVenda = (float)($valorMap[$orcId] ?? 0);
 		$subCusto = (float)($custoMap[$orcId] ?? 0);
-		$lucro = $subVenda - $subCusto;
+		$descontoAbs = $this->_orcDescontoAbsoluto($orcamento, $subVenda);
+		$totalLiquido = max(0.0, $subVenda - $descontoAbs);
+		$lucro = $totalLiquido - $subCusto;
+		$margemPctLiquido = $totalLiquido > 0.01 ? (int)round(($lucro / $totalLiquido) * 100) : 0;
+		$grupoId = $this->_orcGrupoVersaoId($orcamento);
+		$versoesLista = $this->_orcVersoesDoGrupo($empresaId, $grupoId);
+		$aprovacaoInterna = $this->_orcSchemaHasColumn('aprovacao_interna')
+			? (string)($orcamento->aprovacao_interna ?? C_OrcamentoAprovacaoInternaPendente)
+			: C_OrcamentoAprovacaoInternaPendente;
+
 		$this->set('orcVersaoLabel', $versaoMap[$orcId] ?? 'v1');
+		$this->set('orcVersoesLista', $versoesLista);
+		$this->set('orcGrupoVersaoId', $grupoId);
+		$this->set('orcDescontoAbs', $descontoAbs);
+		$this->set('orcDescontoValor', (float)($orcamento->desconto_valor ?? 0));
+		$this->set('orcDescontoTipo', (string)($orcamento->desconto_tipo ?? 'pct'));
+		$this->set('orcTotalLiquido', $totalLiquido);
+		$this->set('orcAprovacaoInterna', $aprovacaoInterna);
+		$this->set('orcPodeAprovarInterno', $this->_orcPodeAprovarInterno());
 		$this->set('orcRevisaoMargem', [
 			'subVenda' => $subVenda,
 			'subCusto' => $subCusto,
 			'lucro' => $lucro,
-			'margemPct' => (int)($margemMap[$orcId] ?? ($subVenda > 0 ? round(($lucro / $subVenda) * 100) : 0)),
+			'margemPct' => $margemPctLiquido,
+			'descontoAbs' => $descontoAbs,
+			'totalLiquido' => $totalLiquido,
 		]);
 		$this->set('empresaObj', $empresaObj);
 		$this->set('orcamento', $orcamento);
@@ -2146,6 +2540,14 @@ class OrcamentosController extends AppController {
 
 		$envioSucesso = ((int)$this->request->getQuery('ok', 0)) === 1;
 		if ($this->request->is(['post', 'put'])) {
+			if ($this->_orcSchemaHasColumn('aprovacao_interna')) {
+				$ai = (string)($orcamento->aprovacao_interna ?? C_OrcamentoAprovacaoInternaPendente);
+				if ($ai !== C_OrcamentoAprovacaoInternaAprovado) {
+					$this->Flash->error(__('A proposta precisa da aprovação interna do gerente antes do envio ao cliente.'));
+
+					return $this->redirect(['action' => 'view', $orcamento->id]);
+				}
+			}
 			$oldStatus = $orcamento->status;
 			$orcamento->status = C_OrcamentoStatusEnviado;
 

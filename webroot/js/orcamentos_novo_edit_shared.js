@@ -971,4 +971,22 @@
 		}
 	});
 
+	function orcSyncDescontoHidden() {
+		if (!$('#disc-val').length) {
+			return;
+		}
+		var $hv = $('#orc-desconto-valor-hidden');
+		var $ht = $('#orc-desconto-tipo-hidden');
+		if ($hv.length) {
+			$hv.val($('#disc-val').val() || 0);
+		}
+		if ($ht.length) {
+			$ht.val($('#disc-tipo').val() || 'pct');
+		}
+	}
+
+	$('#form-orc-add, #form-orc-edit').on('submit', function () {
+		orcSyncDescontoHidden();
+	});
+
 })(jQuery);
