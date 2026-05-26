@@ -7,86 +7,11 @@ $carrinhoLinhasExtra = $carrinhoLinhasExtra ?? [];
 ?>
 <div class="row">
 	<div class="col-lg-12">
-		<div class="orc-premium-carrinho-tbl-wrap table-responsive">
-			<table class="table orc-premium-carrinho-tbl" id="tableCarrinho">
-				<?= $this->element('orcamentos_carrinho_colgroup') ?>
-				<thead>
-					<tr>
-						<th>Ordem</th>
-						<th>Código</th>
-						<th>Produto/Serviço</th>
-						<th>Descrição</th>
-						<th class="text-right">Pagamento</th>
-						<th class="text-right">Qtde.</th>
-						<th class="text-right">Vl. Mensal</th>
-						<th class="text-right">Vl. Unit.</th>
-						<th class="text-right">Valor Total</th>
-						<th class="text-right">Custo</th>
-						<th class="text-right">Margem</th>
-						<th class="text-center">Ações</th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php foreach ($carrinho as $reg) :
-						$ex = $carrinhoLinhasExtra[(int)$reg->id] ?? ['custoLinha' => 0.0, 'margemPct' => null];
-						$custoLinha = (float)($ex['custoLinha'] ?? 0);
-						$margemPct = $ex['margemPct'] ?? null;
-						?>
-						<tr id="<?= $reg->id ?>">
-							<td><?= (isset($reg->virouitemordem) && (int)$reg->virouitemordem === 1) ? 'Sim' : 'Não' ?></td>
-							<td><?= h($reg->idproduto) ?></td>
-							<td><?= h($reg->servico) ?></td>
-							<td><?= h($reg->observacao) ?></td>
-							<td class="text-right"><?= $reg->valormensal > 0 ? 'Mensal' : 'Único'; ?></td>
-							<td class="text-right"><?= h($reg->quantidade) ?></td>
-							<td class="text-right valormensal"><?php echo 'R$ ' . number_format($reg->valormensal, 2, ',', '.'); ?></td>
-							<td class="text-right valorunit"><?php echo 'R$ ' . number_format($reg->valoruni, 2, ',', '.'); ?></td>
-							<td class="text-right valordoservico"><?php echo ($reg->valormensal > 0) ? 'R$ 0,00' : 'R$ ' . number_format($reg->valordoservico, 2, ',', '.'); ?></td>
-							<td class="text-right orc-line-custo" data-custo="<?= h((string)$custoLinha) ?>"><?= 'R$ ' . number_format($custoLinha, 2, ',', '.'); ?></td>
-							<td class="text-right orc-line-margem"><?= $margemPct !== null ? h((string)$margemPct) . '%' : '—' ?></td>
-							<td class="text-center btn-actions">
-								<?= $this->Html->link('<i class="fa fa-edit"></i>', [], [
-									'rel' => 'tooltip',
-									'title' => 'Editar',
-									'data-id' => $reg->id,
-									'data-servico' => $reg->servico,
-									'data-quantidade' => $reg->quantidade,
-									'data-valoruni' => $reg->valoruni,
-									'data-observacao' => $reg->observacao,
-									'data-valormensal' => $reg->valormensal,
-									'data-idproduto' => $reg->idproduto,
-									'data-tipo' => $reg->valormensal > 0 ? 1 : 0,
-									'class' => 'editaitemcarrinho btn btn-orc-tbl-icon btn-orc-tbl-icon--edit',
-									'escape' => false,
-								]) ?>
-								<?= $this->Html->link('<i class="fa fa-times"></i>', [], [
-									'rel' => 'tooltip',
-									'title' => 'Excluir',
-									'id' => $reg->id,
-									'class' => 'excluiitemcarrinho btn btn-orc-tbl-icon btn-orc-tbl-icon--del',
-									'escape' => false,
-								]) ?>
-							</td>
-						</tr>
-					<?php endforeach; ?>
-					<tr>
-						<th class="text-right"></th>
-						<th class="text-right"></th>
-						<th class="text-right"></th>
-						<th class="text-right"></th>
-						<th class="text-right"></th>
-						<th class="text-right">Valor Mensal:</th>
-						<th class="text-right valormensaltotal"></th>
-						<th class="text-right">Valor Total:</th>
-						<th class="text-right valortotal"></th>
-						<th class="text-right"></th>
-						<th class="text-right"></th>
-						<th></th>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		<button type="button" class="btn btn-sm btn-secondary float-right m-b-10 btn-limpacarrinho">Limpar carrinho</button>
+		<?= $this->element('orcamentos_carrinho_tabela', [
+			'carrinho' => $carrinho ?? [],
+			'carrinhoLinhasExtra' => $carrinhoLinhasExtra,
+			'mostrarAcoesItens' => true,
+		]) ?>
 	</div>
 </div>
 <script>
@@ -108,21 +33,19 @@ $carrinhoLinhasExtra = $carrinhoLinhasExtra ?? [];
 	function valortotal() {
 		var valortotal = 0;
 		var valormensaltotal = 0;
-		$('.valormensal').each(function() {
-			var linha = $(this).closest('tr');
-			var strQtde = $(this).prev().text().trim();
-			var qtde = 0;
-			if (strQtde.indexOf(':') > -1) {
-				var arr = strQtde.split(':');
-				qtde = parseFloat(arr[0]) + (parseFloat(arr[1]) / 6 / 10);
-			} else {
-				qtde = parseFloat(strQtde.replace(/\./g, '').replace(',', '.')) || 0;
+		$('#tableCarrinho tbody tr').each(function () {
+			var linha = $(this);
+			if (linha.hasClass('orc-carrinho-empty') || linha.hasClass('orc-carrinho-sum-row')) {
+				return;
 			}
-
-			var strMensal = $(this).text().split('R$').join('');
-			var vMensal = parseFloat(strMensal.replace(/\./g, '').replace(',', '.')) || 0;
-			var strUnit = linha.find('.valorunit').text().split('R$').join('');
-			var vUnit = parseFloat(strUnit.replace(/\./g, '').replace(',', '.')) || 0;
+			var $vm = linha.find('.valormensal');
+			if (!$vm.length) {
+				return;
+			}
+			var strQtde = linha.find('.orc-col-qtd').first().text().trim();
+			var qtde = parseFloat(strQtde.replace(/\./g, '').replace(',', '.')) || 0;
+			var vMensal = parseBrFloat($vm.text());
+			var vUnit = parseBrFloat(linha.find('.valorunit').text());
 			if (vMensal > 0) {
 				valormensaltotal += (vMensal * qtde);
 			} else {

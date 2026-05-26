@@ -6,14 +6,23 @@ $showItemForm = $isAdd
 	|| ($orcamento !== null
 		&& (int)$orcamento->get('status') !== (int)C_OrcamentoStatusAprovado
 		&& $role === 0);
+$discValor = 0.0;
+$discTipo = 'pct';
+if (!$isAdd && isset($orcamento)) {
+	$discValor = (float)($orcamento->desconto_valor ?? 0);
+	$discTipo = (string)($orcamento->desconto_tipo ?? 'pct');
+	if (!in_array($discTipo, ['pct', 'fix'], true)) {
+		$discTipo = 'pct';
+	}
+}
 ?>
 <?php if ($showItemForm) : ?>
 	<div class="orc-discount-row">
 		<span class="orc-discount-lbl">Desconto:</span>
-		<input type="number" id="disc-val" class="orc-discount-inp" value="0" min="0" step="0.01" />
+		<input type="number" id="disc-val" class="orc-discount-inp" value="<?= h((string)$discValor) ?>" min="0" step="0.01" />
 		<select id="disc-tipo" class="orc-discount-select">
-			<option value="pct">%</option>
-			<option value="fix">R$</option>
+			<option value="pct"<?= $discTipo === 'pct' ? ' selected' : '' ?>>%</option>
+			<option value="fix"<?= $discTipo === 'fix' ? ' selected' : '' ?>>R$</option>
 		</select>
 		<span class="orc-discount-lbl">| Desconto aplicado:</span>
 		<span class="orc-discount-applied" id="disc-show">R$ 0,00</span>
