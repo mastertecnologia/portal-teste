@@ -152,20 +152,6 @@ class PortalUi {
     }
 
     /**
-     * Fila React legada (equipe) — uso explícito com ?legacy=1 no index.
-     *
-     * @return array<string, mixed>
-     */
-    public static function servicedeskLegacyFilaRoute(): array {
-        return [
-            'controller' => 'Servicedesk',
-            'action' => 'index',
-            'prefix' => false,
-            '?' => ['legacy' => '1'],
-        ];
-    }
-
-    /**
      * Detalhe de ticket (protótipo ou edição legada).
      */
     public static function servicedeskTicketRoute(int $ticketId): ?array {

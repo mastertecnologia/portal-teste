@@ -84,9 +84,6 @@ final class PgmSidebarStaffPayloadBuilder
             if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) {
                 $items[] = self::item('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], (bool)($ctx['ticketsOperacionalActive'] ?? false), '', 'Dashboard operacional');
                 $items[] = self::item('bar-chart-3', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ctx['ticketsSlaRelatorioActive'] ?? false), '', 'Relatório SLA');
-                $legacySdActive = PortalUi::isPremiumModule('servicedesk')
-                    && ($ctx['ctrl'] ?? '') === 'Servicedesk' && ($ctx['act'] ?? '') === 'index';
-                $items[] = self::item('layout-grid', ' Fila legado (React)', PortalUi::servicedeskLegacyFilaRoute(), ['data-turbo' => 'false'], $legacySdActive, '', 'Service Desk legado');
             }
             $configChildren = [];
             if ($roleNav === 0 && (($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true))) {

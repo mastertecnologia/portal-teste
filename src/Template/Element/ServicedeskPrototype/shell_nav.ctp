@@ -42,5 +42,4 @@ $badge = static function (string $key) use ($badges): string {
 <a class="<?= h(trim($is($active, 'integracoes'))) ?>" href="<?= h($u(['controller' => 'ServicedeskPrototype', 'action' => 'view', 'integracoes'])) ?>"><?= h(__('Integrações')) ?></a>
 
 <div class="sdp-nav-h" style="margin-top:12px;"><?= h(__('Oficial')) ?></div>
-<a href="<?= h($u(['controller' => 'Servicedesk', 'action' => 'index'])) ?>"><?= h(__('Service Desk clássico')) ?></a>
 <a href="<?= h($u(['controller' => 'Servicedesk', 'action' => 'operacional'])) ?>"><?= h(__('Painel operacional')) ?></a>

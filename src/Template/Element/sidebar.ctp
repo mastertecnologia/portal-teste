@@ -178,11 +178,6 @@
 						<?php if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) : ?>
 						<?= $pgmSbLink('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], $ticketsOperacionalActive, '', 'Dashboard operacional') ?>
 						<?= $pgmSbLink('bar-chart-2', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ticketsSlaRelatorioActive ?? false), '', 'Relatório SLA') ?>
-						<?php
-						$legacySdActive = PortalUi::isPremiumModule('servicedesk')
-							&& $ctrl === 'Servicedesk' && $act === 'index';
-						?>
-						<?= $pgmSbLink('layout-grid', ' Fila legado (React)', PortalUi::servicedeskLegacyFilaRoute(), ['data-turbo' => 'false'], $legacySdActive, '', 'Service Desk legado') ?>
 						<?php endif; ?>
 						<?php
 						$incCfgChildren = [];

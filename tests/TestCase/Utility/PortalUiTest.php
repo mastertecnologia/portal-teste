@@ -68,7 +68,6 @@ class PortalUiTest extends TestCase {
 		$this->assertSame('ServicedeskPrototype', PortalUi::servicedeskHomeRoute()['controller']);
 		$this->assertSame('ticket', PortalUi::servicedeskTicketRoute(12)['action']);
 		$this->assertSame(12, PortalUi::servicedeskTicketRoute(12)[0]);
-		$this->assertSame('1', PortalUi::servicedeskLegacyFilaRoute()['?']['legacy']);
 		Configure::write('PortalUi.premium_modules', []);
 		$this->assertSame('Servicedesk', PortalUi::servicedeskHomeRoute()['controller']);
 		$this->assertSame('edit', PortalUi::servicedeskTicketRoute(3)['action']);
