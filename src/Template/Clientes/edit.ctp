@@ -54,7 +54,7 @@
 		</div>
 
 		<!-- Page head -->
-		<div class="cli-page-head">
+		<header class="cli-page-head cli-crm-page-head cli-crm-page-head--bar">
 			<div class="cli-page-head-left">
 				<div class="cli-eyebrow"><?= $isEquipe ? h(__('Clientes · Editar cadastro')) : h(__('Minha Empresa')) ?></div>
 				<h1><?= h($cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : ($cliente->razaosocial ?: $cliente->nomefantasia)) ?></h1>
@@ -89,35 +89,84 @@
 						<div class="cli-ficha-toolbar">
 							<p class="cli-ficha-hint mb-0"><i class="fas fa-eye"></i> <span id="cli-ficha-mode-label">Modo leitura</span> — use a barra inferior para <strong>Editar</strong>, <strong>Salvar</strong> ou <strong>Cancelar</strong>.</p>
 						</div>
-						<div class="cli-wizard-root" data-cli-wizard-root data-cli-wizard-initial="<?= (int)$cliWizardStep ?>">
+						<div class="cli-form-body cli-form-body--cadastro-lead cli-wizard-root" data-cli-wizard-root data-cli-wizard-initial="<?= (int)$cliWizardStep ?>">
 						<?= $this->element('Cli/cadastro_wizard_stepper', ['wizardStep' => $cliWizardStep]) ?>
 						<div class="cli-wizard-pane cli-wizard-pane--active" data-cli-wizard-step="1" data-cli-wizard-title="<?= h(__('Identificação')) ?>">
 						<div class="cli-cadastro-grid">
 						<div class="cli-cadastro-col cli-cadastro-col--main">
-						<?= $this->element('Cli/card', ['title' => __('Identificação')]) ?>
-						<div class="row">
-							<?= $this->element('Cli/select', ['label' => 'Tipo', 'field' => 'tipo', 'colClass' => 'col-lg-3 col-md-3 col-sm-12 col-xs-12', 'selectOptions' => C_ClientesTipo, 'options' => ['title' => 'Tipo do cliente', 'required' => true, 'class' => 'form-control']]) ?>
+						<div class="cli-section">
+							<div class="cli-section-head">
+								<div class="cli-section-icon"><i class="fas fa-id-card"></i></div>
+								<div class="cli-section-title"><?= h(__('Tipo de cliente')) ?></div>
+							</div>
+							<div class="cli-section-body">
+								<?= $this->Form->control('tipo', ['id' => 'tipo', 'options' => C_ClientesTipo, 'required' => false, 'label' => false, 'class' => 'form-control d-none', 'templates' => ['inputContainer' => '{{content}}']]) ?>
+								<div class="cli-tipo-group">
+									<button type="button" class="cli-tipo-btn<?= (int)$cliente->tipo === (int)C_ClientesTipoJuridica ? ' active' : '' ?>" id="btn-tipo-pj" data-cli-tipo-btn="<?= (int)C_ClientesTipoJuridica ?>">
+										<i class="fas fa-building"></i> <?= h(__('Pessoa Jurídica')) ?>
+									</button>
+									<button type="button" class="cli-tipo-btn<?= (int)$cliente->tipo === (int)C_ClientesTipoFisica ? ' active' : '' ?>" id="btn-tipo-pf" data-cli-tipo-btn="<?= (int)C_ClientesTipoFisica ?>">
+										<i class="fas fa-user"></i> <?= h(__('Pessoa Física')) ?>
+									</button>
+								</div>
+							</div>
 						</div>
-						<br>
-						<div class="row pessoaJuridica <?= $pessoaJuridica ?>">
-							<?= $this->element('Cli/input', ['label' => 'Razão Social', 'field' => 'razaosocial', 'colClass' => 'col-lg-5 col-md-4 col-sm-12 col-xs-12', 'options' => ['placeholder' => 'Insira a razão social']]) ?>
-							<?= $this->element('Cli/input', ['label' => 'Nome Fantasia', 'field' => 'nomefantasia', 'colClass' => 'col-lg-5 col-md-4 col-sm-12 col-xs-12', 'options' => ['placeholder' => 'Insira o nome fantasia']]) ?>
-							<?= $this->element('Cli/input', ['label' => 'CNPJ', 'field' => 'cnpj', 'colClass' => 'col-lg-2 col-md-4 col-sm-12 col-xs-12', 'options' => ['id' => 'cnpj', 'placeholder' => 'Insira o CNPJ']]) ?>
+						<div class="cli-section pessoaJuridica <?= $pessoaJuridica ?>">
+							<div class="cli-section-head">
+								<div class="cli-section-icon"><i class="fas fa-building"></i></div>
+								<div class="cli-section-title"><?= h(__('Dados da empresa')) ?></div>
+							</div>
+							<div class="cli-section-body">
+								<div class="cli-fg cli-fg-5-4-3">
+									<div class="cli-fgroup">
+										<label><?= h(__('Razão Social')) ?> <span class="cli-req">*</span></label>
+										<?= $this->Form->control('razaosocial', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Insira a razão social')]) ?>
+									</div>
+									<div class="cli-fgroup">
+										<label><?= h(__('Nome Fantasia')) ?></label>
+										<?= $this->Form->control('nomefantasia', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Insira o nome fantasia')]) ?>
+									</div>
+									<div class="cli-fgroup">
+										<label>CNPJ <span class="cli-req">*</span></label>
+										<?= $this->Form->control('cnpj', ['class' => 'form-control', 'id' => 'cnpj', 'label' => false, 'placeholder' => __('Insira o CNPJ')]) ?>
+									</div>
+								</div>
+								<?php if ($isEquipe) : ?>
+								<div class="cli-fg cli-fg-3">
+									<div class="cli-fgroup">
+										<label><?= h(__('Nome do Responsável')) ?></label>
+										<?= $this->Form->control('nomeresponsavel', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Insira o nome')]) ?>
+									</div>
+									<div class="cli-fgroup">
+										<label>CPF</label>
+										<?= $this->Form->control('cpf', ['id' => 'cpfresponsavel', 'class' => 'form-control', 'label' => false, 'placeholder' => __('Insira o CPF')]) ?>
+									</div>
+									<div class="cli-fgroup">
+										<label>RG</label>
+										<?= $this->Form->control('rg', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Insira o RG')]) ?>
+									</div>
+								</div>
+								<?php endif; ?>
+							</div>
 						</div>
-						<div class="row pessoaFisica <?= $pessoaFisica ?>">
-							<?= $this->element('Cli/input', ['label' => 'Nome', 'field' => 'nome', 'colClass' => 'col-lg-8 col-xs-12', 'options' => ['placeholder' => 'Insira o nome']]) ?>
-							<?= $this->element('Cli/input', ['label' => 'CPF', 'field' => 'cpf', 'colClass' => 'col-lg-4 col-xs-12', 'options' => ['id' => 'cpffisica', 'placeholder' => 'Insira o CPF']]) ?>
+						<div class="cli-section pessoaFisica <?= $pessoaFisica ?>">
+							<div class="cli-section-head">
+								<div class="cli-section-icon"><i class="fas fa-user"></i></div>
+								<div class="cli-section-title"><?= h(__('Dados pessoais')) ?></div>
+							</div>
+							<div class="cli-section-body">
+								<div class="cli-fg cli-fg-3-1">
+									<div class="cli-fgroup">
+										<label><?= h(__('Nome')) ?> <span class="cli-req">*</span></label>
+										<?= $this->Form->control('nome', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Insira o nome')]) ?>
+									</div>
+									<div class="cli-fgroup">
+										<label>CPF</label>
+										<?= $this->Form->control('cpf', ['id' => 'cpffisica', 'class' => 'form-control', 'label' => false, 'placeholder' => __('Insira o CPF')]) ?>
+									</div>
+								</div>
+							</div>
 						</div>
-						<?= $this->element('Cli/card_end') ?>
-						<?php if($isEquipe){ ?>
-						<?= $this->element('Cli/card', ['title' => 'Responsável (representante legal)']) ?>
-						<div class="row pessoaJuridica <?= $pessoaJuridica ?>">
-							<?= $this->element('Cli/input', ['label' => 'Nome do Responsável', 'field' => 'nomeresponsavel', 'colClass' => 'col-lg-6 col-md-6 col-sm-12 col-xs-12', 'options' => ['placeholder' => 'Insira o nome']]) ?>
-							<?= $this->element('Cli/input', ['label' => 'CPF', 'field' => 'cpf', 'colClass' => 'col-md-3 col-xs-12', 'options' => ['id' => 'cpfresponsavel', 'placeholder' => 'Insira o CPF']]) ?>
-							<?= $this->element('Cli/input', ['label' => 'RG', 'field' => 'rg', 'colClass' => 'col-md-3 col-xs-12', 'options' => ['placeholder' => 'Insira o RG']]) ?>
-						</div>
-						<?= $this->element('Cli/card_end') ?>
-						<?php } ?>
 						</div>
 						<div class="cli-cadastro-col cli-cadastro-col--side">
 						<div class="cli-section cli-section--hint">
@@ -136,25 +185,68 @@
 						<div class="cli-wizard-pane" data-cli-wizard-step="2" data-cli-wizard-title="<?= h(__('Endereço & Contato')) ?>" hidden>
 						<div class="cli-cadastro-grid">
 						<div class="cli-cadastro-col cli-cadastro-col--main">
-						<?= $this->element('Cli/card', ['title' => __('Endereço principal')]) ?>
-						<div class="row">
-							<?= $this->element('Cli/input', ['label' => 'Endereço', 'field' => 'endereco', 'colClass' => 'col-lg-6 col-md-6 col-sm-12', 'options' => ['placeholder' => 'Insira o endereço', 'required' => true]]) ?>
-							<?= $this->element('Cli/input', ['label' => 'Nro.', 'field' => 'nroendereco', 'colClass' => 'col-lg-2 col-md-6 col-sm-12', 'options' => ['placeholder' => 'Insira o nro.', 'required' => true]]) ?>
-							<?= $this->element('Cli/input', ['label' => 'Bairro', 'field' => 'bairro', 'colClass' => 'col-lg-2 col-md-6 col-sm-12', 'options' => ['placeholder' => 'Insira o bairro', 'required' => true]]) ?>
-							<?= $this->element('Cli/input', ['label' => 'Complemento', 'field' => 'complemento', 'colClass' => 'col-lg-2 col-md-6 col-sm-12', 'options' => ['placeholder' => 'Insira o complemento']]) ?>
-							<?= $this->element('Cli/input', ['label' => 'CEP', 'field' => 'cep', 'colClass' => 'col-lg-2 col-md-12 col-sm-12', 'options' => ['id' => 'cep', 'placeholder' => 'Insira o CEP', 'required' => true]]) ?>
+						<div class="cli-section">
+							<div class="cli-section-head">
+								<div class="cli-section-icon"><i class="fas fa-map-marker-alt"></i></div>
+								<div class="cli-section-title"><?= h(__('Endereço principal')) ?></div>
+							</div>
+							<div class="cli-section-body">
+								<div class="cli-fg cli-fg-addr cli-fg-endereco-cep-first">
+									<div class="cli-fgroup">
+										<label class="cli-label-between">
+											<span>CEP <span class="cli-req">*</span></span>
+											<button type="button" class="btn-cli-outline btn-cli-sm" id="btn-buscar-cep-edit" title="<?= h(__('Buscar CEP')) ?>">
+												<i class="fas fa-search" aria-hidden="true"></i>
+											</button>
+										</label>
+										<?= $this->Form->control('cep', ['class' => 'form-control', 'id' => 'cep', 'label' => false, 'placeholder' => '00000-000', 'required' => true]) ?>
+									</div>
+									<div class="cli-fgroup">
+										<label><?= h(__('Logradouro')) ?> <span class="cli-req">*</span></label>
+										<?= $this->Form->control('endereco', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Insira o endereço'), 'required' => true]) ?>
+									</div>
+									<div class="cli-fgroup">
+										<label><?= h(__('Nro.')) ?> <span class="cli-req">*</span></label>
+										<?= $this->Form->control('nroendereco', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Insira o nro.'), 'required' => true]) ?>
+									</div>
+									<div class="cli-fgroup">
+										<label><?= h(__('Complemento')) ?></label>
+										<?= $this->Form->control('complemento', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Insira o complemento')]) ?>
+									</div>
+									<div class="cli-fgroup">
+										<label><?= h(__('Bairro')) ?> <span class="cli-req">*</span></label>
+										<?= $this->Form->control('bairro', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Insira o bairro'), 'required' => true]) ?>
+									</div>
+								</div>
+								<div class="cli-fg cli-fg-2">
+									<div class="cli-fgroup">
+										<label><?= h(__('Cidade')) ?> <span class="cli-req">*</span></label>
+										<?= $this->Form->control('idcidade', ['data-live-search' => 'true', 'class' => 'selectpicker form-control', 'options' => $cidades, 'label' => false]) ?>
+									</div>
+								</div>
+							</div>
 						</div>
-						<div class="row">
-							<?= $this->element('Cli/select', ['label' => 'Cidade', 'field' => 'idcidade', 'colClass' => 'col-lg-3 col-md-3 col-sm-12 col-xs-12', 'selectOptions' => $cidades, 'options' => ['data-live-search' => 'true', 'class' => 'selectpicker form-control']]) ?>
-						</div>
-						<?= $this->element('Cli/card_end') ?>
-						<?= $this->element('Cli/card', ['title' => __('Contatos')]) ?>
-						<div class="row">
-							<?= $this->element('Cli/input', ['label' => __('Telefone principal'), 'field' => 'fone', 'colClass' => 'col-lg-3 col-md-3 col-sm-6 col-xs-6', 'options' => ['id' => 'fone', 'placeholder' => 'Insira o telefone']]) ?>
-							<?= $this->element('Cli/input', ['label' => __('WhatsApp'), 'field' => 'fone2', 'colClass' => 'col-lg-3 col-md-3 col-sm-6 col-xs-6', 'options' => ['id' => 'fone2', 'placeholder' => 'Insira o WhatsApp']]) ?>
-							<?= $this->element('Cli/input', ['label' => __('Site / domínio'), 'field' => 'site', 'colClass' => 'col-lg-6 col-md-6 col-sm-12 col-xs-12', 'options' => ['id' => 'site', 'placeholder' => __('empresa.com.br'), 'autocomplete' => 'url']]) ?>
-						</div>
-						<div class="row">
+						<div class="cli-section">
+							<div class="cli-section-head">
+								<div class="cli-section-icon"><i class="fas fa-phone-alt"></i></div>
+								<div class="cli-section-title"><?= h(__('Contatos')) ?></div>
+							</div>
+							<div class="cli-section-body">
+								<div class="cli-fg cli-fg-contatos">
+									<div class="cli-fgroup">
+										<label><?= h(__('Telefone principal')) ?></label>
+										<?= $this->Form->control('fone', ['class' => 'form-control', 'id' => 'fone', 'label' => false, 'placeholder' => '(00) 0000-0000']) ?>
+									</div>
+									<div class="cli-fgroup">
+										<label><?= h(__('WhatsApp')) ?></label>
+										<?= $this->Form->control('fone2', ['class' => 'form-control', 'id' => 'fone2', 'label' => false, 'placeholder' => '(00) 00000-0000']) ?>
+									</div>
+									<div class="cli-fgroup cli-fgroup--wide">
+										<label><?= h(__('Site / domínio')) ?></label>
+										<?= $this->Form->control('site', ['class' => 'form-control', 'id' => 'site', 'label' => false, 'placeholder' => __('empresa.com.br'), 'autocomplete' => 'url']) ?>
+									</div>
+								</div>
+								<div class="row">
 							<?= $this->element('Cli/email_readonly_block', [
 								'labelTitle' => 'E-mail de faturamento',
 								'modalTarget' => '#modal-emails-faturamento',
@@ -175,8 +267,9 @@
 								'helpText' => 'E-mails usados para avisos gerais, suporte e comunicações operacionais.',
 								'gerenciarClass' => 'btn btn-sm btn-outline-info btn-gerenciar-emails',
 							]) ?>
+								</div>
+							</div>
 						</div>
-						<?= $this->element('Cli/card_end') ?>
 						<?= $this->element('Cli/contatos_crm_panel', compact('cliente', 'cliContatosReady', 'cliContatos')) ?>
 						</div>
 						<div class="cli-cadastro-col cli-cadastro-col--side">
@@ -191,45 +284,62 @@
 						<div class="cli-wizard-pane" data-cli-wizard-step="3" data-cli-wizard-title="<?= h(__('Fiscal & Financeiro')) ?>" hidden>
 						<div class="cli-cadastro-grid">
 						<div class="cli-cadastro-col cli-cadastro-col--main">
-						<?= $this->element('Cli/card', ['title' => __('Registros fiscais')]) ?>
-						<?php
-						$cliLabelHtmlIe = '<label class="cli-cmp-label d-flex justify-content-between align-items-center flex-wrap pgm-gap-6"><span>Inscrição Estadual <small class="text-muted">(somente números)</small></span>';
-						if (!empty($isEquipe)) {
-							$cliLabelHtmlIe .= '<button type="button" class="btn btn-sm btn-outline-info d-none" id="btn-buscar-ie-edit" title="Consultar IE na SEFAZ/SINTEGRA">Buscar IE</button>';
-						}
-						$cliLabelHtmlIe .= '</label>';
-						$cliBeforeIe = '<input type="hidden" id="uf_contribuinte_edit" value="' . h($ufContribuinte ?? '') . '" />';
-						?>
-						<div class="row pessoaJuridica <?= $pessoaJuridica ?>">
-							<?= $this->element('Cli/input', ['label' => 'Inscrição Municipal (somente números)', 'field' => 'inscricaomunicipal', 'colClass' => 'col-lg-6 col-md-6 col-sm-12 col-xs-12', 'options' => ['onkeypress' => 'return SomenteNumero(event)', 'placeholder' => 'Insira a inscrição municipal']]) ?>
-							<?= $this->element('Cli/input', ['label' => '', 'labelHtml' => $cliLabelHtmlIe, 'beforeControlHtml' => $cliBeforeIe, 'field' => 'inscricaoestadual', 'colClass' => 'col-lg-6 col-md-6 col-sm-12 col-xs-12', 'options' => ['id' => 'inscricaoestadual', 'onkeypress' => 'return SomenteNumero(event)', 'placeholder' => 'Insira a inscrição estadual']]) ?>
+						<div class="cli-section pessoaJuridica <?= $pessoaJuridica ?>">
+							<div class="cli-section-head">
+								<div class="cli-section-icon"><i class="fas fa-file-invoice"></i></div>
+								<div class="cli-section-title"><?= h(__('Registros fiscais')) ?></div>
+							</div>
+							<div class="cli-section-body">
+								<input type="hidden" id="uf_contribuinte_edit" value="<?= h($ufContribuinte ?? '') ?>" />
+								<div class="cli-fg cli-fg-2">
+									<div class="cli-fgroup">
+										<label><?= h(__('Inscrição Municipal')) ?></label>
+										<?= $this->Form->control('inscricaomunicipal', ['onkeypress' => 'return SomenteNumero(event)', 'class' => 'form-control', 'label' => false, 'placeholder' => __('Somente números')]) ?>
+									</div>
+									<div class="cli-fgroup">
+										<label class="cli-label-between">
+											<span><?= h(__('Inscrição Estadual')) ?></span>
+											<?php if ($isEquipe) : ?>
+											<button type="button" class="btn-cli-outline btn-cli-sm d-none" id="btn-buscar-ie-edit" title="<?= h(__('Consultar IE na SEFAZ/SINTEGRA')) ?>">
+												<i class="fas fa-search" aria-hidden="true"></i> <?= h(__('Buscar IE')) ?>
+											</button>
+											<?php endif; ?>
+										</label>
+										<?= $this->Form->control('inscricaoestadual', ['id' => 'inscricaoestadual', 'onkeypress' => 'return SomenteNumero(event)', 'class' => 'form-control', 'label' => false, 'placeholder' => __('Somente números')]) ?>
+									</div>
+								</div>
+							</div>
 						</div>
-						<?= $this->element('Cli/card_end') ?>
 						</div>
 						<div class="cli-cadastro-col cli-cadastro-col--side">
 						<?php if (!empty($cliCrmFinanceReady)) : ?>
-						<?= $this->element('Cli/card', ['title' => __('Configuração financeira')]) ?>
-						<div class="row">
-							<div class="col-lg-6 col-md-6 col-sm-12">
-								<label class="cli-label"><?= h(__('Limite de crédito (R$)')) ?></label>
-								<?= $this->Form->control('limite_credito', ['type' => 'text', 'class' => 'form-control', 'label' => false, 'placeholder' => '0,00']) ?>
+						<div class="cli-section">
+							<div class="cli-section-head">
+								<div class="cli-section-icon"><i class="fas fa-coins"></i></div>
+								<div class="cli-section-title"><?= h(__('Configuração financeira')) ?></div>
 							</div>
-							<div class="col-lg-6 col-md-6 col-sm-12">
-								<label class="cli-label"><?= h(__('Score interno (0–10)')) ?></label>
-								<?= $this->Form->control('score_interno', ['type' => 'text', 'class' => 'form-control', 'label' => false, 'placeholder' => '9,2']) ?>
+							<div class="cli-section-body">
+								<div class="cli-fg cli-fg-2">
+									<div class="cli-fgroup">
+										<label><?= h(__('Limite de crédito (R$)')) ?></label>
+										<?= $this->Form->control('limite_credito', ['type' => 'text', 'class' => 'form-control', 'label' => false, 'placeholder' => '0,00']) ?>
+									</div>
+									<div class="cli-fgroup">
+										<label><?= h(__('Score interno (0–10)')) ?></label>
+										<?= $this->Form->control('score_interno', ['type' => 'text', 'class' => 'form-control', 'label' => false, 'placeholder' => '9,2']) ?>
+									</div>
+								</div>
+								<div class="cli-fgroup">
+									<label><?= h(__('Observações financeiras')) ?></label>
+									<?= $this->Form->control('observacoes_financeiras', ['type' => 'textarea', 'rows' => 3, 'class' => 'form-control', 'label' => false]) ?>
+								</div>
 							</div>
 						</div>
-						<div class="row mt-2">
-							<div class="col-12">
-								<label class="cli-label"><?= h(__('Observações financeiras')) ?></label>
-								<?= $this->Form->control('observacoes_financeiras', ['type' => 'textarea', 'rows' => 3, 'class' => 'form-control', 'label' => false]) ?>
-							</div>
-						</div>
-						<?= $this->element('Cli/card_end') ?>
 						<?php else : ?>
-						<div class="cli-card cli-wizard-info-card">
-							<p class="cli-wizard-info-title"><i class="fas fa-info-circle" aria-hidden="true"></i> <?= h(__('Configuração financeira')) ?></p>
-							<p class="cli-wizard-info-text mb-0"><?= h(__('Rode bin/cake migrations migrate para habilitar limite de crédito e score no cadastro.')) ?></p>
+						<div class="cli-section cli-section--hint">
+							<div class="cli-section-body">
+								<p class="cli-wizard-info-text mb-0"><i class="fas fa-info-circle" aria-hidden="true"></i> <?= h(__('Rode bin/cake migrations migrate para habilitar limite de crédito e score no cadastro.')) ?></p>
+							</div>
 						</div>
 						<?php endif; ?>
 						</div>
@@ -238,48 +348,65 @@
 						<div class="cli-wizard-pane" data-cli-wizard-step="4" data-cli-wizard-title="<?= h(__('Comercial & CRM')) ?>" hidden>
 						<div class="cli-cadastro-grid">
 						<div class="cli-cadastro-col cli-cadastro-col--main">
-						<?php if($isEquipe){ ?>
-						<?= $this->element('Cli/card', ['title' => __('Comercial & CRM')]) ?>
-							<div class="row">
-							<?= $this->element('Cli/input', ['label' => 'Senha para o cliente visualizar os acessos', 'field' => 'senha', 'colClass' => 'col-lg-2 col-md-3 col-sm-3 col-xs-12', 'options' => ['placeholder' => 'Insira a senha']]) ?>
-								<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-t-30">
-									<?= $this->Form->checkbox('exibirsenhacliente', ['checked' => true, 'class' => 'custom-control-input', 'id' => 'exibirsenhacliente']); ?>
-									<label class="custom-control-label text-muted" for="exibirsenhacliente">Exibir Senha </label>
-								</div>
-							<?= $this->element('Cli/select', ['label' => 'Empresa dominante', 'field' => 'empresadominante', 'colClass' => 'col-lg-3 col-md-3 col-sm-3 col-xs-12', 'selectOptions' => $empresasOptSidebar, 'options' => ['class' => 'form-control']]) ?>
+						<?php if ($isEquipe) : ?>
+						<div class="cli-section">
+							<div class="cli-section-head">
+								<div class="cli-section-icon"><i class="fas fa-chart-line"></i></div>
+								<div class="cli-section-title"><?= h(__('Comercial & CRM')) ?></div>
 							</div>
-							<div class="row align-items-center">
-								<?php if (!$cliInativoRbacHidden) : ?>
-								<div class="col-lg-2 col-md-3 col-sm-3 col-xs-12">
-									<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10 m-t-5">
+							<div class="cli-section-body">
+								<div class="cli-fg cli-fg-3">
+									<div class="cli-fgroup">
+										<label><?= h(__('Senha para o cliente visualizar os acessos')) ?></label>
+										<?= $this->Form->control('senha', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Insira a senha')]) ?>
+									</div>
+									<div class="cli-fgroup">
+										<label><?= h(__('Empresa dominante')) ?></label>
+										<?= $this->Form->control('empresadominante', ['class' => 'form-control', 'label' => false, 'options' => $empresasOptSidebar]) ?>
+									</div>
+									<div class="cli-config-check-slot">
+										<div class="cli-check-row">
+											<?= $this->Form->checkbox('exibirsenhacliente', ['checked' => true, 'class' => 'custom-control-input', 'id' => 'exibirsenhacliente']) ?>
+											<label for="exibirsenhacliente"><?= h(__('Exibir senha ao cliente')) ?></label>
+										</div>
+									</div>
+								</div>
+								<div class="cli-fg cli-fg-1-1-ac">
+									<?php if (!$cliInativoRbacHidden) : ?>
+									<div class="cli-check-row">
 										<?= $this->Form->checkbox('inativo', [
 											'class' => 'custom-control-input',
 											'id' => 'inativo',
 											'disabled' => $cliInativoRbacReadonly,
-										]); ?>
-										<label class="custom-control-label text-muted" for="inativo">Inativo </label>
+										]) ?>
+										<label for="inativo"><?= h(__('Cliente inativo')) ?></label>
 									</div>
 									<?php if ($cliInativoRbacReadonly) : ?>
-										<p class="text-muted small mb-0 mt-1">Status inativo bloqueado por regra RBAC (<code class="ap-code-violet">Clientes.field.inativo</code>).</p>
+									<p class="cli-field-hint mb-0"><?= h(__('Status inativo bloqueado por regra RBAC (Clientes.field.inativo).')) ?></p>
 									<?php endif; ?>
-								</div>
-								<?php endif; ?>
-								<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-									<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10 m-t-5">
-										<?= $this->Form->checkbox('contrato', ['class' => 'custom-control-input', 'id' => 'contrato']); ?>
-										<label class="custom-control-label text-muted" for="contrato">Contrato </label>
+									<?php endif; ?>
+									<div class="cli-check-row">
+										<?= $this->Form->checkbox('contrato', ['class' => 'custom-control-input', 'id' => 'contrato']) ?>
+										<label for="contrato"><?= h(__('Possui contrato de serviço')) ?></label>
 									</div>
 								</div>
-								<div class="col-lg-7 col-md-6 col-sm-6 col-xs-12 m-t-5">
-									<p class="text-muted small mb-0">Salvar, inativar e alternar status usam a <strong>barra fixa inferior</strong>.</p>
-								</div>
+								<p class="cli-field-hint mb-0"><?= h(__('Salvar, inativar e alternar status usam a barra fixa inferior.')) ?></p>
 							</div>
-						<?= $this->element('Cli/card_end') ?>
-						<?php } else { ?>
-						<div class="cli-card cli-wizard-info-card">
-							<p class="cli-wizard-info-text mb-0"><?= h(__('Configurações comerciais adicionais estão disponíveis para a equipe interna.')) ?></p>
 						</div>
-						<?php } ?>
+						<?php else : ?>
+						<div class="cli-section cli-section--hint">
+							<div class="cli-section-body">
+								<p class="cli-wizard-info-text mb-0"><?= h(__('Configurações comerciais adicionais estão disponíveis para a equipe interna.')) ?></p>
+							</div>
+						</div>
+						<?php endif; ?>
+						</div>
+						<div class="cli-cadastro-col cli-cadastro-col--side">
+						<div class="cli-section cli-section--hint">
+							<div class="cli-section-body">
+								<p class="mb-0"><?= h(__('Use as abas Acessos, Usuários, Contratos, Ativos e Token para dados operacionais do cliente.')) ?></p>
+							</div>
+						</div>
 						</div>
 						</div>
 						</div>
