@@ -1893,9 +1893,14 @@ export async function deleteWorkflowTransition(id) {
   return { ok: true };
 }
 
-export async function fetchWorkflowSlaLogs(limit = 80) {
+export async function fetchWorkflowSlaLogs(limit = 80, ticketId = null) {
   if (USE_MOCK) return { ok: true, logs: [] };
-  const r = await fetch(`${wfSlaPaths().logs}${qs({ limit })}`, {
+  const params = { limit };
+  const tid = ticketId != null ? parseInt(String(ticketId), 10) : 0;
+  if (Number.isFinite(tid) && tid > 0) {
+    params.ticket_id = tid;
+  }
+  const r = await fetch(`${wfSlaPaths().logs}${qs(params)}`, {
     credentials: 'same-origin',
     headers: { Accept: 'application/json' },
   });

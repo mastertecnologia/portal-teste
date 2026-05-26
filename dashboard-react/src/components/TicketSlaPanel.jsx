@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
-import { postTicketSlaPause, postTicketSlaResume } from '../lib/api';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { fetchWorkflowSlaLogs, postTicketSlaPause, postTicketSlaResume } from '../lib/api';
 
 function formatMin(m) {
   if (m == null || !Number.isFinite(Number(m))) return '—';
@@ -26,6 +26,10 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const [policyOpen, setPolicyOpen] = useState(false);
+  const [logsOpen, setLogsOpen] = useState(false);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsErr, setLogsErr] = useState(null);
+  const [escalationApiLogs, setEscalationApiLogs] = useState([]);
 
   const visible = Boolean(d?.schemaReady && (d?.hasSlaFeature || (d?.cycles?.length ?? 0) > 0 || (d?.events?.length ?? 0) > 0));
 
@@ -65,8 +69,30 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
     applySnap({ workflow: r.workflow, slaByState: r.slaByState, slaDetail: r.slaDetail });
   }, [ticket?.id, busy, applySnap]);
 
-  const logsUrl = d?.urls?.workflowSlaLogs;
   const adminUrl = d?.urls?.workflowSlaAdmin;
+
+  useEffect(() => {
+    if (!logsOpen || !ticket?.id) {
+      return;
+    }
+    let cancelled = false;
+    setLogsLoading(true);
+    setLogsErr(null);
+    (async () => {
+      const r = await fetchWorkflowSlaLogs(100, ticket.id);
+      if (cancelled) return;
+      setLogsLoading(false);
+      if (!r.ok) {
+        setLogsErr(r.error || 'Não foi possível carregar os logs.');
+        setEscalationApiLogs([]);
+        return;
+      }
+      setEscalationApiLogs(Array.isArray(r.logs) ? r.logs : []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [logsOpen, ticket?.id]);
   const role = boot?.role;
   const canAct = role === 0 && d?.actions;
 
@@ -109,19 +135,17 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
               Ver política
             </button>
           ) : null}
-          {logsUrl ? (
-            <a
-              href={logsUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded border border-[var(--pgm-border,#3d4554)] bg-transparent px-2 py-1 text-[11px] text-[var(--pgm-text-muted,#9aa0a8)] hover:bg-white/5"
-            >
-              Logs de SLA
-            </a>
-          ) : null}
+          <button
+            type="button"
+            onClick={() => setLogsOpen(true)}
+            className="rounded border border-[var(--pgm-border,#3d4554)] bg-transparent px-2 py-1 text-[11px] text-[var(--pgm-text-muted,#9aa0a8)] hover:bg-white/5"
+          >
+            Logs de SLA
+          </button>
           {adminUrl ? (
             <a
               href={adminUrl}
+              data-turbo="false"
               target="_blank"
               rel="noreferrer"
               className="rounded border border-[var(--pgm-border,#3d4554)] bg-transparent px-2 py-1 text-[11px] text-[var(--pgm-text-muted,#9aa0a8)] hover:bg-white/5"
@@ -236,6 +260,93 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
             ))}
           </ul>
         </details>
+      ) : null}
+
+      {logsOpen ? (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Logs de SLA"
+        >
+          <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--pgm-border)] bg-[#222834] p-4 text-sm shadow-xl">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h4 className="font-semibold text-[var(--pgm-accent)]">
+                Logs de SLA {ticket?.id ? `· ticket #${ticket.id}` : ''}
+              </h4>
+              <button type="button" className="text-[var(--pgm-text-muted)] hover:text-white" onClick={() => setLogsOpen(false)}>
+                ✕
+              </button>
+            </div>
+            {logsErr ? <p className="mb-2 text-xs text-red-300">{logsErr}</p> : null}
+            {logsLoading ? <p className="text-xs text-[var(--pgm-text-muted)]">Carregando…</p> : null}
+
+            <section className="mb-4">
+              <h5 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--pgm-text-muted)]">
+                Escalonamentos (API)
+              </h5>
+              {escalationApiLogs.length === 0 && !logsLoading ? (
+                <p className="text-xs text-[var(--pgm-text-muted)]">Nenhum escalonamento registrado na API para este ticket.</p>
+              ) : (
+                <ul className="max-h-40 space-y-1 overflow-y-auto text-[11px]">
+                  {escalationApiLogs.map((lg) => (
+                    <li key={lg.id} className="border-b border-white/5 pb-1">
+                      <span className="text-[var(--pgm-accent)]">{lg.reason_code || '—'}</span>
+                      {lg.workflow_state_from != null || lg.workflow_state_to != null
+                        ? ` · estado ${lg.workflow_state_from ?? '—'} → ${lg.workflow_state_to ?? '—'}`
+                        : ''}
+                      {' · '}
+                      {formatTs(lg.created_at)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section className="mb-4">
+              <h5 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--pgm-text-muted)]">
+                Escalonamentos (ticket)
+              </h5>
+              {(d?.escalationLogs?.length ?? 0) === 0 ? (
+                <p className="text-xs text-[var(--pgm-text-muted)]">—</p>
+              ) : (
+                <ul className="max-h-32 space-y-1 overflow-y-auto text-[11px]">
+                  {d.escalationLogs.map((lg) => (
+                    <li key={lg.id} className="border-b border-white/5 pb-1">
+                      {lg.reason_code || '—'} · {formatTs(lg.created_at)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section>
+              <h5 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--pgm-text-muted)]">
+                Eventos de SLA (ticket)
+              </h5>
+              {(d?.events?.length ?? 0) === 0 ? (
+                <p className="text-xs text-[var(--pgm-text-muted)]">Nenhum evento registrado.</p>
+              ) : (
+                <ul className="max-h-48 space-y-1 overflow-y-auto text-[11px]">
+                  {d.events.map((ev) => (
+                    <li key={ev.id} className="border-b border-white/5 pb-1">
+                      <span className="text-[var(--pgm-accent)]">{ev.event_type}</span> · {formatTs(ev.created_at)}
+                      {ev.ticket_sla_cycle_id ? ` · ciclo ${ev.ticket_sla_cycle_id}` : ''}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <button
+              type="button"
+              className="mt-4 w-full rounded border border-[var(--pgm-border)] py-2 text-xs text-[var(--pgm-text-muted)] hover:bg-white/5"
+              onClick={() => setLogsOpen(false)}
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
       ) : null}
 
       {policyOpen && pol ? (
