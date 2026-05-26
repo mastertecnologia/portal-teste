@@ -21,7 +21,7 @@ $juridicaTipo = (int)(defined('C_ClientesTipoJuridica') ? C_ClientesTipoJuridica
 $clientesMetaJson = $clientesMetaJson ?? '{}';
 $produtosCatalogoJson = $produtosCatalogoJson ?? '[]';
 
-if ($mode === 'edit') {
+if ($mode === 'edit' || $mode === 'dados') {
 	$carrinhoUrl = Router::url(['controller' => 'Orcamentos', 'action' => 'carrinhoedit']) . '/' . (int)($orcamentoId ?? 0);
 	$carrinhoMethod = 'GET';
 	$addservicoUrl = Router::url(['controller' => 'Orcamentos', 'action' => 'addservico']) . '/edit';
@@ -36,7 +36,7 @@ $tipoLocacao = defined('C_ProdutosTipoLocacao') ? (int)C_ProdutosTipoLocacao : 3
 
 $config = [
 	'mode' => $mode,
-	'orcamentoId' => $mode === 'edit' ? (int)($orcamentoId ?? 0) : 0,
+	'orcamentoId' => ($mode === 'edit' || $mode === 'dados') ? (int)($orcamentoId ?? 0) : 0,
 	'tipoServico' => $tipoServico,
 	'tipoProduto' => $tipoProduto,
 	'tipoLicenca' => $tipoLicenca,
