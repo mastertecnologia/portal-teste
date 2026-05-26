@@ -15,6 +15,7 @@ class PgmAssetsController extends AppController
 		'cliente-edit.js',
 		'cliente-edit-ficha.js',
 		'cliente-edit-ficha-acessos.js',
+		'cliente-visao360-anexo.js',
 	];
 
 	protected static $allowedCss = [
