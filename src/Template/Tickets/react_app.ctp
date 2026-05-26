@@ -51,6 +51,8 @@ if (!empty($reactAppExtraCss) && is_array($reactAppExtraCss)) {
  */
 $ticketsJsSrc = $w . 'tickets-app/assets/tickets.js?v=' . $ticketsAssetV;
 ?>
+<?php /* Se a resposta cair num turbo-frame sem o id esperado, força visita completa em vez de "Content missing". */ ?>
+<meta name="turbo-visit-control" content="reload">
 <?php /* Filho direto de .row precisa ser .col-* no Bootstrap, senão largura/overflow quebram o React */ ?>
 <div class="col-md-12 tickets-react-shell p-0">
 	<link rel="stylesheet" href="<?= h($w . 'tickets-app/assets/tickets.css?v=' . $ticketsAssetV) ?>">

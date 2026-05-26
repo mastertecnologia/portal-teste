@@ -255,6 +255,7 @@ export default function OperationalDashboard({ boot }) {
                       <td className="px-3 py-2">
                         <a
                           href={ticketHref(row.id)}
+                          data-turbo="false"
                           className="font-medium text-[var(--pgm-primary-hover)] transition hover:text-[var(--pgm-primary)] hover:underline"
                         >
                           Abrir
