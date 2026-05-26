@@ -63,6 +63,11 @@ $isPj = (int)$cliente->tipo === (int)C_ClientesTipoJuridica;
 $docFmt = $isPj ? cli360Mask('##.###.###/####-##', (string)$c['doc']) : cli360Mask('###.###.###-##', (string)$c['doc']);
 $seg = (array)($c['segmento'] ?? []);
 $avTone = ['teal', 'blue', 'rose', 'orange', 'purple', 'navy', 'wine'][(int)$cliente->id % 7];
+$anexoTickets = (array)($c['anexo_ticket_options'] ?? []);
+$cli360AnexoUploadBase = \Cake\Routing\Router::url(['controller' => 'Tickets', 'action' => 'apiAnexoUpload'], true);
+$cli360TicketAddUrl = ['controller' => 'Tickets', 'action' => 'add', '?' => ['idcliente' => (int)$cliente->id]];
+$cli360Visao360ArquivosUrl = $cli360VisaoRoute((int)$cliente->id, ['tab' => 'arquivos']);
+
 $tabs = [
 	'geral' => ['label' => __('Visão geral'), 'icon' => 'fa-th-large', 'count' => null],
 	'orcamentos' => ['label' => __('Orçamentos'), 'icon' => 'fa-file-invoice', 'count' => (int)($counts['orcamentos'] ?? 0)],
@@ -89,7 +94,9 @@ $tabs = [
 		</div>
 		<div class="cli-360-toolbar-actions">
 			<?= $this->Html->link('<i class="fas fa-file-pdf" aria-hidden="true"></i> ' . __('Ficha PDF'), ['controller' => 'Clientes', 'action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false', 'title' => __('Abrir ficha do cliente')]) ?>
-			<?= $this->Html->link('<i class="fas fa-paperclip" aria-hidden="true"></i> ' . __('Anexar'), ['controller' => 'Tickets', 'action' => 'index'], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
+			<button type="button" class="btn-cli-secondary btn-cli-sm" data-cli360-anexo-open="1" data-turbo="false">
+				<i class="fas fa-paperclip" aria-hidden="true"></i> <?= h(__('Anexar')) ?>
+			</button>
 			<?= $this->Html->link('<i class="fas fa-pen" aria-hidden="true"></i> ' . __('Editar'), ['controller' => 'Clientes', 'action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
 			<?= $this->Html->link(
 				'<i class="fas fa-plus" aria-hidden="true"></i> ' . __('Novo orçamento'),
@@ -425,11 +432,9 @@ $tabs = [
 	?>
 	<div class="cli-360-arq-head">
 		<h2 class="cli-360-arq-title"><i class="fas fa-paperclip" aria-hidden="true"></i> <?= h(__('Arquivos e documentos')) ?> · <?= $nArq ?> <?= h(__('itens')) ?></h2>
-		<?= $this->Html->link(
-			'<i class="fas fa-paperclip" aria-hidden="true"></i> ' . __('Anexar via ticket'),
-			['controller' => 'Tickets', 'action' => 'index'],
-			['class' => 'btn-cli-primary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']
-		) ?>
+		<button type="button" class="btn-cli-primary btn-cli-sm" data-cli360-anexo-open="1" data-turbo="false">
+			<i class="fas fa-paperclip" aria-hidden="true"></i> <?= h(__('Anexar arquivo')) ?>
+		</button>
 	</div>
 	<p class="cli-360-arq-note"><?= h(__('Anexos reais de tickets e comprovantes em lançamentos financeiros deste cliente.')) ?></p>
 	<?php if ($nArq > 0) : ?>
@@ -485,6 +490,35 @@ $tabs = [
 
 </div>
 </div>
+
+<?= $this->element('Cli/visao360_anexo_modal', [
+	'cli360ClienteId' => (int)$cliente->id,
+	'cli360AnexoTickets' => $anexoTickets,
+	'cli360AnexoUploadBase' => $cli360AnexoUploadBase,
+	'cli360TicketAddUrl' => $cli360TicketAddUrl,
+	'cli360Visao360ArquivosUrl' => $cli360Visao360ArquivosUrl,
+]) ?>
+
+<?php
+$cli360AnexoJson = json_encode([
+	'uploadUrlBase' => rtrim($cli360AnexoUploadBase, '/'),
+	'clienteId' => (int)$cliente->id,
+	'hasTickets' => $anexoTickets !== [],
+	'returnUrl' => \Cake\Routing\Router::url($cli360Visao360ArquivosUrl),
+	'maxBytes' => 25 * 1024 * 1024,
+	'msg' => [
+		'noFile' => (string)__('Selecione ao menos um arquivo.'),
+		'noTicket' => (string)__('Selecione o ticket.'),
+		'uploading' => (string)__('Enviando…'),
+		'success' => (string)__('Arquivo(s) anexado(s) com sucesso.'),
+		'error' => (string)__('Não foi possível enviar o anexo. Tente novamente.'),
+		'tooLarge' => (string)__('Arquivo excede 25 MB: {0}'),
+	],
+], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
+?>
+<script>window.PGM_CLI360_ANEXO = <?= $cli360AnexoJson ?>;</script>
+<?= $this->Html->script('/pgm-assets/js/modules/clientes/cliente-visao360-anexo') ?>
+
 <script>
 (function () {
 	var root = document.getElementById('cli-360-arq-filters');

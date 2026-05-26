@@ -219,6 +219,7 @@ trait ClientesVisao360Trait {
 				'pdf' => 0,
 				'doc' => 0,
 			],
+			'anexo_ticket_options' => [],
 			'domain_events' => [],
 			'domain_events_ready' => InfrastructureGuard::isReady(),
 		];
@@ -503,6 +504,18 @@ trait ClientesVisao360Trait {
 				$wAb['Tickets.situacao NOT IN'] = $closed;
 			}
 			$payload['counts']['tickets_abertos'] = (int)$tickets->find()->where($wAb)->count();
+			foreach ($tickets->find()->where($wT)->order(['Tickets.id' => 'DESC'])->limit(40)->all() as $t) {
+				$tid = (int)$t->get('id');
+				$assunto = trim((string)$t->get('assunto'));
+				$solic = trim((string)$t->get('solicitacao'));
+				$lbl = '#' . $tid;
+				if ($assunto !== '') {
+					$lbl .= ' · ' . \Cake\Utility\Text::truncate($assunto, 48, ['ellipsis' => '…']);
+				} elseif ($solic !== '') {
+					$lbl .= ' · ' . \Cake\Utility\Text::truncate($solic, 48, ['ellipsis' => '…']);
+				}
+				$payload['anexo_ticket_options'][] = ['id' => $tid, 'label' => $lbl];
+			}
 			foreach ($tickets->find()->where($wT)->order(['Tickets.created' => 'DESC'])->limit(8)->all() as $t) {
 				$tid = (int)$t->get('id');
 				$payload['timeline'][] = [

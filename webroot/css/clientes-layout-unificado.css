@@ -3006,3 +3006,96 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
   color: var(--orc-text-muted);
 }
 .cli-contato-modal-err { margin-top: 10px; }
+
+/* Visão 360° — modal anexar arquivo */
+.cli-360-anexo-modal .modal-header.cli-360-anexo-modal-head {
+  border-bottom: 1px solid var(--orc-border-light);
+  padding: 14px 18px;
+}
+.cli-360-anexo-modal .modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--orc-text);
+}
+.cli-360-anexo-modal .modal-title i {
+  color: var(--orc-teal-dark);
+  margin-right: 6px;
+}
+.cli-360-anexo-modal .modal-body {
+  padding: 18px 20px;
+}
+.cli-360-anexo-modal-foot {
+  background: var(--orc-bg-surface);
+  border-top: 1px solid var(--orc-border-light);
+}
+.cli-360-anexo-hint {
+  margin-top: 6px;
+}
+.cli-360-anexo-dropzone {
+  position: relative;
+  border: 2px dashed var(--orc-teal-mid, #7ec4b0);
+  background: var(--orc-teal-light, #e8f6f1);
+  border-radius: var(--orc-radius, 10px);
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  margin: 14px 0;
+  transition: border-color 0.15s, background 0.15s;
+}
+.cli-360-anexo-dropzone.is-dragover,
+.cli-360-anexo-dropzone:hover {
+  border-color: var(--orc-teal-dark);
+  background: #dff0ea;
+}
+.cli-360-anexo-file-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.cli-360-anexo-dropzone-icon {
+  font-size: 40px;
+  color: var(--orc-teal-dark);
+  margin-bottom: 8px;
+}
+.cli-360-anexo-dropzone-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--orc-teal-dark);
+  margin: 0 0 4px;
+}
+.cli-360-anexo-dropzone-sub {
+  font-size: 11px;
+  color: var(--orc-text-muted);
+  margin: 0 0 10px;
+}
+.cli-360-anexo-filelist {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.cli-360-anexo-fileitem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--orc-border-light);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  background: var(--orc-bg-card, #fff);
+}
+.cli-360-anexo-fileitem-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.cli-360-anexo-fileitem-size {
+  color: var(--orc-text-muted);
+  font-size: 11px;
+}
