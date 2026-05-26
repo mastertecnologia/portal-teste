@@ -1,172 +1,175 @@
 <?php
-    use App\Utility\PortalUi;
-    use Cake\Routing\Router;
-    $this->append('css', $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']));
-    $orcListRoute = PortalUi::listRoute('orcamentos') ?? ['controller' => 'Orcamentos', 'action' => 'index'];
+use App\Utility\PortalUi;
+use Cake\Routing\Router;
 
-    $dval = pgm_format_date_br($orcamento['validoate'] ?? null);
-    $orcamento['validoate'] = $dval;
+$this->append('css', $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']));
+$orcListRoute = PortalUi::listRoute('orcamentos') ?? ['controller' => 'Orcamentos', 'action' => 'index'];
+$versaoLbl = (string)($orcVersaoLabel ?? 'v1');
+$margem = (array)($orcRevisaoMargem ?? ['subVenda' => 0, 'subCusto' => 0, 'lucro' => 0, 'margemPct' => 0]);
+$brl = function ($v) {
+	return 'R$ ' . number_format((float)$v, 2, ',', '.');
+};
+$nomeCliente = empty($orcamento->cliente->razaosocial) ? ($orcamento->cliente->nome ?? '—') : $orcamento->cliente->razaosocial;
+$autorNome = ($orcamento->user && !empty($orcamento->user->name)) ? $orcamento->user->name : '—';
+$createdFmt = $orcamento->created ? $orcamento->created->format('d/m/Y') : '—';
+$st = (int)$orcamento->status;
+$stBadge = 'pend';
+$stLbl = 'Rascunho';
+if ($st === (int)C_OrcamentoStatusEnviado) { $stBadge = 'env'; $stLbl = 'Enviado'; }
+elseif ($st === (int)C_OrcamentoStatusAprovado) { $stBadge = 'aprov'; $stLbl = 'Aprovado'; }
+elseif ($st === (int)C_OrcamentoStatusRecusado) { $stBadge = 'recus'; $stLbl = 'Recusado'; }
+$margemPct = (int)($margem['margemPct'] ?? 0);
+$margemColor = $margemPct > 30 ? 'var(--orc-teal)' : ($margemPct > 15 ? 'var(--orc-amber)' : 'var(--orc-red)');
 ?>
-<style>
-.orc-info-row { display:flex; gap:0; border:1px solid var(--pgm-border, #e5e4e0); border-radius:8px; overflow:hidden; margin-bottom:14px; flex-wrap:wrap; background: var(--pgm-bg-surface, #ffffff); }
-.orc-info-cell { flex:1; min-width:140px; padding:12px 16px; border-right:1px solid var(--pgm-border, #e5e4e0); }
-.orc-info-cell:last-child { border-right:none; }
-.orc-info-label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color: var(--pgm-text-muted, #6b6a65); font-weight:600; margin-bottom:4px; }
-.orc-info-value { font-size:13px; font-weight:600; color: var(--pgm-text, #1a1a18); }
-.orc-obs-box { background: var(--pgm-bg-elevated, #f9f9f8); border-radius:8px; padding:14px 16px; font-size:13px; color: var(--pgm-text-secondary, #3d3d3a); line-height:1.8; border-left:3px solid var(--pgm-erp-teal, #1d9e75); }
-.orc-obs-html p { margin: 0 0 0.65em; }
-.orc-obs-html p:last-child { margin-bottom: 0; }
-</style>
 <div class="col-md-12 orc-premium-page-root">
-<div class="orc-premium-wrap orc-premium-form orc-premium-view">
+<div class="orc-premium-wrap orc-premium-form orc-premium-view orc-revisao-page">
 
-    <!-- Cabeçalho -->
-    <div class="orc-page-head">
-        <div>
-            <div class="orc-form-crumb">
-                <?= $this->Html->link('Orçamentos', $orcListRoute, ['escape' => false]) ?> › <span class="orc-form-crumb-current"><?= __('Revisão') ?> #<?= $orcamento->id ?></span>
-            </div>
-            <h1 class="orc-h1">
-                <?= __('Revisão') ?> — <span class="orc-id-accent">#<?= $orcamento->id ?></span>
-                <?php if(!empty($orcamento->versao)): ?>
-                    <span class="badge orc-ver-pill">v<?= $orcamento->versao ?></span>
-                <?php endif; ?>
-                <span><?= orcamentoStatus($orcamento->status) ?></span>
-            </h1>
-        </div>
-        <div class="orc-page-head-actions">
-            <?= $this->Html->link('<i class="fa fa-arrow-left"></i> ' . __('Voltar'), $orcListRoute, ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]) ?>
-            <?php if (isset($role) && (int)$role === 0) : ?>
-                <?= $this->Html->link('← ' . __('Editar'), ['action' => 'edit', $orcamento->id], ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]) ?>
-                <?= $this->Html->link('<i class="fa fa-file-text-o"></i> ' . __('Pré-visualizar PDF'), ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
-                <?= $this->Html->link(__('Gerar e assinar') . ' →', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]) ?>
-            <?php endif; ?>
-            <?php if($orcamento->status == C_OrcamentoStatusEnviado): ?>
-                <?= $this->Html->Link('<i class="fa fa-check"></i> Aprovar', ['action' => 'aprovar', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]) ?>
-            <?php endif; ?>
-        </div>
-    </div>
+	<div class="orc-page-head">
+		<div>
+			<div class="orc-form-crumb">
+				<?= $this->Html->link('Orçamentos', $orcListRoute, ['escape' => false]) ?> › <?= $this->Html->link('Novo', ['action' => 'add'], ['escape' => false]) ?> › <span class="orc-form-crumb-current">Revisão</span>
+			</div>
+			<h1 class="orc-h1">
+				Revisão — <span class="orc-id-accent">#<?= (int)$orcamento->id ?></span> <span class="orc-id-accent"><?= h($versaoLbl) ?></span>
+			</h1>
+		</div>
+		<div class="orc-page-head-actions">
+			<?php if (isset($role) && (int)$role === 0) : ?>
+				<?= $this->Html->link('← Editar', ['action' => 'edit', $orcamento->id], ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]) ?>
+				<?= $this->Html->link('Pré-visualizar PDF', ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
+				<?= $this->Html->link('Gerar e assinar →', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]) ?>
+			<?php endif; ?>
+		</div>
+	</div>
 
-    <?= $this->element('orcamentos_stepper') ?>
+	<?= $this->element('orcamentos_stepper') ?>
 
-    <!-- Card: Dados da proposta -->
-    <div class="card orc-premium-card-inner orc-card-mb-14">
-        <div class="card-body">
-            <div class="orc-sec-title">Dados da proposta</div>
-            <div class="orc-info-row">
-                <div class="orc-info-cell">
-                    <div class="orc-info-label">Cliente</div>
-                    <div class="orc-info-value"><?= empty($orcamento->cliente->razaosocial) ? $orcamento->cliente->nome : $orcamento->cliente->razaosocial ?></div>
-                </div>
-                <div class="orc-info-cell">
-                    <div class="orc-info-label">Emitido por</div>
-                    <div class="orc-info-value"><?= ($orcamento->user && !empty($orcamento->user->name)) ? $orcamento->user->name : '—' ?></div>
-                </div>
-                <div class="orc-info-cell">
-                    <div class="orc-info-label">Pagamento</div>
-                    <div class="orc-info-value"><?= !empty($orcamento->formapagamento) ? $orcamento->formapagamento : '—' ?></div>
-                </div>
-                <div class="orc-info-cell">
-                    <div class="orc-info-label">Válido até</div>
-                    <div class="orc-info-value orc-info-value--amber"><?= $orcamento->validoate ?></div>
-                </div>
-                <div class="orc-info-cell">
-                    <div class="orc-info-label">Status</div>
-                    <div class="orc-flex-gap-8">
-                        <?= orcamentoStatus($orcamento->status) ?>
-                        <?php if(isset($temordem) && $temordem != 'nao'): ?>
-                            <?= $this->Html->link('<i class="fa fa-list-alt"></i> OS Nº ' . $temordem, ['controller' => 'Ordensservico', 'action' => 'view', $temordem], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-            <?php if(!empty($orcamento->solicitacao)): ?>
-                <div class="orc-sec-title orc-sec-title--mt10">Observações / condições</div>
-                <div class="orc-obs-box orc-obs-html"><?= $orcamento->solicitacao ?></div>
-            <?php endif; ?>
-        </div>
-    </div>
+	<div class="card orc-premium-card-inner orc-card-mb-14">
+		<div class="card-body">
+			<div class="orc-sec-title">Controle de versões</div>
+			<div class="orc-version-panel">
+				<div class="orc-version-item">
+					<div class="orc-version-item-left">
+						<span class="orc-version-badge orc-version-badge--current"><?= h($versaoLbl) ?> — atual</span>
+						<span class="orc-version-title">Proposta original</span>
+					</div>
+					<div class="orc-version-item-right">
+						<span class="orc-version-meta"><?= h($createdFmt) ?> · <?= h($autorNome) ?></span>
+						<span class="orc-badge-status orc-badge-status--<?= h($stBadge) ?>"><?= h($stLbl) ?></span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <!-- Card: Itens -->
-    <div class="card orc-premium-card-inner orc-card-mb-14">
-        <div class="card-body">
-            <div class="orc-sec-title">Itens do orçamento</div>
-            <div id="carrinho" class="m-t-10"></div>
-        </div>
-    </div>
+	<div class="orc-revisao-cols">
+		<div class="orc-revisao-col-left">
+			<div class="card orc-premium-card-inner orc-card-mb-14">
+				<div class="card-body">
+					<div class="orc-sec-title">Dados do cliente</div>
+					<div class="orc-kv-list">
+						<div class="orc-kv-row"><span class="orc-kv-lbl">Cliente</span><span class="orc-kv-val"><?= h($nomeCliente) ?></span></div>
+						<div class="orc-kv-row"><span class="orc-kv-lbl">Pagamento</span><span class="orc-kv-val"><?= !empty($orcamento->formapagamento) ? h($orcamento->formapagamento) : '—' ?></span></div>
+						<div class="orc-kv-row"><span class="orc-kv-lbl">Válido até</span><span class="orc-kv-val orc-kv-val--amber"><?= h($orcamento->validoate) ?></span></div>
+					</div>
+				</div>
+			</div>
+			<div class="card orc-premium-card-inner orc-card-mb-14">
+				<div class="card-body">
+					<div class="orc-sec-title">Análise de margem</div>
+					<div class="orc-margin-summary orc-margin-summary--2col">
+						<div class="orc-margin-card">
+							<div class="orc-margin-card-val"><?= h($brl($margem['subVenda'] ?? 0)) ?></div>
+							<div class="orc-margin-card-lbl">Total venda</div>
+						</div>
+						<div class="orc-margin-card">
+							<div class="orc-margin-card-val orc-margin-card-val--teal"><?= h($brl($margem['lucro'] ?? 0)) ?></div>
+							<div class="orc-margin-card-lbl">Lucro bruto</div>
+						</div>
+						<div class="orc-margin-card">
+							<div class="orc-margin-card-val orc-margin-card-val--muted"><?= h($brl($margem['subCusto'] ?? 0)) ?></div>
+							<div class="orc-margin-card-lbl">Custo total</div>
+						</div>
+						<div class="orc-margin-card">
+							<div class="orc-margin-card-val" style="color:<?= h($margemColor) ?>;"><?= (int)$margemPct ?>%</div>
+							<div class="orc-margin-card-lbl">Margem bruta</div>
+							<div class="orc-margin-bar"><div class="orc-margin-fill" style="--orc-margin-pct:<?= min(100, max(0, $margemPct)) ?>%;"></div></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="orc-revisao-col-right">
+			<div class="card orc-premium-card-inner orc-card-mb-14">
+				<div class="card-body">
+					<div class="orc-sec-title">Workflow de aprovação interna</div>
+					<div class="orc-wf-list">
+						<div class="orc-workflow-step">
+							<div class="orc-wf-dot orc-wf-ok"><i class="fa fa-check"></i></div>
+							<div class="orc-wf-body">
+								<div class="orc-wf-title">Vendedor</div>
+								<div class="orc-wf-sub"><?= h($autorNome) ?> · <?= h($createdFmt) ?> · Criado</div>
+							</div>
+						</div>
+						<div class="orc-workflow-step">
+							<div class="orc-wf-dot <?= $st >= (int)C_OrcamentoStatusEnviado ? 'orc-wf-ok' : 'orc-wf-wait' ?>">
+								<?php if ($st >= (int)C_OrcamentoStatusEnviado) : ?><i class="fa fa-check"></i><?php else : ?><span class="orc-wf-dot-inner"></span><?php endif; ?>
+							</div>
+							<div class="orc-wf-body">
+								<div class="orc-wf-title<?= $st < (int)C_OrcamentoStatusEnviado ? ' orc-wf-title--muted' : '' ?>">Gerente comercial</div>
+								<div class="orc-wf-sub"><?= $st >= (int)C_OrcamentoStatusEnviado ? 'Verificado' : 'Pendente de verificação' ?></div>
+							</div>
+						</div>
+						<div class="orc-workflow-step">
+							<div class="orc-wf-dot <?= $st >= (int)C_OrcamentoStatusEnviado ? 'orc-wf-ok' : 'orc-wf-wait' ?>">
+								<?php if ($st >= (int)C_OrcamentoStatusEnviado) : ?><i class="fa fa-check"></i><?php else : ?><span class="orc-wf-dot-inner"></span><?php endif; ?>
+							</div>
+							<div class="orc-wf-body">
+								<div class="orc-wf-title<?= $st < (int)C_OrcamentoStatusEnviado ? ' orc-wf-title--muted' : '' ?>">Envio ao cliente</div>
+								<div class="orc-wf-sub"><?= $st >= (int)C_OrcamentoStatusEnviado ? 'Proposta enviada' : 'Aguardando aprovações internas' ?></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <!-- Card: Fluxo de aprovação (admin) -->
-    <?php if(isset($role) && $role == 0): ?>
-    <div class="card orc-premium-card-inner orc-card-mb-14">
-        <div class="card-body">
-            <div class="orc-sec-title">Fluxo de aprovação</div>
-            <div class="orc-wf-list">
-                <div class="orc-workflow-step">
-                    <div class="orc-wf-dot orc-wf-ok"><i class="fa fa-check"></i></div>
-                    <div class="orc-wf-body">
-                        <div class="orc-wf-title">Orçamento criado</div>
-                        <div class="orc-wf-sub">Proposta gerada no sistema em <?= $orcamento->created->format('d/m/Y') ?></div>
-                    </div>
-                </div>
-                <div class="orc-workflow-step">
-                    <div class="orc-wf-dot <?= $orcamento->status >= C_OrcamentoStatusEnviado ? 'orc-wf-ok' : 'orc-wf-pend' ?>">
-                        <i class="fa fa-<?= $orcamento->status >= C_OrcamentoStatusEnviado ? 'check' : 'clock-o' ?>"></i>
-                    </div>
-                    <div class="orc-wf-body">
-                        <div class="orc-wf-title<?= $orcamento->status < C_OrcamentoStatusEnviado ? ' orc-wf-title--muted' : '' ?>">Enviado ao cliente</div>
-                        <div class="orc-wf-sub"><?= $orcamento->status >= C_OrcamentoStatusEnviado ? 'Proposta enviada por e-mail' : 'Aguardando envio' ?></div>
-                    </div>
-                </div>
-                <div class="orc-workflow-step">
-                    <div class="orc-wf-dot <?= $orcamento->status == C_OrcamentoStatusAprovado ? 'orc-wf-ok' : ($orcamento->status == C_OrcamentoStatusRecusado ? 'orc-wf-pend' : '') ?>">
-                        <?php if($orcamento->status == C_OrcamentoStatusAprovado): ?><i class="fa fa-check"></i>
-                        <?php elseif($orcamento->status == C_OrcamentoStatusRecusado): ?><i class="fa fa-times"></i>
-                        <?php else: ?><div class="orc-wf-dot-inner" role="presentation"></div><?php endif; ?>
-                    </div>
-                    <div class="orc-wf-body">
-                        <div class="orc-wf-title<?= !in_array($orcamento->status, [C_OrcamentoStatusAprovado, C_OrcamentoStatusRecusado]) ? ' orc-wf-title--muted' : '' ?>">Decisão do cliente</div>
-                        <div class="orc-wf-sub">
-                            <?php
-                            if($orcamento->status == C_OrcamentoStatusAprovado) echo 'Aprovado' . (!empty($orcamento->ipaprovacao) ? ' · IP: ' . $orcamento->ipaprovacao : '');
-                            elseif($orcamento->status == C_OrcamentoStatusRecusado) echo 'Recusado pelo cliente';
-                            else echo 'Aguardando resposta';
-                            ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <?php endif; ?>
+	<div class="card orc-premium-card-inner orc-card-mb-14">
+		<div class="card-body">
+			<div class="orc-sec-title">Itens da proposta</div>
+			<div id="carrinho" class="orc-carrinho-slot"></div>
+			<div class="orc-tot-wrap">
+				<div class="orc-tot-inner">
+					<div class="orc-tot-l"><span>Subtotal</span><span><?= h($brl($margem['subVenda'] ?? 0)) ?></span></div>
+					<div class="orc-tot-l"><span>Desconto</span><span class="orc-tot-rd">— <?= h($brl(0)) ?></span></div>
+					<div class="orc-tot-l"><span>Total geral</span><span class="orc-tot-g"><?= h($brl($margem['subVenda'] ?? 0)) ?></span></div>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <!-- Footer -->
-    <div class="orc-footer-bar">
-        <?= $this->Html->link('← ' . __('Voltar'), ['action' => 'index'], ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]) ?>
-        <div class="orc-footer-bar-actions">
-            <?php if (isset($role) && (int)$role === 0) : ?>
-                <?= $this->Html->link('<i class="fa fa-file-text-o"></i> ' . __('Pré-visualizar PDF'), ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
-                <?= $this->Html->link(__('Avançar para assinatura') . ' →', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]) ?>
-            <?php endif; ?>
-            <?php if($orcamento->status == C_OrcamentoStatusEnviado): ?>
-                <?= $this->Html->Link('<i class="fa fa-check"></i> Aprovar', ['action' => 'aprovar', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
-            <?php endif; ?>
-        </div>
-    </div>
+	<div class="orc-footer-bar">
+		<?= $this->Html->link('← Voltar', $orcListRoute, ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]) ?>
+		<div class="orc-footer-bar-actions">
+			<?php if (isset($role) && (int)$role === 0) : ?>
+				<?= $this->Html->link('Pré-visualizar PDF', ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
+				<?= $this->Html->link('Avançar para assinatura →', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]) ?>
+			<?php endif; ?>
+		</div>
+	</div>
 
 </div>
 </div>
 <script>
-    carrinho();
-    function carrinho(){
-        $.ajax({
-            type: "POST",
-            url: "<?= Router::url(['controller'=>'Orcamentos','action'=>'carrinhoedit']);?>/" + <?= $orcamento->id ?>,
-            dataType: "html",
-            success : function(data) { $("#carrinho").html(data); },
-            error : function(error) { alert(error); }
-        });
-    }
-    $(window).bind('beforeunload', function(){
-        $.ajax({ url: "<?= Router::url(['controller'=>'Orcamentos','action'=>'limpasession']);?>", });
-    });
+	carrinho();
+	function carrinho(){
+		$.ajax({
+			type: "POST",
+			url: "<?= Router::url(['controller'=>'Orcamentos','action'=>'carrinhoedit']);?>/" + <?= (int)$orcamento->id ?> + "?layout=revisao",
+			dataType: "html",
+			success : function(data) { $("#carrinho").html(data); },
+			error : function(error) { alert(error); }
+		});
+	}
 </script>

@@ -43,6 +43,38 @@
 		el.textContent = t ? t : '—';
 	}
 
+	function orcTipDisplayFromProduto(data) {
+		var lbl = 'Serviço';
+		if (data && data.tipo == cfg.tipoProduto) {
+			lbl = 'Produto';
+		} else if (data && data.tipo == cfg.tipoServico) {
+			lbl = 'Serviço';
+		} else if (data && data.tipoLabel) {
+			lbl = data.tipoLabel;
+		}
+		$('#orc-f-tip-display').val(lbl);
+	}
+
+	function orcCustoUnitFromCatalog(codigo) {
+		var cu = $('#orc-custo-unit');
+		if (!cu.length || !window.orcProdutosCatalogo) {
+			return;
+		}
+		var found = null;
+		(window.orcProdutosCatalogo || []).some(function (p) {
+			if (String(p.codigo) === String(codigo) || String(p.id) === String(codigo)) {
+				found = p;
+				return true;
+			}
+			return false;
+		});
+		if (found && found.custoUnit != null && parseFloat(found.custoUnit) > 0) {
+			cu.val(numberToReal(parseFloat(found.custoUnit)));
+		} else {
+			cu.val('');
+		}
+	}
+
 	function orcObsSolicitacaoPreviewSync() {
 		var $ta = $('#observacoes');
 		var $iframe = $('#orc-obs-solicitacao-preview');
@@ -212,6 +244,8 @@
 						$('#observacao').val(descLinha);
 					}
 					orcInsertDescPreviewSync();
+					orcTipDisplayFromProduto(data);
+					orcCustoUnitFromCatalog($(this).val());
 					$('#quantidade').val('');
 					$('#valordoservico').val('');
 					if (data.tipo == cfg.tipoServico) {
@@ -270,6 +304,8 @@
 			$('#valoruni').attr('disabled', false);
 			$('.mensal').attr('disabled', false);
 			orcInsertDescPreviewSync();
+			$('#orc-f-tip-display').val('');
+			$('#orc-custo-unit').val('');
 		}
 	});
 
@@ -896,6 +932,12 @@
 			}
 			if (!$('#valoruni').val() && parseFloat(p.vlunitario) > 0) {
 				$('#valoruni').val(numberToReal(parseFloat(p.vlunitario)));
+			}
+			if (p.tipoLabel) {
+				$('#orc-f-tip-display').val(p.tipoLabel);
+			}
+			if (p.custoUnit != null && parseFloat(p.custoUnit) > 0) {
+				$('#orc-custo-unit').val(numberToReal(parseFloat(p.custoUnit)));
 			}
 		}, 450);
 		$('#orc-catalog-overlay').removeClass('open');

@@ -249,7 +249,7 @@
 				</div>
 			<?php endif; ?>
 
-			<div id="carrinho" class="m-t-10"></div>
+			<div id="carrinho" class="orc-carrinho-slot m-t-10"></div>
 
 			<?= $this->element('orcamentos_secao_produtos_rodape', [
 				'orcModo' => 'edit',

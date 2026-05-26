@@ -23,7 +23,7 @@
 			?>
 			<?= $this->Html->link('Orçamentos', $orcListRoute, ['escape' => false]) ?> › <span class="orc-form-crumb-current">Novo</span>
 			</div>
-			<h1 class="orc-h1" id="orc-novo-proposta-title">Proposta de Orçamento</h1>
+			<h1 class="orc-h1" id="orc-novo-proposta-title">Proposta de Orçamento <span class="orc-id-accent">#<?= (int)($orcPreviewNumero ?? 0) ?></span></h1>
 		</div>
 		<div class="orc-page-head-actions">
 			<?= $this->Html->link('Cancelar', $orcListRoute, ['class' => 'btn btn-orc-form-secondary']) ?>
@@ -40,43 +40,39 @@
 	<div class="card orc-premium-card-inner orc-card-mb-14">
 		<div class="card-body">
 			<div class="orc-sec-title">Dados do cliente</div>
-			<div class="row">
-				<div class="col-lg-6 col-md-12">
+			<div class="orc-cliente-grid orc-cliente-grid--top">
+				<div class="orc-field">
 					<label class="control-label">Cliente</label>
-					<?= $this->Form->control('idcliente', ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione um cliente', 'label' => false, 'required' => true, 'id' => 'idcliente']) ?>
+					<?= $this->Form->control('idcliente', ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione...', 'label' => false, 'required' => true, 'id' => 'idcliente']) ?>
 				</div>
-				<div class="col-lg-6 col-md-12">
-					<div class="row">
-						<div class="col-sm-6">
-							<label class="control-label">Pagamento</label>
-							<?= $this->Form->control('formapagamento', [
-								'type' => 'select',
-								'options' => $orcFormaPagamentoOpcoes ?? [],
-								'class' => 'form-control orc-native-select',
-								'label' => false,
-								'id' => 'formapagamento',
-								'empty' => false,
-							]) ?>
-						</div>
-						<div class="col-sm-6">
-							<div class="form-group">
-								<label class="control-label">Válido até</label>
-								<?= $this->Form->text('validoate', ['class' => 'form-control datepicker', 'id' => 'validoate', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true]) ?>
-							</div>
-						</div>
+				<div class="orc-cliente-grid orc-cliente-grid--pag">
+					<div class="orc-field">
+						<label class="control-label">Pagamento</label>
+						<?= $this->Form->control('formapagamento', [
+							'type' => 'select',
+							'options' => $orcFormaPagamentoOpcoes ?? [],
+							'class' => 'form-control orc-native-select',
+							'label' => false,
+							'id' => 'formapagamento',
+							'empty' => false,
+						]) ?>
+					</div>
+					<div class="orc-field">
+						<label class="control-label">Válido até</label>
+						<?= $this->Form->text('validoate', ['class' => 'form-control datepicker', 'id' => 'validoate', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true]) ?>
 					</div>
 				</div>
 			</div>
-			<div class="row m-t-10">
-				<div class="col-md-4 col-sm-12">
-					<label class="control-label" id="orc-cli-doc-lbl">CNPJ / CPF</label>
+			<div class="orc-cliente-grid orc-cliente-grid--bottom">
+				<div class="orc-field">
+					<label class="control-label" id="orc-cli-doc-lbl">CNPJ</label>
 					<input type="text" class="form-control orc-input-readonly-fill" id="orc-cli-doc" readonly placeholder="Auto-preenchido" />
 				</div>
-				<div class="col-md-4 col-sm-12">
+				<div class="orc-field">
 					<label class="control-label">E-mail do cliente</label>
-					<input type="email" class="form-control" id="orc-cli-email" autocomplete="email" placeholder="Preenchido ao escolher o cliente (editável)" />
+					<input type="email" class="form-control" id="orc-cli-email" autocomplete="email" placeholder="Auto-preenchido" />
 				</div>
-				<div class="col-md-4 col-sm-12">
+				<div class="orc-field">
 					<label class="control-label">Contato / responsável</label>
 					<input type="text" class="form-control orc-input-readonly-fill" id="orc-cli-contato" readonly placeholder="Auto-preenchido" />
 				</div>
@@ -88,25 +84,24 @@
 		<div class="card-body">
 			<?= $this->element('orcamentos_secao_produtos_form', ['orcModo' => 'add']); ?>
 
-			<div id="carrinho" class="m-t-10"></div>
+			<div id="carrinho" class="orc-carrinho-slot m-t-10"></div>
 
 			<?= $this->element('orcamentos_secao_produtos_rodape', ['orcModo' => 'add']); ?>
 		</div>
 	</div>
 
-	<div class="orc-obs-block">
-		<div class="orc-sec-title">Observações</div>
-		<label class="control-label" for="observacoes">Condições, prazos, garantias</label>
-		<p class="orc-obs-source-hint">Pré-visualização do texto (inclui HTML gravado no orçamento). Edite o conteúdo no campo abaixo.</p>
-		<iframe id="orc-obs-solicitacao-preview" class="orc-obs-preview-frame" title="Pré-visualização das condições" sandbox=""></iframe>
-		<?= $this->Form->textarea('solicitacao', [
-			'novalidate' => true,
-			'id' => 'observacoes',
-			'class' => 'form-control orc-obs-textarea',
-			'label' => false,
-			'rows' => 6,
-			'placeholder' => 'Condições, prazos, garantias...',
-		]) ?>
+	<div class="card orc-premium-card-inner orc-card-mb-14 orc-obs-block">
+		<div class="card-body">
+			<div class="orc-sec-title">Observações</div>
+			<?= $this->Form->textarea('solicitacao', [
+				'novalidate' => true,
+				'id' => 'observacoes',
+				'class' => 'form-control orc-obs-textarea',
+				'label' => false,
+				'rows' => 3,
+				'placeholder' => 'Condições, prazos, garantias...',
+			]) ?>
+		</div>
 	</div>
 
 	<div class="orc-footer-bar">

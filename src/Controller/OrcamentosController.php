@@ -505,6 +505,7 @@ class OrcamentosController extends AppController {
 				$byCodigo[trim((string)$p['codigo'])] = (float)($p[$costCol] ?? 0);
 			}
 		}
+		$tipoMeta = $this->_produtoTipoMetaPorCodigo($idempresa);
 		$out = [];
 		foreach ($carrinho as $reg) {
 			$rid = (int)$reg->id;
@@ -531,10 +532,81 @@ class OrcamentosController extends AppController {
 			if ($venda > 0.0001) {
 				$margemPct = (int)round((($venda - $custoLinha) / $venda) * 100);
 			}
-			$out[$rid] = ['custoLinha' => $custoLinha, 'margemPct' => $margemPct];
+			$tipoBadge = 'serv';
+			$tipoLabel = 'Serviço';
+			$keyTipo = trim((string)($idp ?? ''));
+			if ($keyTipo !== '' && $keyTipo !== '0') {
+				if (isset($tipoMeta[$keyTipo])) {
+					$tipoBadge = $tipoMeta[$keyTipo]['tipoBadge'];
+					$tipoLabel = $tipoMeta[$keyTipo]['tipoLabel'];
+				} elseif (is_numeric($keyTipo) && isset($tipoMeta[(string)(int)$keyTipo])) {
+					$tipoBadge = $tipoMeta[(string)(int)$keyTipo]['tipoBadge'];
+					$tipoLabel = $tipoMeta[(string)(int)$keyTipo]['tipoLabel'];
+				}
+			}
+			$out[$rid] = [
+				'custoLinha' => $custoLinha,
+				'margemPct' => $margemPct,
+				'tipoBadge' => $tipoBadge,
+				'tipoLabel' => $tipoLabel,
+			];
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Metadados de tipo (prod/serv/lic/loc) por código de produto.
+	 *
+	 * @return array<string,array{tipoBadge:string,tipoLabel:string}>
+	 */
+	protected function _produtoTipoMetaPorCodigo($idempresa): array {
+		$tipoMap = [];
+		if (defined('C_ProdutosTipo')) {
+			$tc = constant('C_ProdutosTipo');
+			$tipoMap = is_array($tc) ? $tc : [];
+		}
+		$out = [];
+		foreach ($this->Produtos->find()
+			->select(['id', 'codigo', 'tipo'])
+			->where(['idempresa' => $idempresa])
+			->enableHydration(false) as $p) {
+			$tipoInt = (int)($p['tipo'] ?? 0);
+			$tipoLabel = $tipoMap[$tipoInt] ?? 'Serviço';
+			$tipoBadge = 'serv';
+			if (defined('C_ProdutosTipoProduto') && $tipoInt === (int)C_ProdutosTipoProduto) {
+				$tipoBadge = 'prod';
+			} elseif (defined('C_ProdutosTipoServico') && $tipoInt === (int)C_ProdutosTipoServico) {
+				$tipoBadge = 'serv';
+			} elseif (stripos((string)$tipoLabel, 'licen') !== false) {
+				$tipoBadge = 'lic';
+			} elseif (stripos((string)$tipoLabel, 'loca') !== false) {
+				$tipoBadge = 'loc';
+			}
+			$key = trim((string)($p['codigo'] ?? ''));
+			if ($key !== '') {
+				$out[$key] = ['tipoBadge' => $tipoBadge, 'tipoLabel' => $tipoLabel];
+			}
+			$out[(string)(int)$p['id']] = ['tipoBadge' => $tipoBadge, 'tipoLabel' => $tipoLabel];
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Próximo ID de orçamento (pré-visualização, sem incrementar).
+	 */
+	protected function _previewProximoOrcamentoId($idempresa): int {
+		$empresa = $this->Empresas->get($idempresa);
+		$candidate = (int)$empresa->prxorcamento + 1;
+		for ($i = 0; $i < 50; $i++) {
+			if (empty($this->Orcamentos->findById($candidate)->where(['idempresa' => $idempresa])->first())) {
+				return $candidate;
+			}
+			$candidate++;
+		}
+
+		return $candidate;
 	}
 
 	/**
@@ -962,8 +1034,9 @@ class OrcamentosController extends AppController {
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('orcStepperStep', 1);
 		$this->set('orcFormaPagamentoOpcoes', $this->_orcFormaPagamentoOpcoes());
+		$this->set('orcPreviewNumero', $this->_previewProximoOrcamentoId($this->Auth->user('idempresa')));
 	}
-	
+
 	public function edit($id = null) {
 		// Permissão para o cliente
 		if ($this->Auth->user('role') == 1) {
@@ -1039,7 +1112,10 @@ class OrcamentosController extends AppController {
 
 		$orcamento = $this->Orcamentos->find('all')
 			->where(['Orcamentos.idempresa' => $this->Auth->user('idempresa'), 'Orcamentos.id' => $id])
-			->contain([ 'Users' => ['fields' => ['Users.name']]])
+			->contain([
+				'Users' => ['fields' => ['Users.name']],
+				'Clientes' => ['fields' => ['Clientes.razaosocial', 'Clientes.nome', 'Clientes.email', 'Clientes.tipo']],
+			])
 		->first();
 
 		$idcliente = $this->Auth->user('idcliente');
@@ -1062,6 +1138,23 @@ class OrcamentosController extends AppController {
 		$this->set('title', 'Visualização de Orçamento');
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('orcStepperStep', 4);
+		$this->set('role', (int)$this->Auth->user('role'));
+		$empresaId = (int)$this->Auth->user('idempresa');
+		$orcId = (int)$id;
+		$versaoMap = $this->_versaoRotuloPorOrcamentoIds($empresaId, [$orcId]);
+		$valorMap = $this->_valorTotaisPorOrcamentoIds($empresaId, [$orcId]);
+		$custoMap = $this->_custoTotaisPorOrcamentoIds($empresaId, [$orcId]);
+		$margemMap = $this->_margemBrutaPctPorOrcamentoIds($empresaId, [$orcId], $valorMap);
+		$subVenda = (float)($valorMap[$orcId] ?? 0);
+		$subCusto = (float)($custoMap[$orcId] ?? 0);
+		$lucro = $subVenda - $subCusto;
+		$this->set('orcVersaoLabel', $versaoMap[$orcId] ?? 'v1');
+		$this->set('orcRevisaoMargem', [
+			'subVenda' => $subVenda,
+			'subCusto' => $subCusto,
+			'lucro' => $lucro,
+			'margemPct' => (int)($margemMap[$orcId] ?? ($subVenda > 0 ? round(($lucro / $subVenda) * 100) : 0)),
+		]);
 		$this->set('empresaObj', $empresaObj);
 		$this->set('orcamento', $orcamento);
 		$this->set('idcarrinho', $_SESSION['idcarrinho']);
@@ -1600,6 +1693,8 @@ class OrcamentosController extends AppController {
 		$this->set('carrinhoLinhasExtra', $carrinhoLinhasExtra);
 		$this->set('orcamento', $orcamento);
 		$this->set('role', $this->Auth->user('role'));
+		$layout = (string)$this->request->getQuery('layout', 'form');
+		$this->set('orcCarrinhoLayout', $layout === 'revisao' ? 'revisao' : 'form');
 	}
 
 	public function limpacarrinho(){
