@@ -71,7 +71,7 @@
 					<?= $this->Html->link('<i class="fas fa-arrow-left" aria-hidden="true"></i> ' . __('Voltar'), ['action' => 'index'], ['class' => 'btn-cli-secondary', 'escape' => false, 'data-turbo' => 'false']) ?>
 				</div>
 			<?php endif; ?>
-		</div>
+		</header>
 
 		<!-- Tab nav: wizard só na aba Cliente; demais abas preservam fluxo legado (acessos, usuários, contratos, ativos, token) -->
 		<?php
