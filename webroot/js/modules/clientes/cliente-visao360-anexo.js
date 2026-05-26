@@ -172,29 +172,53 @@
 			});
 		});
 
-		if (!$pick.length || !$fileInput.length) {
+		if (!$fileInput.length) {
 			return;
 		}
 
-		$pick.on('click', function (e) {
-			e.preventDefault();
-			e.stopPropagation();
-			$fileInput.trigger('click');
-		});
+		var openingFileDialog = false;
+		var fileEl = $fileInput[0];
 
-		$dropzone.on('click', function (e) {
-			if (e.target === $pick[0] || $pick[0].contains(e.target)) {
+		function openFilePicker() {
+			if (openingFileDialog || !fileEl) {
 				return;
 			}
-			$fileInput.trigger('click');
+			openingFileDialog = true;
+			fileEl.click();
+			window.setTimeout(function () {
+				openingFileDialog = false;
+			}, 500);
+		}
+
+		$fileInput.on('click', function (e) {
+			e.stopPropagation();
 		});
 
-		$dropzone.on('keydown', function (e) {
-			if (e.key === 'Enter' || e.key === ' ') {
+		if ($pick.length) {
+			$pick.on('click', function (e) {
 				e.preventDefault();
-				$fileInput.trigger('click');
-			}
-		});
+				e.stopPropagation();
+				openFilePicker();
+			});
+		}
+
+		if ($dropzone.length) {
+			$dropzone.on('click', function (e) {
+				if ($pick.length && ($pick[0] === e.target || $pick[0].contains(e.target))) {
+					return;
+				}
+				e.preventDefault();
+				e.stopPropagation();
+				openFilePicker();
+			});
+
+			$dropzone.on('keydown', function (e) {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					openFilePicker();
+				}
+			});
+		}
 
 		$fileInput.on('change', function () {
 			addFiles(this.files);
