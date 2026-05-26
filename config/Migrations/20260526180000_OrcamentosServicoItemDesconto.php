@@ -25,11 +25,7 @@ class OrcamentosServicoItemDesconto extends AbstractMigration
 			]);
 		}
 		$table->update();
-	}
 
-	public function up()
-	{
-		parent::up();
 		if (class_exists('\Cake\Cache\Cache')) {
 			\Cake\Cache\Cache::clearAll();
 		}
