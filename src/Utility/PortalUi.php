@@ -112,29 +112,22 @@ class PortalUi {
     }
 
     /**
-     * Rota do detalhe/revisão de orçamento (legado view ou protótipo detalhe).
+     * Rota do detalhe/revisão de orçamento (pg-revisao — Orcamentos::view com stepper).
      */
     public static function orcamentosDetalheRoute(int $orcamentoId): ?array {
         if ($orcamentoId <= 0) {
             return null;
-        }
-        if (self::isPremiumModule('orcamentos')) {
-            return ['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', $orcamentoId, 'prefix' => false];
         }
 
         return ['controller' => 'Orcamentos', 'action' => 'view', $orcamentoId, 'prefix' => false];
     }
 
     /**
-     * Wizard “novo orçamento” (protótipo pg-novo ou legado add).
+     * Tela “novo orçamento” (pg-novo — Orcamentos::add com dados reais e carrinho).
      *
      * @return array<string, mixed>
      */
     public static function orcamentosNovoRoute(): array {
-        if (self::isPremiumModule('orcamentos')) {
-            return ['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo', 'prefix' => false];
-        }
-
         return ['controller' => 'Orcamentos', 'action' => 'add', 'prefix' => false];
     }
 

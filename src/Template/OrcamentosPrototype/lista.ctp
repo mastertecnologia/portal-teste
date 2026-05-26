@@ -7,7 +7,10 @@
  * @var array<int,array<string,mixed>> $orcItems
  * @var array<int,string> $orcStatusLabels
  */
+use App\Utility\PortalUi;
+
 $H = $this->ErpPrototype;
+$orcNovoRoute = PortalUi::orcamentosNovoRoute();
 $counts = (array)($orcCounts ?? []);
 $items = (array)($orcItems ?? []);
 $labels = (array)($orcStatusLabels ?? []);
@@ -19,8 +22,7 @@ $badgeMap = ['pend' => 'pend', 'env' => 'env', 'aprov' => 'aprov', 'recus' => 'r
 	'title' => __('Orçamentos'),
 	'subtitle' => __('Propostas comerciais · revisão · assinatura · faturamento'),
 	'actions' => [
-		['label' => __('Módulo clássico'), 'url' => ['controller' => 'Orcamentos', 'action' => 'index'], 'class' => 'btn btn-ghost btn-sm'],
-		['label' => '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg> ' . __('Gerar Orçamento'), 'url' => ['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo'], 'class' => 'btn btn-primary'],
+		['label' => '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg> ' . __('Gerar Orçamento'), 'url' => $orcNovoRoute, 'class' => 'btn btn-primary'],
 	],
 ]) ?>
 
@@ -86,7 +88,7 @@ $badgeMap = ['pend' => 'pend', 'env' => 'env', 'aprov' => 'aprov', 'recus' => 'r
 					$st = (int)($it['status'] ?? 0);
 					$lbl = (string)($labels[$st] ?? '—');
 					$badge = $badgeMap[$stKey] ?? 'arq';
-					$href = $this->Url->build(['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', (int)$it['id']]);
+					$href = $this->Url->build(PortalUi::orcamentosDetalheRoute((int)$it['id']) ?? ['controller' => 'Orcamentos', 'action' => 'view', (int)$it['id']]);
 					$m = $it['margem_pct'] ?? null;
 					$mc = '#6b6a65';
 					if ($m !== null && is_numeric($m)) {
@@ -113,7 +115,7 @@ $badgeMap = ['pend' => 'pend', 'env' => 'env', 'aprov' => 'aprov', 'recus' => 'r
 						<td class="mu" style="color:var(--text);"><?= h($H->dt($it['modified'])) ?></td>
 						<td>
 							<div style="display:flex;gap:4px;flex-wrap:nowrap;">
-								<?= $this->Html->link(__('Revisar'), ['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', (int)$it['id']], ['class' => 'btn btn-primary btn-xs', 'onclick' => 'event.stopPropagation();', 'data-turbo' => 'false']) ?>
+								<?= $this->Html->link(__('Revisar'), PortalUi::orcamentosDetalheRoute((int)$it['id']) ?? ['controller' => 'Orcamentos', 'action' => 'view', (int)$it['id']], ['class' => 'btn btn-primary btn-xs', 'onclick' => 'event.stopPropagation();', 'data-turbo' => 'false']) ?>
 								<?= $this->Html->link(__('Editar'), ['controller' => 'Orcamentos', 'action' => 'edit', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs', 'onclick' => 'event.stopPropagation();', 'data-turbo' => 'false']) ?>
 							</div>
 						</td>

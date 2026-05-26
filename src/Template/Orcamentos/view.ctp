@@ -1,6 +1,8 @@
 <?php
+    use App\Utility\PortalUi;
     use Cake\Routing\Router;
     $this->append('css', $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']));
+    $orcListRoute = PortalUi::listRoute('orcamentos') ?? ['controller' => 'Orcamentos', 'action' => 'index'];
 
     $dval = pgm_format_date_br($orcamento['validoate'] ?? null);
     $orcamento['validoate'] = $dval;
@@ -22,10 +24,10 @@
     <div class="orc-page-head">
         <div>
             <div class="orc-form-crumb">
-                <?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span class="orc-form-crumb-current">Orçamento #<?= $orcamento->id ?></span>
+                <?= $this->Html->link('Orçamentos', $orcListRoute, ['escape' => false]) ?> › <span class="orc-form-crumb-current"><?= __('Revisão') ?> #<?= $orcamento->id ?></span>
             </div>
             <h1 class="orc-h1">
-                Orçamento <span class="orc-id-accent">#<?= $orcamento->id ?></span>
+                <?= __('Revisão') ?> — <span class="orc-id-accent">#<?= $orcamento->id ?></span>
                 <?php if(!empty($orcamento->versao)): ?>
                     <span class="badge orc-ver-pill">v<?= $orcamento->versao ?></span>
                 <?php endif; ?>
@@ -33,10 +35,11 @@
             </h1>
         </div>
         <div class="orc-page-head-actions">
-            <?= $this->Html->link('<i class="fa fa-arrow-left"></i> Voltar', ['action' => 'index'], ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]) ?>
+            <?= $this->Html->link('<i class="fa fa-arrow-left"></i> ' . __('Voltar'), $orcListRoute, ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]) ?>
             <?php if (isset($role) && (int)$role === 0) : ?>
-                <?= $this->Html->link('<i class="fa fa-pencil"></i> Editar', ['action' => 'edit', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
-                <?= $this->Html->link('<i class="fa fa-file-text-o"></i> PDF', ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
+                <?= $this->Html->link('← ' . __('Editar'), ['action' => 'edit', $orcamento->id], ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]) ?>
+                <?= $this->Html->link('<i class="fa fa-file-text-o"></i> ' . __('Pré-visualizar PDF'), ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
+                <?= $this->Html->link(__('Gerar e assinar') . ' →', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]) ?>
             <?php endif; ?>
             <?php if($orcamento->status == C_OrcamentoStatusEnviado): ?>
                 <?= $this->Html->Link('<i class="fa fa-check"></i> Aprovar', ['action' => 'aprovar', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]) ?>
@@ -138,10 +141,14 @@
 
     <!-- Footer -->
     <div class="orc-footer-bar">
-        <span class="orc-footer-meta">Orçamento #<?= $orcamento->id ?></span>
+        <?= $this->Html->link('← ' . __('Voltar'), ['action' => 'index'], ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]) ?>
         <div class="orc-footer-bar-actions">
+            <?php if (isset($role) && (int)$role === 0) : ?>
+                <?= $this->Html->link('<i class="fa fa-file-text-o"></i> ' . __('Pré-visualizar PDF'), ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
+                <?= $this->Html->link(__('Avançar para assinatura') . ' →', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]) ?>
+            <?php endif; ?>
             <?php if($orcamento->status == C_OrcamentoStatusEnviado): ?>
-                <?= $this->Html->Link('<i class="fa fa-check"></i> Aprovar', ['action' => 'aprovar', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]) ?>
+                <?= $this->Html->Link('<i class="fa fa-check"></i> Aprovar', ['action' => 'aprovar', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
             <?php endif; ?>
         </div>
     </div>

@@ -870,10 +870,6 @@ class OrcamentosController extends AppController {
 		// Permissão para o cliente
 		if ($this->Auth->user('role') == 1) return $this->redirect(['action' => 'solicitar']);
 
-		if (!$this->request->is('post') && PortalUi::isPremiumModule('orcamentos')) {
-			return $this->redirect(PortalUi::orcamentosNovoRoute());
-		}
-
 		$orcamento = $this->Orcamentos->newEntity();
         $ticket = $this->Tickets->findById($idticket)->first();
 		if(!empty($ticket)) $orcamento->solicitacao = $ticket->solicitacao;
@@ -975,13 +971,6 @@ class OrcamentosController extends AppController {
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
 
-		if (!$this->request->is(['post', 'put', 'patch']) && PortalUi::isPremiumModule('orcamentos')) {
-			$protoRoute = PortalUi::orcamentosDetalheRoute((int)$id);
-			if ($protoRoute !== null) {
-				return $this->redirect($protoRoute);
-			}
-		}
-
 		$orcamento = $this->Orcamentos->find('all')
 		->where(['Orcamentos.idempresa' => $this->Auth->user('idempresa'), 'Orcamentos.id' => $id])
 		->contain([
@@ -1038,13 +1027,6 @@ class OrcamentosController extends AppController {
 	}
 
 	public function view($id = null, $idempresa = null) {
-		$orcId = (int)$id;
-		if ((int)$this->Auth->user('role') !== (int)C_RoleCliente && $orcId > 0 && PortalUi::isPremiumModule('orcamentos')) {
-			$protoRoute = PortalUi::orcamentosDetalheRoute($orcId);
-			if ($protoRoute !== null) {
-				return $this->redirect($protoRoute);
-			}
-		}
 		if(!empty($idempresa)) {
 			$user = $this->Users->get($this->Auth->user('id'));
 			$user->idempresa = $idempresa;

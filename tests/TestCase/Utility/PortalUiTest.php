@@ -51,11 +51,11 @@ class PortalUiTest extends TestCase {
 		$this->assertTrue(PortalUi::isClientesListNavActive('Clientes', 'index'));
 	}
 
-	public function testOrcamentosDetalheRouteSwitchesWithPremium(): void {
+	public function testOrcamentosDetalheRoutePointsToView(): void {
 		Configure::write('PortalUi.premium_modules', ['orcamentos' => true]);
 		$route = PortalUi::orcamentosDetalheRoute(99);
-		$this->assertSame('OrcamentosPrototype', $route['controller']);
-		$this->assertSame('detalhe', $route['action']);
+		$this->assertSame('Orcamentos', $route['controller']);
+		$this->assertSame('view', $route['action']);
 		$this->assertSame(99, $route[0]);
 		Configure::write('PortalUi.premium_modules', []);
 		$legacy = PortalUi::orcamentosDetalheRoute(5);
@@ -73,10 +73,10 @@ class PortalUiTest extends TestCase {
 		$this->assertSame('edit', PortalUi::servicedeskTicketRoute(3)['action']);
 	}
 
-	public function testOrcamentosNovoRouteSwitchesWithPremium(): void {
+	public function testOrcamentosNovoRouteAlwaysUsesAdd(): void {
 		Configure::write('PortalUi.premium_modules', ['orcamentos' => true]);
-		$this->assertSame('OrcamentosPrototype', PortalUi::orcamentosNovoRoute()['controller']);
-		$this->assertSame('view', PortalUi::orcamentosNovoRoute()['action']);
+		$this->assertSame('Orcamentos', PortalUi::orcamentosNovoRoute()['controller']);
+		$this->assertSame('add', PortalUi::orcamentosNovoRoute()['action']);
 		Configure::write('PortalUi.premium_modules', []);
 		$this->assertSame('Orcamentos', PortalUi::orcamentosNovoRoute()['controller']);
 		$this->assertSame('add', PortalUi::orcamentosNovoRoute()['action']);

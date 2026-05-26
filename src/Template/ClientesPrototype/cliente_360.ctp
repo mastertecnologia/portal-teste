@@ -55,7 +55,7 @@ $initials = $hasCliente ? $H->initials((string)($c['nome'] ?? '')) : '?';
 		<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
 			<?= $this->Html->link('📋 ' . __('Editar cliente'), ['controller' => 'Clientes', 'action' => 'edit', (int)$c['id']], ['class' => 'btn btn-ghost btn-sm']) ?>
 			<?= $this->Html->link('🛠 ' . __('Abrir OS'), ['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'abertura'], ['class' => 'btn btn-ghost btn-sm']) ?>
-			<?= $this->Html->link('💼 ' . __('Novo orçamento'), ['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo'], ['class' => 'btn btn-ghost btn-sm']) ?>
+			<?= $this->Html->link('💼 ' . __('Novo orçamento'), \App\Utility\PortalUi::orcamentosNovoRoute(), ['class' => 'btn btn-ghost btn-sm']) ?>
 			<?= $this->Html->link('💵 ' . __('Faturas'), ['controller' => 'Faturas', 'action' => 'index'], ['class' => 'btn btn-ghost btn-sm']) ?>
 			<?= $this->Html->link('📚 ' . __('Tickets do cliente'), ['controller' => 'ServicedeskPrototype', 'action' => 'fila'], ['class' => 'btn btn-ghost btn-sm']) ?>
 			<?= $this->Html->link('📞 ' . __('Histórico'), ['controller' => 'Clientes', 'action' => 'view', (int)$c['id']], ['class' => 'btn btn-ghost btn-sm']) ?>

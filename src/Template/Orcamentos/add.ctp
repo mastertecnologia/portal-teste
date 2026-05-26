@@ -18,12 +18,15 @@
 	<div class="orc-page-head">
 		<div>
 			<div class="orc-form-crumb">
-				<?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span class="orc-form-crumb-current">Novo</span>
+				<?php
+				$orcListRoute = \App\Utility\PortalUi::listRoute('orcamentos') ?? ['controller' => 'Orcamentos', 'action' => 'index'];
+			?>
+			<?= $this->Html->link('Orçamentos', $orcListRoute, ['escape' => false]) ?> › <span class="orc-form-crumb-current">Novo</span>
 			</div>
 			<h1 class="orc-h1" id="orc-novo-proposta-title">Proposta de Orçamento</h1>
 		</div>
 		<div class="orc-page-head-actions">
-			<?= $this->Html->link('Cancelar', ['action' => 'index'], ['class' => 'btn btn-orc-form-secondary']) ?>
+			<?= $this->Html->link('Cancelar', $orcListRoute, ['class' => 'btn btn-orc-form-secondary']) ?>
 			<?= $this->Form->button('Avançar para revisão →', [
 				'type' => 'submit',
 				'class' => 'btn btn-orc-premium-primary',
@@ -111,7 +114,7 @@
 			<i class="fa fa-trash"></i> Limpar
 		</button>
 		<div class="orc-footer-bar-actions">
-			<?= $this->Html->link('Cancelar', ['action' => 'index'], ['class' => 'btn btn-orc-form-secondary']) ?>
+			<?= $this->Html->link('Cancelar', $orcListRoute, ['class' => 'btn btn-orc-form-secondary']) ?>
 			<?= $this->Form->button('Avançar →', [
 				'type' => 'submit',
 				'class' => 'btn btn-orc-premium-primary',

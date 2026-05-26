@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Controller\Traits\ErpPrototypeRbacTrait;
 use App\Controller\Traits\PrototypeApiSecurityTrait;
+use App\Utility\PortalUi;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 
@@ -155,7 +156,7 @@ class OrcamentosPrototypeController extends AppController {
 	}
 
 	/**
-	 * Detalhe de um orçamento (mockup pg-revisao com dados reais).
+	 * Compatibilidade de URL — redireciona para Orcamentos::view (pg-revisao).
 	 *
 	 * @param string|int $id
 	 */
@@ -164,82 +165,11 @@ class OrcamentosPrototypeController extends AppController {
 		if ($id <= 0) {
 			throw new NotFoundException(__('Orçamento inválido.'));
 		}
-		$empresa = (int)$this->Auth->user('idempresa');
-		$orc = null;
-		$itens = [];
-		try {
-			$orc = $this->Orcamentos->find()
-				->contain(['Clientes', 'Users'])
-				->where(['Orcamentos.id' => $id, 'Orcamentos.idempresa' => $empresa])
-				->first();
-		} catch (\Throwable $e) {
+		$route = PortalUi::orcamentosDetalheRoute($id);
+		if ($route !== null) {
+			return $this->redirect($route);
 		}
-		if ($orc === null) {
-			throw new NotFoundException(__('Orçamento não encontrado ou fora do seu escopo.'));
-		}
-		try {
-			$tblItens = $this->loadModel('Orcamentositens');
-			$itens = $tblItens->find()
-				->where(['Orcamentositens.idorcamento' => $id])
-				->order(['Orcamentositens.id' => 'ASC'])
-				->all()
-				->toArray();
-		} catch (\Throwable $e) {
-		}
-
-		$totalSub = 0.0;
-		$totalDesc = 0.0;
-		$linhas = [];
-		foreach ($itens as $it) {
-			$qtd = (float)($it->get('quantidade') ?? 1);
-			$vu = (float)($it->get('valorunitario') ?? 0);
-			$desc = (float)($it->get('valordesconto') ?? 0);
-			$subtotal = $qtd * $vu - $desc;
-			$totalSub += $qtd * $vu;
-			$totalDesc += $desc;
-			$linhas[] = [
-				'id' => (int)$it->get('id'),
-				'codigo' => (string)($it->get('codproduto') ?? ''),
-				'descricao' => (string)($it->get('descricao') ?? ''),
-				'unidade' => (string)($it->get('unidade') ?? ''),
-				'qtd' => $qtd,
-				'vlr' => $vu,
-				'desconto' => $desc,
-				'subtotal' => $subtotal,
-			];
-		}
-
-		$cliente = $orc->cliente ?? null;
-		$autor = $orc->user ?? null;
-		$historico = (new \App\Service\PrototypeStatusHistoryService())->fetch('orcamento', $id, 30);
-		$this->set([
-			'title' => __('Orçamento #{0}', $id),
-			'orcHistorico' => $historico,
-			'erpNavActive' => 'orc-lista',
-			'erpBreadcrumb' => [
-				['label' => 'PGM ERP'],
-				['label' => __('Comercial')],
-				['label' => __('Orçamentos'), 'url' => ['controller' => 'OrcamentosPrototype', 'action' => 'lista']],
-				['label' => '#' . $id, 'cur' => true],
-			],
-			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
-			'orc' => [
-				'id' => (int)$orc->get('id'),
-				'cliente' => $cliente ? (string)($cliente->get('razaosocial') ?? $cliente->get('nome') ?? '') : '—',
-				'cliente_cnpj' => $cliente ? (string)($cliente->get('cnpj') ?? $cliente->get('cpf') ?? '') : '',
-				'autor' => $autor ? trim((string)($autor->get('name') ?? $autor->get('username'))) : '—',
-				'status' => (int)$orc->get('status'),
-				'created' => $orc->get('created'),
-				'modified' => $orc->get('modified'),
-				'observacao' => (string)($orc->get('observacao') ?? ''),
-				'valortotal' => (float)($orc->get('valortotal') ?? $orc->get('valor') ?? 0),
-			],
-			'orcLinhas' => $linhas,
-			'orcTotalSub' => $totalSub,
-			'orcTotalDesc' => $totalDesc,
-		]);
-
-		return $this->render('detalhe');
+		throw new NotFoundException(__('Orçamento inválido.'));
 	}
 
 	/**
@@ -251,20 +181,29 @@ class OrcamentosPrototypeController extends AppController {
 		if ($page === 'lista') {
 			return $this->lista();
 		}
+		if ($page === 'novo') {
+			return $this->redirect(PortalUi::orcamentosNovoRoute());
+		}
 		if (in_array($page, ['faturamento', 'cobranca'], true)) {
 			return $this->redirect(['controller' => 'Faturamento', 'action' => 'index']);
 		}
 		$orcId = (int)$this->request->getQuery('id', 0);
 		if ($orcId > 0) {
 			if ($page === 'revisao') {
-				return $this->redirect(['action' => 'detalhe', $orcId]);
+				$route = PortalUi::orcamentosDetalheRoute($orcId);
+				if ($route !== null) {
+					return $this->redirect($route);
+				}
 			}
 			if ($page === 'print') {
-				return $this->redirect(['controller' => 'Orcamentos', 'action' => 'imprimirPdf', $orcId]);
+				return $this->redirect(['controller' => 'Orcamentos', 'action' => 'imprimir', $orcId]);
 			}
 			if ($page === 'esign' || $page === 'sucesso') {
-				return $this->redirect(['controller' => 'Orcamentos', 'action' => 'view', $orcId]);
+				return $this->redirect(['controller' => 'Orcamentos', 'action' => 'envioassinatura', $orcId]);
 			}
+		}
+		if (in_array($page, ['revisao', 'print', 'esign', 'sucesso'], true)) {
+			return $this->redirect(['action' => 'lista']);
 		}
 		$wizard = ['novo' => 1, 'revisao' => 2, 'print' => 3, 'esign' => 4, 'sucesso' => 5];
 		$allowed = array_merge(array_keys($wizard), ['faturamento', 'cobranca']);
@@ -730,7 +669,7 @@ class OrcamentosPrototypeController extends AppController {
 		if ($idcliente <= 0) {
 			$this->Flash->error(__('Selecione um cliente para iniciar o orçamento.'));
 
-			return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo']);
+			return $this->redirect(PortalUi::orcamentosNovoRoute());
 		}
 		try {
 			$cli = $this->Clientes->find()
@@ -739,7 +678,7 @@ class OrcamentosPrototypeController extends AppController {
 			if ($cli === null) {
 				$this->Flash->error(__('Cliente fora do seu escopo.'));
 
-				return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo']);
+				return $this->redirect(PortalUi::orcamentosNovoRoute());
 			}
 			$entity = $this->Orcamentos->newEntity([
 				'idempresa' => $empresa,
@@ -754,15 +693,16 @@ class OrcamentosPrototypeController extends AppController {
 			if ($saved === false) {
 				$this->Flash->error(__('Falha ao gravar o orçamento.'));
 
-				return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo']);
+				return $this->redirect(PortalUi::orcamentosNovoRoute());
 			}
 			$this->Flash->success(__('Orçamento {0} criado em rascunho.', sprintf('ORC-%04d', (int)$entity->get('id'))));
+			$next = PortalUi::orcamentosDetalheRoute((int)$entity->get('id'));
 
-			return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', (int)$entity->get('id')]);
+			return $this->redirect($next ?? ['controller' => 'Orcamentos', 'action' => 'edit', (int)$entity->get('id')]);
 		} catch (\Throwable $e) {
 			$this->Flash->error(__('Erro ao gravar: {0}', $e->getMessage()));
 
-			return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo']);
+			return $this->redirect(PortalUi::orcamentosNovoRoute());
 		}
 	}
 
