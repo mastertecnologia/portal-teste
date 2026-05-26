@@ -10,6 +10,11 @@ $brl = function ($v) {
 	return 'R$ ' . number_format((float)$v, 2, ',', '.');
 };
 $nomeCliente = empty($orcamento->cliente->razaosocial) ? ($orcamento->cliente->nome ?? '—') : $orcamento->cliente->razaosocial;
+$cliTipo = (int)($orcamento->cliente->tipo ?? 0);
+$cliDocLbl = ($cliTipo === (int)C_ClientesTipoJuridica) ? 'CNPJ' : 'CPF';
+$cliDocRaw = ($cliTipo === (int)C_ClientesTipoJuridica) ? ($orcamento->cliente->cnpj ?? '') : ($orcamento->cliente->cpf ?? '');
+$cliDocFmt = function_exists('formatCnpjCpf') ? formatCnpjCpf($cliDocRaw) : (string)$cliDocRaw;
+$validoateFmt = function_exists('pgm_format_date_br') ? pgm_format_date_br($orcamento->validoate ?? null) : (string)($orcamento->validoate ?? '—');
 $autorNome = ($orcamento->user && !empty($orcamento->user->name)) ? $orcamento->user->name : '—';
 $createdFmt = $orcamento->created ? $orcamento->created->format('d/m/Y') : '—';
 $st = (int)$orcamento->status;
@@ -135,8 +140,9 @@ $versaoStatusBadge = function ($versaoEnt) {
 					<div class="orc-sec-title">Dados do cliente</div>
 					<div class="orc-kv-list">
 						<div class="orc-kv-row"><span class="orc-kv-lbl">Cliente</span><span class="orc-kv-val"><?= h($nomeCliente) ?></span></div>
+						<div class="orc-kv-row"><span class="orc-kv-lbl"><?= h($cliDocLbl) ?></span><span class="orc-kv-val"><?= h($cliDocFmt !== '' ? $cliDocFmt : '—') ?></span></div>
 						<div class="orc-kv-row"><span class="orc-kv-lbl">Pagamento</span><span class="orc-kv-val"><?= !empty($orcamento->formapagamento) ? h($orcamento->formapagamento) : '—' ?></span></div>
-						<div class="orc-kv-row"><span class="orc-kv-lbl">Válido até</span><span class="orc-kv-val orc-kv-val--amber"><?= h($orcamento->validoate) ?></span></div>
+						<div class="orc-kv-row"><span class="orc-kv-lbl">Válido até</span><span class="orc-kv-val orc-kv-val--amber"><?= h($validoateFmt !== '' ? $validoateFmt : '—') ?></span></div>
 					</div>
 				</div>
 			</div>

@@ -167,12 +167,15 @@
 			return;
 		}
 		var jur = cfg.juridicaTipo;
+		var fmt = window.orcFormatDocBr || function (r) {
+			return r;
+		};
 		if (parseInt(m.tipo, 10) === jur) {
 			$('#orc-cli-doc-lbl').text('CNPJ');
-			$('#orc-cli-doc').val(m.cnpj || '');
+			$('#orc-cli-doc').val(fmt(m.cnpj || '', true));
 		} else {
 			$('#orc-cli-doc-lbl').text('CPF');
-			$('#orc-cli-doc').val(m.cpf || '');
+			$('#orc-cli-doc').val(fmt(m.cpf || '', false));
 		}
 		$('#orc-cli-email').val(m.email || '');
 		var cont = (m.nome || '').trim();
@@ -397,10 +400,33 @@
 	});
 
 	$('#tipo').change(function () {
+		var $q = $('#quantidade');
+		if ($q.data('mask')) {
+			$q.unmask();
+		}
 		if ($(this).val() == 1) {
-			$('#quantidade').mask('99:99');
+			$q.attr('type', 'text');
+			$q.removeClass('orc-input-compact');
+			$q.mask('99:99');
 		} else {
-			$('#quantidade').mask('0000000');
+			$q.attr('type', 'number');
+			$q.addClass('orc-input-compact');
+		}
+	});
+
+	$(document).on('click', '.orc-date-trigger', function (e) {
+		e.preventDefault();
+		var sel = $(this).attr('data-target');
+		var $inp = sel ? $(sel) : $(this).siblings('.datepicker').first();
+		if ($inp.length) {
+			$inp.trigger('focus');
+			if (typeof $inp.bootstrapMaterialDatePicker === 'function') {
+				try {
+					$inp.bootstrapMaterialDatePicker('setDate', $inp.val() ? $inp.val() : moment());
+				} catch (err) {
+					/* picker já inicializado no layout */
+				}
+			}
 		}
 	});
 

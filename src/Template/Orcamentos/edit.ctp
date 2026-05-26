@@ -130,7 +130,12 @@
 				</div>
 				<div class="col-lg-3 col-md-6 col-sm-12">
 					<label class="control-label">Válido até</label>
-					<?= $this->Form->text('validoate', ['class' => 'form-control datepicker', 'id' => 'validoate', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true, 'data-mask' => '99/99/9999']) ?>
+					<div class="orc-date-field">
+						<?= $this->Form->text('validoate', ['class' => 'form-control datepicker', 'id' => 'validoate', 'placeholder' => 'dd/mm/aaaa', 'required' => true, 'autocomplete' => 'off']) ?>
+						<button type="button" class="orc-date-trigger" tabindex="-1" aria-label="Abrir calendário" data-target="#validoate">
+							<i class="fa fa-calendar" aria-hidden="true"></i>
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>

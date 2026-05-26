@@ -62,6 +62,19 @@ $configJson = json_encode($config, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASH
 $estoquesLoteJson = json_encode(Router::url(['controller' => 'Produtos', 'action' => 'estoquesLote']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 ?>
 <script>
+window.orcFormatDocBr = window.orcFormatDocBr || function (raw, isCnpj) {
+	var d = String(raw == null ? '' : raw).replace(/\D/g, '');
+	if (!d) {
+		return '';
+	}
+	if (isCnpj && d.length === 14) {
+		return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+	}
+	if (!isCnpj && d.length === 11) {
+		return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+	}
+	return raw;
+};
 window.SomenteNumero = window.SomenteNumero || function (e, campo) {
 	var tecla = (window.event) ? event.keyCode : e.which;
 	if (tecla > 47 && tecla < 58) {

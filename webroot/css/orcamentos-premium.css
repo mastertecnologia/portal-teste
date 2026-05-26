@@ -3172,6 +3172,77 @@ body.layout-no-topbar .orc-premium-form .orc-wf-pend {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(110px, 130px) minmax(0, 1.4fr);
   margin-bottom: 10px;
 }
+
+/* Tipografia alinhada ao protótipo pg-novo */
+.orc-premium-form.orc-premium-wrap,
+.orc-premium-view.orc-premium-wrap {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13px;
+  color: var(--orc-text, #1a1a18);
+}
+
+.orc-premium-form .orc-date-field {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+.orc-premium-form .orc-date-field .form-control.datepicker {
+  padding-right: 38px;
+}
+.orc-premium-form .orc-date-trigger {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 36px;
+  border: none;
+  background: transparent;
+  color: var(--orc-text-muted, #6b6a65);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 8px 8px 0;
+}
+.orc-premium-form .orc-date-trigger:hover {
+  color: var(--orc-teal, #1d9e75);
+}
+
+/* Tipo / Qtde / Vl. unit — cards compactos (protótipo) */
+.orc-premium-form .orc-field--compact .orc-input-compact,
+.orc-premium-form .orc-field--compact select.orc-input-compact {
+  height: 38px;
+  min-height: 38px;
+  padding: 8px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--orc-border, #e5e4e0);
+  background: var(--orc-bg-surface, #f9f9f8);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--orc-text, #1a1a18);
+  box-shadow: none;
+}
+.orc-premium-form .orc-field--compact .orc-input-compact:focus,
+.orc-premium-form .orc-field--compact select.orc-input-compact:focus {
+  border-color: var(--orc-teal, #1d9e75);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.08);
+}
+.orc-premium-form .orc-field--qtd.orc-field--compact .orc-input-compact {
+  text-align: center;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.orc-premium-form .orc-field--vl.orc-field--compact .orc-input-compact {
+  text-align: center;
+}
+.orc-premium-form .orc-field--tipo.orc-field--compact select.orc-input-compact {
+  padding-right: 2rem !important;
+}
+.orc-premium-form .orc-field--qtd input[type='number'].orc-input-compact::-webkit-inner-spin-button,
+.orc-premium-form .orc-field--qtd input[type='number'].orc-input-compact::-webkit-outer-spin-button {
+  opacity: 1;
+}
 @media (max-width: 991px) {
   .orc-premium-form .orc-manual-grid--row1 {
     grid-template-columns: 1fr 1fr;

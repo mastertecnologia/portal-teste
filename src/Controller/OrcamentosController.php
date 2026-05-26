@@ -1298,11 +1298,7 @@ class OrcamentosController extends AppController {
 							$this->request->getParam('action'),
 							$orcamento->id
 						);
-						$next = PortalUi::isPremiumModule('orcamentos')
-							? PortalUi::orcamentosDetalheRoute((int)$orcamento->id)
-							: ['action' => 'edit', $orcamento->id];
-
-						return $this->redirect($next ?? ['action' => 'edit', $orcamento->id]);
+						return $this->redirect(['action' => 'view', $orcamento->id]);
 					}
 					$this->Orcamentos->delete($orcamento);
 					$this->Empresas->decrementOrcamento($this->Auth->user('idempresa'));
@@ -1345,8 +1341,8 @@ class OrcamentosController extends AppController {
 			$clientesOpt[$reg->id] = $nomeCliente . ' (' . $nomeCidade . ')';
 			$clientesMeta[$reg->id] = [
 				'tipo' => (int)$reg->tipo,
-				'cnpj' => (string)($reg->cnpj ?? ''),
-				'cpf' => (string)($reg->cpf ?? ''),
+				'cnpj' => function_exists('formatCnpjCpf') ? formatCnpjCpf($reg->cnpj ?? '') : (string)($reg->cnpj ?? ''),
+				'cpf' => function_exists('formatCnpjCpf') ? formatCnpjCpf($reg->cpf ?? '') : (string)($reg->cpf ?? ''),
 				'email' => (string)($reg->email ?? ''),
 				'nome' => (string)($reg->nome ?? ''),
 				'razaosocial' => (string)($reg->razaosocial ?? ''),
@@ -1719,7 +1715,7 @@ class OrcamentosController extends AppController {
 			->where(['Orcamentos.idempresa' => $this->Auth->user('idempresa'), 'Orcamentos.id' => $id])
 			->contain([
 				'Users' => ['fields' => ['Users.name']],
-				'Clientes' => ['fields' => ['Clientes.razaosocial', 'Clientes.nome', 'Clientes.email', 'Clientes.tipo']],
+				'Clientes' => ['fields' => ['Clientes.razaosocial', 'Clientes.nome', 'Clientes.email', 'Clientes.tipo', 'Clientes.cnpj', 'Clientes.cpf']],
 			])
 		->first();
 

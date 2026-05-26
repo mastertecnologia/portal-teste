@@ -65,22 +65,35 @@ $orcFieldTpl = [
 			<?= $this->Form->control('servico', array_merge($orcFieldTpl, ['class' => 'form-control', 'label' => false, 'placeholder' => 'Descrição...'])) ?>
 			<small class="qtdEstoque text-muted"></small>
 		</div>
-		<div class="orc-field orc-field--tipo">
+		<div class="orc-field orc-field--tipo orc-field--compact">
 			<label class="control-label">Tipo</label>
-			<select id="orc-f-tip" class="form-control orc-native-select" title="Tipo do item">
+			<select id="orc-f-tip" class="form-control orc-native-select orc-input-compact" title="Tipo do item">
 				<option value="prod">Produto</option>
 				<option value="serv">Serviço</option>
 				<option value="lic">Licença</option>
 				<option value="loc">Locação</option>
 			</select>
 		</div>
-		<div class="orc-field orc-field--qtd">
+		<div class="orc-field orc-field--qtd orc-field--compact">
 			<label class="control-label">Qtde.</label>
-			<?= $this->Form->control('quantidade', array_merge($orcFieldTpl, ['onkeypress' => 'return SomenteNumero(event, "#quantidade")', 'class' => 'quantidade form-control', 'label' => false, 'value' => '1'])) ?>
+			<?= $this->Form->control('quantidade', array_merge($orcFieldTpl, [
+				'type' => 'number',
+				'min' => 0,
+				'step' => 'any',
+				'onkeypress' => 'return SomenteNumero(event, "#quantidade")',
+				'class' => 'quantidade form-control orc-input-compact',
+				'label' => false,
+				'value' => '1',
+			])) ?>
 		</div>
-		<div class="orc-field orc-field--vl">
+		<div class="orc-field orc-field--vl orc-field--compact">
 			<label class="control-label">Vl. Unit. (R$)</label>
-			<?= $this->Form->control('valoruni', array_merge($orcFieldTpl, ['onkeypress' => 'return SomenteNumero(event, "#valoruni")', 'class' => 'form-control mascaramonetaria', 'label' => false, 'placeholder' => '0,00'])) ?>
+			<?= $this->Form->control('valoruni', array_merge($orcFieldTpl, [
+				'onkeypress' => 'return SomenteNumero(event, "#valoruni")',
+				'class' => 'form-control mascaramonetaria orc-input-compact',
+				'label' => false,
+				'placeholder' => '0,00',
+			])) ?>
 		</div>
 	</div>
 	<div class="orc-manual-grid orc-manual-grid--row2">
