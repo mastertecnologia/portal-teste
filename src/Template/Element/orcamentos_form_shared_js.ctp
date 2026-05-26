@@ -29,11 +29,16 @@ if ($mode === 'edit') {
 	$addservicoUrl = Router::url(['controller' => 'Orcamentos', 'action' => 'addservico']);
 }
 
+$tipoLicenca = defined('C_ProdutosTipoLicenca') ? (int)C_ProdutosTipoLicenca : 2;
+$tipoLocacao = defined('C_ProdutosTipoLocacao') ? (int)C_ProdutosTipoLocacao : 3;
+
 $config = [
 	'mode' => $mode,
 	'orcamentoId' => $mode === 'edit' ? (int)($orcamentoId ?? 0) : 0,
 	'tipoServico' => $tipoServico,
 	'tipoProduto' => $tipoProduto,
+	'tipoLicenca' => $tipoLicenca,
+	'tipoLocacao' => $tipoLocacao,
 	'juridicaTipo' => $juridicaTipo,
 	'toggleTitleNew' => 'Proposta de Orçamento',
 	'toggleTitleEdit' => 'Editando item do orçamento',

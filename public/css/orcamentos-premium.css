@@ -1499,6 +1499,11 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   margin: 10px 0 4px;
   padding: 0 2px;
 }
+.orc-premium-wrap .orc-is-hidden,
+.orc-premium-form .orc-is-hidden {
+	display: none !important;
+}
+
 .orc-premium-form .orc-inline-actions.orc-is-hidden {
   display: none !important;
 }

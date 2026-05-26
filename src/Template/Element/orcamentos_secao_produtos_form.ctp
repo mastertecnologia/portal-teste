@@ -65,7 +65,12 @@ $orcFieldTpl = [
 		</div>
 		<div class="orc-field orc-field--tipo">
 			<label class="control-label">Tipo</label>
-			<input type="text" class="form-control orc-input-readonly-fill" id="orc-f-tip-display" readonly placeholder="—" />
+			<select id="orc-f-tip" class="form-control orc-native-select" title="Tipo do item">
+				<option value="prod">Produto</option>
+				<option value="serv">Serviço</option>
+				<option value="lic">Licença</option>
+				<option value="loc">Locação</option>
+			</select>
 		</div>
 		<div class="orc-field orc-field--qtd">
 			<label class="control-label">Qtde.</label>

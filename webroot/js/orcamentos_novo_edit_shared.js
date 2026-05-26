@@ -43,16 +43,75 @@
 		el.textContent = t ? t : '—';
 	}
 
-	function orcTipDisplayFromProduto(data) {
-		var lbl = 'Serviço';
-		if (data && data.tipo == cfg.tipoProduto) {
-			lbl = 'Produto';
-		} else if (data && data.tipo == cfg.tipoServico) {
-			lbl = 'Serviço';
-		} else if (data && data.tipoLabel) {
-			lbl = data.tipoLabel;
+	function orcTipBadgeFromCatalogCodigo(codigo) {
+		var found = null;
+		(window.orcProdutosCatalogo || []).some(function (p) {
+			if (String(p.codigo) === String(codigo) || String(p.id) === String(codigo)) {
+				found = p;
+				return true;
+			}
+			return false;
+		});
+		if (found && found.badge) {
+			return String(found.badge);
 		}
-		$('#orc-f-tip-display').val(lbl);
+		return null;
+	}
+
+	function orcTipBadgeFromData(data, codigoFallback) {
+		if (data && data.badge) {
+			return String(data.badge);
+		}
+		var fromCat = codigoFallback ? orcTipBadgeFromCatalogCodigo(codigoFallback) : null;
+		if (fromCat) {
+			return fromCat;
+		}
+		if (data && data.tipoLabel) {
+			var tl = String(data.tipoLabel).toLowerCase();
+			if (tl.indexOf('licen') >= 0) {
+				return 'lic';
+			}
+			if (tl.indexOf('loca') >= 0) {
+				return 'loc';
+			}
+			if (tl.indexOf('prod') >= 0) {
+				return 'prod';
+			}
+			if (tl.indexOf('serv') >= 0) {
+				return 'serv';
+			}
+		}
+		var t = data && data.tipo !== undefined && data.tipo !== null ? parseInt(data.tipo, 10) : NaN;
+		if (!isNaN(t)) {
+			if (t === cfg.tipoProduto) {
+				return 'prod';
+			}
+			if (t === cfg.tipoServico) {
+				return 'serv';
+			}
+			if (typeof cfg.tipoLicenca !== 'undefined' && t === cfg.tipoLicenca) {
+				return 'lic';
+			}
+			if (typeof cfg.tipoLocacao !== 'undefined' && t === cfg.tipoLocacao) {
+				return 'loc';
+			}
+		}
+		return 'serv';
+	}
+
+	function orcTipDisplayFromProduto(data, codigoFallback) {
+		var $tip = $('#orc-f-tip');
+		if (!$tip.length) {
+			return;
+		}
+		var badge = orcTipBadgeFromData(data, codigoFallback || (data && data.codigo));
+		if (badge === 'srv') {
+			badge = 'serv';
+		}
+		if (['prod', 'serv', 'lic', 'loc'].indexOf(badge) < 0) {
+			badge = 'serv';
+		}
+		$tip.val(badge);
 	}
 
 	function orcCustoUnitFromCatalog(codigo) {
@@ -220,13 +279,14 @@
 		orcObsSolicitacaoPreviewSync();
 	});
 
-	$('#idproduto').change(function () {
-		if ($(this).val() != 0) {
+	function orcOnIdprodutoChange() {
+		var codigoSel = $('#idproduto').val();
+		if (codigoSel != 0 && codigoSel !== '0') {
 			$('#valoruni').attr('disabled', true);
 			$('.mensal').attr('disabled', true);
 			$.ajax({
 				type: 'post',
-				url: cfg.produtoUrlBase + '/' + $(this).val(),
+				url: cfg.produtoUrlBase + '/' + codigoSel,
 				dataType: 'json',
 				success: function (data) {
 					if (data.mensagem) {
@@ -244,8 +304,8 @@
 						$('#observacao').val(descLinha);
 					}
 					orcInsertDescPreviewSync();
-					orcTipDisplayFromProduto(data);
-					orcCustoUnitFromCatalog($(this).val());
+					orcTipDisplayFromProduto(data, codigoSel);
+					orcCustoUnitFromCatalog(codigoSel);
 					$('#quantidade').val('');
 					$('#valordoservico').val('');
 					if (data.tipo == cfg.tipoServico) {
@@ -304,9 +364,13 @@
 			$('#valoruni').attr('disabled', false);
 			$('.mensal').attr('disabled', false);
 			orcInsertDescPreviewSync();
-			$('#orc-f-tip-display').val('');
+			$('#orc-f-tip').val('prod');
 			$('#orc-custo-unit').val('');
 		}
+	}
+
+	$('#idproduto').on('change changed.bs.select', function () {
+		orcOnIdprodutoChange();
 	});
 
 	$('#tipo').change(function () {
@@ -933,9 +997,7 @@
 			if (!$('#valoruni').val() && parseFloat(p.vlunitario) > 0) {
 				$('#valoruni').val(numberToReal(parseFloat(p.vlunitario)));
 			}
-			if (p.tipoLabel) {
-				$('#orc-f-tip-display').val(p.tipoLabel);
-			}
+			orcTipDisplayFromProduto(p, rawId);
 			if (p.custoUnit != null && parseFloat(p.custoUnit) > 0) {
 				$('#orc-custo-unit').val(numberToReal(parseFloat(p.custoUnit)));
 			}
