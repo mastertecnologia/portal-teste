@@ -689,6 +689,63 @@ class OrcamentosController extends AppController {
 	/**
 	 * @param \Cake\Datasource\EntityInterface $item
 	 */
+	protected function _orcHashSuffix(): string {
+		if (function_exists('sequenciaAleatoria')) {
+			return (string)sequenciaAleatoria();
+		}
+
+		return bin2hex(random_bytes(8));
+	}
+
+	/**
+	 * Valor seguro para coluna idproduto (inteiro legado ou código texto).
+	 *
+	 * @param mixed $idprodutoVal
+	 * @return int|string|null
+	 */
+	protected function _orcIdprodutoParaGravacao($idprodutoVal, $idempresa) {
+		$idprodutoVal = trim((string)$idprodutoVal);
+		if ($idprodutoVal === '' || $idprodutoVal === '0') {
+			return null;
+		}
+		$col = $this->Orcamentosservicos->getSchema()->getColumn('idproduto');
+		$type = (string)($col['type'] ?? '');
+		$isInteger = in_array($type, ['integer', 'biginteger', 'smallinteger', 'tinyinteger'], true);
+		if ($isInteger) {
+			if (is_numeric($idprodutoVal)) {
+				return (int)$idprodutoVal;
+			}
+			$produto = $this->_orcFindProdutoByIdprodutoCampo($idprodutoVal, $idempresa);
+
+			return $produto ? (int)$produto->id : 0;
+		}
+
+		return $idprodutoVal;
+	}
+
+	protected function _orcFormatValidoateForSave($value) {
+		if ($value === null || $value === '') {
+			return $value;
+		}
+		if ($value instanceof \DateTimeInterface) {
+			return $value->format('Y-m-d');
+		}
+		$str = trim((string)$value);
+		if ($str === '') {
+			return $value;
+		}
+		$dt = \DateTime::createFromFormat('d/m/Y', $str);
+		if ($dt instanceof \DateTime) {
+			return $dt->format('Y-m-d');
+		}
+		$dt = \DateTime::createFromFormat('Y-m-d', $str);
+		if ($dt instanceof \DateTime) {
+			return $str;
+		}
+
+		return $value;
+	}
+
 	protected function _orcAplicarPrecosLinhaServicoFromRequest($item, array $data): void {
 		$vlMensalUnit = $this->_orcParseDecimalBr($data['valormensal'] ?? 0);
 		$qtd = $this->_parseQuantidadeOrcamentoLinha($data['quantidade'] ?? ($item->quantidade ?? 0));
@@ -1201,47 +1258,75 @@ class OrcamentosController extends AppController {
 			}
 		}
 
-		if ($this->request->is('post')) { 
-			$postData = $this->request->getData();
-			$orcamento = $this->Orcamentos->patchEntity($orcamento, $postData);
-			$this->_orcNormalizeFormaPagamento($orcamento);
-			$this->_orcPatchDescontoFromRequest($orcamento, $postData);
-			$orcamento->created = date("Y-m-d H:i:s");
-			$orcamento->idautor = $this->Auth->user('id');
-			$orcamento->id = $this->Empresas->incrementOrcamento($this->Auth->user('idempresa'));
-			$orcamento->idempresa = $this->Auth->user('idempresa');
-			$orcamento->hash = $orcamento->idautor . $orcamento->id . $orcamento->idempresa . sequenciaAleatoria();
-			// cria status por padrao como pendente
-			$orcamento->status = C_OrcamentoStatusPendente;
-			$this->_orcEnsureGrupoVersaoOnSave($orcamento);
-			if ($this->_orcSchemaHasColumn('idgrupoversao')) {
-				$orcamento->set('idgrupoversao', (int)$orcamento->id);
-			}
-
-			if ($this->Orcamentos->save($orcamento)) {
-				if(isset($idcarrinhoorcamento)) $_SESSION['idcarrinhoadd'] = $idcarrinhoorcamento;
-				$savedLink = $this->_saveOrcamentositensNovoOrcamento(
-					$_SESSION['idcarrinhoadd'],
-					$orcamento->id,
-					$orcamento->idempresa
-				);
-				if ($savedLink) {
-					$this->limpasession();
-					$this->Flash->success(__('Orçamento gerado com sucesso!'));
-					$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $orcamento->id);
-					$next = PortalUi::isPremiumModule('orcamentos')
-						? PortalUi::orcamentosDetalheRoute((int)$orcamento->id)
-						: ['action' => 'edit', $orcamento->id];
-
-					return $this->redirect($next ?? ['action' => 'edit', $orcamento->id]);
+		if ($this->request->is('post')) {
+			$orcamentoIdReservado = false;
+			try {
+				$postData = $this->request->getData();
+				if (isset($postData['validoate'])) {
+					$postData['validoate'] = $this->_orcFormatValidoateForSave($postData['validoate']);
 				}
-				$this->Orcamentos->delete($orcamento);
-				$this->Empresas->decrementOrcamento($this->Auth->user('idempresa'));
-				$this->Flash->error(__('Não foi possível vincular os itens ao orçamento (erro ao gravar o carrinho). Se o problema persistir, verifique a sequence da tabela orcamentosnovositens no PostgreSQL.'));
+				$orcamento = $this->Orcamentos->patchEntity($orcamento, $postData);
+				$this->_orcNormalizeFormaPagamento($orcamento);
+				$this->_orcPatchDescontoFromRequest($orcamento, $postData);
+				$orcamento->created = date('Y-m-d H:i:s');
+				$orcamento->idautor = $this->Auth->user('id');
+				$orcamento->id = $this->Empresas->incrementOrcamento($this->Auth->user('idempresa'));
+				$orcamentoIdReservado = true;
+				$orcamento->idempresa = $this->Auth->user('idempresa');
+				$orcamento->hash = $orcamento->idautor . $orcamento->id . $orcamento->idempresa . $this->_orcHashSuffix();
+				$orcamento->status = C_OrcamentoStatusPendente;
+				$this->_orcEnsureGrupoVersaoOnSave($orcamento);
+				if ($this->_orcSchemaHasColumn('idgrupoversao')) {
+					$orcamento->set('idgrupoversao', (int)$orcamento->id);
+				}
+
+				if ($this->Orcamentos->save($orcamento)) {
+					if (isset($idcarrinhoorcamento)) {
+						$_SESSION['idcarrinhoadd'] = $idcarrinhoorcamento;
+					}
+					$savedLink = $this->_saveOrcamentositensNovoOrcamento(
+						$_SESSION['idcarrinhoadd'],
+						$orcamento->id,
+						$orcamento->idempresa
+					);
+					if ($savedLink) {
+						$this->limpasession();
+						$this->Flash->success(__('Orçamento gerado com sucesso!'));
+						$this->Atividades->registrar(
+							$this->Auth->user('id'),
+							$this->request->getParam('controller'),
+							$this->request->getParam('action'),
+							$orcamento->id
+						);
+						$next = PortalUi::isPremiumModule('orcamentos')
+							? PortalUi::orcamentosDetalheRoute((int)$orcamento->id)
+							: ['action' => 'edit', $orcamento->id];
+
+						return $this->redirect($next ?? ['action' => 'edit', $orcamento->id]);
+					}
+					$this->Orcamentos->delete($orcamento);
+					$this->Empresas->decrementOrcamento($this->Auth->user('idempresa'));
+					$this->Flash->error(__('Não foi possível vincular os itens ao orçamento (erro ao gravar o carrinho). Se o problema persistir, verifique a sequence da tabela orcamentosnovositens no PostgreSQL.'));
+				} else {
+					$this->Empresas->decrementOrcamento($this->Auth->user('idempresa'));
+					$errs = $orcamento->getErrors();
+					$this->log('Orcamentos::add save failed ' . json_encode($errs), 'warning');
+					$this->Flash->error(__('Não foi possível gerar o orçamento.'));
+				}
+			} catch (\Throwable $e) {
+				$this->log('Orcamentos::add ' . $e->getMessage(), 'error');
+				if ($orcamentoIdReservado) {
+					try {
+						$this->Empresas->decrementOrcamento($this->Auth->user('idempresa'));
+					} catch (\Throwable $e2) {
+						/* ignore */
+					}
+				}
+				$this->Flash->error(__('Erro ao gerar o orçamento. Tente novamente ou contate o suporte.'));
 			}
-			$orcamento->id = $this->Empresas->decrementOrcamento($this->Auth->user('idempresa'));
-			$this->Flash->error(__('Não foi possível gerar o orçamento.'));
-		} else $this->limpacarrinho();
+		} else {
+			$this->limpacarrinho();
+		}
 
 		$this->_orcNormalizeFormaPagamento($orcamento);
 
@@ -1421,7 +1506,7 @@ class OrcamentosController extends AppController {
 		$novo->set('idautor', $this->Auth->user('id'));
 		$novo->set('created', date('Y-m-d H:i:s'));
 		$novo->set('status', C_OrcamentoStatusPendente);
-		$novo->set('hash', $this->Auth->user('id') . $novoId . $idempresa . sequenciaAleatoria());
+		$novo->set('hash', $this->Auth->user('id') . $novoId . $idempresa . $this->_orcHashSuffix());
 		$novo->set('versao', $maxVersao + 1);
 		$novo->set('idgrupoversao', $grupoId);
 		$novo->set('aprovacao_interna', C_OrcamentoAprovacaoInternaPendente);
@@ -1637,6 +1722,11 @@ class OrcamentosController extends AppController {
 				'Clientes' => ['fields' => ['Clientes.razaosocial', 'Clientes.nome', 'Clientes.email', 'Clientes.tipo']],
 			])
 		->first();
+
+		if ($orcamento === null) {
+			$this->Flash->error(__('Orçamento não encontrado.'));
+			return $this->redirect(['action' => 'index']);
+		}
 
 		$idcliente = $this->Auth->user('idcliente');
 		if ($this->Auth->user('role') == C_RoleCliente && $orcamento->idcliente != $idcliente) {
@@ -2146,7 +2236,7 @@ class OrcamentosController extends AppController {
 
 			$orcamentond = $this->Orcamentosservicos->newEntity();
 			if (!empty($data['idproduto']) && $data['idproduto'] != '0') {
-				$orcamentond->idproduto = trim((string)$data['idproduto']);
+				$orcamentond->idproduto = $this->_orcIdprodutoParaGravacao($data['idproduto'], $idempresa);
 			}
 			$orcamentond->servico = $servico;
 			$orcamentond->quantidade = $data['quantidade'] ?? 0;
@@ -3038,9 +3128,9 @@ class OrcamentosController extends AppController {
 				$item->servico = $data['servico'];
 				$item->quantidade = $data['quantidade'];
 				$item->observacao = $data['observacao'];
-				$item->idproduto = !empty($data['idproduto']) && $data['idproduto'] != '0'
-					? trim((string)$data['idproduto'])
-					: $item->idproduto;
+				if (!empty($data['idproduto']) && $data['idproduto'] != '0') {
+					$item->idproduto = $this->_orcIdprodutoParaGravacao($data['idproduto'], (int)$this->Auth->user('idempresa'));
+				}
 				$item->tipo = $data['tipo'];
 				$this->_orcAplicarPrecosLinhaServicoFromRequest($item, $data);
 				$this->_orcSincronizarPrecoProdutoNaLinhaSeBrutoZero($item, (int)$this->Auth->user('idempresa'));

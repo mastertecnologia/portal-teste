@@ -62,6 +62,30 @@ $configJson = json_encode($config, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASH
 $estoquesLoteJson = json_encode(Router::url(['controller' => 'Produtos', 'action' => 'estoquesLote']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 ?>
 <script>
+window.SomenteNumero = window.SomenteNumero || function (e, campo) {
+	var tecla = (window.event) ? event.keyCode : e.which;
+	if (tecla > 47 && tecla < 58) {
+		return true;
+	}
+	if (tecla === 8 || tecla === 0) {
+		return true;
+	}
+	if (tecla === 46) {
+		return false;
+	}
+	if (campo && typeof jQuery !== 'undefined') {
+		var v = jQuery(campo).val() || '';
+		if (v.indexOf(',') > -1 && tecla === 44) {
+			return false;
+		}
+		if (v.indexOf(',') <= -1 && tecla === 44) {
+			return true;
+		}
+	} else if (tecla === 44) {
+		return true;
+	}
+	return false;
+};
 window.orcClientesMeta = <?= $clientesMetaJson ?>;
 window.orcProdutosCatalogo = <?= $produtosCatalogoJson ?>;
 window.orcEstoquesLoteUrl = <?= $estoquesLoteJson ?>;
