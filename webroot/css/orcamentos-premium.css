@@ -1099,6 +1099,12 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   background: var(--orc-teal);
   transition: width .4s, background .4s;
 }
+.orc-premium-form .orc-margin-fill--muted {
+  background: #b8b6b0;
+}
+.orc-premium-form .orc-margin-card--with-bar .orc-margin-card-val {
+  margin-bottom: 3px;
+}
 .orc-premium-form .orc-margin-card-val--muted {
   color: var(--orc-text-muted, #6b6a65);
 }
@@ -1194,27 +1200,57 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   border-radius: 6px;
   font-size: 12px;
 }
+.orc-premium-form .orc-field--disc .control-label {
+  display: block;
+  margin-bottom: 4px;
+}
 .orc-premium-form .orc-item-discount-wrap,
 .orc-premium-form .orc-line-disc-edit {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   flex-wrap: nowrap;
+  width: 100%;
 }
 .orc-premium-form .orc-item-discount-wrap .orc-discount-inp,
 .orc-premium-form .orc-line-disc-edit .orc-line-disc-val {
-  width: 56px;
-  min-width: 48px;
-  padding: 4px 6px;
+  flex: 1 1 52px;
+  width: auto;
+  min-width: 0;
+  max-width: 72px;
+  padding: 5px 8px;
   border: 1px solid #e5e4e0;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 12px;
   text-align: right;
+  height: 32px;
+  box-sizing: border-box;
 }
+.orc-premium-form .orc-item-discount-wrap .orc-discount-select,
 .orc-premium-form .orc-line-disc-edit .orc-line-disc-tipo {
-  width: 44px;
-  padding: 4px 2px;
-  font-size: 11px;
+  flex: 0 0 52px;
+  width: 52px;
+  min-width: 52px;
+  padding: 5px 4px;
+  font-size: 12px;
+  height: 32px;
+  box-sizing: border-box;
+}
+.orc-premium-form .orc-discount-row {
+  align-items: center;
+}
+.orc-premium-form .orc-discount-row .orc-discount-inp {
+  flex: 0 0 70px;
+  width: 70px;
+  height: 32px;
+  box-sizing: border-box;
+}
+.orc-premium-form .orc-discount-row .orc-discount-select {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 32px;
+  box-sizing: border-box;
 }
 .orc-premium-form .orc-line-disc-lbl {
   font-size: 11px;
@@ -3133,7 +3169,7 @@ body.layout-no-topbar .orc-premium-form .orc-wf-pend {
   grid-template-columns: 100px minmax(0, 1fr) 95px 65px 100px;
 }
 .orc-premium-form .orc-manual-grid--row2 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(110px, 130px) minmax(0, 1.4fr);
   margin-bottom: 10px;
 }
 @media (max-width: 991px) {

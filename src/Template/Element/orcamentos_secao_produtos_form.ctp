@@ -38,15 +38,17 @@ $orcFieldTpl = [
 			<div class="orc-margin-card-val" id="ms-subtotal">R$ 0,00</div>
 			<div class="orc-margin-card-lbl">Subtotal venda</div>
 		</div>
-		<div class="orc-margin-card">
+		<div class="orc-margin-card orc-margin-card--with-bar">
 			<div class="orc-margin-card-val orc-margin-card-val--muted" id="ms-custo">R$ 0,00</div>
 			<div class="orc-margin-card-lbl">Custo total</div>
+			<div class="orc-margin-bar"><div class="orc-margin-fill orc-margin-fill--muted" id="ms-bar-custo"></div></div>
 		</div>
-		<div class="orc-margin-card">
+		<div class="orc-margin-card orc-margin-card--with-bar">
 			<div class="orc-margin-card-val orc-margin-card-val--teal" id="ms-lucro">R$ 0,00</div>
 			<div class="orc-margin-card-lbl">Lucro bruto</div>
+			<div class="orc-margin-bar"><div class="orc-margin-fill" id="ms-bar-lucro"></div></div>
 		</div>
-		<div class="orc-margin-card">
+		<div class="orc-margin-card orc-margin-card--with-bar">
 			<div class="orc-margin-card-val orc-margin-card-val--teal" id="ms-margem">0%</div>
 			<div class="orc-margin-card-lbl">Margem bruta</div>
 			<div class="orc-margin-bar"><div class="orc-margin-fill" id="ms-bar"></div></div>

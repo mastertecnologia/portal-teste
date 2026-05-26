@@ -233,6 +233,8 @@
 		});
 		var lucro = subVenda - subCusto;
 		var margem = subVenda > 0.01 ? Math.round((lucro / subVenda) * 100) : 0;
+		var pctCusto = subVenda > 0.01 ? Math.min(100, Math.round((subCusto / subVenda) * 100)) : 0;
+		var pctLucro = subVenda > 0.01 ? Math.min(100, Math.max(0, margem)) : 0;
 		$('#ms-subtotal').text('R$ ' + numberToReal(subVenda));
 		$('#ms-custo').text('R$ ' + numberToReal(subCusto));
 		$('#ms-lucro').text('R$ ' + numberToReal(lucro));
@@ -241,6 +243,14 @@
 		var msBar = document.getElementById('ms-bar');
 		if (msBar) {
 			msBar.style.setProperty('--orc-margin-pct', w + '%');
+		}
+		var msBarCusto = document.getElementById('ms-bar-custo');
+		if (msBarCusto) {
+			msBarCusto.style.setProperty('--orc-margin-pct', pctCusto + '%');
+		}
+		var msBarLucro = document.getElementById('ms-bar-lucro');
+		if (msBarLucro) {
+			msBarLucro.style.setProperty('--orc-margin-pct', pctLucro + '%');
 		}
 		orcApplyDiscountRow(subVenda, subCusto);
 	};
@@ -523,6 +533,21 @@
 
 	var editando = false;
 
+	function orcDiscValFromRaw(raw) {
+		if (raw === undefined || raw === null || raw === '') {
+			return '0';
+		}
+		if (typeof raw === 'number' && !isNaN(raw)) {
+			return String(raw);
+		}
+		var s = String(raw).trim().replace(/\s/g, '');
+		if (s.indexOf(',') >= 0) {
+			s = s.replace(/\./g, '').replace(',', '.');
+		}
+		var n = parseFloat(s);
+		return isNaN(n) ? '0' : String(n);
+	}
+
 	function preencherFormularioEdicao(dados) {
 		$('#servico').val(dados.servico);
 		$('#quantidade').val(dados.quantidade);
@@ -532,7 +557,7 @@
 		$('#idproduto').val(dados.idproduto);
 		$('#tipo').val(dados.tipo);
 		$('#item_edit_id').val(dados.id);
-		$('#orc-item-disc-val').val(dados.descontoValor != null ? dados.descontoValor : 0);
+		$('#orc-item-disc-val').val(orcDiscValFromRaw(dados.descontoValor));
 		$('#orc-item-disc-tipo').val(dados.descontoTipo || 'pct');
 		if (dados.tipo == 1) {
 			$('#quantidade').mask('99:99');
@@ -615,6 +640,16 @@
 	$(document).on('click', '.editaitemcarrinho', function (e) {
 		e.preventDefault();
 		var $btn = $(this);
+		var $row = $btn.closest('tr');
+		var discVal = $btn.attr('data-orc-disc-v');
+		if (discVal === undefined || discVal === null || discVal === '') {
+			discVal = $btn.attr('data-desconto-valor');
+		}
+		var discTipo = $btn.attr('data-orc-disc-t') || $btn.attr('data-desconto-tipo') || 'pct';
+		if ($row.find('.orc-line-disc-val').length) {
+			discVal = $row.find('.orc-line-disc-val').val();
+			discTipo = $row.find('.orc-line-disc-tipo').val() || discTipo;
+		}
 		var dados = {
 			id: $btn.data('id'),
 			servico: $btn.data('servico'),
@@ -624,8 +659,8 @@
 			valormensal: $btn.data('valormensal'),
 			idproduto: $btn.data('idproduto'),
 			tipo: $btn.data('tipo'),
-			descontoValor: $btn.attr('data-desconto-valor') != null ? $btn.attr('data-desconto-valor') : $btn.data('descontoValor'),
-			descontoTipo: $btn.attr('data-desconto-tipo') || $btn.data('descontoTipo') || 'pct'
+			descontoValor: discVal,
+			descontoTipo: discTipo
 		};
 		preencherFormularioEdicao(dados);
 		toggleModoEdicao(true);
@@ -811,10 +846,12 @@
 		$('#ms-custo').text('R$ ' + numberToReal(0));
 		$('#ms-lucro').text('R$ ' + numberToReal(0));
 		$('#ms-margem').text('0%');
-		var msBarInit = document.getElementById('ms-bar');
-		if (msBarInit) {
-			msBarInit.style.setProperty('--orc-margin-pct', '0%');
-		}
+		['ms-bar', 'ms-bar-custo', 'ms-bar-lucro'].forEach(function (id) {
+			var el = document.getElementById(id);
+			if (el) {
+				el.style.setProperty('--orc-margin-pct', '0%');
+			}
+		});
 		orcApplyDiscountRow(0, 0);
 	});
 
