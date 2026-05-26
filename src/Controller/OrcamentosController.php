@@ -1371,6 +1371,125 @@ class OrcamentosController extends AppController {
 		$this->set('orcItemDescontoEnabled', $this->_orcServicoTemDescontoColunas());
 	}
 
+	/**
+	 * Passo 1 do fluxo premium: dados + itens (mesma UX de add), sem workflow de edit.
+	 * POST grava cabeçalho e redireciona para revisão (view).
+	 */
+	public function dados($id = null) {
+		if ($this->Auth->user('role') == 1) {
+			$this->Flash->error('Você não possui permissões para acessar esta página.');
+
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+
+		$orcamento = $this->Orcamentos->find('all')
+			->where(['Orcamentos.idempresa' => $this->Auth->user('idempresa'), 'Orcamentos.id' => $id])
+			->first();
+		if ($orcamento === null) {
+			$this->Flash->error(__('Orçamento não encontrado.'));
+
+			return $this->redirect(['action' => 'index']);
+		}
+		$this->_orcNormalizeFormaPagamento($orcamento);
+
+		$carrinho = $this->Orcamentositens->find('all')
+			->where(['idempresa' => $this->Auth->user('idempresa'), 'idorcamento' => $id])
+			->first();
+		if (empty($carrinho)) {
+			$ultimo = $this->Orcamentos->find('all')->order(['id' => 'ASC'])->last();
+			$_SESSION['idcarrinho'] = $this->Auth->user('idempresa') . $ultimo->id + 1 . $this->Auth->user('id');
+		} else {
+			$_SESSION['idcarrinho'] = $carrinho->iditem;
+		}
+
+		if ($this->request->is(['post', 'put'])) {
+			$postData = $this->request->getData();
+			if (isset($postData['validoate'])) {
+				$postData['validoate'] = $this->_orcFormatValidoateForSave($postData['validoate']);
+			}
+			$orcamento = $this->Orcamentos->patchEntity($orcamento, $postData);
+			$this->_orcNormalizeFormaPagamento($orcamento);
+			$this->_orcPatchDescontoFromRequest($orcamento, $postData);
+			$this->_orcEnsureGrupoVersaoOnSave($orcamento);
+			if ($this->_orcSchemaHasColumn('aprovacao_interna')
+				&& (string)$orcamento->aprovacao_interna === C_OrcamentoAprovacaoInternaReprovado) {
+				$orcamento->set('aprovacao_interna', C_OrcamentoAprovacaoInternaPendente);
+				$orcamento->set('aprovacao_interna_em', null);
+				$orcamento->set('aprovacao_interna_por', null);
+				$orcamento->set('aprovacao_interna_motivo', null);
+			}
+
+			if ($this->Orcamentos->save($orcamento)) {
+				$this->Flash->success(__('Dados da proposta atualizados.'));
+				$this->Atividades->registrar(
+					$this->Auth->user('id'),
+					$this->request->getParam('controller'),
+					$this->request->getParam('action'),
+					$orcamento->id
+				);
+
+				return $this->redirect(['action' => 'view', $orcamento->id]);
+			}
+			$this->Flash->error(__('Não foi possível salvar os dados da proposta.'));
+		}
+
+		$clientes = $this->Clientes->find('all')
+			->where(['Clientes.idempresa' => $this->Auth->user('idempresa'), 'Clientes.inativo' => 0])
+			->contain(['Cidades'])
+			->order(['Clientes.razaosocial'])
+			->toArray();
+
+		$clientesOpt = [];
+		$clientesMeta = [];
+		foreach ($clientes as $reg) {
+			$nomeCliente = ($reg->tipo == C_ClientesTipoJuridica) ? $reg->razaosocial : $reg->nome;
+			$nomeCidade = (!empty($reg->cidade) && !empty($reg->cidade->nome)) ? $reg->cidade->nome : 'Sem Cidade';
+			$clientesOpt[$reg->id] = $nomeCliente . ' (' . $nomeCidade . ')';
+			$clientesMeta[$reg->id] = [
+				'tipo' => (int)$reg->tipo,
+				'cnpj' => function_exists('formatCnpjCpf') ? formatCnpjCpf($reg->cnpj ?? '') : (string)($reg->cnpj ?? ''),
+				'cpf' => function_exists('formatCnpjCpf') ? formatCnpjCpf($reg->cpf ?? '') : (string)($reg->cpf ?? ''),
+				'email' => (string)($reg->email ?? ''),
+				'nome' => (string)($reg->nome ?? ''),
+				'razaosocial' => (string)($reg->razaosocial ?? ''),
+			];
+		}
+		asort($clientesOpt);
+
+		$produtosOpt = [0 => 'Código'];
+		$produtosOpt1 = $this->Produtos->find('all')
+			->where(['idempresa' => $this->Auth->user('idempresa'), 'ativo' => 1])
+			->order(['descricao'])
+			->toArray();
+		foreach ($produtosOpt1 as $reg) {
+			$produtosOpt[$reg->codigo] = $reg->descricao . ' (' . $reg->codigo . ')';
+		}
+		$this->set('produtosCatalogoJson', $this->_orcamentoProdutosCatalogoJson($produtosOpt1));
+
+		$dval = function_exists('pgm_format_date_br') ? pgm_format_date_br($orcamento->validoate ?? null) : '';
+		if ($dval !== '') {
+			$orcamento->set('validoate', $dval);
+		}
+
+		$discTipo = (string)($orcamento->desconto_tipo ?? 'pct');
+		if (!in_array($discTipo, ['pct', 'fix'], true)) {
+			$discTipo = 'pct';
+		}
+
+		$this->set('idcarrinho', $_SESSION['idcarrinho']);
+		$this->set('clientes', $clientesOpt);
+		$this->set('produtos', $produtosOpt);
+		$this->set('orcamento', $orcamento);
+		$this->set('clientesMetaJson', json_encode($clientesMeta, JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE));
+		$this->set('title', 'Dados da proposta');
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('orcStepperStep', 1);
+		$this->set('orcFormaPagamentoOpcoes', $this->_orcFormaPagamentoOpcoes());
+		$this->set('orcItemDescontoEnabled', $this->_orcServicoTemDescontoColunas());
+		$this->set('orcDescontoValorInicial', (float)($orcamento->desconto_valor ?? 0));
+		$this->set('orcDescontoTipoInicial', $discTipo);
+	}
+
 	public function edit($id = null) {
 		// Permissão para o cliente
 		if ($this->Auth->user('role') == 1) {

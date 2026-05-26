@@ -68,7 +68,7 @@ $versaoStatusBadge = function ($versaoEnt) {
 		</div>
 		<div class="orc-page-head-actions">
 			<?php if (isset($role) && (int)$role === 0) : ?>
-				<?= $this->Html->link('← Editar proposta', ['action' => 'edit', $orcamento->id], ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false, 'data-turbo' => 'false']) ?>
+				<?= $this->Html->link('← Editar proposta', ['action' => 'dados', $orcamento->id], ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false, 'data-turbo' => 'false']) ?>
 				<?= $this->Html->link('Pré-visualizar PDF', ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
 				<?= $this->Html->link('Gerar e assinar →', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]) ?>
 			<?php endif; ?>
@@ -237,7 +237,7 @@ $versaoStatusBadge = function ($versaoEnt) {
 						</div>
 					<?php elseif ($gerReprov && isset($role) && (int)$role === 0) : ?>
 						<p class="orc-wf-hint-reprov">
-							<?= $this->Html->link('Editar proposta', ['action' => 'edit', $orcamento->id], ['class' => 'orc-id-accent']) ?>
+							<?= $this->Html->link('Editar proposta', ['action' => 'dados', $orcamento->id], ['class' => 'orc-id-accent', 'data-turbo' => 'false']) ?>
 							para corrigir e solicitar nova aprovação interna.
 						</p>
 					<?php endif; ?>

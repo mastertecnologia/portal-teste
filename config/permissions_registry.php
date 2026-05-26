@@ -1643,7 +1643,7 @@ return [
         "module" => "Orçamentos",
         "controller" => "Orcamentos",
         "action" =>
-            "edit,alterarsituacao,alterar_situacao,arquivar,enviar,envioassinatura,envio_assinatura,email,criarMov,criar_mov,mudarstatus,apiatualizaritem,apiexcluiritem,apiadicionaritem,salvarrascunho,novaversao,nova_versao,salvarDesconto,salvar_desconto,salvarDescontoItem,salvar_desconto_item",
+            "edit,dados,alterarsituacao,alterar_situacao,arquivar,enviar,envioassinatura,envio_assinatura,email,criarMov,criar_mov,mudarstatus,apiatualizaritem,apiexcluiritem,apiadicionaritem,salvarrascunho,novaversao,nova_versao,salvarDesconto,salvar_desconto,salvarDescontoItem,salvar_desconto_item",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>

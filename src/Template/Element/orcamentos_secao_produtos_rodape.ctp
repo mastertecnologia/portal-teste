@@ -1,8 +1,10 @@
 <?php
 $orcModo = $orcModo ?? 'add';
 $isAdd = ($orcModo === 'add');
+$isDados = ($orcModo === 'dados');
 $role = isset($role) ? (int)$role : 0;
 $showItemForm = $isAdd
+	|| $isDados
 	|| ($orcamento !== null
 		&& (int)$orcamento->get('status') !== (int)C_OrcamentoStatusAprovado
 		&& $role === 0);

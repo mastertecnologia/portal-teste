@@ -518,7 +518,7 @@
 			desconto_valor: $('#orc-item-disc-val').val() || 0,
 			desconto_tipo: $('#orc-item-disc-tipo').val() || 'pct'
 		};
-		if (cfg.mode === 'edit' && cfg.orcamentoId) {
+		if ((cfg.mode === 'edit' || cfg.mode === 'dados') && cfg.orcamentoId) {
 			postData.id_orcamento = cfg.orcamentoId;
 		}
 		$.ajax({
@@ -1229,7 +1229,7 @@
 		}
 	}
 
-	$('#form-orc-add, #form-orc-edit').on('submit', function () {
+	$('#form-orc-add, #form-orc-edit, #form-orc-dados').on('submit', function () {
 		orcSyncDescontoHidden();
 	});
 
