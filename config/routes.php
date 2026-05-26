@@ -2362,7 +2362,7 @@ Router::scope("/", function ($routes) {
         ["controller" => "PgmAssets", "action" => "clientesModuleJs"],
         [
             "pass" => ["file"],
-            "file" => "(cliente-edit|cliente-edit-ficha|cliente-edit-ficha-acessos)\\.js",
+            "file" => "(cliente-edit|cliente-edit-ficha|cliente-edit-ficha-acessos|cliente-visao360-anexo)\\.js",
         ],
     );
     $routes->connect(
@@ -2370,7 +2370,7 @@ Router::scope("/", function ($routes) {
         ["controller" => "PgmAssets", "action" => "clientesModuleJs"],
         [
             "pass" => ["file"],
-            "file" => "(cliente-edit|cliente-edit-ficha|cliente-edit-ficha-acessos)\\.js",
+            "file" => "(cliente-edit|cliente-edit-ficha|cliente-edit-ficha-acessos|cliente-visao360-anexo)\\.js",
         ],
     );
     // Compat: HTML em cache / bookmarks ainda pedem /js/modules/clientes/*.js (mesma ação que pgm-assets)
@@ -2379,7 +2379,7 @@ Router::scope("/", function ($routes) {
         ["controller" => "PgmAssets", "action" => "clientesModuleJs"],
         [
             "pass" => ["file"],
-            "file" => "(cliente-edit|cliente-edit-ficha|cliente-edit-ficha-acessos)\\.js",
+            "file" => "(cliente-edit|cliente-edit-ficha|cliente-edit-ficha-acessos|cliente-visao360-anexo)\\.js",
         ],
     );
     // Compat: HTML em cache / links antigos ainda pedem /css/*.css — mesma resposta que pgm-assets
