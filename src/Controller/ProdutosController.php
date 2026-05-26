@@ -517,8 +517,36 @@ class ProdutosController extends AppController {
 		if ($tipoFiltro !== null) {
 			$produto->tipo = (int)$tipoFiltro;
 		}
-		return $this->jsonResponse($produto, 200);
+
+		return $this->jsonResponse($this->_produtoOrcamentoPayload($produto), 200);
     }
+
+	/**
+	 * Campos extras para o formulário de orçamento (tipo exibido no select Tipo).
+	 *
+	 * @param \Cake\Datasource\EntityInterface $produto
+	 * @return array<string,mixed>
+	 */
+	protected function _produtoOrcamentoPayload($produto): array {
+		$data = $produto->toArray();
+		$tipoInt = (int)($produto->tipo ?? 0);
+		$tipoMap = (defined('C_ProdutosTipo') && is_array(constant('C_ProdutosTipo'))) ? constant('C_ProdutosTipo') : [];
+		$tipoLabel = $tipoMap[$tipoInt] ?? 'Item';
+		$badge = 'serv';
+		if (defined('C_ProdutosTipoProduto') && $tipoInt === (int)C_ProdutosTipoProduto) {
+			$badge = 'prod';
+		} elseif (defined('C_ProdutosTipoServico') && $tipoInt === (int)C_ProdutosTipoServico) {
+			$badge = 'serv';
+		} elseif (stripos((string)$tipoLabel, 'licen') !== false) {
+			$badge = 'lic';
+		} elseif (stripos((string)$tipoLabel, 'loca') !== false) {
+			$badge = 'loc';
+		}
+		$data['tipoLabel'] = $tipoLabel;
+		$data['badge'] = $badge;
+
+		return $data;
+	}
 
     public function listAPI() {
         $this->autoRender = false;
