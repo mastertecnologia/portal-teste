@@ -107,6 +107,18 @@
 	}
 	window.tipo = tipo;
 
+	function cliSetTipo(val) {
+		$('#tipo').val(val).trigger('change');
+		if (String(val) === '2') {
+			$('#btn-tipo-pj').addClass('active');
+			$('#btn-tipo-pf').removeClass('active');
+		} else {
+			$('#btn-tipo-pf').addClass('active');
+			$('#btn-tipo-pj').removeClass('active');
+		}
+	}
+	window.cliSetTipo = cliSetTipo;
+
 	function cliFichaSetViewMode() {
 		var C = conf();
 		window.cliFichaEditing = false;
@@ -119,7 +131,8 @@
 		try {
 			$('.selectpicker').selectpicker('refresh');
 		} catch (e) { /* ignore */ }
-		$('.btn-gerenciar-emails-faturamento, .btn-gerenciar-emails, #btn-buscar-ie-edit').prop('disabled', true).addClass('disabled');
+		$('.btn-gerenciar-emails-faturamento, .btn-gerenciar-emails, #btn-buscar-ie-edit, #btn-buscar-cep-edit').prop('disabled', true).addClass('disabled');
+		$('[data-cli-tipo-btn]').prop('disabled', true).addClass('disabled');
 		if (C.isEquipe) {
 			$('#btn-buscar-ie-edit').addClass('d-none');
 		}
@@ -150,7 +163,8 @@
 		try {
 			$('.selectpicker').selectpicker('refresh');
 		} catch (e) { /* ignore */ }
-		$('.btn-gerenciar-emails-faturamento, .btn-gerenciar-emails').prop('disabled', false).removeClass('disabled');
+		$('.btn-gerenciar-emails-faturamento, .btn-gerenciar-emails, #btn-buscar-cep-edit').prop('disabled', false).removeClass('disabled');
+		$('[data-cli-tipo-btn]').prop('disabled', false).removeClass('disabled');
 		if (C.isEquipe) {
 			$('#btn-buscar-ie-edit').prop('disabled', false).removeClass('disabled').removeClass('d-none');
 		}
@@ -470,6 +484,58 @@
 			}
 		});
 
+		$(document).on('click', '[data-cli-tipo-btn]', function (e) {
+			e.preventDefault();
+			if (!window.cliFichaEditing) {
+				return;
+			}
+			cliSetTipo($(this).data('cli-tipo-btn'));
+		});
+
+		$('#btn-buscar-cep-edit').on('click', function (e) {
+			e.preventDefault();
+			if (!window.cliFichaEditing) {
+				return;
+			}
+			var cep = ($('#cep').val() || '').replace(/\D/g, '');
+			if (cep.length !== 8) {
+				alert('Informe um CEP válido.');
+				return;
+			}
+			var base = window.location.pathname.replace(/\/[^/]*$/, '');
+			if (base.indexOf('/portal') === -1 && document.querySelector('base[href*="/portal"]')) {
+				base = '/portal';
+			}
+			var url = (base || '') + '/api/util/cep/' + encodeURIComponent(cep);
+			$.getJSON(url, function (res) {
+				if (!res || !res.success || !res.data) {
+					alert('CEP não encontrado.');
+					return;
+				}
+				var d = res.data;
+				if (d.street) {
+					$('#endereco').val(String(d.street).toUpperCase());
+				}
+				if (d.neighborhood) {
+					$('#bairro').val(String(d.neighborhood).toUpperCase());
+				}
+				if (d.city && d.state) {
+					var alvo = String(d.city).toUpperCase() + ' - ' + String(d.state).toUpperCase();
+					$('#idcidade option').each(function () {
+						if ($(this).text().toUpperCase().indexOf(alvo) >= 0) {
+							$('#idcidade').val($(this).val());
+							try {
+								$('#idcidade').selectpicker('refresh');
+							} catch (err) { /* ignore */ }
+							return false;
+						}
+					});
+				}
+			}).fail(function () {
+				alert('Erro ao consultar CEP.');
+			});
+		});
+
 		$('#tipo').change(function () {
 			tipo($(this).val());
 			if (!window.cliFichaEditing) {
@@ -478,6 +544,12 @@
 				cliFichaSetEditMode();
 			}
 		});
+
+		var tipoNum = parseInt($('#tipo').val(), 10);
+		if (tipoNum !== 1) {
+			tipoNum = 2;
+		}
+		cliSetTipo(tipoNum);
 
 		$('#razaosocial').change(function () {
 			var v = $(this).val().toUpperCase();
