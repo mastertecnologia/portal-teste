@@ -58,6 +58,11 @@
 					if (!pgmTurboSameOriginHref(a)) {
 						return;
 					}
+					var uPath = pgmTurboSameOriginHref(a).pathname || '';
+					if (/\/(tickets|servicedesk)\/(view|edit)(\/|$)/i.test(uPath)) {
+						a.setAttribute('data-turbo', 'false');
+						return;
+					}
 					a.setAttribute('data-turbo-frame', FRAME_ID);
 					a.setAttribute('data-turbo-action', 'advance');
 				});

@@ -413,6 +413,11 @@ class ServicedeskController extends TicketsController {
 		if ($this->viewBuilder()->getLayout() === 'print') {
 			return;
 		}
+		// React (react_app.ctp) deve manter layout default + <turbo-frame id="pgm-main-frame">.
+		// Trocar para layout servicedesk quebra navegação no shell ERP (TurboFrameMissingError).
+		if ($this->viewBuilder()->getTemplate() === 'react_app') {
+			return;
+		}
 		$this->viewBuilder()->setLayout('servicedesk');
 	}
 

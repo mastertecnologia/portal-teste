@@ -1839,6 +1839,7 @@ export default function TechDashboard({ boot }) {
                           <a
                             className="tickets-sd-ticket-link font-mono text-[11.5px] font-semibold text-[var(--pgm-primary-hover)] no-underline transition hover:text-[var(--pgm-primary)] hover:underline"
                             href={ticket.urls.edit}
+                            data-turbo="false"
                           >
                             #{ticket.id}
                           </a>
