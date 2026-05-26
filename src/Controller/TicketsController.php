@@ -1995,7 +1995,18 @@ class TicketsController extends AppController {
 		$this->viewBuilder()->setTemplate('react_app');
 		$this->set('title', "Ticket $idticket");
 		$this->set('hideLayoutPageTitle', true);
-		$this->set('reactBoot', $this->_reactBoot('client_view', (int)$idticket, $this->_servicedeskBootMerge()));
+		$clientViewBoot = [
+			'paths' => [
+				'indexCliente' => Router::url(['controller' => 'Servicedesk', 'action' => 'index']),
+				'indexTecnico' => Router::url(['controller' => 'Servicedesk', 'action' => 'index']),
+				'servicedeskUrl' => Router::url(['controller' => 'Servicedesk', 'action' => 'index']),
+			],
+		];
+		$this->set('reactBoot', $this->_reactBoot(
+			'client_view',
+			(int)$idticket,
+			array_replace_recursive($clientViewBoot, $this->_servicedeskBootMerge())
+		));
 	}
 
 	public function imprimir($idticket = null){

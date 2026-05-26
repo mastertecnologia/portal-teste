@@ -37,7 +37,15 @@ function PapelBadge({ papel, embed }) {
 }
 
 /** Lista de tickets do cliente no embed (boot.paths ou resposta da API). */
-function resolveClienteIndexUrl(boot, ticket) {
+function resolveBackIndexUrl(boot, ticket) {
+  const role = boot?.role;
+  if (role === 0) {
+    const tech =
+      boot?.paths?.indexTecnico ||
+      boot?.paths?.servicedeskUrl ||
+      boot?.paths?.ticketsOperacional;
+    if (tech) return tech;
+  }
   const fromBoot = boot?.paths?.indexCliente;
   if (fromBoot) return fromBoot;
   const fromTicket = ticket?.urls?.indexCliente;
@@ -46,6 +54,9 @@ function resolveClienteIndexUrl(boot, ticket) {
   if (w) return `${String(w).replace(/\/$/, '')}/servicedesk`;
   return null;
 }
+
+/** Evita navegação parcial no turbo-frame (resposta sem frame → "Content missing"). */
+const PORTAL_TURBO_OFF = { 'data-turbo': 'false' };
 
 export default function ClientTicketDetail({ boot }) {
   const { id: idParam } = useParams();
@@ -162,10 +173,10 @@ export default function ClientTicketDetail({ boot }) {
     }
   }
 
-  const backLabel = '← Meus tickets';
+  const backLabel = boot?.role === 0 ? '← Service Desk' : '← Meus tickets';
 
   if (erro && !ticket) {
-    const backErr = embedded ? resolveClienteIndexUrl(boot, null) : null;
+    const backErr = embedded ? resolveBackIndexUrl(boot, null) : null;
     return (
       <div
         className={
@@ -174,7 +185,11 @@ export default function ClientTicketDetail({ boot }) {
       >
         <p className={embedded ? 'text-red-300' : 'text-rose-700'}>{erro}</p>
         {embedded && backErr ? (
-          <a href={backErr} className="mt-4 inline-block text-[var(--pgm-primary-hover)] underline hover:text-[var(--pgm-primary)]">
+          <a
+            href={backErr}
+            {...PORTAL_TURBO_OFF}
+            className="mt-4 inline-block text-[var(--pgm-primary-hover)] underline hover:text-[var(--pgm-primary)]"
+          >
             {backLabel}
           </a>
         ) : (
@@ -199,14 +214,18 @@ export default function ClientTicketDetail({ boot }) {
   }
 
   const statusPlain = stripHtml(ticket.status);
-  const backHref = embedded ? resolveClienteIndexUrl(boot, ticket) : null;
+  const backHref = embedded ? resolveBackIndexUrl(boot, ticket) : null;
 
   const clienteNome = stripHtml(ticket.cliente || '').trim() || '—';
 
   const header = embedded ? (
     <div className="tickets-react-ticket-strip relative z-20 mb-4 shrink-0 rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.35)]">
       {backHref ? (
-        <a href={backHref} className="text-sm font-medium text-[var(--pgm-primary-hover)] hover:text-[var(--pgm-primary)] hover:underline">
+        <a
+          href={backHref}
+          {...PORTAL_TURBO_OFF}
+          className="text-sm font-medium text-[var(--pgm-primary-hover)] hover:text-[var(--pgm-primary)] hover:underline"
+        >
           {backLabel}
         </a>
       ) : (
