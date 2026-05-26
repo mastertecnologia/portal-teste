@@ -3049,11 +3049,14 @@ body.pgm-app-shell-premium .pgm-topbar-notif-wrap {
 }
 .cli-360-anexo-file-input {
   position: absolute;
-  width: 0;
-  height: 0;
-  opacity: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
-  pointer-events: none;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 .cli-360-anexo-dropzone-icon {
   font-size: 40px;

@@ -35,8 +35,8 @@ $hasTickets = $cli360AnexoTickets !== [];
 					<p class="cli-360-anexo-hint small text-muted mb-0"><?= h(__('O arquivo ficará vinculado ao ticket selecionado e aparecerá na aba Arquivos.')) ?></p>
 				</div>
 
+				<input type="file" id="cli360-anexo-file" class="cli-360-anexo-file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.txt,.zip" tabindex="-1" aria-hidden="true" />
 				<div class="cli-360-anexo-dropzone" id="cli360-anexo-dropzone" role="button" tabindex="0" aria-label="<?= h(__('Área para enviar arquivos')) ?>">
-					<input type="file" id="cli360-anexo-file" class="cli-360-anexo-file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.txt,.zip" />
 					<div class="cli-360-anexo-dropzone-icon" aria-hidden="true"><i class="fas fa-cloud-upload-alt"></i></div>
 					<p class="cli-360-anexo-dropzone-title"><?= h(__('Clique ou arraste arquivos aqui')) ?></p>
 					<p class="cli-360-anexo-dropzone-sub"><?= h(__('PDF, imagens, Office · até 25 MB por arquivo')) ?></p>
