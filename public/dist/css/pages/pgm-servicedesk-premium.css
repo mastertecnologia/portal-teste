@@ -1385,3 +1385,66 @@ html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .
 @media (max-width: 768px) {
 	html[data-pgm-theme="dark"] body.sd-body .kpi-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ── Painel SLA no ticket (React) — botões legíveis no tema claro; fallback :has() para bundle antigo ── */
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-sla-panel,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .rounded-xl.border:has(> div > h3) {
+	background: var(--pgm-bg-surface, #ffffff) !important;
+	border-color: var(--pgm-border, #cbd5e1) !important;
+	color: var(--pgm-text, #0f172a) !important;
+	box-shadow: var(--pgm-shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.06)) !important;
+}
+
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-sla-panel__title {
+	color: var(--pgm-primary, #1d9e75) !important;
+}
+
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-sla-panel__actions .pgm-sla-panel__btn,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .tickets-sla-panel-actions .pgm-sla-panel__btn,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-sla-panel__actions button,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-sla-panel__actions a,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .tickets-sla-panel-actions button,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .tickets-sla-panel-actions a,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .rounded-xl.border:has(> div > h3) .flex-wrap > button,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .rounded-xl.border:has(> div > h3) .flex-wrap > a {
+	display: inline-flex !important;
+	align-items: center !important;
+	border: 1px solid var(--pgm-border, #cbd5e1) !important;
+	background: var(--pgm-bg-elevated, #f8fafc) !important;
+	color: var(--pgm-text, #0f172a) !important;
+	font-size: 11px !important;
+	font-weight: 600 !important;
+	line-height: 1.35 !important;
+	padding: 0.35rem 0.65rem !important;
+	border-radius: 0.375rem !important;
+	box-shadow: var(--pgm-shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.06)) !important;
+	opacity: 1 !important;
+	text-decoration: none !important;
+	cursor: pointer !important;
+	-webkit-appearance: none !important;
+	appearance: none !important;
+}
+
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-sla-panel__actions .pgm-sla-panel__btn:hover,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-sla-panel__actions button:hover,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-sla-panel__actions a:hover,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .tickets-sla-panel-actions button:hover,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .tickets-sla-panel-actions a:hover,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .rounded-xl.border:has(> div > h3) .flex-wrap > button:hover,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .rounded-xl.border:has(> div > h3) .flex-wrap > a:hover {
+	border-color: var(--pgm-primary, #1d9e75) !important;
+	color: var(--pgm-primary, #1d9e75) !important;
+	background: var(--pgm-bg-overlay, #f1f5f9) !important;
+}
+
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-sla-panel__btn--pause {
+	border-color: rgba(217, 119, 6, 0.55) !important;
+	background: #fffbeb !important;
+	color: #92400e !important;
+}
+
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-sla-panel__btn--resume {
+	border-color: rgba(5, 150, 105, 0.55) !important;
+	background: #ecfdf5 !important;
+	color: #065f46 !important;
+}

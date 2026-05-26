@@ -129,30 +129,50 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
   const wfSla = ticket?.workflow?.slaByState || ticket?.slaByState;
 
   return (
-    <div className={SLA_PANEL}>
+    <div className={`pgm-sla-panel ${SLA_PANEL}`}>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <h3 className={SLA_PANEL_TITLE}>SLA & Service Desk</h3>
-        <div className="tickets-sla-panel-actions flex flex-wrap gap-2">
+        <h3 className={`pgm-sla-panel__title ${SLA_PANEL_TITLE}`}>SLA & Service Desk</h3>
+        <div className="pgm-sla-panel__actions tickets-sla-panel-actions flex flex-wrap gap-2">
           {canAct?.canPause ? (
-            <button type="button" disabled={busy} onClick={doPause} className={SLA_BTN_PAUSE}>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={doPause}
+              className={`pgm-sla-panel__btn pgm-sla-panel__btn--pause ${SLA_BTN_PAUSE}`}
+            >
               Pausar SLA
             </button>
           ) : null}
           {canAct?.canResume ? (
-            <button type="button" disabled={busy} onClick={doResume} className={SLA_BTN_RESUME}>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={doResume}
+              className={`pgm-sla-panel__btn pgm-sla-panel__btn--resume ${SLA_BTN_RESUME}`}
+            >
               Retomar SLA
             </button>
           ) : null}
           {pol ? (
-            <button type="button" onClick={() => setPolicyOpen(true)} className={SLA_BTN_ACTION}>
+            <button
+              type="button"
+              onClick={() => setPolicyOpen(true)}
+              className={`pgm-sla-panel__btn ${SLA_BTN_ACTION}`}
+            >
               Ver política
             </button>
           ) : null}
-          <button type="button" onClick={() => setLogsOpen(true)} className={SLA_BTN_ACTION}>
+          <button type="button" onClick={() => setLogsOpen(true)} className={`pgm-sla-panel__btn ${SLA_BTN_ACTION}`}>
             Logs de SLA
           </button>
           {adminUrl ? (
-            <a href={adminUrl} data-turbo="false" target="_blank" rel="noreferrer" className={SLA_BTN_ACTION}>
+            <a
+              href={adminUrl}
+              data-turbo="false"
+              target="_blank"
+              rel="noreferrer"
+              className={`pgm-sla-panel__btn ${SLA_BTN_ACTION}`}
+            >
               Cadastro SLA
             </a>
           ) : null}
