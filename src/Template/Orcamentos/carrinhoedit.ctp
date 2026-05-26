@@ -16,6 +16,7 @@ $mostrarAcoesItens = isset($orcamento)
 			'carrinhoLinhasExtra' => $carrinhoLinhasExtra,
 			'mostrarAcoesItens' => $mostrarAcoesItens,
 			'orcCarrinhoLayout' => $orcCarrinhoLayout ?? 'form',
+			'orcItemDescontoEnabled' => !empty($orcItemDescontoEnabled),
 		]) ?>
 	</div>
 </div>
@@ -43,19 +44,7 @@ $mostrarAcoesItens = isset($orcamento)
 			if (linha.hasClass('orc-carrinho-empty') || linha.hasClass('orc-carrinho-sum-row')) {
 				return;
 			}
-			var $vm = linha.find('.valormensal');
-			if (!$vm.length) {
-				return;
-			}
-			var strQtde = linha.find('.orc-col-qtd').first().text().trim();
-			var qtde = parseFloat(strQtde.replace(/\./g, '').replace(',', '.')) || 0;
-			var vMensal = parseBrFloat($vm.text());
-			var vUnit = parseBrFloat(linha.find('.valorunit').text());
-			if (vMensal > 0) {
-				valormensaltotal += (vMensal * qtde);
-			} else {
-				valortotal += (vUnit * qtde);
-			}
+			valortotal += parseBrFloat(linha.find('.valordoservico').first().text());
 		});
 
 		$('.valortotal').html('R$ ' + numberToReal(valortotal));

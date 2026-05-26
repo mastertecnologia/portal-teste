@@ -1194,6 +1194,32 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   border-radius: 6px;
   font-size: 12px;
 }
+.orc-premium-form .orc-item-discount-wrap,
+.orc-premium-form .orc-line-disc-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+.orc-premium-form .orc-item-discount-wrap .orc-discount-inp,
+.orc-premium-form .orc-line-disc-edit .orc-line-disc-val {
+  width: 56px;
+  min-width: 48px;
+  padding: 4px 6px;
+  border: 1px solid #e5e4e0;
+  border-radius: 6px;
+  font-size: 11px;
+  text-align: right;
+}
+.orc-premium-form .orc-line-disc-edit .orc-line-disc-tipo {
+  width: 44px;
+  padding: 4px 2px;
+  font-size: 11px;
+}
+.orc-premium-form .orc-line-disc-lbl {
+  font-size: 11px;
+  color: var(--orc-text-muted, #6b6a65);
+}
 .orc-premium-form .orc-discount-applied {
   font-size: 12px;
   font-weight: 600;

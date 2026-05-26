@@ -11,6 +11,7 @@ $carrinhoLinhasExtra = $carrinhoLinhasExtra ?? [];
 			'carrinho' => $carrinho ?? [],
 			'carrinhoLinhasExtra' => $carrinhoLinhasExtra,
 			'mostrarAcoesItens' => true,
+			'orcItemDescontoEnabled' => !empty($orcItemDescontoEnabled),
 		]) ?>
 	</div>
 </div>
@@ -38,19 +39,8 @@ $carrinhoLinhasExtra = $carrinhoLinhasExtra ?? [];
 			if (linha.hasClass('orc-carrinho-empty') || linha.hasClass('orc-carrinho-sum-row')) {
 				return;
 			}
-			var $vm = linha.find('.valormensal');
-			if (!$vm.length) {
-				return;
-			}
-			var strQtde = linha.find('.orc-col-qtd').first().text().trim();
-			var qtde = parseFloat(strQtde.replace(/\./g, '').replace(',', '.')) || 0;
-			var vMensal = parseBrFloat($vm.text());
-			var vUnit = parseBrFloat(linha.find('.valorunit').text());
-			if (vMensal > 0) {
-				valormensaltotal += (vMensal * qtde);
-			} else {
-				valortotal += (vUnit * qtde);
-			}
+			var linhaTotal = parseBrFloat(linha.find('.valordoservico').first().text());
+			valortotal += linhaTotal;
 		});
 
 		$('.valortotal').html('R$ ' + numberToReal(valortotal));

@@ -155,14 +155,13 @@ class OrcamentosController extends AppController {
 			->where(['idempresa' => $idempresa, 'idorcamento IN' => $itemIds])
 			->toArray();
 		$sumByItem = [];
+		$temDescItem = $this->_orcServicoTemDescontoColunas();
 		foreach ($servicos as $s) {
 			$bid = (int)$s->idorcamento;
 			if (!isset($sumByItem[$bid])) {
 				$sumByItem[$bid] = 0.0;
 			}
-			$vm = (float)($s->valormensal ?? 0);
-			$vd = (float)($s->valordoservico ?? 0);
-			$sumByItem[$bid] += ($vm > 0 ? $vm : $vd);
+			$sumByItem[$bid] += \App\Utility\OrcamentoDescontoUtil::linhaLiquido($s, $temDescItem);
 		}
 		foreach ($orcToItem as $oid => $iid) {
 			$out[$oid] = $sumByItem[$iid] ?? 0.0;
@@ -254,15 +253,34 @@ class OrcamentosController extends AppController {
 			return 0.0;
 		}
 		$dv = (float)($orcamento->desconto_valor ?? 0);
-		if ($dv <= 0 || $subVenda <= 0) {
-			return 0.0;
-		}
 		$tipo = (string)($orcamento->desconto_tipo ?? 'pct');
-		if ($tipo === 'fix') {
-			return min($subVenda, $dv);
-		}
 
-		return min($subVenda, max(0.0, $subVenda * ($dv / 100)));
+		return \App\Utility\OrcamentoDescontoUtil::descontoAbsoluto($subVenda, $dv, $tipo);
+	}
+
+	protected function _orcServicoTemDescontoColunas(): bool {
+		$schema = $this->Orcamentosservicos->getSchema();
+
+		return $schema->hasColumn('desconto_valor') && $schema->hasColumn('desconto_tipo');
+	}
+
+	protected function _orcPatchItemDescontoFromRequest($item, array $data): void {
+		if (!$this->_orcServicoTemDescontoColunas() || $item === null) {
+			return;
+		}
+		$rawVal = $data['desconto_valor'] ?? $data['item_desconto_valor'] ?? 0;
+		$val = is_numeric($rawVal)
+			? (float)$rawVal
+			: (float)str_replace(['.', ','], ['', '.'], preg_replace('/[^\d.,-]/', '', (string)$rawVal));
+		if ($val < 0) {
+			$val = 0.0;
+		}
+		$tipo = (string)($data['desconto_tipo'] ?? $data['item_desconto_tipo'] ?? 'pct');
+		if (!in_array($tipo, ['pct', 'fix'], true)) {
+			$tipo = 'pct';
+		}
+		$item->set('desconto_valor', round($val, 2));
+		$item->set('desconto_tipo', $tipo);
 	}
 
 	protected function _orcPatchDescontoFromRequest($orcamento, array $data): void {
@@ -651,6 +669,7 @@ class OrcamentosController extends AppController {
 			}
 		}
 		$tipoMeta = $this->_produtoTipoMetaPorCodigo($idempresa);
+		$temDescItem = $this->_orcServicoTemDescontoColunas();
 		$out = [];
 		foreach ($carrinho as $reg) {
 			$rid = (int)$reg->id;
@@ -667,12 +686,8 @@ class OrcamentosController extends AppController {
 			}
 			$q = $this->_parseQuantidadeOrcamentoLinha($reg->quantidade ?? 0);
 			$custoLinha = $cu * $q;
-			$venda = 0.0;
-			if ((float)($reg->valormensal ?? 0) > 0) {
-				$venda = (float)$reg->valormensal;
-			} else {
-				$venda = (float)($reg->valordoservico ?? 0);
-			}
+			$venda = \App\Utility\OrcamentoDescontoUtil::linhaLiquido($reg, $temDescItem);
+			$descItemAbs = \App\Utility\OrcamentoDescontoUtil::linhaDescontoAbsoluto($reg, $temDescItem);
 			$margemPct = null;
 			if ($venda > 0.0001) {
 				$margemPct = (int)round((($venda - $custoLinha) / $venda) * 100);
@@ -694,6 +709,10 @@ class OrcamentosController extends AppController {
 				'margemPct' => $margemPct,
 				'tipoBadge' => $tipoBadge,
 				'tipoLabel' => $tipoLabel,
+				'descontoAbs' => $descItemAbs,
+				'descontoValor' => $temDescItem ? (float)($reg->desconto_valor ?? 0) : 0.0,
+				'descontoTipo' => $temDescItem ? (string)($reg->desconto_tipo ?? 'pct') : 'pct',
+				'vlLiquido' => $venda,
 			];
 		}
 
@@ -1416,6 +1435,46 @@ class OrcamentosController extends AppController {
 		return $this->redirect(['action' => 'view', $orcamento->id]);
 	}
 
+	/**
+	 * POST AJAX — desconto de uma linha do carrinho (% ou R$).
+	 */
+	public function salvarDescontoItem() {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		if ((int)$this->Auth->user('role') === 1) {
+			return $this->jsonResponse(['ok' => false, 'mensagem' => __('Sem permissão.')], 403);
+		}
+		if (!$this->_orcServicoTemDescontoColunas()) {
+			return $this->jsonResponse(['ok' => false, 'mensagem' => __('Desconto por item indisponível. Execute as migrations.')], 503);
+		}
+		$id = (int)$this->request->getData('id');
+		if ($id <= 0) {
+			return $this->jsonResponse(['ok' => false, 'mensagem' => __('Item inválido.')], 400);
+		}
+		$item = $this->Orcamentosservicos->find()
+			->where(['id' => $id, 'idempresa' => $this->Auth->user('idempresa')])
+			->first();
+		if ($item === null) {
+			return $this->jsonResponse(['ok' => false, 'mensagem' => __('Item não encontrado.')], 404);
+		}
+		$this->_orcPatchItemDescontoFromRequest($item, $this->request->getData());
+		if (!$this->Orcamentosservicos->save($item)) {
+			return $this->jsonResponse(['ok' => false, 'mensagem' => __('Não foi possível salvar.')], 422);
+		}
+		$liquido = \App\Utility\OrcamentoDescontoUtil::linhaLiquido($item, true);
+		$descAbs = \App\Utility\OrcamentoDescontoUtil::linhaDescontoAbsoluto($item, true);
+
+		return $this->jsonResponse([
+			'ok' => true,
+			'vlLiquido' => round($liquido, 2),
+			'descontoAbs' => round($descAbs, 2),
+			'descontoLabel' => \App\Utility\OrcamentoDescontoUtil::rotuloDesconto(
+				(float)$item->desconto_valor,
+				(string)$item->desconto_tipo
+			),
+		], 200);
+	}
+
 	public function salvarDesconto($id = null) {
 		$this->request->allowMethod(['post']);
 		if ((int)$this->Auth->user('role') === 1) {
@@ -2004,6 +2063,7 @@ class OrcamentosController extends AppController {
 			$orcamentond->valordoservico = $valordoservico;
 			$orcamentond->idempresa = $idempresa;
 			$orcamentond->idorcamento = $idorcamento;
+			$this->_orcPatchItemDescontoFromRequest($orcamentond, $data);
 
 			if ($this->Orcamentosservicos->save($orcamentond)) {
 				$this->response = $this->response->withType('text/html')->withStringBody('boa');
@@ -2035,6 +2095,7 @@ class OrcamentosController extends AppController {
 		$this->set('carrinho', $carrinho);
 		$this->set('idorcamento', $idorcamento);
 		$this->set('carrinhoLinhasExtra', $carrinhoLinhasExtra);
+		$this->set('orcItemDescontoEnabled', $this->_orcServicoTemDescontoColunas());
 	}
 	
 	public function carrinhoedit($idorcamento = null){
@@ -2061,6 +2122,7 @@ class OrcamentosController extends AppController {
 		$this->set('role', $this->Auth->user('role'));
 		$layout = (string)$this->request->getQuery('layout', 'form');
 		$this->set('orcCarrinhoLayout', $layout === 'revisao' ? 'revisao' : 'form');
+		$this->set('orcItemDescontoEnabled', $this->_orcServicoTemDescontoColunas());
 	}
 
 	public function limpacarrinho(){
@@ -2873,7 +2935,8 @@ class OrcamentosController extends AppController {
 				$item->valordoservico = formatNumber($data['valordoservico']);
 				$item->idproduto = $data['idproduto'];
 				$item->tipo = $data['tipo'];
-				
+				$this->_orcPatchItemDescontoFromRequest($item, $data);
+
 				if ($this->Orcamentosservicos->save($item)) {
 					echo 'success';
 					return;

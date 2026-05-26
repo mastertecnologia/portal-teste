@@ -53,6 +53,8 @@ $config = [
 	'editaitemcarrinhoUrl' => Router::url(['controller' => 'Orcamentos', 'action' => 'editaitemcarrinho']),
 	'produtoUrlBase' => Router::url(['controller' => 'Produtos', 'action' => 'produto']),
 	'qtdestoqueUrlBase' => Router::url(['controller' => 'Produtos', 'action' => 'qtdestoque']),
+	'salvarDescontoItemUrl' => Router::url(['controller' => 'Orcamentos', 'action' => 'salvarDescontoItem']),
+	'itemDescontoEnabled' => true,
 ];
 $configJson = json_encode($config, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 $estoquesLoteJson = json_encode(Router::url(['controller' => 'Produtos', 'action' => 'estoquesLote']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

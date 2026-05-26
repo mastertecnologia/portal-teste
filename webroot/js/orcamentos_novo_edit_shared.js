@@ -253,6 +253,7 @@
 			success: function (data) {
 				$('#carrinho').html(data);
 				$('#carrinho').fadeIn();
+				orcBindLineDiscountInputs();
 			},
 			error: function (xhr) {
 				var msg = 'Não foi possível carregar os itens.';
@@ -443,7 +444,9 @@
 			observacao: observacao,
 			valormensal: valormensal,
 			idproduto: idproduto,
-			tipo: tipo
+			tipo: tipo,
+			desconto_valor: $('#orc-item-disc-val').val() || 0,
+			desconto_tipo: $('#orc-item-disc-tipo').val() || 'pct'
 		};
 		if (cfg.mode === 'edit' && cfg.orcamentoId) {
 			postData.id_orcamento = cfg.orcamentoId;
@@ -467,6 +470,8 @@
 				$('#valormensal').val('');
 				$('#idproduto').val(0);
 				$('#tipo').val(0);
+				$('#orc-item-disc-val').val(0);
+				$('#orc-item-disc-tipo').val('pct');
 				$('#idproduto').selectpicker('refresh');
 				$('.qtdEstoque').text('').hide();
 				$('#valormensal').attr('disabled', false);
@@ -527,6 +532,8 @@
 		$('#idproduto').val(dados.idproduto);
 		$('#tipo').val(dados.tipo);
 		$('#item_edit_id').val(dados.id);
+		$('#orc-item-disc-val').val(dados.descontoValor != null ? dados.descontoValor : 0);
+		$('#orc-item-disc-tipo').val(dados.descontoTipo || 'pct');
 		if (dados.tipo == 1) {
 			$('#quantidade').mask('99:99');
 		} else {
@@ -547,6 +554,8 @@
 		$('#tipo').val(0);
 		$('#valordoservico').val('');
 		$('#item_edit_id').val('');
+		$('#orc-item-disc-val').val(0);
+		$('#orc-item-disc-tipo').val('pct');
 		$('#idproduto').selectpicker('refresh');
 		$('#valoruni').prop('disabled', false);
 		$('#valormensal').prop('disabled', false);
@@ -613,7 +622,9 @@
 			observacao: $(this).data('observacao'),
 			valormensal: $(this).data('valormensal'),
 			idproduto: $(this).data('idproduto'),
-			tipo: $(this).data('tipo')
+			tipo: $(this).data('tipo'),
+			descontoValor: $(this).data('descontoValor'),
+			descontoTipo: $(this).data('descontoTipo')
 		};
 		preencherFormularioEdicao(dados);
 		toggleModoEdicao(true);
@@ -658,7 +669,9 @@
 				observacao: observacao,
 				valormensal: valormensal,
 				idproduto: idproduto,
-				tipo: tipo
+				tipo: tipo,
+				desconto_valor: $('#orc-item-disc-val').val() || 0,
+				desconto_tipo: $('#orc-item-disc-tipo').val() || 'pct'
 			},
 			success: function (data) {
 				var ok = typeof data === 'string' ? data.trim() === 'success' : false;
@@ -715,6 +728,54 @@
 			window.orcNovoAfterCarrinhoTotals();
 		}
 	});
+
+	var orcLineDiscSaveTimer = null;
+	function orcSalvarDescontoLinha($row) {
+		if (!cfg.salvarDescontoItemUrl || cfg.itemDescontoEnabled === false) {
+			return;
+		}
+		var id = $row.find('.orc-line-disc-val').data('id') || $row.attr('data-item-id');
+		if (!id) {
+			return;
+		}
+		$.ajax({
+			type: 'POST',
+			url: cfg.salvarDescontoItemUrl,
+			dataType: 'json',
+			data: {
+				id: id,
+				desconto_valor: $row.find('.orc-line-disc-val').val() || 0,
+				desconto_tipo: $row.find('.orc-line-disc-tipo').val() || 'pct'
+			},
+			success: function (res) {
+				if (!res || !res.ok) {
+					return;
+				}
+				if (res.vlLiquido != null) {
+					$row.find('.valordoservico').text('R$ ' + numberToReal(parseFloat(res.vlLiquido)));
+				}
+				if (typeof window.valortotal === 'function') {
+					window.valortotal();
+				} else if (typeof window.orcNovoAfterCarrinhoTotals === 'function') {
+					window.orcNovoAfterCarrinhoTotals();
+				}
+			}
+		});
+	}
+
+	function orcBindLineDiscountInputs() {
+		if (!cfg.salvarDescontoItemUrl || cfg.itemDescontoEnabled === false) {
+			return;
+		}
+		$('#carrinho .orc-line-disc-val, #carrinho .orc-line-disc-tipo').off('change.orcDisc input.orcDisc').on('change.orcDisc input.orcDisc', function () {
+			var $row = $(this).closest('tr');
+			clearTimeout(orcLineDiscSaveTimer);
+			orcLineDiscSaveTimer = setTimeout(function () {
+				orcSalvarDescontoLinha($row);
+			}, 400);
+		});
+	}
+	orcBindLineDiscountInputs();
 
 	$('#btn-orc-limpar-novo').on('click', function (e) {
 		e.preventDefault();

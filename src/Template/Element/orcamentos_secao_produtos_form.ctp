@@ -90,6 +90,16 @@ $orcFieldTpl = [
 			<label class="control-label">Vl. Mensal (R$)</label>
 			<?= $this->Form->control('valormensal', array_merge($orcFieldTpl, ['onkeypress' => 'return SomenteNumero(event, "#valormensal")', 'class' => 'mensal form-control mascaramonetaria', 'label' => false, 'placeholder' => '0,00'])) ?>
 		</div>
+		<div class="orc-field orc-field--disc">
+			<label class="control-label">Desconto item</label>
+			<div class="orc-item-discount-wrap">
+				<input type="number" id="orc-item-disc-val" class="form-control orc-discount-inp" value="0" min="0" step="0.01" title="Desconto neste item" />
+				<select id="orc-item-disc-tipo" class="form-control orc-native-select orc-discount-select">
+					<option value="pct">%</option>
+					<option value="fix">R$</option>
+				</select>
+			</div>
+		</div>
 		<div class="orc-field orc-field--grow">
 			<label class="control-label">Descrição adicional</label>
 			<?= $this->Form->control('observacao', array_merge($orcFieldTpl, ['class' => 'form-control orc-item-obs-field', 'label' => false, 'placeholder' => 'Detalhes...', 'id' => 'observacao'])) ?>

@@ -74,11 +74,16 @@ if ($emp) {
 $carrinho = $carrinho ?? [];
 $totUnico = 0.0;
 $totMensal = 0.0;
+$temDescItemImp = false;
+if (!empty($carrinho[0]) && property_exists($carrinho[0], 'desconto_valor')) {
+	$temDescItemImp = true;
+}
 foreach ($carrinho as $_row) {
+	$liquido = OrcamentoDescontoUtil::linhaLiquido($_row, $temDescItemImp);
 	if ((float)($_row->valormensal ?? 0) > 0) {
-		$totMensal += (float)$_row->valormensal;
+		$totMensal += $liquido;
 	} else {
-		$totUnico += (float)($_row->valordoservico ?? 0);
+		$totUnico += $liquido;
 	}
 }
 $totGeral = $totUnico + $totMensal;
@@ -223,9 +228,8 @@ $totGeral = $totUnico + $totMensal;
 						$vlUnit = ($reg->valormensal <= 0 && (float)$reg->valoruni > 0)
 							? 'R$ ' . number_format($reg->valoruni, 2, ',', '.')
 							: '—';
-						$vlTot = ($reg->valormensal > 0)
-							? 'R$ ' . number_format($reg->valormensal, 2, ',', '.')
-							: (($reg->valordoservico > 0) ? 'R$ ' . number_format($reg->valordoservico, 2, ',', '.') : 'R$ 0,00');
+						$vlTotLinha = OrcamentoDescontoUtil::linhaLiquido($reg, $temDescItemImp);
+						$vlTot = 'R$ ' . number_format($vlTotLinha, 2, ',', '.');
 						?>
 						<tr id="<?= h((string)$reg->id) ?>">
 							<td><?= h((string)$reg->idproduto) ?></td>

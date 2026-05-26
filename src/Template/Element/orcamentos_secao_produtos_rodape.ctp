@@ -18,7 +18,7 @@ if (!$isAdd && isset($orcamento)) {
 ?>
 <?php if ($showItemForm) : ?>
 	<div class="orc-discount-row">
-		<span class="orc-discount-lbl">Desconto:</span>
+		<span class="orc-discount-lbl">Desconto no total:</span>
 		<input type="number" id="disc-val" class="orc-discount-inp" value="<?= h((string)$discValor) ?>" min="0" step="0.01" />
 		<select id="disc-tipo" class="orc-discount-select">
 			<option value="pct"<?= $discTipo === 'pct' ? ' selected' : '' ?>>%</option>

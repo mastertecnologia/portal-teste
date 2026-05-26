@@ -6,15 +6,19 @@
  * @var array<int,array<string,mixed>> $carrinhoLinhasExtra
  * @var bool $mostrarAcoesItens
  * @var bool $orcCarrinhoReadonly
+ * @var bool $orcItemDescontoEnabled
  */
+use App\Utility\OrcamentoDescontoUtil;
+
 $carrinho = $carrinho ?? [];
 $carrinhoLinhasExtra = $carrinhoLinhasExtra ?? [];
 $mostrarAcoesItens = !empty($mostrarAcoesItens);
 $orcCarrinhoReadonly = !empty($orcCarrinhoReadonly);
 $orcCarrinhoLayout = $orcCarrinhoLayout ?? 'form';
+$orcItemDescontoEnabled = !empty($orcItemDescontoEnabled);
 $isRevisao = ($orcCarrinhoLayout === 'revisao');
 $emptyMsg = $carrinhoEmptyMessage ?? ($isRevisao ? 'Sem itens.' : 'Use o catálogo ou adicione itens manualmente acima.');
-$colCount = ($isRevisao ? 7 : 8) + ($mostrarAcoesItens ? 1 : 0);
+$colCount = ($isRevisao ? 7 : 8) + ($orcItemDescontoEnabled ? 1 : 0) + ($mostrarAcoesItens ? 1 : 0);
 $badgeCls = ['prod' => 'orc-badge-tipo--prod', 'srv' => 'orc-badge-tipo--serv', 'serv' => 'orc-badge-tipo--serv', 'lic' => 'orc-badge-tipo--lic', 'loc' => 'orc-badge-tipo--loc'];
 ?>
 <div class="orc-tbl-ref-wrap">
@@ -30,6 +34,9 @@ $badgeCls = ['prod' => 'orc-badge-tipo--prod', 'srv' => 'orc-badge-tipo--serv', 
 				<th class="r" style="width:90px;">Vl. Unit.</th>
 				<th class="r" style="width:80px;">Custo</th>
 				<th class="r" style="width:70px;">Margem</th>
+				<?php if ($orcItemDescontoEnabled) : ?>
+				<th class="r" style="width:88px;">Desc. item</th>
+				<?php endif; ?>
 				<th class="r" style="width:95px;">Vl. Total</th>
 				<?php if ($mostrarAcoesItens) : ?>
 					<th style="width:30px;"></th>
@@ -45,17 +52,28 @@ $badgeCls = ['prod' => 'orc-badge-tipo--prod', 'srv' => 'orc-badge-tipo--serv', 
 				</tr>
 			<?php else : ?>
 				<?php foreach ($carrinho as $reg) :
-					$ex = $carrinhoLinhasExtra[(int)$reg->id] ?? ['custoLinha' => 0.0, 'margemPct' => null, 'tipoBadge' => 'serv', 'tipoLabel' => 'Serviço'];
+					$ex = $carrinhoLinhasExtra[(int)$reg->id] ?? [
+						'custoLinha' => 0.0,
+						'margemPct' => null,
+						'tipoBadge' => 'serv',
+						'tipoLabel' => 'Serviço',
+						'descontoValor' => 0.0,
+						'descontoTipo' => 'pct',
+						'vlLiquido' => OrcamentoDescontoUtil::linhaLiquido($reg, $orcItemDescontoEnabled),
+					];
 					$custoLinha = (float)($ex['custoLinha'] ?? 0);
 					$margemPct = $ex['margemPct'] ?? null;
 					$tipoBadge = (string)($ex['tipoBadge'] ?? 'serv');
 					$tipoLbl = (string)($ex['tipoLabel'] ?? 'Serviço');
 					$tipoClass = $badgeCls[$tipoBadge] ?? 'orc-badge-tipo--serv';
-					$vlTotal = (float)($reg->valormensal ?? 0) > 0
-						? (float)$reg->valormensal * (float)($reg->quantidade ?? 1)
-						: (float)($reg->valordoservico ?? 0);
+					$vlTotal = (float)($ex['vlLiquido'] ?? OrcamentoDescontoUtil::linhaLiquido($reg, $orcItemDescontoEnabled));
+					$discVal = (float)($ex['descontoValor'] ?? ($reg->desconto_valor ?? 0));
+					$discTipo = (string)($ex['descontoTipo'] ?? ($reg->desconto_tipo ?? 'pct'));
+					if (!in_array($discTipo, ['pct', 'fix'], true)) {
+						$discTipo = 'pct';
+					}
 					?>
-					<tr id="<?= (int)$reg->id ?>">
+					<tr id="<?= (int)$reg->id ?>" data-item-id="<?= (int)$reg->id ?>">
 						<?php if (!$isRevisao) : ?>
 						<td><?= h($reg->idproduto) ?></td>
 						<?php endif; ?>
@@ -70,6 +88,21 @@ $badgeCls = ['prod' => 'orc-badge-tipo--prod', 'srv' => 'orc-badge-tipo--serv', 
 						<td class="r valorunit"><?= 'R$ ' . number_format((float)$reg->valoruni, 2, ',', '.') ?></td>
 						<td class="r orc-line-custo" data-custo="<?= h((string)$custoLinha) ?>"><?= 'R$ ' . number_format($custoLinha, 2, ',', '.') ?></td>
 						<td class="r orc-line-margem"><?= $margemPct !== null ? h((string)$margemPct) . '%' : '—' ?></td>
+						<?php if ($orcItemDescontoEnabled) : ?>
+						<td class="r orc-line-disc-cell">
+							<?php if ($mostrarAcoesItens && !$orcCarrinhoReadonly) : ?>
+								<div class="orc-line-disc-edit">
+									<input type="number" class="orc-line-disc-val" value="<?= h((string)$discVal) ?>" min="0" step="0.01" data-id="<?= (int)$reg->id ?>" aria-label="Desconto do item" />
+									<select class="orc-line-disc-tipo orc-native-select" data-id="<?= (int)$reg->id ?>">
+										<option value="pct"<?= $discTipo === 'pct' ? ' selected' : '' ?>>%</option>
+										<option value="fix"<?= $discTipo === 'fix' ? ' selected' : '' ?>>R$</option>
+									</select>
+								</div>
+							<?php else : ?>
+								<span class="orc-line-disc-lbl"><?= h(OrcamentoDescontoUtil::rotuloDesconto($discVal, $discTipo)) ?></span>
+							<?php endif; ?>
+						</td>
+						<?php endif; ?>
 						<td class="r valordoservico"><?= 'R$ ' . number_format($vlTotal, 2, ',', '.') ?></td>
 						<td class="r valormensal orc-is-hidden"><?php echo 'R$ ' . number_format((float)$reg->valormensal, 2, ',', '.'); ?></td>
 						<?php if ($mostrarAcoesItens) : ?>
@@ -85,6 +118,8 @@ $badgeCls = ['prod' => 'orc-badge-tipo--prod', 'srv' => 'orc-badge-tipo--serv', 
 									'data-valormensal' => $reg->valormensal,
 									'data-idproduto' => $reg->idproduto,
 									'data-tipo' => $reg->valormensal > 0 ? 1 : 0,
+									'data-desconto-valor' => $discVal,
+									'data-desconto-tipo' => $discTipo,
 									'class' => 'editaitemcarrinho btn btn-orc-tbl-icon btn-orc-tbl-icon--edit',
 									'escape' => false,
 								]) ?>
