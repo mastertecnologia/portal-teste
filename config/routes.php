@@ -969,7 +969,14 @@ Router::scope("/", function ($routes) {
             "controller" => "Servicedesk",
             "action" => "workflowStates",
         ])
-        ->setMethods(["GET"]);
+        ->setMethods(["GET", "POST"]);
+    $routes
+        ->connect("/servicedesk/workflow-states/:id", [
+            "controller" => "Servicedesk",
+            "action" => "workflowState",
+            "id",
+        ], ["pass" => ["id"], "id" => "\d+"])
+        ->setMethods(["PATCH", "DELETE"]);
     $routes
         ->connect("/servicedesk/workflow-transitions", [
             "controller" => "Servicedesk",

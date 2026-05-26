@@ -556,6 +556,7 @@ trait ServicedeskWorkflowSlaTrait {
 				'workflowSlaPolicyBase' => $w . 'servicedesk/workflow-sla/',
 				'workflowStates' => $w . 'servicedesk/workflow-states',
 				'workflowSlaStates' => $w . 'servicedesk/workflow-states',
+				'workflowStateBase' => $w . 'servicedesk/workflow-states/',
 				'workflowTransitions' => $w . 'servicedesk/workflow-transitions',
 				'workflowSlaTransitions' => $w . 'servicedesk/workflow-transitions',
 				'workflowTransitionBase' => $w . 'servicedesk/workflow-transitions/',
@@ -808,6 +809,137 @@ trait ServicedeskWorkflowSlaTrait {
 		$this->jsonResponse(['ok' => false, 'error' => 'method'], 405);
 	}
 
+	protected function _wfSerializeState($row): array {
+		if (!$row) {
+			return [];
+		}
+		$codigo = $this->_wfNormalizeStateCodigo((string)$row->codigo);
+		$wfSvc = new \App\Service\Ticket\WorkflowService(TableRegistry::get('Tickets'));
+
+		return [
+			'id' => (int)$row->id,
+			'nome' => (string)$row->nome,
+			'codigo' => $codigo,
+			'is_inicial' => (bool)$row->is_inicial,
+			'is_final' => (bool)$row->is_final,
+			'legacy_situacao_mapped' => $wfSvc->isLegacySituacaoMappedCodigo($codigo),
+		];
+	}
+
+	protected function _wfNormalizeStateCodigo(string $codigo): string {
+		$k = strtolower(trim($codigo));
+		$k = preg_replace('/\s+/u', '_', $k);
+		$k = preg_replace('/[^a-z0-9_]/', '', $k);
+		if ($k === 'em_execucao' || $k === 'em-execucao' || $k === 'em_execução') {
+			return 'emandamento';
+		}
+
+		return $k;
+	}
+
+	/**
+	 * @param array<string,mixed> $data
+	 * @return array{0:bool,1:array<int|string>,2:array<string,mixed>}
+	 */
+	protected function _wfValidateStatePayload(array $data, ?int $ignoreId = null): array {
+		$errs = [];
+		$nome = trim((string)($data['nome'] ?? ''));
+		if ($nome === '') {
+			$errs[] = 'nome_obrigatorio';
+		}
+		$codigo = $this->_wfNormalizeStateCodigo((string)($data['codigo'] ?? ''));
+		if ($codigo === '' || !preg_match('/^[a-z][a-z0-9_]*$/', $codigo)) {
+			$errs[] = 'codigo_invalido';
+		}
+		$table = $this->_wfStatesTable();
+		if ($table !== null && $codigo !== '') {
+			$dupQ = $table->find()->where(['codigo' => $codigo]);
+			if ($ignoreId !== null && $ignoreId > 0) {
+				$dupQ->where(['id !=' => $ignoreId]);
+			}
+			if ($dupQ->first()) {
+				$errs[] = 'codigo_duplicado';
+			}
+		}
+		$isInicial = !empty($data['is_inicial']);
+		$isFinal = !empty($data['is_final']);
+		if ($isInicial && $isFinal) {
+			$errs[] = 'inicial_final_conflito';
+		}
+
+		return [$errs === [], $errs, [
+			'nome' => $nome,
+			'codigo' => $codigo,
+			'is_inicial' => $isInicial,
+			'is_final' => $isFinal,
+		]];
+	}
+
+	/**
+	 * @param array<int|string> $codes
+	 * @return array<int,string>
+	 */
+	protected function _wfStateValidationErrorMessages(array $codes): array {
+		$map = [
+			'nome_obrigatorio' => 'Informe o nome do estado.',
+			'codigo_invalido' => 'Código inválido (use slug minúsculo: letras, números e _).',
+			'codigo_duplicado' => 'Já existe um estado com este código.',
+			'inicial_final_conflito' => 'Um estado não pode ser inicial e final ao mesmo tempo.',
+			'estado_em_uso_tickets' => 'Não é possível excluir: há tickets neste estado.',
+			'estado_unico_inicial' => 'Deve existir ao menos um estado inicial.',
+			'tabela_indisponivel' => 'Tabela workflow_states indisponível.',
+		];
+		$out = [];
+		foreach ($codes as $c) {
+			$key = is_string($c) ? $c : (string)$c;
+			$out[] = $map[$key] ?? $key;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @param array<int|string> $errs
+	 * @return array<string,mixed>
+	 */
+	protected function _wfStateValidationErrorResponse(array $errs): array {
+		return [
+			'ok' => false,
+			'errors' => $errs,
+			'error_messages' => $this->_wfStateValidationErrorMessages($errs),
+		];
+	}
+
+	protected function _wfEnsureSingleInitialState(int $stateId): void {
+		$table = $this->_wfStatesTable();
+		if ($table === null || $stateId <= 0) {
+			return;
+		}
+		$table->updateAll(
+			['is_inicial' => false],
+			['id !=' => $stateId, 'is_inicial' => true]
+		);
+	}
+
+	protected function _wfCountTicketsOnState(int $stateId): int {
+		if ($stateId <= 0) {
+			return 0;
+		}
+		try {
+			$tickets = TableRegistry::get('Tickets');
+			$cols = $tickets->getSchema()->columns();
+			if (!in_array('workflow_state_id', $cols, true)) {
+				return 0;
+			}
+
+			return (int)$tickets->find()
+				->where(['workflow_state_id' => $stateId])
+				->count();
+		} catch (\Throwable $e) {
+			return 0;
+		}
+	}
+
 	public function workflowStates() {
 		$this->autoRender = false;
 		if (!$this->_wfTechOr403()) {
@@ -815,21 +947,103 @@ trait ServicedeskWorkflowSlaTrait {
 		}
 		$table = $this->_wfStatesTable();
 		if ($table === null) {
-			return $this->jsonResponse(['ok' => true, 'states' => []]);
+			if ($this->request->is('get')) {
+				return $this->jsonResponse(['ok' => true, 'states' => []]);
+			}
+
+			return $this->jsonResponse($this->_wfStateValidationErrorResponse(['tabela_indisponivel']), 422);
 		}
-		$rows = $table->find()->order(['nome' => 'ASC'])->all();
-		$out = [];
-		foreach ($rows as $r) {
-			$out[] = [
-				'id' => (int)$r->id,
-				'nome' => (string)$r->nome,
-				'codigo' => (string)$r->codigo,
-				'is_inicial' => (bool)$r->is_inicial,
-				'is_final' => (bool)$r->is_final,
-			];
+		if ($this->request->is('get')) {
+			$rows = $table->find()->order(['nome' => 'ASC'])->all();
+			$out = [];
+			foreach ($rows as $r) {
+				$out[] = $this->_wfSerializeState($r);
+			}
+
+			return $this->jsonResponse(['ok' => true, 'states' => $out]);
+		}
+		if ($this->request->is('post')) {
+			$body = (array)$this->request->input('json_decode', true) + $this->request->getData();
+			[$ok, $errs, $clean] = $this->_wfValidateStatePayload($body);
+			if (!$ok) {
+				return $this->jsonResponse($this->_wfStateValidationErrorResponse($errs), 422);
+			}
+			$ent = $table->newEntity($clean + ['created_at' => FrozenTime::now()]);
+			if (!$table->save($ent)) {
+				return $this->jsonResponse($this->_wfPolicySaveErrorResponse($ent->getErrors()), 422);
+			}
+			if (!empty($clean['is_inicial'])) {
+				$this->_wfEnsureSingleInitialState((int)$ent->id);
+				$ent = $table->get($ent->id);
+			}
+
+			return $this->jsonResponse(['ok' => true, 'state' => $this->_wfSerializeState($ent)], 201);
 		}
 
-		return $this->jsonResponse(['ok' => true, 'states' => $out]);
+		return $this->jsonResponse(['ok' => false, 'error' => 'method'], 405);
+	}
+
+	public function workflowState() {
+		$this->autoRender = false;
+		if (!$this->_wfTechOr403()) {
+			return;
+		}
+		$id = (int)$this->request->getParam('id');
+		if ($id <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'bad_request'], 400);
+		}
+		$table = $this->_wfStatesTable();
+		if ($table === null) {
+			return $this->jsonResponse($this->_wfStateValidationErrorResponse(['tabela_indisponivel']), 422);
+		}
+		try {
+			$row = $table->get($id);
+		} catch (\Throwable $e) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if ($this->request->is('delete')) {
+			if ($this->_wfCountTicketsOnState($id) > 0) {
+				return $this->jsonResponse($this->_wfStateValidationErrorResponse(['estado_em_uso_tickets']), 422);
+			}
+			if ((bool)$row->is_inicial) {
+				$otherInitial = $table->find()
+					->where(['is_inicial' => true, 'id !=' => $id])
+					->count();
+				if ($otherInitial <= 0) {
+					return $this->jsonResponse($this->_wfStateValidationErrorResponse(['estado_unico_inicial']), 422);
+				}
+			}
+			if ($table->delete($row)) {
+				return $this->jsonResponse(['ok' => true]);
+			}
+
+			return $this->jsonResponse(['ok' => false, 'error' => 'delete_failed'], 500);
+		}
+		if ($this->request->is(['patch', 'put', 'post'])) {
+			$body = (array)$this->request->input('json_decode', true) + $this->request->getData();
+			$merge = [
+				'nome' => array_key_exists('nome', $body) ? $body['nome'] : $row->nome,
+				'codigo' => array_key_exists('codigo', $body) ? $body['codigo'] : $row->codigo,
+				'is_inicial' => array_key_exists('is_inicial', $body) ? $body['is_inicial'] : $row->is_inicial,
+				'is_final' => array_key_exists('is_final', $body) ? $body['is_final'] : $row->is_final,
+			];
+			[$ok, $errs, $clean] = $this->_wfValidateStatePayload($merge, $id);
+			if (!$ok) {
+				return $this->jsonResponse($this->_wfStateValidationErrorResponse($errs), 422);
+			}
+			$row = $table->patchEntity($row, $clean);
+			if (!$table->save($row)) {
+				return $this->jsonResponse($this->_wfPolicySaveErrorResponse($row->getErrors()), 422);
+			}
+			if (!empty($clean['is_inicial'])) {
+				$this->_wfEnsureSingleInitialState($id);
+				$row = $table->get($id);
+			}
+
+			return $this->jsonResponse(['ok' => true, 'state' => $this->_wfSerializeState($row)]);
+		}
+
+		return $this->jsonResponse(['ok' => false, 'error' => 'method'], 405);
 	}
 
 	public function workflowTransitions() {

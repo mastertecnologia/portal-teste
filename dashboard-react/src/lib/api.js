@@ -1599,6 +1599,7 @@ function wfSlaPaths() {
     policies: wfSlaPolicyListUrl(boot),
     policyBase: wfSlaPolicyBaseFromBoot(boot),
     states: pick(['workflowSlaStates', 'workflowStates'], 'servicedesk/workflow-states').replace(/\/+$/, ''),
+    stateBase: pick(['workflowStateBase'], 'servicedesk/workflow-states/').replace(/\/?$/, '/'),
     transitions: pick(['workflowSlaTransitions', 'workflowTransitions'], 'servicedesk/workflow-transitions').replace(/\/+$/, ''),
     transitionBase: pick(['workflowTransitionBase'], 'servicedesk/workflow-transitions/').replace(/\/?$/, '/'),
     logs: pick(['workflowSlaLogs'], 'servicedesk/workflow-sla-logs').replace(/\/+$/, ''),
@@ -1848,8 +1849,8 @@ export async function fetchWorkflowStates() {
     return {
       ok: true,
       states: [
-        { id: 1, nome: 'Aberto', codigo: 'aberto', is_inicial: true, is_final: false },
-        { id: 2, nome: 'Em execução', codigo: 'emandamento', is_inicial: false, is_final: false },
+        { id: 1, nome: 'Aberto', codigo: 'aberto', is_inicial: true, is_final: false, legacy_situacao_mapped: true },
+        { id: 2, nome: 'Em execução', codigo: 'emandamento', is_inicial: false, is_final: false, legacy_situacao_mapped: true },
       ],
     };
   }
@@ -1857,6 +1858,45 @@ export async function fetchWorkflowStates() {
   const json = await r.json().catch(() => ({}));
   if (!r.ok || !json.ok) return { ok: false, states: [], error: json.error || r.statusText };
   return { ok: true, states: json.states || [] };
+}
+
+export async function saveWorkflowState(body, id = null) {
+  if (USE_MOCK) return { ok: true, state: { id: id || 99, ...body, legacy_situacao_mapped: false } };
+  const url = id ? `${wfSlaPaths().stateBase}${encodeURIComponent(id)}` : wfSlaPaths().states;
+  const r = await fetch(url, {
+    method: id ? 'PATCH' : 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      errors: json.errors,
+      errorMessages: Array.isArray(json.error_messages) ? json.error_messages : [],
+    };
+  }
+  return { ok: true, state: json.state };
+}
+
+export async function deleteWorkflowState(id) {
+  if (USE_MOCK) return { ok: true };
+  const r = await fetch(`${wfSlaPaths().stateBase}${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+  });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      errorMessages: Array.isArray(json.error_messages) ? json.error_messages : [],
+    };
+  }
+  return { ok: true };
 }
 
 export async function fetchWorkflowTransitions() {

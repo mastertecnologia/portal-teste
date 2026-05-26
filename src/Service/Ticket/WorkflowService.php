@@ -328,6 +328,11 @@ class WorkflowService {
 		return null;
 	}
 
+	/** Indica se o código do estado sincroniza com tickets.situacao (legado). */
+	public function isLegacySituacaoMappedCodigo(string $codigo): bool {
+		return $this->stateCodigoToSituacao($this->normalizeStateCodigo($codigo)) !== null;
+	}
+
 	protected function stateCodigoToSituacao(string $codigo): ?int {
 		if ($codigo === 'emandamento') {
 			return (int)C_TicketSituacaoEmandamento;

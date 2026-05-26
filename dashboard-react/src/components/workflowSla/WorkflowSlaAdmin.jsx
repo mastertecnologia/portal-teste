@@ -7,13 +7,16 @@ import {
   fetchWorkflowSlaEmpresas,
   fetchWorkflowSlaLogs,
   fetchWorkflowSlaPolicies,
+  deleteWorkflowState,
   fetchWorkflowStates,
   fetchWorkflowTransitions,
   normalizeWorkflowSlaPolicyId,
+  saveWorkflowState,
   updateWorkflowSlaPolicy,
   saveWorkflowTransition,
 } from '../../lib/api';
 import WorkflowSlaPolicyForm from './WorkflowSlaPolicyForm.jsx';
+import WorkflowStateForm from './WorkflowStateForm.jsx';
 import WorkflowStateList from './WorkflowStateList.jsx';
 import WorkflowTransitionList from './WorkflowTransitionList.jsx';
 
@@ -93,6 +96,10 @@ export default function WorkflowSlaAdmin({ boot }) {
   const [formBusy, setFormBusy] = useState(false);
   const [transBusy, setTransBusy] = useState(null);
   const [newTrans, setNewTrans] = useState({ from_state_id: '', to_state_id: '', is_global: false });
+  const [stateFormOpen, setStateFormOpen] = useState(false);
+  const [editingState, setEditingState] = useState(null);
+  const [stateBusy, setStateBusy] = useState(false);
+  const [stateRowBusy, setStateRowBusy] = useState(null);
 
   const reloadPolicies = useCallback(async () => {
     const f = {};
@@ -270,6 +277,67 @@ export default function WorkflowSlaAdmin({ boot }) {
       window.alert(r.error || 'Erro');
       return;
     }
+    const rt = await fetchWorkflowTransitions();
+    if (rt.ok) setTransitions(rt.transitions || []);
+  };
+
+  const reloadStates = useCallback(async () => {
+    const rs = await fetchWorkflowStates();
+    if (rs.ok) setStates(rs.states || []);
+    return rs;
+  }, []);
+
+  const openCreateState = useCallback(() => {
+    setEditingState(null);
+    setStateFormOpen(true);
+  }, []);
+
+  const openEditState = useCallback((s) => {
+    setEditingState(s);
+    setStateFormOpen(true);
+  }, []);
+
+  const onSaveState = async (payload) => {
+    setStateBusy(true);
+    setErr('');
+    const isEdit = editingState?.id != null;
+    const r = await saveWorkflowState(payload, isEdit ? editingState.id : null);
+    setStateBusy(false);
+    if (!r.ok) {
+      const msg =
+        (Array.isArray(r.errorMessages) && r.errorMessages.length ? r.errorMessages.join(' — ') : null) ||
+        r.error ||
+        'Erro ao salvar estado';
+      setErr(msg);
+      return;
+    }
+    setStateFormOpen(false);
+    setEditingState(null);
+    setOkHint(isEdit ? 'Estado atualizado.' : 'Estado criado.');
+    setTimeout(() => setOkHint(''), 4000);
+    await reloadStates();
+    const rt = await fetchWorkflowTransitions();
+    if (rt.ok) setTransitions(rt.transitions || []);
+  };
+
+  const onDeleteState = async (s) => {
+    if (!window.confirm(`Excluir o estado "${s.nome}"? Transições e políticas SLA ligadas serão removidas.`)) return;
+    setStateRowBusy(s.id);
+    setErr('');
+    const r = await deleteWorkflowState(s.id);
+    setStateRowBusy(null);
+    if (!r.ok) {
+      const msg =
+        (Array.isArray(r.errorMessages) && r.errorMessages.length ? r.errorMessages.join(' — ') : null) ||
+        r.error ||
+        'Erro ao excluir';
+      setErr(msg);
+      return;
+    }
+    setOkHint('Estado excluído.');
+    setTimeout(() => setOkHint(''), 3000);
+    await reloadStates();
+    await reloadPolicies();
     const rt = await fetchWorkflowTransitions();
     if (rt.ok) setTransitions(rt.transitions || []);
   };
@@ -480,7 +548,16 @@ export default function WorkflowSlaAdmin({ boot }) {
         </>
       ) : null}
 
-      {tab === 'states' ? <WorkflowStateList states={states} loading={loading && !states.length} /> : null}
+      {tab === 'states' ? (
+        <WorkflowStateList
+          states={states}
+          loading={loading && !states.length}
+          onCreate={openCreateState}
+          onEdit={openEditState}
+          onDelete={onDeleteState}
+          busyId={stateRowBusy}
+        />
+      ) : null}
 
       {tab === 'transitions' ? (
         <div className="space-y-4">
@@ -573,6 +650,26 @@ export default function WorkflowSlaAdmin({ boot }) {
               )}
             </tbody>
           </table>
+        </div>
+      ) : null}
+
+      {stateFormOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-label="Estado do workflow">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-5 shadow-xl">
+            <h3 className="mb-3 text-lg font-bold text-[var(--pgm-text)]">
+              {editingState?.id != null ? 'Editar estado' : 'Novo estado'}
+            </h3>
+            <WorkflowStateForm
+              key={editingState?.id != null ? `state-${editingState.id}` : 'state-create'}
+              initial={editingState}
+              submitting={stateBusy}
+              onCancel={() => {
+                setStateFormOpen(false);
+                setEditingState(null);
+              }}
+              onSubmit={onSaveState}
+            />
+          </div>
         </div>
       ) : null}
 
