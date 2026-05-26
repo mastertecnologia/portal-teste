@@ -166,7 +166,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 							<tbody>
 								<?php foreach ($orcamentosPendentes as $reg) :
 									$nomeCli = !empty($reg->cliente->razaosocial) ? $reg->cliente->razaosocial : $reg->cliente->nome;
-									$editUrl = $this->Url->build(['action' => 'edit', $reg->id]);
+									$editUrl = $this->Url->build(['action' => 'dados', $reg->id]);
 									$ini = $orcPremiumIniciais($nomeCli);
 									?>
 									<tr>
@@ -183,7 +183,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
 										<td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
-											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
+											<?= $this->Html->link('Editar', ['action' => 'dados', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -209,7 +209,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 							<tbody>
 								<?php foreach ($orcamentosEnviados as $reg) :
 									$nomeCli = !empty($reg->cliente->razaosocial) ? $reg->cliente->razaosocial : $reg->cliente->nome;
-									$editUrl = $this->Url->build(['action' => 'edit', $reg->id]);
+									$editUrl = $this->Url->build(['action' => 'dados', $reg->id]);
 									$ini = $orcPremiumIniciais($nomeCli);
 									?>
 									<tr>
@@ -226,7 +226,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
 										<td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
-											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
+											<?= $this->Html->link('Editar', ['action' => 'dados', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -252,7 +252,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 							<tbody>
 								<?php foreach ($orcamentosAprovados as $reg) :
 									$nomeCli = !empty($reg->cliente->razaosocial) ? $reg->cliente->razaosocial : $reg->cliente->nome;
-									$editUrl = $this->Url->build(['action' => 'edit', $reg->id]);
+									$editUrl = $this->Url->build(['action' => 'dados', $reg->id]);
 									$ini = $orcPremiumIniciais($nomeCli);
 									?>
 									<tr>
@@ -269,7 +269,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
 										<td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
-											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
+											<?= $this->Html->link('Editar', ['action' => 'dados', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -295,7 +295,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 							<tbody>
 								<?php foreach ($orcamentosRecusados as $reg) :
 									$nomeCli = !empty($reg->cliente->razaosocial) ? $reg->cliente->razaosocial : $reg->cliente->nome;
-									$editUrl = $this->Url->build(['action' => 'edit', $reg->id]);
+									$editUrl = $this->Url->build(['action' => 'dados', $reg->id]);
 									$ini = $orcPremiumIniciais($nomeCli);
 									?>
 									<tr>
@@ -312,7 +312,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
 										<td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
-											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
+											<?= $this->Html->link('Editar', ['action' => 'dados', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -338,7 +338,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 							<tbody>
 								<?php foreach ($orcamentosArquivados as $reg) :
 									$nomeCli = !empty($reg->cliente->razaosocial) ? $reg->cliente->razaosocial : $reg->cliente->nome;
-									$editUrl = $this->Url->build(['action' => 'edit', $reg->id]);
+									$editUrl = $this->Url->build(['action' => 'dados', $reg->id]);
 									$ini = $orcPremiumIniciais($nomeCli);
 									?>
 									<tr>
@@ -355,7 +355,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
 										<td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
-											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
+											<?= $this->Html->link('Editar', ['action' => 'dados', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>
