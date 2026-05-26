@@ -31,6 +31,22 @@ const SLA_MODAL_BTN_CLOSE =
 const SLA_MODAL_BTN_FOOTER =
   'mt-4 w-full rounded border border-[var(--pgm-border,#cbd5e1)] bg-[var(--pgm-bg-elevated,#f8fafc)] py-2 text-xs font-medium text-[var(--pgm-text,#0f172a)] hover:bg-[var(--pgm-bg-overlay,#f1f5f9)]';
 
+/** Painel e ações — fallbacks alinhados ao tema claro (servicedesk / tickets-react-sd). */
+const SLA_PANEL =
+  'mt-3 rounded-xl border border-[var(--pgm-border,#cbd5e1)] bg-[var(--pgm-bg-surface,#ffffff)] p-3 text-[0.8125rem] text-[var(--pgm-text,#0f172a)] shadow-[var(--pgm-shadow-sm,0_1px_2px_rgba(15,23,42,0.06))]';
+const SLA_PANEL_TITLE = 'text-sm font-semibold text-[var(--pgm-primary,#1d9e75)]';
+const SLA_LABEL = 'text-[10px] uppercase tracking-wide text-[var(--pgm-text-muted,#64748b)]';
+const SLA_BTN_ACTION =
+  'inline-flex items-center rounded-md border border-[var(--pgm-border,#cbd5e1)] bg-[var(--pgm-bg-elevated,#f8fafc)] px-2.5 py-1 text-[11px] font-semibold text-[var(--pgm-text,#0f172a)] shadow-sm transition hover:border-[var(--pgm-primary,#1d9e75)] hover:bg-[var(--pgm-bg-overlay,#f1f5f9)] hover:text-[var(--pgm-primary,#1d9e75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pgm-primary,#1d9e75)] focus-visible:ring-offset-1 disabled:opacity-50';
+const SLA_BTN_PAUSE =
+  'inline-flex items-center rounded-md border border-amber-600/50 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-900 shadow-sm transition hover:border-amber-600 hover:bg-amber-100 disabled:opacity-50';
+const SLA_BTN_RESUME =
+  'inline-flex items-center rounded-md border border-emerald-600/50 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-900 shadow-sm transition hover:border-emerald-600 hover:bg-emerald-100 disabled:opacity-50';
+const SLA_DETAILS =
+  'mt-2 rounded-lg border border-[var(--pgm-border-subtle,#e2e8f0)] bg-[var(--pgm-bg-elevated,#f8fafc)] p-2';
+const SLA_DETAILS_SUMMARY =
+  'cursor-pointer text-xs font-semibold text-[var(--pgm-text-secondary,#334155)] hover:text-[var(--pgm-text,#0f172a)]';
+
 /** @param {{ ticket: object, boot: object, onSlaUpdated?: (snap: object) => void }} props */
 export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
   const d = ticket?.slaDetail;
@@ -113,64 +129,40 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
   const wfSla = ticket?.workflow?.slaByState || ticket?.slaByState;
 
   return (
-    <div className="mt-3 rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.08))] bg-[var(--pgm-bg-elevated,#1e2430)] p-3 text-[0.8125rem] text-[var(--pgm-text,#e8eaed)]">
+    <div className={SLA_PANEL}>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-[var(--pgm-accent,#5cdbc0)]">SLA & Service Desk</h3>
-        <div className="flex flex-wrap gap-1.5">
+        <h3 className={SLA_PANEL_TITLE}>SLA & Service Desk</h3>
+        <div className="tickets-sla-panel-actions flex flex-wrap gap-2">
           {canAct?.canPause ? (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={doPause}
-              className="rounded border border-amber-500/40 bg-amber-500/15 px-2 py-1 text-[11px] font-medium text-amber-100 hover:bg-amber-500/25 disabled:opacity-50"
-            >
+            <button type="button" disabled={busy} onClick={doPause} className={SLA_BTN_PAUSE}>
               Pausar SLA
             </button>
           ) : null}
           {canAct?.canResume ? (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={doResume}
-              className="rounded border border-emerald-500/40 bg-emerald-500/15 px-2 py-1 text-[11px] font-medium text-emerald-100 hover:bg-emerald-500/25 disabled:opacity-50"
-            >
+            <button type="button" disabled={busy} onClick={doResume} className={SLA_BTN_RESUME}>
               Retomar SLA
             </button>
           ) : null}
           {pol ? (
-            <button
-              type="button"
-              onClick={() => setPolicyOpen(true)}
-              className="rounded border border-[var(--pgm-border,#3d4554)] bg-transparent px-2 py-1 text-[11px] text-[var(--pgm-text-muted,#9aa0a8)] hover:bg-white/5"
-            >
+            <button type="button" onClick={() => setPolicyOpen(true)} className={SLA_BTN_ACTION}>
               Ver política
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={() => setLogsOpen(true)}
-            className="rounded border border-[var(--pgm-border,#3d4554)] bg-transparent px-2 py-1 text-[11px] text-[var(--pgm-text-muted,#9aa0a8)] hover:bg-white/5"
-          >
+          <button type="button" onClick={() => setLogsOpen(true)} className={SLA_BTN_ACTION}>
             Logs de SLA
           </button>
           {adminUrl ? (
-            <a
-              href={adminUrl}
-              data-turbo="false"
-              target="_blank"
-              rel="noreferrer"
-              className="rounded border border-[var(--pgm-border,#3d4554)] bg-transparent px-2 py-1 text-[11px] text-[var(--pgm-text-muted,#9aa0a8)] hover:bg-white/5"
-            >
+            <a href={adminUrl} data-turbo="false" target="_blank" rel="noreferrer" className={SLA_BTN_ACTION}>
               Cadastro SLA
             </a>
           ) : null}
         </div>
       </div>
-      {err ? <p className="mb-2 text-xs text-red-300">{err}</p> : null}
+      {err ? <p className="mb-2 text-xs font-medium text-red-600">{err}</p> : null}
 
       <div className="grid gap-2 sm:grid-cols-2">
         <div>
-          <div className="text-[10px] uppercase tracking-wide text-[var(--pgm-text-muted,#9aa0a8)]">Contrato</div>
+          <div className={SLA_LABEL}>Contrato</div>
           <div className="font-medium">
             {d?.contract ? (
               <>
@@ -183,56 +175,56 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
           </div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wide text-[var(--pgm-text-muted,#9aa0a8)]">Política aplicada</div>
+          <div className={SLA_LABEL}>Política aplicada</div>
           <div className="font-medium">
             {pol ? `#${pol.id} ${pol.estado_nome || ''}` : d?.resolvedPolicyId ? `#${d.resolvedPolicyId}` : '—'}
           </div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wide text-[var(--pgm-text-muted,#9aa0a8)]">SLA resposta</div>
+          <div className={SLA_LABEL}>SLA resposta</div>
           <div>
             Meta {formatMin(d?.slaResposta?.targetMinutes)} · restante {formatMin(d?.slaResposta?.remainingMinutes)}
           </div>
-          <div className="text-[11px] text-[var(--pgm-text-muted,#9aa0a8)]">até {formatTs(d?.slaResposta?.deadlineIso)}</div>
+          <div className="text-[11px] text-[var(--pgm-text-muted,#64748b)]">até {formatTs(d?.slaResposta?.deadlineIso)}</div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wide text-[var(--pgm-text-muted,#9aa0a8)]">SLA resolução</div>
+          <div className={SLA_LABEL}>SLA resolução</div>
           <div>
             Meta {formatMin(d?.slaResolucao?.targetMinutes)} · restante {formatMin(d?.slaResolucao?.remainingMinutes)}
           </div>
-          <div className="text-[11px] text-[var(--pgm-text-muted,#9aa0a8)]">até {formatTs(d?.slaResolucao?.deadlineIso)}</div>
+          <div className="text-[11px] text-[var(--pgm-text-muted,#64748b)]">até {formatTs(d?.slaResolucao?.deadlineIso)}</div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wide text-[var(--pgm-text-muted,#9aa0a8)]">Status SLA (workflow)</div>
+          <div className={SLA_LABEL}>Status SLA (workflow)</div>
           <div className="font-medium">{d?.status?.label || '—'}</div>
           {wfSla?.enabled ? (
-            <div className="text-[11px] text-[var(--pgm-text-muted,#9aa0a8)]">
+            <div className="text-[11px] text-[var(--pgm-text-muted,#64748b)]">
               Prazo resolução (linha): {formatTs(wfSla?.deadlineResolucao)}
             </div>
           ) : null}
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wide text-[var(--pgm-text-muted,#9aa0a8)]">Tempo pausado (ciclo)</div>
+          <div className={SLA_LABEL}>Tempo pausado (ciclo)</div>
           <div className="font-medium">{pausedFmt}</div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wide text-[var(--pgm-text-muted,#9aa0a8)]">Fila atual</div>
+          <div className={SLA_LABEL}>Fila atual</div>
           <div>{d?.queue?.name || '—'}</div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wide text-[var(--pgm-text-muted,#9aa0a8)]">Técnico atual</div>
+          <div className={SLA_LABEL}>Técnico atual</div>
           <div>{d?.technician?.name || '—'}</div>
         </div>
       </div>
 
       {d?.cycles?.length ? (
-        <details className="mt-3 rounded border border-white/5 bg-black/20 p-2">
-          <summary className="cursor-pointer text-xs font-semibold text-[var(--pgm-text-muted,#9aa0a8)]">
+        <details className={SLA_DETAILS}>
+          <summary className={SLA_DETAILS_SUMMARY}>
             Histórico de ciclos ({d.cycles.length})
           </summary>
           <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto text-[11px]">
             {d.cycles.map((c) => (
-              <li key={c.id} className="border-b border-white/5 pb-1">
+              <li key={c.id} className="border-b border-[var(--pgm-border-subtle,#e2e8f0)] pb-1">
                 <span className="font-mono">#{c.cycle_number}</span> — {c.phase}
                 {c.open ? ' · aberto' : ' · fechado'} · início {formatTs(c.started_at)}
                 {c.ended_at ? ` · fim ${formatTs(c.ended_at)}` : ''}
@@ -243,14 +235,14 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
       ) : null}
 
       {d?.events?.length ? (
-        <details className="mt-2 rounded border border-white/5 bg-black/20 p-2">
-          <summary className="cursor-pointer text-xs font-semibold text-[var(--pgm-text-muted,#9aa0a8)]">
+        <details className={SLA_DETAILS}>
+          <summary className={SLA_DETAILS_SUMMARY}>
             Eventos de SLA ({d.events.length})
           </summary>
           <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto text-[11px]">
             {d.events.map((ev) => (
-              <li key={ev.id} className="border-b border-white/5 pb-1">
-                <span className="text-[var(--pgm-accent,#5cdbc0)]">{ev.event_type}</span> · {formatTs(ev.created_at)}
+              <li key={ev.id} className="border-b border-[var(--pgm-border-subtle,#e2e8f0)] pb-1">
+                <span className="font-medium text-[var(--pgm-primary,#1d9e75)]">{ev.event_type}</span> · {formatTs(ev.created_at)}
                 {ev.ticket_sla_cycle_id ? ` · ciclo ${ev.ticket_sla_cycle_id}` : ''}
               </li>
             ))}
@@ -259,13 +251,13 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
       ) : null}
 
       {d?.escalationLogs?.length ? (
-        <details className="mt-2 rounded border border-white/5 bg-black/20 p-2">
-          <summary className="cursor-pointer text-xs font-semibold text-[var(--pgm-text-muted,#9aa0a8)]">
+        <details className={SLA_DETAILS}>
+          <summary className={SLA_DETAILS_SUMMARY}>
             Escalonamentos registrados ({d.escalationLogs.length})
           </summary>
           <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto text-[11px]">
             {d.escalationLogs.map((lg) => (
-              <li key={lg.id} className="border-b border-white/5 pb-1">
+              <li key={lg.id} className="border-b border-[var(--pgm-border-subtle,#e2e8f0)] pb-1">
                 {lg.reason_code || '—'} · {formatTs(lg.created_at)}
               </li>
             ))}
@@ -289,7 +281,7 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
                 ✕
               </button>
             </div>
-            {logsErr ? <p className="mb-2 text-xs text-red-300">{logsErr}</p> : null}
+            {logsErr ? <p className="mb-2 text-xs font-medium text-red-600">{logsErr}</p> : null}
             {logsLoading ? <p className="text-xs text-[var(--pgm-text-muted)]">Carregando…</p> : null}
 
             <section className="mb-4">
@@ -301,8 +293,8 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
               ) : (
                 <ul className="max-h-40 space-y-1 overflow-y-auto text-[11px]">
                   {escalationApiLogs.map((lg) => (
-                    <li key={lg.id} className="border-b border-white/5 pb-1">
-                      <span className="text-[var(--pgm-accent)]">{lg.reason_code || '—'}</span>
+                    <li key={lg.id} className="border-b border-[var(--pgm-border-subtle,#e2e8f0)] pb-1">
+                      <span className="font-medium text-[var(--pgm-primary,#1d9e75)]">{lg.reason_code || '—'}</span>
                       {lg.workflow_state_from != null || lg.workflow_state_to != null
                         ? ` · estado ${lg.workflow_state_from ?? '—'} → ${lg.workflow_state_to ?? '—'}`
                         : ''}
@@ -323,7 +315,7 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
               ) : (
                 <ul className="max-h-32 space-y-1 overflow-y-auto text-[11px]">
                   {d.escalationLogs.map((lg) => (
-                    <li key={lg.id} className="border-b border-white/5 pb-1">
+                    <li key={lg.id} className="border-b border-[var(--pgm-border-subtle,#e2e8f0)] pb-1">
                       {lg.reason_code || '—'} · {formatTs(lg.created_at)}
                     </li>
                   ))}
@@ -340,8 +332,8 @@ export default function TicketSlaPanel({ ticket, boot, onSlaUpdated }) {
               ) : (
                 <ul className="max-h-48 space-y-1 overflow-y-auto text-[11px]">
                   {d.events.map((ev) => (
-                    <li key={ev.id} className="border-b border-white/5 pb-1">
-                      <span className="text-[var(--pgm-accent)]">{ev.event_type}</span> · {formatTs(ev.created_at)}
+                    <li key={ev.id} className="border-b border-[var(--pgm-border-subtle,#e2e8f0)] pb-1">
+                      <span className="font-medium text-[var(--pgm-primary,#1d9e75)]">{ev.event_type}</span> · {formatTs(ev.created_at)}
                       {ev.ticket_sla_cycle_id ? ` · ciclo ${ev.ticket_sla_cycle_id}` : ''}
                     </li>
                   ))}
