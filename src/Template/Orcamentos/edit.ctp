@@ -381,5 +381,6 @@
 	'orcamentoId' => $orcamento->id,
 	'clientesMetaJson' => '{}',
 	'produtosCatalogoJson' => $produtosCatalogoJson ?? '[]',
+	'orcItemDescontoEnabled' => !empty($orcItemDescontoEnabled),
 ]) ?>
 

@@ -614,17 +614,18 @@
 
 	$(document).on('click', '.editaitemcarrinho', function (e) {
 		e.preventDefault();
+		var $btn = $(this);
 		var dados = {
-			id: $(this).data('id'),
-			servico: $(this).data('servico'),
-			quantidade: $(this).data('quantidade'),
-			valoruni: $(this).data('valoruni'),
-			observacao: $(this).data('observacao'),
-			valormensal: $(this).data('valormensal'),
-			idproduto: $(this).data('idproduto'),
-			tipo: $(this).data('tipo'),
-			descontoValor: $(this).data('descontoValor'),
-			descontoTipo: $(this).data('descontoTipo')
+			id: $btn.data('id'),
+			servico: $btn.data('servico'),
+			quantidade: $btn.data('quantidade'),
+			valoruni: $btn.data('valoruni'),
+			observacao: $btn.data('observacao'),
+			valormensal: $btn.data('valormensal'),
+			idproduto: $btn.data('idproduto'),
+			tipo: $btn.data('tipo'),
+			descontoValor: $btn.attr('data-desconto-valor') != null ? $btn.attr('data-desconto-valor') : $btn.data('descontoValor'),
+			descontoTipo: $btn.attr('data-desconto-tipo') || $btn.data('descontoTipo') || 'pct'
 		};
 		preencherFormularioEdicao(dados);
 		toggleModoEdicao(true);
@@ -674,11 +675,13 @@
 				desconto_tipo: $('#orc-item-disc-tipo').val() || 'pct'
 			},
 			success: function (data) {
-				var ok = typeof data === 'string' ? data.trim() === 'success' : false;
-				if (ok) {
+				var resp = typeof data === 'string' ? data.trim() : '';
+				if (resp === 'success') {
 					window.carrinho();
 					toggleModoEdicao(false);
 					bootbox.alert('Item atualizado com sucesso!');
+				} else if (resp === 'error:migration') {
+					bootbox.alert('Desconto por item indisponível: execute bin/cake migrations migrate e bin/cake cache clear_all no servidor.');
 				} else {
 					bootbox.alert('Erro ao atualizar item.');
 				}

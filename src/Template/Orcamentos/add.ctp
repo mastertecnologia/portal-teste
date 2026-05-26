@@ -151,6 +151,7 @@
 </div>
 
 <?= $this->element('orcamentos_form_shared_js', [
+	'orcItemDescontoEnabled' => !empty($orcItemDescontoEnabled),
 	'mode' => 'add',
 	'idcarrinho' => $idcarrinho,
 	'clientesMetaJson' => $clientesMetaJson ?? '{}',

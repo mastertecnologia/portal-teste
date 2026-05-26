@@ -76,6 +76,7 @@ class AppController extends Controller
                 "getitemcarrinho",
                 "edititemcarrinho",
                 "editaitemcarrinho",
+                "salvarDescontoItem",
                 "carrinhoedit",
                 // Solicitar orçamento: inputs HTML + itens dinâmicos (itens[n][*]) fora do FormHelper
                 "solicitar",

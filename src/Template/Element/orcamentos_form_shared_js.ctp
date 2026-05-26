@@ -8,10 +8,12 @@
  * @var int|null $orcamentoId id do orçamento (edit)
  * @var string $clientesMetaJson JSON de metadados de clientes (add)
  * @var string $produtosCatalogoJson JSON do catálogo
+ * @var bool $orcItemDescontoEnabled Colunas desconto_valor/tipo na tabela de itens
  */
 use Cake\Routing\Router;
 
 $mode = $mode ?? 'add';
+$orcItemDescontoEnabled = !empty($orcItemDescontoEnabled);
 $tipoServico = defined('C_ProdutosTipoServico') ? (int)C_ProdutosTipoServico : 1;
 $tipoProduto = defined('C_ProdutosTipoProduto') ? (int)C_ProdutosTipoProduto : 0;
 $juridicaTipo = (int)(defined('C_ClientesTipoJuridica') ? C_ClientesTipoJuridica : 1);
@@ -54,7 +56,7 @@ $config = [
 	'produtoUrlBase' => Router::url(['controller' => 'Produtos', 'action' => 'produto']),
 	'qtdestoqueUrlBase' => Router::url(['controller' => 'Produtos', 'action' => 'qtdestoque']),
 	'salvarDescontoItemUrl' => Router::url(['controller' => 'Orcamentos', 'action' => 'salvarDescontoItem']),
-	'itemDescontoEnabled' => true,
+	'itemDescontoEnabled' => $orcItemDescontoEnabled,
 ];
 $configJson = json_encode($config, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 $estoquesLoteJson = json_encode(Router::url(['controller' => 'Produtos', 'action' => 'estoquesLote']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

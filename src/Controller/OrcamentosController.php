@@ -259,7 +259,13 @@ class OrcamentosController extends AppController {
 	}
 
 	protected function _orcServicoTemDescontoColunas(): bool {
-		$schema = $this->Orcamentosservicos->getSchema();
+		$table = $this->Orcamentosservicos;
+		$schema = $table->getSchema();
+		if ($schema->hasColumn('desconto_valor') && $schema->hasColumn('desconto_tipo')) {
+			return true;
+		}
+		// Após migration, o cache de schema pode estar desatualizado até clear_all.
+		$schema = $table->getSchema(true);
 
 		return $schema->hasColumn('desconto_valor') && $schema->hasColumn('desconto_tipo');
 	}
@@ -1177,6 +1183,7 @@ class OrcamentosController extends AppController {
 		$this->set('orcStepperStep', 1);
 		$this->set('orcFormaPagamentoOpcoes', $this->_orcFormaPagamentoOpcoes());
 		$this->set('orcPreviewNumero', $this->_previewProximoOrcamentoId($this->Auth->user('idempresa')));
+		$this->set('orcItemDescontoEnabled', $this->_orcServicoTemDescontoColunas());
 	}
 
 	public function edit($id = null) {
@@ -1252,6 +1259,7 @@ class OrcamentosController extends AppController {
 		$this->set('orcamento', $orcamento);
 		$this->set('idcarrinho', $_SESSION['idcarrinho']);
 		$this->set('orcFormaPagamentoOpcoes', $this->_orcFormaPagamentoOpcoes());
+		$this->set('orcItemDescontoEnabled', $this->_orcServicoTemDescontoColunas());
 	}
 
 	/**
@@ -2935,10 +2943,18 @@ class OrcamentosController extends AppController {
 				$item->valordoservico = formatNumber($data['valordoservico']);
 				$item->idproduto = $data['idproduto'];
 				$item->tipo = $data['tipo'];
+				$discPost = $data['desconto_valor'] ?? $data['item_desconto_valor'] ?? 0;
+				$discPostNum = is_numeric($discPost) ? (float)$discPost : (float)preg_replace('/[^\d.,-]/', '', (string)$discPost);
 				$this->_orcPatchItemDescontoFromRequest($item, $data);
+				if ($discPostNum > 0 && !$this->_orcServicoTemDescontoColunas()) {
+					echo 'error:migration';
+
+					return;
+				}
 
 				if ($this->Orcamentosservicos->save($item)) {
 					echo 'success';
+
 					return;
 				}
 			}
