@@ -91,6 +91,8 @@ $orcPremiumMargemOrder = function ($id) use ($margemBrutaPctPorOrcamentoId, $val
 
 $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 ?>
+<?php /* Turbo Frame: garante CSS premium após swap do #pgm-main-frame (append('css') só vai ao <head>). */ ?>
+<?= $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']) ?>
 <div class="col-md-12 orc-premium-page-root">
 <div id="orc-premium-container" class="orc-premium-wrap orc-premium-index">
 	<?php if ((int)($role ?? 1) === 0) : ?>

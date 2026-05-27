@@ -202,7 +202,7 @@ final class PgmSidebarStaffPayloadBuilder
                         'file-text',
                         ' Orçamentos',
                         PortalUi::listRoute('orcamentos') ?? ['controller' => 'Orcamentos', 'action' => 'index'],
-                        [],
+                        ['data-turbo' => 'false'],
                         (bool)($ctx['orcamentosListNavActive'] ?? false),
                         '',
                         'Orçamentos'
