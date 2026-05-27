@@ -156,7 +156,7 @@ $this->Html->css('/dist/css/pages/config-admin-shell.css', ['block' => true]);
 							<div class="col-8">
 								<div class="form-group ">
 									<label class="control-label text-muted"> Mensagem Orçamento </label>
-									<?= $this->Form->textarea('orcamentomensagem', ['class' => 'form-control', 'required' => true, 'label' => false, 'placeholder' => 'Insira a mensagem do orçamento']) ?>
+									<?= $this->Form->textarea('orcamentomensagem', ['class' => 'form-control', 'required' => true, 'label' => false, 'placeholder' => 'Use #LINKACESSO# e/ou #LINKASSINATURA# para incluir links de acesso e assinatura no e-mail']) ?>
 								</div>
 							</div>
 						</div>

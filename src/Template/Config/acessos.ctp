@@ -22,7 +22,7 @@ $this->Breadcrumbs->add('Acessos', [], ['class' => 'breadcrumb-item active']);
 				<div class="col-lg-12">
 					<div class="form-group">
 						<label class="control-label text-muted">URL de acesso externo</label>
-						<?= $this->Form->text('urlfora', ['class' => 'form-control', 'label' => false, 'required' => true, 'placeholder' => 'https://…']) ?>
+						<?= $this->Form->text('urlfora', ['class' => 'form-control', 'label' => false, 'required' => true, 'placeholder' => 'https://portal.exemplo.com/portal (com /portal se aplicável, sem barra no final)']) ?>
 					</div>
 				</div>
 			</div>

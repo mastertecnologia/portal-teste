@@ -5,7 +5,9 @@ use App\Controller\AppController;
 use App\Utility\PortalUi;
 use App\Utility\RbacChecker;
 use Cake\Event\Event;
+use Cake\Log\Log;
 use Cake\Mailer\Email;
+use Cake\Mailer\TransportFactory;
 use Cake\Routing\Router;
 use Cake\View\View;
 
@@ -2154,23 +2156,155 @@ class OrcamentosController extends AppController {
 		return $first . '••••' . $last . '@' . $d;
 	}
 
+	/**
+	 * Base pública do portal (Config.urlfora), sem barra final — mesmo critério que reset de senha.
+	 */
+	protected function _portalUrlforaBase(): string {
+		$urlfora = '';
+		try {
+			$cfg = $this->Config->get(1);
+			if (!empty($cfg->urlfora)) {
+				$urlfora = (string)$cfg->urlfora;
+			}
+		} catch (\Throwable $e) {
+		}
+		$urlfora = rtrim($urlfora, '/');
+		if ($urlfora === '') {
+			$urlfora = rtrim(Router::url('/', true), '/');
+		}
+
+		return $urlfora;
+	}
+
+	protected function _orcamentoSeguroPropostaUrl(string $hash): ?string {
+		$hash = trim($hash);
+		if ($hash === '') {
+			return null;
+		}
+
+		return $this->_portalUrlforaBase() . '/orcamentos/seguro-proposta/' . rawurlencode($hash);
+	}
+
+	protected function _orcamentoViewPublicUrl(int $idorcamento, int $idempresa): string {
+		return $this->_portalUrlforaBase() . '/orcamentos/view/' . $idorcamento . '/' . $idempresa;
+	}
+
+	/**
+	 * Garante hash do orçamento (link seguro / OTP) antes do envio por e-mail.
+	 *
+	 * @param \App\Model\Entity\Orcamento|\Cake\Datasource\EntityInterface $orcamento
+	 */
+	protected function _orcEnsureHash($orcamento): void {
+		if (!empty($orcamento->hash)) {
+			return;
+		}
+		$idautor = (int)($orcamento->idautor ?? $this->Auth->user('id') ?? 0);
+		$orcamento->hash = $idautor . (int)$orcamento->id . (int)$orcamento->idempresa . $this->_orcHashSuffix();
+		$this->Orcamentos->save($orcamento);
+	}
+
+	/**
+	 * @return array{html:string,seguro_url:?string}
+	 */
+	protected function _orcamentoEmailLinksHtml($orcamento, int $idorcamento): array {
+		$seguroUrl = !empty($orcamento->hash)
+			? $this->_orcamentoSeguroPropostaUrl((string)$orcamento->hash)
+			: null;
+		if ($seguroUrl === null) {
+			return ['html' => '', 'seguro_url' => null];
+		}
+		$viewUrl = $this->_orcamentoViewPublicUrl($idorcamento, (int)$orcamento->idempresa);
+		$html = "<a href='" . h($viewUrl) . "'>Portal Web - Orçamentos</a>"
+			. " ou, se não possuir login, acesse <a href='" . h($seguroUrl) . "'>este link</a> (acesso seguro com verificação)";
+
+		return ['html' => $html, 'seguro_url' => $seguroUrl];
+	}
+
+	protected function _orcamentoAssinaturaLinkHtml(?string $seguroUrl): string {
+		if ($seguroUrl === null || $seguroUrl === '') {
+			return '';
+		}
+
+		return "<a href='" . h($seguroUrl) . "'>Assinar proposta (acesso seguro)</a>";
+	}
+
+	/**
+	 * @param array<string, array<string, string>> $attachments
+	 */
+	protected function _orcamentoSendHtmlEmail(
+		string $to,
+		array $from,
+		string $subject,
+		string $htmlBody,
+		int $idempresa,
+		array $attachments = []
+	): bool {
+		$primary = ((int)$idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm';
+		$candidates = [$primary];
+		if (filter_var(env('MAIL_RESET_FALLBACK_DEFAULT', true), FILTER_VALIDATE_BOOLEAN)) {
+			if (!in_array('default', $candidates, true)) {
+				$candidates[] = 'default';
+			}
+		}
+		$last = null;
+		foreach ($candidates as $transport) {
+			try {
+				$cfg = TransportFactory::getConfig($transport);
+				if (!is_array($cfg) || ($cfg['className'] ?? '') !== 'Smtp') {
+					continue;
+				}
+				$usr = isset($cfg['username']) ? trim((string)$cfg['username']) : '';
+				$pwd = isset($cfg['password']) ? trim((string)$cfg['password']) : '';
+				if ($transport === 'default' && $usr === '' && $pwd === '') {
+					continue;
+				}
+				$email = new Email();
+				$email->transport($transport);
+				$email->from($from)
+					->to($to)
+					->emailFormat('html')
+					->subject($subject);
+				if ($attachments !== []) {
+					$email->attachments($attachments);
+				}
+				$email->send($htmlBody);
+				if ($transport !== $primary) {
+					Log::info(sprintf('[orcamento-email] Enviado via fallback "%s" (falhou "%s").', $transport, $primary));
+				}
+
+				return true;
+			} catch (\Throwable $e) {
+				$last = $e;
+				Log::warning(sprintf('[orcamento-email] Transporte "%s" falhou: %s', $transport, $e->getMessage()));
+			}
+		}
+		if ($last !== null) {
+			Log::error('[orcamento-email] Falha em todos os transportes: ' . $last->getMessage());
+		}
+
+		return false;
+	}
+
 	protected function _sendSeguroOtpEmail($orcamento, string $toEmail, string $code) {
 		try {
 			$empresa = $this->Empresas->get($orcamento->idempresa);
 			$nomeempresa = (isset($empresa->nomefantasia) && (string)$empresa->nomefantasia !== '') ? $empresa->nomefantasia : $empresa->razaosocial;
-			$email = new Email();
-			$email->transport(((int)$orcamento->idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm');
 			$from = 'helpdesk@pgm.inf.br';
-			$email->from([$from => $nomeempresa]);
 			$esc = htmlspecialchars($code, ENT_QUOTES, 'UTF-8');
 			$msg = '<p>Seu código de verificação para acessar a proposta comercial:</p>'
 				. '<p style="font-size:24px;font-weight:bold;letter-spacing:4px;">' . $esc . '</p>'
 				. '<p>Válido por 10 minutos. Se você não solicitou este código, ignore este e-mail.</p>';
-			$email->to($toEmail)
-				->emailFormat('html')
-				->subject('Código de verificação — Proposta PGM nº ' . (int)$orcamento->id);
-			return (bool)$email->send($msg);
+
+			return $this->_orcamentoSendHtmlEmail(
+				$toEmail,
+				[$from => $nomeempresa],
+				'Código de verificação — Proposta PGM nº ' . (int)$orcamento->id,
+				$msg,
+				(int)$orcamento->idempresa
+			);
 		} catch (\Throwable $e) {
+			Log::warning('[orcamento-email] OTP: ' . $e->getMessage());
+
 			return false;
 		}
 	}
@@ -2819,7 +2953,7 @@ class OrcamentosController extends AppController {
 			// Email
 				$empresa = $this->Empresas->get($orcamento->idempresa);
 				// Mensagem 
-					$url = $this->Config->get(1)->urlfora.'orcamentos/edit/'.$orcamento->id;
+					$url = $this->_portalUrlforaBase() . '/orcamentos/edit/' . (int)$orcamento->id;
 					
 					$assunto = "Orçamento $orcamento->id aprovado!";
 					$mensagem = "
@@ -2998,16 +3132,10 @@ class OrcamentosController extends AppController {
 		$versaoMap = $this->_versaoRotuloPorOrcamentoIds($this->Auth->user('idempresa'), [(int)$orcamento->id]);
 		$orcVersaoLabel = $versaoMap[(int)$orcamento->id] ?? 'v1';
 
-		// Link do portal do cliente (acesso seguro → depois viewhash).
-		$assinarUrl = null;
-		try {
-			$base = $this->Config->get(1)->urlfora ?? null;
-			if (!empty($base) && !empty($orcamento->hash)) {
-				$assinarUrl = $base . 'orcamentos/seguro-proposta/' . $orcamento->hash;
-			}
-		} catch (\Throwable $e) {
-			$assinarUrl = null;
-		}
+		$this->_orcEnsureHash($orcamento);
+		$assinarUrl = !empty($orcamento->hash)
+			? $this->_orcamentoSeguroPropostaUrl((string)$orcamento->hash)
+			: null;
 
 		$this->set('title', 'Envio & Assinatura Digital');
 		$this->set('hideLayoutPageTitle', true);
@@ -3083,24 +3211,29 @@ class OrcamentosController extends AppController {
 			return $this->redirect(['action' => 'edit', $orcamento->id]);
 		}
 
+		$this->_orcEnsureHash($orcamento);
+
 		$empresa = $this->Empresas->get($idempresa);
-			// Link de acesso 
-				$linkacesso = '';
-				try {
-					$base = $this->Config->get(1)->urlfora ?? '';
-					if ($base !== '' && !empty($orcamento->hash)) {
-						$url = $base . 'orcamentos/view/' . $idorcamento . '/' . (int)$orcamento->idempresa;
-						$linkacesso = "<a href='" . h($url) . "'>Portal Web - Orçamentos</a>";
-						$urlHash = $base . 'orcamentos/seguro-proposta/' . $orcamento->hash;
-						$linkacesso .= " ou se não possuir login, acesse <a href='" . h($urlHash) . "'>este link</a> (acesso seguro com verificação)";
-					}
-				} catch (\Throwable $e) {
-					$linkacesso = '';
-				}
-			// Subistitui as tags 
-				$mensagem = $empresa->orcamentomensagem;
-				$mensagem = str_replace("#LINKACESSO#", $linkacesso, $empresa->orcamentomensagem);
-				$assunto = str_replace("#NROORCAMENTO#", $idorcamento, $empresa->orcamentoassunto);
+		$links = $this->_orcamentoEmailLinksHtml($orcamento, $idorcamento);
+		$linkacesso = $links['html'];
+		$seguroUrl = $links['seguro_url'];
+		$linkAssinatura = $this->_orcamentoAssinaturaLinkHtml($seguroUrl);
+		$templateMsg = (string)($empresa->orcamentomensagem ?? '');
+		$mensagem = str_replace(
+			['#LINKACESSO#', '#LINKASSINATURA#'],
+			[$linkacesso, $linkAssinatura],
+			$templateMsg
+		);
+		if ($isStep6 && $seguroUrl !== null && strpos($mensagem, $seguroUrl) === false) {
+			$bloco = '<p><strong>Assinatura digital da proposta:</strong> ' . $linkAssinatura . '</p>';
+			$mensagem .= $bloco;
+		}
+		if ($linkacesso === '' && $isStep6) {
+			$this->Flash->error(__('Não foi possível gerar o link de assinatura. Verifique Configurações → Acessos (URL externa) e tente novamente.'));
+
+			return $this->redirect(['action' => 'envioassinatura', $orcamento->id]);
+		}
+		$assunto = str_replace('#NROORCAMENTO#', (string)$idorcamento, (string)($empresa->orcamentoassunto ?? ''));
 			// Assinautra 
 				if(empty($this->Auth->user('assinaturapgm'))) $message = $mensagem . '<hr> PGM' ;
 				else {
@@ -3140,18 +3273,17 @@ class OrcamentosController extends AppController {
 				else $nomeempresa = $empresa->razaosocial;
 			//
 
-			$email = new Email();
-			
-			$email->transport(((int)$this->Auth->user('idempresa') === (int)C_EmpresaMaster) ? 'master' : 'pgm');
 			$from = 'helpdesk@pgm.inf.br';
+			$enviado = $this->_orcamentoSendHtmlEmail(
+				$destinatario,
+				[$from => $nomeempresa],
+				$assunto,
+				$message,
+				$idempresa,
+				$arrayEmail
+			);
 
-			$email->from([$from => $nomeempresa]);
-			$email->attachments($arrayEmail)
-				->to($destinatario)
-				->emailFormat('html')
-				->subject($assunto);
-
-			if($email->send($message) ){
+			if ($enviado) {
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $data['idorcamento']);
 				// Atualiza status para "Enviado" e registra movimento.
 				$sitantiga = (int)($orcamento->status ?? C_OrcamentoStatusPendente);
@@ -3168,7 +3300,7 @@ class OrcamentosController extends AppController {
 				}
 				return $this->redirect(['action' => 'edit', $orcamento->id]);
 			}
-			$this->Flash->error('Erro ao enviar e-mail.');
+			$this->Flash->error(__('Não foi possível enviar o e-mail. Verifique o endereço do destinatário e as credenciais SMTP (MAIL_PGM_* no servidor).'));
 
 			if (!empty($tmpGeneratedPdfPath) && is_file($tmpGeneratedPdfPath)) {
 				@unlink($tmpGeneratedPdfPath);
