@@ -2123,12 +2123,13 @@ body.pgm-app-shell-premium.layout-no-topbar:has(.orcamento-content) #pgm-dynamic
   --orc-shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --orc-radius-sm: 8px;
   --orc-radius-lg: 12px;
-  background: #ffffff;
-  border-radius: var(--orc-radius-lg);
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none !important;
 }
 
 body.skin-green .orc-premium-wrap.orc-premium-view {
-  background: #ffffff !important;
+  background: transparent !important;
   color: #1a1a18 !important;
 }
 
@@ -3125,7 +3126,7 @@ body.layout-no-topbar .orc-premium-index .orc-premium-list-card .dataTables_wrap
   border: 1px solid #e5e4e0 !important;
 }
 
-/* Formulários add/edit */
+/* Formulários add/edit — fundo da página #f2f1ee; cartões brancos em .orcamento-card */
 body.layout-no-topbar .orc-premium-wrap.orc-premium-form {
   --orc-teal: #00c08b;
   --orc-teal-dark: #008f68;
@@ -3139,12 +3140,14 @@ body.layout-no-topbar .orc-premium-wrap.orc-premium-form {
   --orc-bg-surface: #f8f8f7;
   --orc-bg-card: #ffffff;
   --orc-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  background: #ffffff !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
   color: #1a1a18 !important;
 }
 
 body.layout-no-topbar.skin-green .orc-premium-wrap.orc-premium-form {
-  background: #ffffff !important;
+  background: transparent !important;
   color: #1a1a18 !important;
 }
 
@@ -3160,7 +3163,7 @@ body.layout-no-topbar .orc-premium-form .orc-wf-ok {
   color: #008f68 !important;
 }
 
-/* Visualização */
+/* Visualização / revisão — mesmo plano de fundo que add/dados */
 body.layout-no-topbar .orc-premium-wrap.orc-premium-view {
   --orc-teal: #00c08b;
   --orc-teal-dark: #008f68;
@@ -3173,12 +3176,14 @@ body.layout-no-topbar .orc-premium-wrap.orc-premium-view {
   --orc-bg-surface: #f8f8f7;
   --orc-bg-card: #ffffff;
   --orc-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  background: #ffffff !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
   color: #1a1a18 !important;
 }
 
 body.layout-no-topbar.skin-green .orc-premium-wrap.orc-premium-view {
-  background: #ffffff !important;
+  background: transparent !important;
   color: #1a1a18 !important;
 }
 
@@ -3724,4 +3729,18 @@ body.layout-no-topbar .orc-premium-form .orc-wf-pend {
 }
 .orc-premium-view .orc-discount-form-revisao {
   margin-top: 12px;
+}
+
+/* Reforço: fluxo proposta — sem “folha” branca no .orc-premium-wrap (pg-novo / imagem 2) */
+body.layout-no-topbar .orc-premium-wrap.orcamento-content,
+body.layout-no-topbar.skin-green .orc-premium-wrap.orcamento-content {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+body.layout-no-topbar:has(.orcamento-content) #pgm-dynamic-content,
+body.layout-no-topbar:has(.orcamento-content) .page-wrapper > .container-fluid {
+  background-color: var(--pgm-bg-page, #f2f1ee) !important;
 }
