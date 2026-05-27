@@ -55,7 +55,6 @@ $versaoStatusBadge = function ($versaoEnt) {
 };
 ?>
 <div class="col-md-12 orc-premium-page-root">
-<div class="orcamento-page">
 <div class="orc-premium-wrap orc-premium-form orc-premium-view orc-revisao-page orcamento-content">
 
 	<div class="orc-page-head">
@@ -294,7 +293,6 @@ $versaoStatusBadge = function ($versaoEnt) {
 		</div>
 	</footer>
 
-</div>
 </div>
 </div>
 <script>

@@ -227,8 +227,14 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main {
   background: #f2f1ee !important;
 }
 
+body.pgm-app-shell-premium.layout-no-topbar:has(.orc-premium-page-root) #pgm-dynamic-content,
+body.layout-no-topbar:has(.orc-premium-page-root) #pgm-dynamic-content {
+  background-color: #f2f1ee !important;
+}
+
 body.layout-no-topbar:has(.orc-premium-page-root) .page-wrapper > .container-fluid {
   max-width: 100%;
+  background: #f2f1ee !important;
 }
 
 body.layout-no-topbar:has(.orc-premium-page-root) .orc-premium-page-root {
@@ -813,8 +819,21 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 }
 
 /* ========== Layout fluxo proposta — docs/reference/pgm_erp_completo.html #pg-novo ========== */
+/* Um plano de fundo (#f2f1ee); cartões brancos soltos — sem “folha branca” atrás do conteúdo */
+body.layout-no-topbar:has(.orcamento-content) .orc-premium-page-root {
+  padding: 0 !important;
+  min-height: 0;
+  background: transparent !important;
+}
+
+body.pgm-app-shell-premium.layout-no-topbar:has(.orcamento-content) #pgm-dynamic-content {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
 .orcamento-page {
-  min-height: 100%;
+  min-height: 0;
+  background: transparent;
 }
 
 .orcamento-content {
@@ -1660,22 +1679,22 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 }
 
 .orc-premium-wrap .btn-orc-outline-teal {
-  background: #fff;
-  border: 1px solid var(--orc-teal-mid, #5cdbc0);
-  color: var(--orc-teal-dark, #008f68);
-  border-radius: 10px;
-  font-weight: 600;
+  background: var(--orc-blue-light, #e6f1fb);
+  border: 1px solid #b5d4f4;
+  color: var(--orc-blue-dark, #0c447c);
+  border-radius: var(--orc-radius-sm, 8px);
+  font-weight: 500;
   font-size: 12px;
-  padding: 8px 14px;
+  padding: 5px 10px;
   line-height: 1.2;
   flex-shrink: 0;
 }
 
 .orc-premium-wrap .btn-orc-outline-teal:hover,
 .orc-premium-wrap .btn-orc-outline-teal:focus {
-  background: var(--orc-teal-light, #e6faf4);
-  border-color: var(--orc-teal, #00c08b);
-  color: var(--orc-teal-dark, #008f68);
+  background: #b5d4f4;
+  border-color: #b5d4f4;
+  color: var(--orc-blue-dark, #0c447c);
 }
 
 .orc-premium-wrap .btn-orc-outline-purple {
@@ -2968,6 +2987,26 @@ body.layout-no-topbar:has(.orc-premium-page-root) #main-wrapper,
 body.layout-no-topbar:has(.orc-premium-page-root) .page-wrapper,
 body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main {
   background: #f2f1ee !important;
+}
+
+body.pgm-app-shell-premium.layout-no-topbar:has(.orc-premium-page-root) #pgm-dynamic-content,
+body.layout-no-topbar:has(.orc-premium-page-root) #pgm-dynamic-content {
+  background-color: #f2f1ee !important;
+}
+
+body.layout-no-topbar:has(.orc-premium-page-root) .page-wrapper > .container-fluid {
+  background: #f2f1ee !important;
+}
+
+body.layout-no-topbar:has(.orcamento-content) .orc-premium-page-root {
+  padding: 0 !important;
+  min-height: 0;
+  background: transparent !important;
+}
+
+body.pgm-app-shell-premium.layout-no-topbar:has(.orcamento-content) #pgm-dynamic-content {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer {

@@ -18,7 +18,6 @@
 	}
 </style>
 <div class="col-md-12 orc-premium-page-root">
-<div class="orcamento-page">
 <div class="orc-premium-wrap orc-premium-form orcamento-content">
 
 	<?= $this->Form->create($orcamento, [
@@ -90,7 +89,6 @@
 
 	<?= $this->Form->end(); ?>
 
-</div>
 </div>
 </div>
 
