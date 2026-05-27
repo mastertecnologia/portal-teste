@@ -14,7 +14,7 @@ if ($cancelTurbo) {
 	$cancelOpts['data-turbo'] = 'false';
 }
 ?>
-<div class="orc-footer-bar orc-footer-bar--proposta">
+<footer class="orcamento-footer orc-footer-bar orc-footer-bar--proposta">
 	<?php if ($showLimpar) : ?>
 		<button type="button" class="btn btn-orc-outline-danger" id="btn-orc-limpar-novo">
 			<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
@@ -32,4 +32,4 @@ if ($cancelTurbo) {
 			'escape' => false,
 		]) ?>
 	</div>
-</div>
+</footer>

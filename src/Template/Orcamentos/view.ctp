@@ -55,7 +55,8 @@ $versaoStatusBadge = function ($versaoEnt) {
 };
 ?>
 <div class="col-md-12 orc-premium-page-root">
-<div class="orc-premium-wrap orc-premium-form orc-premium-view orc-revisao-page">
+<div class="orcamento-page">
+<div class="orc-premium-wrap orc-premium-form orc-premium-view orc-revisao-page orcamento-content">
 
 	<div class="orc-page-head">
 		<div>
@@ -75,10 +76,11 @@ $versaoStatusBadge = function ($versaoEnt) {
 		</div>
 	</div>
 
-	<?= $this->element('orcamentos_stepper') ?>
+	<section class="orcamento-stepper-card" aria-label="Etapas do orçamento">
+		<?= $this->element('orcamentos_stepper') ?>
+	</section>
 
-	<div class="card orc-premium-card-inner orc-card-mb-14">
-		<div class="card-body">
+	<section class="orcamento-card">
 			<div class="orc-sec-title">Controle de versões</div>
 			<div class="orc-version-panel">
 				<?php if ($versoesLista === []) : ?>
@@ -131,13 +133,11 @@ $versaoStatusBadge = function ($versaoEnt) {
 					]
 				) ?>
 			<?php endif; ?>
-		</div>
-	</div>
+	</section>
 
 	<div class="orc-revisao-cols">
 		<div class="orc-revisao-col-left">
-			<div class="card orc-premium-card-inner orc-card-mb-14">
-				<div class="card-body">
+			<section class="orcamento-card">
 					<div class="orc-sec-title">Dados do cliente</div>
 					<div class="orc-kv-list">
 						<div class="orc-kv-row"><span class="orc-kv-lbl">Cliente</span><span class="orc-kv-val"><?= h($nomeCliente) ?></span></div>
@@ -145,10 +145,8 @@ $versaoStatusBadge = function ($versaoEnt) {
 						<div class="orc-kv-row"><span class="orc-kv-lbl">Pagamento</span><span class="orc-kv-val"><?= !empty($orcamento->formapagamento) ? h($orcamento->formapagamento) : '—' ?></span></div>
 						<div class="orc-kv-row"><span class="orc-kv-lbl">Válido até</span><span class="orc-kv-val orc-kv-val--amber"><?= h($validoateFmt !== '' ? $validoateFmt : '—') ?></span></div>
 					</div>
-				</div>
-			</div>
-			<div class="card orc-premium-card-inner orc-card-mb-14">
-				<div class="card-body">
+			</section>
+			<section class="orcamento-card">
 					<div class="orc-sec-title">Análise de margem</div>
 					<div class="orc-margin-summary orc-margin-summary--2col">
 						<div class="orc-margin-card">
@@ -169,12 +167,10 @@ $versaoStatusBadge = function ($versaoEnt) {
 							<div class="orc-margin-bar"><div class="orc-margin-fill" style="--orc-margin-pct:<?= min(100, max(0, $margemPct)) ?>%;"></div></div>
 						</div>
 					</div>
-				</div>
-			</div>
+			</section>
 		</div>
 		<div class="orc-revisao-col-right">
-			<div class="card orc-premium-card-inner orc-card-mb-14">
-				<div class="card-body">
+			<section class="orcamento-card">
 					<div class="orc-sec-title">Workflow de aprovação interna</div>
 					<div class="orc-wf-list">
 						<div class="orc-workflow-step">
@@ -245,13 +241,11 @@ $versaoStatusBadge = function ($versaoEnt) {
 							para corrigir e solicitar nova aprovação interna.
 						</p>
 					<?php endif; ?>
-				</div>
-			</div>
+			</section>
 		</div>
 	</div>
 
-	<div class="card orc-premium-card-inner orc-card-mb-14">
-		<div class="card-body">
+	<section class="orcamento-card orcamento-card--produtos">
 			<div class="orc-sec-title">Itens da proposta</div>
 			<div id="carrinho" class="orc-carrinho-slot"></div>
 
@@ -288,10 +282,9 @@ $versaoStatusBadge = function ($versaoEnt) {
 					<div class="orc-tot-l"><span>Total geral</span><span class="orc-tot-g"><?= h($brl($totalLiquido)) ?></span></div>
 				</div>
 			</div>
-		</div>
-	</div>
+	</section>
 
-	<div class="orc-footer-bar">
+	<footer class="orcamento-footer orc-footer-bar">
 		<?= $this->Html->link('← Voltar', $orcListRoute, ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]) ?>
 		<div class="orc-footer-bar-actions">
 			<?php if (isset($role) && (int)$role === 0) : ?>
@@ -301,8 +294,9 @@ $versaoStatusBadge = function ($versaoEnt) {
 				<?php endif; ?>
 			<?php endif; ?>
 		</div>
-	</div>
+	</footer>
 
+</div>
 </div>
 </div>
 <script>

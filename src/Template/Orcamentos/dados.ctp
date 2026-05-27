@@ -7,6 +7,7 @@
 	if (!in_array($discTipoIni, ['pct', 'fix'], true)) {
 		$discTipoIni = 'pct';
 	}
+	$crumbMiddleHtml = $this->Html->link('Revisão', ['action' => 'view', $orcamento->id], ['escape' => false, 'data-turbo' => 'false']);
 ?>
 <style>
 	.dtp table.dtp-picker-days tr > td{
@@ -17,7 +18,9 @@
 	}
 </style>
 <div class="col-md-12 orc-premium-page-root">
-<div class="orc-premium-wrap orc-premium-form">
+<div class="orcamento-page">
+<div class="orc-premium-wrap orc-premium-form orcamento-content">
+
 	<?= $this->Form->create($orcamento, [
 		'url' => ['action' => 'dados', $orcamento->id],
 		'enctype' => 'multipart/form-data',
@@ -36,125 +39,49 @@
 		'value' => h($discTipoIni),
 	]) ?>
 
-	<div class="orc-page-head">
-		<div>
-			<div class="orc-form-crumb">
-				<?= $this->Html->link('Orçamentos', $orcListRoute, ['escape' => false]) ?>
-				› <?= $this->Html->link('Revisão', ['action' => 'view', $orcamento->id], ['escape' => false, 'data-turbo' => 'false']) ?>
-				› <span class="orc-form-crumb-current">Dados</span>
-			</div>
-			<h1 class="orc-h1" id="orc-novo-proposta-title">
-				Proposta de Orçamento <span class="orc-id-accent">#<?= (int)$orcamento->id ?></span>
-			</h1>
-		</div>
-		<div class="orc-page-head-actions">
-			<?= $this->Html->link('Cancelar', ['action' => 'view', $orcamento->id], [
-				'class' => 'btn btn-orc-form-secondary',
-				'data-turbo' => 'false',
-			]) ?>
-			<?= $this->Form->button('Avançar para revisão →', [
-				'type' => 'submit',
-				'class' => 'btn btn-orc-premium-primary',
-				'escape' => false,
-			]) ?>
-		</div>
-	</div>
+	<?= $this->element('orcamentos_proposta_topbar', [
+		'orcListRoute' => $orcListRoute,
+		'crumbMiddleHtml' => $crumbMiddleHtml,
+		'crumbCurrent' => 'Dados',
+		'orcNumero' => (int)$orcamento->id,
+		'cancelUrl' => ['action' => 'view', $orcamento->id],
+		'cancelTurbo' => true,
+	]) ?>
 
-	<?= $this->element('orcamentos_stepper') ?>
+	<section class="orcamento-stepper-card" aria-label="Etapas do orçamento">
+		<?= $this->element('orcamentos_stepper') ?>
+	</section>
 
-	<div class="card orc-premium-card-inner orc-card-mb-14">
-		<div class="card-body">
-			<div class="orc-sec-title">Dados do cliente</div>
-			<div class="orc-cliente-grid orc-cliente-grid--top">
-				<div class="orc-field">
-					<label class="control-label">Cliente</label>
-					<?= $this->Form->control('idcliente', [
-						'class' => 'form-control selectpicker',
-						'data-live-search' => true,
-						'options' => $clientes,
-						'title' => 'Selecione...',
-						'label' => false,
-						'required' => true,
-						'id' => 'idcliente',
-					]) ?>
-				</div>
-				<div class="orc-cliente-grid orc-cliente-grid--pag">
-					<div class="orc-field">
-						<label class="control-label">Pagamento</label>
-						<?= $this->Form->control('formapagamento', [
-							'type' => 'select',
-							'options' => $orcFormaPagamentoOpcoes ?? [],
-							'class' => 'form-control orc-native-select',
-							'label' => false,
-							'id' => 'formapagamento',
-							'empty' => false,
-						]) ?>
-					</div>
-					<div class="orc-field">
-						<label class="control-label">Válido até</label>
-						<div class="orc-date-field">
-							<?= $this->Form->text('validoate', [
-								'class' => 'form-control datepicker',
-								'id' => 'validoate',
-								'placeholder' => 'dd/mm/aaaa',
-								'required' => true,
-								'autocomplete' => 'off',
-							]) ?>
-							<button type="button" class="orc-date-trigger" tabindex="-1" aria-label="Abrir calendário" data-target="#validoate">
-								<i class="fa fa-calendar" aria-hidden="true"></i>
-							</button>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="orc-cliente-grid orc-cliente-grid--bottom">
-				<div class="orc-field">
-					<label class="control-label" id="orc-cli-doc-lbl">CNPJ</label>
-					<input type="text" class="form-control orc-input-readonly-fill" id="orc-cli-doc" readonly placeholder="Auto-preenchido" />
-				</div>
-				<div class="orc-field">
-					<label class="control-label">E-mail do cliente</label>
-					<input type="email" class="form-control" id="orc-cli-email" autocomplete="email" placeholder="Auto-preenchido" />
-				</div>
-				<div class="orc-field">
-					<label class="control-label">Contato / responsável</label>
-					<input type="text" class="form-control orc-input-readonly-fill" id="orc-cli-contato" readonly placeholder="Auto-preenchido" />
-				</div>
-			</div>
-		</div>
-	</div>
+	<?= $this->element('orcamentos_card_cliente', [
+		'clientes' => $clientes,
+		'orcFormaPagamentoOpcoes' => $orcFormaPagamentoOpcoes ?? [],
+	]) ?>
 
-	<div class="card orc-premium-card-inner orc-card-mb-14">
-		<div class="card-body">
-			<?= $this->element('orcamentos_secao_produtos_form', [
-				'orcModo' => 'dados',
-				'orcamento' => $orcamento,
-				'role' => isset($role) ? (int)$role : 0,
-			]); ?>
+	<section class="orcamento-card orcamento-card--produtos">
+		<?= $this->element('orcamentos_secao_produtos_form', [
+			'orcModo' => 'dados',
+			'orcamento' => $orcamento,
+			'role' => isset($role) ? (int)$role : 0,
+		]); ?>
+		<div id="carrinho" class="orc-carrinho-slot m-t-10"></div>
+		<?= $this->element('orcamentos_secao_produtos_rodape', [
+			'orcModo' => 'dados',
+			'orcamento' => $orcamento,
+			'role' => isset($role) ? (int)$role : 0,
+		]); ?>
+	</section>
 
-			<div id="carrinho" class="orc-carrinho-slot m-t-10"></div>
-
-			<?= $this->element('orcamentos_secao_produtos_rodape', [
-				'orcModo' => 'dados',
-				'orcamento' => $orcamento,
-				'role' => isset($role) ? (int)$role : 0,
-			]); ?>
-		</div>
-	</div>
-
-	<div class="card orc-premium-card-inner orc-card-mb-14 orc-obs-card">
-		<div class="card-body">
-			<div class="orc-sec-title">Observações</div>
-			<?= $this->Form->textarea('solicitacao', [
-				'novalidate' => true,
-				'id' => 'observacoes',
-				'class' => 'form-control orc-obs-textarea',
-				'label' => false,
-				'rows' => 3,
-				'placeholder' => 'Condições, prazos, garantias...',
-			]) ?>
-		</div>
-	</div>
+	<section class="orcamento-card orc-obs-card">
+		<div class="orc-sec-title">Observações</div>
+		<?= $this->Form->textarea('solicitacao', [
+			'novalidate' => true,
+			'id' => 'observacoes',
+			'class' => 'form-control orc-obs-textarea',
+			'label' => false,
+			'rows' => 3,
+			'placeholder' => 'Condições, prazos, garantias...',
+		]) ?>
+	</section>
 
 	<?= $this->element('orcamentos_footer_proposta', [
 		'cancelUrl' => ['action' => 'view', $orcamento->id],
@@ -164,6 +91,8 @@
 	]) ?>
 
 	<?= $this->Form->end(); ?>
+
+</div>
 </div>
 </div>
 

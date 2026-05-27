@@ -203,7 +203,7 @@
 
 /* ========== Lista — alinhado a pgm_orcamentos_premium.html (ERP: só área de conteúdo) ========== */
 .orc-premium-page-root {
-  background: #f2f1ee;
+  background: #f3f2f0;
   padding: 24px 12px 32px;
   margin-bottom: 0;
   min-height: calc(100vh - 120px);
@@ -774,8 +774,9 @@ body.skin-green .orc-premium-wrap.orc-premium-index {
   color: #1a1a18 !important;
 }
 
-/* ========== Form pages (add / edit) — variante clara ========== */
-.orc-premium-wrap.orc-premium-form {
+/* ========== Form pages (add / edit / view) — variante clara ========== */
+.orc-premium-wrap.orc-premium-form,
+.orc-premium-wrap.orc-premium-view {
   --orc-teal: #00c08b;
   --orc-teal-dark: #008f68;
   --orc-teal-light: #e6faf4;
@@ -783,6 +784,8 @@ body.skin-green .orc-premium-wrap.orc-premium-index {
   --orc-teal-dim: rgba(0, 192, 139, 0.15);
   --orc-amber: #ffc107;
   --orc-red: #e24b4a;
+  --orc-red-light: #fcebeb;
+  --orc-red-dark: #791f1f;
   --orc-border: #e5e4e0;
   --orc-border-light: #f8f8f7;
   --orc-text: #1a1a18;
@@ -790,17 +793,139 @@ body.skin-green .orc-premium-wrap.orc-premium-index {
   --orc-text-hint: #9a9890;
   --orc-bg-surface: #f8f8f7;
   --orc-bg-card: #ffffff;
-  --orc-shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --orc-shadow-sm: none;
   --orc-radius-sm: 8px;
   --orc-radius-lg: 12px;
-  background: #ffffff;
-  border-radius: var(--orc-radius-lg);
+  background: transparent;
+  border-radius: 0;
   padding: 0;
+  box-shadow: none !important;
+  filter: none !important;
 }
 
-body.skin-green .orc-premium-wrap.orc-premium-form {
-  background: #ffffff !important;
+body.skin-green .orc-premium-wrap.orc-premium-form,
+body.skin-green .orc-premium-wrap.orc-premium-view {
+  background: transparent !important;
   color: #1a1a18 !important;
+}
+
+/* ========== Layout fluxo proposta (protótipo pg-novo / revisão) ========== */
+.orcamento-page {
+  min-height: 100%;
+}
+
+.orcamento-content {
+  padding: 24px 28px;
+  max-width: 100%;
+}
+
+.orcamento-content .orcamento-topbar,
+.orcamento-content .orc-page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.orcamento-content .orcamento-topbar-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.orcamento-content .orcamento-topbar-actions,
+.orcamento-content .orc-page-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.orcamento-content .orc-h1 {
+  margin: 6px 0 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.orcamento-content .orc-id-accent {
+  color: #00b894;
+}
+
+.orcamento-stepper-card,
+.orcamento-card {
+  display: block;
+  background: #fff;
+  border: 1px solid #e5e4e0;
+  border-radius: 12px;
+  box-shadow: none !important;
+  filter: none !important;
+  margin-bottom: 18px;
+}
+
+.orcamento-stepper-card {
+  padding: 16px 20px;
+}
+
+.orcamento-stepper-card .orc-stepper {
+  margin-bottom: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none !important;
+  background: transparent;
+}
+
+.orcamento-card {
+  padding: 22px 24px;
+}
+
+.orcamento-card.orc-obs-card .orc-sec-title {
+  margin-bottom: 14px;
+}
+
+.orcamento-content .card.orc-premium-card-inner,
+.orcamento-content section.orcamento-card {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.orcamento-content .card.orc-premium-card-inner {
+  background: #fff;
+  border: 1px solid #e5e4e0;
+  border-radius: 12px;
+  margin-bottom: 18px;
+}
+
+.orcamento-content .card.orc-premium-card-inner > .card-body {
+  padding: 22px 24px;
+}
+
+.orcamento-footer,
+.orcamento-content .orc-footer-bar--proposta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+  padding: 0 0 24px;
+  background: transparent !important;
+  border: none !important;
+  border-top: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.orcamento-content .orcamento-topbar-actions .btn-orc-premium-primary,
+.orcamento-content .orcamento-footer .btn-orc-premium-primary {
+  box-shadow: none;
+}
+
+.orcamento-content .orcamento-footer .orc-footer-bar-actions {
+  margin-left: auto;
 }
 
 /* Form / view — utilitários (edit + view; evita style= nos .ctp) */
@@ -1314,8 +1439,8 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   margin-left: auto;
 }
 
-/* Rodapé proposta (pg-novo): Limpar à esquerda, Cancelar + Avançar à direita */
-.orc-premium-form .orc-footer-bar--proposta {
+/* Rodapé proposta legado (preferir .orcamento-footer) */
+.orc-premium-form .orc-footer-bar--proposta:not(.orcamento-footer) {
   width: 100%;
   padding: 14px 0 0;
   margin-top: 6px;
@@ -1342,13 +1467,9 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   flex-shrink: 0;
 }
 
-/* Card observações (protótipo .card + .sec-title) */
-.orc-premium-form .orc-obs-card .card-body {
-  padding: 18px 22px;
-}
-
-.orc-premium-form .orc-obs-card .orc-sec-title {
-  margin-bottom: 14px;
+/* Card observações dentro de .orcamento-card */
+.orc-premium-form .orcamento-card.orc-obs-card {
+  padding: 22px 24px;
 }
 
 /* Observações em edit (sem card) */

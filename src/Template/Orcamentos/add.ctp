@@ -1,6 +1,7 @@
 <?php
 	$this->append('css', $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']));
 	$this->Html->script('/js/orcamentos', ['block' => true]);
+	$orcListRoute = \App\Utility\PortalUi::listRoute('orcamentos') ?? ['controller' => 'Orcamentos', 'action' => 'index'];
 ?>
 <style>
 	.dtp table.dtp-picker-days tr > td{
@@ -11,105 +12,48 @@
 	}
 </style>
 <div class="col-md-12 orc-premium-page-root">
-<div class="orc-premium-wrap orc-premium-form">
+<div class="orcamento-page">
+<div class="orc-premium-wrap orc-premium-form orcamento-content">
+
 	<?= $this->Form->create($orcamento, ['url' => ['action' => 'add'], 'enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material', 'id' => 'form-orc-add', 'data-turbo' => 'false']); ?>
 	<?= $this->Form->hidden('item_edit_id', ['id' => 'item_edit_id']); ?>
 	<?= $this->Form->hidden('desconto_valor', ['id' => 'orc-desconto-valor-hidden', 'value' => '0']) ?>
 	<?= $this->Form->hidden('desconto_tipo', ['id' => 'orc-desconto-tipo-hidden', 'value' => 'pct']) ?>
 
-	<div class="orc-page-head">
-		<div>
-			<div class="orc-form-crumb">
-				<?php
-				$orcListRoute = \App\Utility\PortalUi::listRoute('orcamentos') ?? ['controller' => 'Orcamentos', 'action' => 'index'];
-			?>
-			<?= $this->Html->link('Orçamentos', $orcListRoute, ['escape' => false]) ?> › <span class="orc-form-crumb-current">Novo</span>
-			</div>
-			<h1 class="orc-h1" id="orc-novo-proposta-title">Proposta de Orçamento <span class="orc-id-accent">#<?= (int)($orcPreviewNumero ?? 0) ?></span></h1>
-		</div>
-		<div class="orc-page-head-actions">
-			<?= $this->Html->link('Cancelar', $orcListRoute, ['class' => 'btn btn-orc-form-secondary']) ?>
-			<?= $this->Form->button('Avançar para revisão →', [
-				'type' => 'submit',
-				'class' => 'btn btn-orc-premium-primary',
-				'escape' => false,
-			]) ?>
-		</div>
-	</div>
+	<?= $this->element('orcamentos_proposta_topbar', [
+		'orcListRoute' => $orcListRoute,
+		'crumbCurrent' => 'Novo',
+		'orcNumero' => (int)($orcPreviewNumero ?? 0),
+		'cancelUrl' => $orcListRoute,
+	]) ?>
 
-	<?= $this->element('orcamentos_stepper') ?>
+	<section class="orcamento-stepper-card" aria-label="Etapas do orçamento">
+		<?= $this->element('orcamentos_stepper') ?>
+	</section>
 
-	<div class="card orc-premium-card-inner orc-card-mb-14">
-		<div class="card-body">
-			<div class="orc-sec-title">Dados do cliente</div>
-			<div class="orc-cliente-grid orc-cliente-grid--top">
-				<div class="orc-field">
-					<label class="control-label">Cliente</label>
-					<?= $this->Form->control('idcliente', ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione...', 'label' => false, 'required' => true, 'id' => 'idcliente']) ?>
-				</div>
-				<div class="orc-cliente-grid orc-cliente-grid--pag">
-					<div class="orc-field">
-						<label class="control-label">Pagamento</label>
-						<?= $this->Form->control('formapagamento', [
-							'type' => 'select',
-							'options' => $orcFormaPagamentoOpcoes ?? [],
-							'class' => 'form-control orc-native-select',
-							'label' => false,
-							'id' => 'formapagamento',
-							'empty' => false,
-						]) ?>
-					</div>
-					<div class="orc-field">
-						<label class="control-label">Válido até</label>
-						<div class="orc-date-field">
-							<?= $this->Form->text('validoate', ['class' => 'form-control datepicker', 'id' => 'validoate', 'default' => date('d/m/Y'), 'placeholder' => 'dd/mm/aaaa', 'required' => true, 'autocomplete' => 'off']) ?>
-							<button type="button" class="orc-date-trigger" tabindex="-1" aria-label="Abrir calendário" data-target="#validoate">
-								<i class="fa fa-calendar" aria-hidden="true"></i>
-							</button>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="orc-cliente-grid orc-cliente-grid--bottom">
-				<div class="orc-field">
-					<label class="control-label" id="orc-cli-doc-lbl">CNPJ</label>
-					<input type="text" class="form-control orc-input-readonly-fill" id="orc-cli-doc" readonly placeholder="Auto-preenchido" />
-				</div>
-				<div class="orc-field">
-					<label class="control-label">E-mail do cliente</label>
-					<input type="email" class="form-control" id="orc-cli-email" autocomplete="email" placeholder="Auto-preenchido" />
-				</div>
-				<div class="orc-field">
-					<label class="control-label">Contato / responsável</label>
-					<input type="text" class="form-control orc-input-readonly-fill" id="orc-cli-contato" readonly placeholder="Auto-preenchido" />
-				</div>
-			</div>
-		</div>
-	</div>
+	<?= $this->element('orcamentos_card_cliente', [
+		'clientes' => $clientes,
+		'orcFormaPagamentoOpcoes' => $orcFormaPagamentoOpcoes ?? [],
+		'orcValidoateDefault' => date('d/m/Y'),
+	]) ?>
 
-	<div class="card orc-premium-card-inner orc-card-mb-14">
-		<div class="card-body">
-			<?= $this->element('orcamentos_secao_produtos_form', ['orcModo' => 'add']); ?>
+	<section class="orcamento-card orcamento-card--produtos">
+		<?= $this->element('orcamentos_secao_produtos_form', ['orcModo' => 'add']); ?>
+		<div id="carrinho" class="orc-carrinho-slot m-t-10"></div>
+		<?= $this->element('orcamentos_secao_produtos_rodape', ['orcModo' => 'add']); ?>
+	</section>
 
-			<div id="carrinho" class="orc-carrinho-slot m-t-10"></div>
-
-			<?= $this->element('orcamentos_secao_produtos_rodape', ['orcModo' => 'add']); ?>
-		</div>
-	</div>
-
-	<div class="card orc-premium-card-inner orc-card-mb-14 orc-obs-card">
-		<div class="card-body">
-			<div class="orc-sec-title">Observações</div>
-			<?= $this->Form->textarea('solicitacao', [
-				'novalidate' => true,
-				'id' => 'observacoes',
-				'class' => 'form-control orc-obs-textarea',
-				'label' => false,
-				'rows' => 3,
-				'placeholder' => 'Condições, prazos, garantias...',
-			]) ?>
-		</div>
-	</div>
+	<section class="orcamento-card orc-obs-card">
+		<div class="orc-sec-title">Observações</div>
+		<?= $this->Form->textarea('solicitacao', [
+			'novalidate' => true,
+			'id' => 'observacoes',
+			'class' => 'form-control orc-obs-textarea',
+			'label' => false,
+			'rows' => 3,
+			'placeholder' => 'Condições, prazos, garantias...',
+		]) ?>
+	</section>
 
 	<?= $this->element('orcamentos_footer_proposta', [
 		'cancelUrl' => $orcListRoute,
@@ -118,10 +62,11 @@
 	]) ?>
 
 	<?= $this->Form->end(); ?>
+
+</div>
 </div>
 </div>
 
-<!-- Catálogo (layout alinhado ao protótipo “novo frontend”) -->
 <div class="orc-catalog-overlay" id="orc-catalog-overlay" onclick="if(event.target===this)$(this).removeClass('open');">
 	<div class="orc-catalog-modal" onclick="event.stopPropagation();">
 		<div class="orc-catalog-header">
