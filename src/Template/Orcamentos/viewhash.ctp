@@ -553,10 +553,17 @@
       <div class="orc-fld-h orc-fld-h--tight">Observação adicional (opcional)</div>
       <textarea class="orc-textarea" id="rec-obs" placeholder="Deixe um comentário para o vendedor..."></textarea>
     </div>
+    <?= $this->Form->create(null, [
+      'url' => ['action' => 'recusarhash', $orcamento->hash],
+      'id' => 'form-orc-recusar',
+      'data-turbo' => 'false',
+    ]) ?>
+    <?= $this->Form->hidden('motivo_codigo', ['id' => 'rec-motivo-codigo', 'value' => '']) ?>
     <button type="button" class="orc-btn-main red" onclick="orcConfirmarRecusa()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       Confirmar recusa
     </button>
+    <?= $this->Form->end() ?>
     <button class="orc-btn-ghost" onclick="orcGoTo('orc-pg-proposta')">← Voltar — ainda posso reconsiderar</button>
   </div>
 </div>
@@ -585,10 +592,19 @@
         <input type="tel" id="neg-tel" class="orc-neg-inp" placeholder="(54) 99999-9999" />
       </div>
     </div>
+    <?= $this->Form->create(null, [
+      'url' => ['action' => 'negociarhash', $orcamento->hash],
+      'id' => 'form-orc-negociar',
+      'data-turbo' => 'false',
+    ]) ?>
+    <?= $this->Form->hidden('observacao', ['id' => 'neg-obs-hidden', 'value' => '']) ?>
+    <?= $this->Form->hidden('nome_contato', ['id' => 'neg-nome-hidden', 'value' => '']) ?>
+    <?= $this->Form->hidden('telefone', ['id' => 'neg-tel-hidden', 'value' => '']) ?>
     <button type="button" class="orc-btn-main amber" onclick="orcConfirmarNeg()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       Enviar solicitação de ajuste
     </button>
+    <?= $this->Form->end() ?>
     <button class="orc-btn-ghost" onclick="orcGoTo('orc-pg-proposta')">← Voltar para a proposta</button>
   </div>
 </div>
@@ -789,14 +805,41 @@ function orcConfirmarAssinatura() {
 function orcConfirmarRecusa() {
   var motivo = document.querySelector('input[name="motivo"]:checked');
   if (!motivo) { alert('Selecione o motivo da recusa.'); return; }
-  orcGoTo('orc-pg-recusado');
+  var cod = document.getElementById('rec-motivo-codigo');
+  if (cod) cod.value = motivo.value;
+  var obs = document.getElementById('rec-obs');
+  var f = document.getElementById('form-orc-recusar');
+  if (!f) return;
+  var obsField = f.querySelector('textarea[name="observacao"]');
+  if (!obsField) {
+    obsField = document.createElement('textarea');
+    obsField.name = 'observacao';
+    obsField.style.display = 'none';
+    f.appendChild(obsField);
+  }
+  obsField.value = obs ? obs.value : '';
+  f.submit();
 }
 
 function orcConfirmarNeg() {
-  var obs = document.getElementById('neg-obs').value;
-  if (!obs.trim()) { alert('Descreva os ajustes necessários.'); return; }
-  orcGoTo('orc-pg-negociado');
+  var obs = document.getElementById('neg-obs');
+  if (!obs || !obs.value.trim()) { alert('Descreva os ajustes necessários.'); return; }
+  var hObs = document.getElementById('neg-obs-hidden');
+  var hNome = document.getElementById('neg-nome-hidden');
+  var hTel = document.getElementById('neg-tel-hidden');
+  var nome = document.getElementById('neg-nome');
+  var tel = document.getElementById('neg-tel');
+  if (hObs) hObs.value = obs.value.trim();
+  if (hNome && nome) hNome.value = nome.value.trim();
+  if (hTel && tel) hTel.value = tel.value.trim();
+  var f = document.getElementById('form-orc-negociar');
+  if (f) f.submit();
 }
 
 orcSelectPayment('vista');
+<?php if (!empty($portalResposta)) : ?>
+document.addEventListener('DOMContentLoaded', function () {
+  orcGoTo(<?= json_encode($portalResposta === 'recusado' ? 'orc-pg-recusado' : 'orc-pg-negociado') ?>);
+});
+<?php endif; ?>
 </script>

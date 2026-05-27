@@ -194,8 +194,15 @@ class PortalNotificationService {
 		if ($eventType === ClienteDomainEventType::CLIENTE_INATIVADO) {
 			return 'warning';
 		}
-		if ($eventType === ClienteDomainEventType::CONTRATO_VENCENDO) {
+		if ($eventType === ClienteDomainEventType::CONTRATO_VENCENDO
+			|| $eventType === ClienteDomainEventType::ORCAMENTO_CLIENTE_AJUSTE) {
 			return 'warning';
+		}
+		if ($eventType === ClienteDomainEventType::ORCAMENTO_CLIENTE_RECUSA) {
+			return 'error';
+		}
+		if ($eventType === ClienteDomainEventType::ORCAMENTO_CLIENTE_APROVADO) {
+			return 'success';
 		}
 		if ($eventType === ClienteDomainEventType::CONTRATO_VENCIDO) {
 			return 'error';

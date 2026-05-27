@@ -2,6 +2,8 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\ClienteDomain\PortalNotificationService;
+use App\Utility\ClienteDomainEventType;
 use App\Utility\PortalUi;
 use App\Utility\RbacChecker;
 use Cake\Event\Event;
@@ -104,17 +106,14 @@ class OrcamentosController extends AppController {
 		if (!in_array($this->request->getParam('action'), ['solicitar', 'catalogoSugestoes'], true)) {
 			$this->set('title', 'Orçamentos');
 		}
-		$this->Auth->allow(['viewhash', 'carrinhoedit', 'aprovarhash', 'seguroProposta']);
+		$this->Auth->allow(['viewhash', 'carrinhoedit', 'aprovarhash', 'negociarhash', 'recusarhash', 'seguroProposta']);
 
-		// Acesso seguro (público): campos fora do padrão FormHelper (cnpj_input, otp_code, portal_acao).
-		if ($action === 'seguroProposta') {
+		// Portal cliente (público): formulários com campos fora do padrão strict do Security.
+		$portalPublicActions = ['seguroProposta', 'negociarhash', 'recusarhash', 'aprovarhash'];
+		if (in_array($action, $portalPublicActions, true)) {
 			$existingUnlocked = (array)$this->Security->getConfig('unlockedActions');
-			if (!in_array('seguroProposta', $existingUnlocked, true)) {
-				$this->Security->setConfig('unlockedActions', array_values(array_unique(array_merge(
-					$existingUnlocked,
-					['seguroProposta']
-				))));
-			}
+			$merge = array_values(array_unique(array_merge($existingUnlocked, $portalPublicActions)));
+			$this->Security->setConfig('unlockedActions', $merge);
 		}
 	}
 
@@ -1943,6 +1942,10 @@ class OrcamentosController extends AppController {
 		$this->set('title', 'Visualização de Orçamento');
 		$this->set('orcamento', $orcamento);
 		$this->set('carrinho', $carrinho);
+		$resposta = trim((string)$this->request->getQuery('resposta', ''));
+		if (in_array($resposta, ['negociado', 'recusado'], true)) {
+			$this->set('portalResposta', $resposta);
+		}
 	}
 
 	/**
@@ -2964,9 +2967,256 @@ class OrcamentosController extends AppController {
 		$this->set('orcamento', $orcamento);
 	}
 
+	/**
+	 * @return \App\Model\Entity\Orcamento|null
+	 */
+	protected function _findOrcamentoPortalHash(string $hash) {
+		return $this->Orcamentos->findByHash($hash)->contain([
+			'Users' => ['fields' => ['Users.id', 'Users.name', 'Users.email', 'Users.username']],
+			'Clientes' => ['fields' => $this->_orcClienteFieldsSeguroProposta()],
+		])->first();
+	}
+
+	protected function _orcamentoVendedorUserId($orcamento): int {
+		return (int)($orcamento->idautor ?? 0);
+	}
+
+	protected function _orcamentoVendedorEmail($orcamento): ?string {
+		if (empty($orcamento->user)) {
+			return null;
+		}
+		$u = $orcamento->user;
+		foreach (['email', 'username'] as $field) {
+			$e = trim((string)($u->get($field) ?? ''));
+			if ($e !== '' && filter_var($e, FILTER_VALIDATE_EMAIL)) {
+				return $e;
+			}
+		}
+
+		return null;
+	}
+
+	protected function _orcamentoUrlEquipeView(int $orcamentoId): string {
+		return $this->_portalUrlforaBase() . '/orcamentos/view/' . $orcamentoId;
+	}
+
+	protected function _orcamentoClienteRespostaPermitida($orcamento): bool {
+		if ($orcamento === null) {
+			return false;
+		}
+		$st = (int)($orcamento->status ?? -1);
+
+		return in_array($st, [C_OrcamentoStatusEnviado, C_OrcamentoStatusPendente], true);
+	}
+
+	/**
+	 * Sino (portal_internal_notifications) + e-mail ao vendedor/autor da proposta.
+	 */
+	protected function _orcamentoNotificarVendedorResposta(
+		$orcamento,
+		string $eventType,
+		string $titulo,
+		string $mensagemCurta,
+		string $corpoEmailHtml
+	): void {
+		$vendedorId = $this->_orcamentoVendedorUserId($orcamento);
+		if ($vendedorId <= 0) {
+			Log::warning('[orcamento-portal] Sem idautor para notificar — orçamento ' . (int)$orcamento->id);
+
+			return;
+		}
+		$url = $this->_orcamentoUrlEquipeView((int)$orcamento->id);
+		$notifType = PortalNotificationService::mapEventToNotifType($eventType);
+		PortalNotificationService::notifyUsers(
+			[$vendedorId],
+			$eventType,
+			$notifType,
+			$titulo,
+			$mensagemCurta,
+			$url,
+			'Orcamento',
+			(string)$orcamento->id,
+			['idorcamento' => (int)$orcamento->id]
+		);
+
+		$to = $this->_orcamentoVendedorEmail($orcamento);
+		if ($to === null) {
+			Log::warning('[orcamento-portal] Vendedor sem e-mail válido — user_id ' . $vendedorId);
+
+			return;
+		}
+		try {
+			$empresa = $this->Empresas->get((int)$orcamento->idempresa);
+			$nomeempresa = !empty($empresa->nomefantasia) ? $empresa->nomefantasia : $empresa->razaosocial;
+		} catch (\Throwable $e) {
+			$nomeempresa = 'PGM';
+		}
+		$from = 'helpdesk@pgm.inf.br';
+		$this->_orcamentoSendHtmlEmail(
+			$to,
+			[$from => $nomeempresa],
+			$titulo,
+			$corpoEmailHtml,
+			(int)$orcamento->idempresa
+		);
+	}
+
+	/**
+	 * Cliente solicita ajustes / renegociação (portal viewhash).
+	 */
+	public function negociarhash($hash = null) {
+		$this->request->allowMethod(['post']);
+		if (empty($hash)) {
+			return $this->redirect(['controller' => 'Users', 'action' => 'login']);
+		}
+		$orcamento = $this->_findOrcamentoPortalHash((string)$hash);
+		if ($orcamento === null) {
+			$this->Flash->error(__('Proposta não encontrada.'));
+
+			return $this->redirect(['controller' => 'Users', 'action' => 'login']);
+		}
+		if (!$this->_orcamentoClienteRespostaPermitida($orcamento)) {
+			$this->Flash->error(__('Esta proposta não aceita mais solicitações pelo portal.'));
+
+			return $this->redirect(['action' => 'viewhash', $hash]);
+		}
+
+		$obs = trim((string)$this->request->getData('observacao'));
+		if ($obs === '') {
+			$this->Flash->error(__('Descreva os ajustes necessários.'));
+
+			return $this->redirect(['action' => 'viewhash', $hash]);
+		}
+		$nomeContato = trim((string)$this->request->getData('nome_contato'));
+		$telefone = trim((string)$this->request->getData('telefone'));
+		$clienteNome = !empty($orcamento->cliente->razaosocial)
+			? (string)$orcamento->cliente->razaosocial
+			: (string)($orcamento->cliente->nome ?? '');
+
+		$textoMov = 'Cliente solicitou ajustes na proposta via portal.';
+		if ($nomeContato !== '') {
+			$textoMov .= ' Contato: ' . $nomeContato . '.';
+		}
+		if ($telefone !== '') {
+			$textoMov .= ' Tel: ' . $telefone . '.';
+		}
+		$textoMov .= ' Detalhes: ' . $obs;
+
+		$sitantiga = (int)$orcamento->status;
+		$orcamento->motivo = $textoMov;
+		$orcamento->status = C_OrcamentoStatusPendente;
+		if ($this->_orcSchemaHasColumn('aprovacao_interna')) {
+			$orcamento->set('aprovacao_interna', C_OrcamentoAprovacaoInternaPendente);
+		}
+
+		if (!$this->Orcamentos->save($orcamento)) {
+			$this->Flash->error(__('Não foi possível registrar sua solicitação. Tente novamente.'));
+
+			return $this->redirect(['action' => 'viewhash', $hash]);
+		}
+
+		$this->criarMov((int)$orcamento->id, $sitantiga, C_OrcamentoStatusPendente, $textoMov, (int)$orcamento->idempresa);
+
+		$idOrc = (int)$orcamento->id;
+		$link = h($this->_orcamentoUrlEquipeView($idOrc));
+		$corpo = '<p>O cliente <strong>' . h($clienteNome) . '</strong> solicitou <strong>ajustes</strong> na proposta nº '
+			. $idOrc . '.</p>'
+			. '<p><strong>Solicitação:</strong><br>' . nl2br(h($obs)) . '</p>';
+		if ($nomeContato !== '' || $telefone !== '') {
+			$corpo .= '<p><strong>Contato informado:</strong> ' . h($nomeContato) . ($telefone !== '' ? ' · ' . h($telefone) : '') . '</p>';
+		}
+		$corpo .= '<p><a href="' . $link . '">Abrir proposta no portal</a></p>'
+			. '<p><small>IP: ' . h((string)get_client_ip()) . '</small></p>';
+
+		$this->_orcamentoNotificarVendedorResposta(
+			$orcamento,
+			ClienteDomainEventType::ORCAMENTO_CLIENTE_AJUSTE,
+			'Proposta nº ' . $idOrc . ' — cliente pediu ajustes',
+			mb_substr($obs, 0, 200, 'UTF-8'),
+			$corpo
+		);
+
+		return $this->redirect(['action' => 'viewhash', $hash, '?' => ['resposta' => 'negociado']]);
+	}
+
+	/**
+	 * Cliente recusa a proposta (portal viewhash).
+	 */
+	public function recusarhash($hash = null) {
+		$this->request->allowMethod(['post']);
+		if (empty($hash)) {
+			return $this->redirect(['controller' => 'Users', 'action' => 'login']);
+		}
+		$orcamento = $this->_findOrcamentoPortalHash((string)$hash);
+		if ($orcamento === null) {
+			$this->Flash->error(__('Proposta não encontrada.'));
+
+			return $this->redirect(['controller' => 'Users', 'action' => 'login']);
+		}
+		if (!$this->_orcamentoClienteRespostaPermitida($orcamento)) {
+			$this->Flash->error(__('Esta proposta não aceita mais respostas pelo portal.'));
+
+			return $this->redirect(['action' => 'viewhash', $hash]);
+		}
+
+		$motivoCod = trim((string)$this->request->getData('motivo_codigo'));
+		$motivosLbl = [
+			'preco' => 'Preço acima do esperado',
+			'prazo' => 'Prazo não atende',
+			'spec' => 'Especificações inadequadas',
+			'outro' => 'Escolhemos outro fornecedor',
+			'cancelado' => 'Projeto cancelado internamente',
+		];
+		if ($motivoCod === '' || !isset($motivosLbl[$motivoCod])) {
+			$this->Flash->error(__('Selecione o motivo da recusa.'));
+
+			return $this->redirect(['action' => 'viewhash', $hash]);
+		}
+		$obsExtra = trim((string)$this->request->getData('observacao'));
+		$clienteNome = !empty($orcamento->cliente->razaosocial)
+			? (string)$orcamento->cliente->razaosocial
+			: (string)($orcamento->cliente->nome ?? '');
+
+		$textoMov = 'Cliente recusou a proposta via portal. Motivo: ' . $motivosLbl[$motivoCod];
+		if ($obsExtra !== '') {
+			$textoMov .= '. Observação: ' . $obsExtra;
+		}
+
+		$sitantiga = (int)$orcamento->status;
+		$orcamento->motivo = $textoMov;
+		$orcamento->status = C_OrcamentoStatusRecusado;
+
+		if (!$this->Orcamentos->save($orcamento)) {
+			$this->Flash->error(__('Não foi possível registrar sua recusa. Tente novamente.'));
+
+			return $this->redirect(['action' => 'viewhash', $hash]);
+		}
+
+		$this->criarMov((int)$orcamento->id, $sitantiga, C_OrcamentoStatusRecusado, $textoMov, (int)$orcamento->idempresa);
+
+		$idOrc = (int)$orcamento->id;
+		$link = h($this->_orcamentoUrlEquipeView($idOrc));
+		$corpo = '<p>O cliente <strong>' . h($clienteNome) . '</strong> <strong>recusou</strong> a proposta nº ' . $idOrc . '.</p>'
+			. '<p><strong>Motivo:</strong> ' . h($motivosLbl[$motivoCod]) . '</p>';
+		if ($obsExtra !== '') {
+			$corpo .= '<p><strong>Observação:</strong><br>' . nl2br(h($obsExtra)) . '</p>';
+		}
+		$corpo .= '<p><a href="' . $link . '">Abrir proposta no portal</a></p>';
+
+		$this->_orcamentoNotificarVendedorResposta(
+			$orcamento,
+			ClienteDomainEventType::ORCAMENTO_CLIENTE_RECUSA,
+			'Proposta nº ' . $idOrc . ' — recusada pelo cliente',
+			$motivosLbl[$motivoCod],
+			$corpo
+		);
+
+		return $this->redirect(['action' => 'viewhash', $hash, '?' => ['resposta' => 'recusado']]);
+	}
+
 	public function aprovarhash($hash){
-		$orcamento = $this->Orcamentos->findByHash($hash)->first();
-		if (empty($orcamento)) {
+		$orcamento = $this->_findOrcamentoPortalHash((string)$hash);
+		if ($orcamento === null) {
 			$this->Flash->error(__('Não foi encontrado um orçamento!'));
 			return $this->redirect(['controller' => 'Users', 'action' => 'login']);
 		}
@@ -2995,39 +3245,24 @@ class OrcamentosController extends AppController {
 			if (!empty($uid)) {
 				$this->Atividades->registrar($uid, $this->request->getParam('controller'), $this->request->getParam('action'), $orcamento->id);
 			}
-			// Email
-				$empresa = $this->Empresas->get($orcamento->idempresa);
-				// Mensagem 
-					$url = $this->_portalUrlforaBase() . '/orcamentos/edit/' . (int)$orcamento->id;
-					
-					$assunto = "Orçamento $orcamento->id aprovado!";
-					$mensagem = "
-						<h3> O orçamento $orcamento->id foi aprovado pelo cliente! </h3>
-						<p> Para acessá-lo, <a href='$url'>clique aqui!</a> </p>
-						<p> IP: $orcamento->ipaprovacao </p>
-						<p> Navegador: $orcamento->navegadoraprovacao </p>
-					";
-				// Assinautra 
-					if(empty($this->Auth->user('assinaturapgm'))) $message = $mensagem . '<hr> PGM' ;
-					else {
-						$img = '<img src="'.$this->Auth->user('assinaturapgm') .'" alt=""/>';
-						$message = $mensagem . '<hr>' . $img;
-					}
-				// Empresa 
-					if(isset($empresa->nomefantasia)) $nomeempresa = $empresa->nomefantasia;
-					else $nomeempresa = $empresa->razaosocial;
-				//
-				$email = new Email();
-				$email->transport(((int)$orcamento->idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm');
-				$from = 'helpdesk@pgm.inf.br';
-				$email->from([$from => $nomeempresa]);
-				$email->to($this->Config->get(1)->emailtickets)
-				// $email->to('joaomario3224@gmail.com')
-					->emailFormat('html')
-					->subject($assunto);
-	
-				if($email->send($message)) $this->enviar($orcamento->id);
-			//
+			$clienteNome = !empty($orcamento->cliente->razaosocial)
+				? (string)$orcamento->cliente->razaosocial
+				: (string)($orcamento->cliente->nome ?? '');
+			$idOrc = (int)$orcamento->id;
+			$link = h($this->_orcamentoUrlEquipeView($idOrc));
+			$corpo = '<p>O cliente <strong>' . h($clienteNome) . '</strong> <strong>aprovou</strong> a proposta nº ' . $idOrc . '.</p>'
+				. '<p><strong>Signatário:</strong> ' . h($nome) . '</p>'
+				. '<p><a href="' . $link . '">Abrir proposta no portal</a></p>'
+				. '<p>IP: ' . h((string)$orcamento->ipaprovacao) . '<br>'
+				. 'Navegador: ' . h((string)$orcamento->navegadoraprovacao) . '</p>';
+			$this->_orcamentoNotificarVendedorResposta(
+				$orcamento,
+				ClienteDomainEventType::ORCAMENTO_CLIENTE_APROVADO,
+				'Proposta nº ' . $idOrc . ' — aprovada pelo cliente',
+				'Aprovada por ' . $nome,
+				$corpo
+			);
+			$this->enviar($orcamento->id);
 
 		}
 		else $this->Flash->error('Ocorreu um erro ao aprovar o orçamento.');

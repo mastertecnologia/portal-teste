@@ -30,6 +30,10 @@ class ClienteDomainEventType {
 	public const TICKET_ABERTO = 'ticket.aberto';
 	public const TICKET_COMENTARIO = 'ticket.comentario';
 
+	public const ORCAMENTO_CLIENTE_AJUSTE = 'orcamento.cliente_ajuste';
+	public const ORCAMENTO_CLIENTE_RECUSA = 'orcamento.cliente_recusa';
+	public const ORCAMENTO_CLIENTE_APROVADO = 'orcamento.cliente_aprovado';
+
 	/**
 	 * Tipos exibidos na tela de preferências (código estável => rótulo).
 	 *
@@ -54,6 +58,9 @@ class ClienteDomainEventType {
 			self::AGENDA_LEMBRETE => 'Lembretes da agenda (visitas / reuniões)',
 			self::TICKET_ABERTO => 'Ticket aberto (novo chamado)',
 			self::TICKET_COMENTARIO => 'Comentário em ticket',
+			self::ORCAMENTO_CLIENTE_AJUSTE => 'Cliente solicitou ajustes na proposta',
+			self::ORCAMENTO_CLIENTE_RECUSA => 'Cliente recusou a proposta',
+			self::ORCAMENTO_CLIENTE_APROVADO => 'Cliente aprovou a proposta',
 		];
 	}
 }
