@@ -1,6 +1,6 @@
 # Módulo de orçamentos — mapa técnico (CakePHP 3.7)
 
-Documento de referência para evolução alinhada a `pgm_orcamentos_premium.html` (protótipo visual).
+Documento de referência para evolução alinhada a `docs/reference/pgm_erp_completo.html` (tela `#pg-novo`, `#pg-revisao` — protótipo visual ERP completo).
 
 ## Persistência
 

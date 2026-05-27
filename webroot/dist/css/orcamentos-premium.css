@@ -203,7 +203,7 @@
 
 /* ========== Lista — alinhado a pgm_orcamentos_premium.html (ERP: só área de conteúdo) ========== */
 .orc-premium-page-root {
-  background: #f3f2f0;
+  background: #f2f1ee;
   padding: 24px 12px 32px;
   margin-bottom: 0;
   min-height: calc(100vh - 120px);
@@ -774,26 +774,29 @@ body.skin-green .orc-premium-wrap.orc-premium-index {
   color: #1a1a18 !important;
 }
 
-/* ========== Form pages (add / edit / view) — variante clara ========== */
+/* ========== Form pages (add / edit / view) — pgm_erp_completo.html (pg-novo) ========== */
 .orc-premium-wrap.orc-premium-form,
 .orc-premium-wrap.orc-premium-view {
-  --orc-teal: #00c08b;
-  --orc-teal-dark: #008f68;
-  --orc-teal-light: #e6faf4;
-  --orc-teal-mid: #5cdbc0;
-  --orc-teal-dim: rgba(0, 192, 139, 0.15);
-  --orc-amber: #ffc107;
+  --orc-teal: #1d9e75;
+  --orc-teal-dark: #0f6e56;
+  --orc-teal-light: #e1f5ee;
+  --orc-teal-mid: #5dcaa5;
+  --orc-teal-dim: rgba(29, 158, 117, 0.15);
+  --orc-amber: #e9a025;
   --orc-red: #e24b4a;
   --orc-red-light: #fcebeb;
   --orc-red-dark: #791f1f;
+  --orc-blue: #378add;
+  --orc-blue-light: #e6f1fb;
+  --orc-blue-dark: #0c447c;
   --orc-border: #e5e4e0;
-  --orc-border-light: #f8f8f7;
+  --orc-border-light: #f0efec;
   --orc-text: #1a1a18;
   --orc-text-muted: #6b6a65;
   --orc-text-hint: #9a9890;
-  --orc-bg-surface: #f8f8f7;
+  --orc-bg-surface: #f9f9f8;
   --orc-bg-card: #ffffff;
-  --orc-shadow-sm: none;
+  --orc-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   --orc-radius-sm: 8px;
   --orc-radius-lg: 12px;
   background: transparent;
@@ -809,7 +812,7 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
   color: #1a1a18 !important;
 }
 
-/* ========== Layout fluxo proposta (protótipo pg-novo / revisão) ========== */
+/* ========== Layout fluxo proposta — docs/reference/pgm_erp_completo.html #pg-novo ========== */
 .orcamento-page {
   min-height: 100%;
 }
@@ -823,7 +826,7 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 .orcamento-content .orc-page-head {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
   flex-wrap: wrap;
   margin-bottom: 18px;
@@ -843,88 +846,81 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 }
 
 .orcamento-content .orc-h1 {
-  margin: 6px 0 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #111827;
-  letter-spacing: -0.02em;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--orc-text, #1a1a18);
+  letter-spacing: -0.01em;
+}
+
+.orcamento-content .orc-form-crumb {
+  margin-bottom: 3px;
 }
 
 .orcamento-content .orc-id-accent {
-  color: #00b894;
+  color: var(--orc-teal, #1d9e75);
 }
 
-.orcamento-stepper-card,
-.orcamento-card {
-  display: block;
-  background: #fff;
-  border: 1px solid #e5e4e0;
-  border-radius: 12px;
-  box-shadow: none !important;
-  filter: none !important;
-  margin-bottom: 18px;
-}
-
-.orcamento-stepper-card {
-  padding: 16px 20px;
-}
-
-.orcamento-stepper-card .orc-stepper {
-  margin-bottom: 0;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  box-shadow: none !important;
-  background: transparent;
-}
-
-.orcamento-card {
-  padding: 22px 24px;
-}
-
-.orcamento-card.orc-obs-card .orc-sec-title {
-  margin-bottom: 14px;
-}
-
-.orcamento-content .card.orc-premium-card-inner,
-.orcamento-content section.orcamento-card {
-  box-shadow: none !important;
-  filter: none !important;
-}
-
+/* Cards (.card no protótipo ERP completo) */
+.orcamento-content .orcamento-card,
 .orcamento-content .card.orc-premium-card-inner {
-  background: #fff;
-  border: 1px solid #e5e4e0;
-  border-radius: 12px;
-  margin-bottom: 18px;
+  display: block;
+  background: var(--orc-bg-card, #fff);
+  border: 1px solid var(--orc-border, #e5e4e0);
+  border-radius: var(--orc-radius-lg, 12px);
+  padding: 18px 22px;
+  margin-bottom: 14px;
+  box-shadow: var(--orc-shadow-sm);
 }
 
 .orcamento-content .card.orc-premium-card-inner > .card-body {
-  padding: 22px 24px;
+  padding: 0;
 }
 
+.orcamento-content .orcamento-card.orc-obs-card .orc-sec-title {
+  margin-bottom: 14px;
+}
+
+/* Stepper = card próprio (sem wrapper extra) */
+.orcamento-content .orc-stepper {
+  margin-bottom: 22px;
+}
+
+/* Footer (.footer-bar) — fora dos cards */
 .orcamento-footer,
-.orcamento-content .orc-footer-bar--proposta {
+.orcamento-content .orc-footer-bar--proposta,
+.orcamento-content .orc-footer-bar.orcamento-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 24px;
-  padding: 0 0 24px;
+  margin-top: 6px;
+  padding: 14px 0 24px;
   background: transparent !important;
-  border: none !important;
-  border-top: none !important;
+  border: none;
+  border-top: 1px solid var(--orc-border, #e5e4e0);
   box-shadow: none !important;
   filter: none !important;
 }
 
 .orcamento-content .orcamento-topbar-actions .btn-orc-premium-primary,
-.orcamento-content .orcamento-footer .btn-orc-premium-primary {
+.orcamento-content .orcamento-footer .btn-orc-premium-primary,
+.orcamento-content .btn-orc-premium-primary {
+  background: var(--orc-teal, #1d9e75);
   box-shadow: none;
 }
 
+.orcamento-content .orcamento-topbar-actions .btn-orc-premium-primary:hover,
+.orcamento-content .orcamento-footer .btn-orc-premium-primary:hover,
+.orcamento-content .btn-orc-premium-primary:hover {
+  background: var(--orc-teal-dark, #0f6e56);
+}
+
 .orcamento-content .orcamento-footer .orc-footer-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-left: auto;
 }
 
@@ -1303,9 +1299,9 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
   flex-wrap: wrap;
   margin-top: 12px;
   padding: 10px 14px;
-  background: var(--orc-bg-surface, #f8f8f7);
-  border-radius: 8px;
-  border: 1px solid var(--orc-border-light, #f8f8f7);
+  background: var(--orc-bg-surface, #f9f9f8);
+  border-radius: var(--orc-radius-sm, 8px);
+  border: 1px solid var(--orc-border-light, #f0efec);
 }
 .orc-premium-form .orc-discount-lbl {
   font-size: 11px;
