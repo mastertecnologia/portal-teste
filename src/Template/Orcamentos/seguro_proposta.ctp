@@ -215,7 +215,11 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
     <div class="step-desc">Este link foi enviado para <strong><?= h($nomeClienteSeg) ?></strong>. Antes de acessar a proposta, precisamos verificar que você é o destinatário correto.</div>
   </div>
 
-  <?= $this->Form->create(null, ['url' => ['controller' => 'Orcamentos', 'action' => 'seguroProposta', $orcamento->hash], 'id' => 'form-identidade']) ?>
+  <?= $this->Form->create(null, [
+    'url' => ['controller' => 'Orcamentos', 'action' => 'seguroProposta', $orcamento->hash],
+    'id' => 'form-identidade',
+    'data-turbo' => 'false',
+  ]) ?>
   <?= $this->Form->hidden('portal_acao', ['value' => 'identidade']) ?>
   <div class="field-wrap">
     <div style="background:var(--teal-light);border-radius:var(--r);padding:12px 14px;margin-bottom:18px;display:flex;align-items:flex-start;gap:10px;">
@@ -225,14 +229,30 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
 
     <div class="field">
       <label>CNPJ da sua empresa (apenas os 4 últimos dígitos)</label>
-      <input type="text" name="cnpj_input" id="cnpj-input" placeholder="Ex: 0104" maxlength="4" style="letter-spacing:6px;font-size:20px;font-family:monospace;text-align:center;" oninput="this.value=this.value.replace(/\D/g,'');"/>
+      <?= $this->Form->control('cnpj_input', [
+        'type' => 'text',
+        'label' => false,
+        'id' => 'cnpj-input',
+        'placeholder' => 'Ex: 0104',
+        'maxlength' => 4,
+        'templates' => ['inputContainer' => '{{content}}'],
+        'style' => 'letter-spacing:6px;font-size:20px;font-family:monospace;text-align:center;width:100%;',
+        'oninput' => "this.value=this.value.replace(/\\D/g,'');",
+      ]) ?>
       <div class="field-hint">Os 4 últimos dígitos do CNPJ registrado nesta proposta</div>
       <div class="field-error" id="cnpj-err">CNPJ incorreto. Tente novamente.</div>
     </div>
 
     <div class="field">
       <label>Nome do responsável cadastrado</label>
-      <input type="text" name="nome_input" id="nome-input" placeholder="Nome como cadastrado na proposta"/>
+      <?= $this->Form->control('nome_input', [
+        'type' => 'text',
+        'label' => false,
+        'id' => 'nome-input',
+        'placeholder' => 'Nome como cadastrado na proposta',
+        'templates' => ['inputContainer' => '{{content}}'],
+        'style' => 'width:100%;',
+      ]) ?>
       <div class="field-hint">Nome do contato informado pelo vendedor ao gerar a proposta</div>
       <div class="field-error" id="nome-err">Nome não confere. Verifique e tente novamente.</div>
     </div>
@@ -276,7 +296,12 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
     <div class="step-desc" id="otp-desc">Enviamos um código de 6 dígitos para o e-mail <strong><?= h($maskOtp) ?></strong>. O código expira em 10 minutos.</div>
   </div>
 
-  <?= $this->Form->create(null, ['url' => ['controller' => 'Orcamentos', 'action' => 'seguroProposta', $orcamento->hash], 'id' => 'form-otp', 'onsubmit' => 'return prepOtpSubmit(event);']) ?>
+  <?= $this->Form->create(null, [
+    'url' => ['controller' => 'Orcamentos', 'action' => 'seguroProposta', $orcamento->hash],
+    'id' => 'form-otp',
+    'onsubmit' => 'return prepOtpSubmit(event);',
+    'data-turbo' => 'false',
+  ]) ?>
   <?= $this->Form->hidden('portal_acao', ['value' => 'otp']) ?>
   <?= $this->Form->hidden('otp_code', ['id' => 'otp_code_hidden', 'value' => '']) ?>
   <div class="field-wrap">
@@ -311,7 +336,12 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
     </div>
   </div>
 
-  <?= $this->Form->create(null, ['url' => ['controller' => 'Orcamentos', 'action' => 'seguroProposta', $orcamento->hash], 'id' => 'form-reenviar-otp', 'style' => 'display:none']) ?>
+  <?= $this->Form->create(null, [
+    'url' => ['controller' => 'Orcamentos', 'action' => 'seguroProposta', $orcamento->hash],
+    'id' => 'form-reenviar-otp',
+    'style' => 'display:none',
+    'data-turbo' => 'false',
+  ]) ?>
   <?= $this->Form->hidden('portal_acao', ['value' => 'reenviar_otp']) ?>
   <?= $this->Form->end() ?>
 

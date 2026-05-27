@@ -105,6 +105,17 @@ class OrcamentosController extends AppController {
 			$this->set('title', 'Orçamentos');
 		}
 		$this->Auth->allow(['viewhash', 'carrinhoedit', 'aprovarhash', 'seguroProposta']);
+
+		// Acesso seguro (público): campos fora do padrão FormHelper (cnpj_input, otp_code, portal_acao).
+		if ($action === 'seguroProposta') {
+			$existingUnlocked = (array)$this->Security->getConfig('unlockedActions');
+			if (!in_array('seguroProposta', $existingUnlocked, true)) {
+				$this->Security->setConfig('unlockedActions', array_values(array_unique(array_merge(
+					$existingUnlocked,
+					['seguroProposta']
+				))));
+			}
+		}
 	}
 
 	public function criarMov($idorcamento = null, $sitantiga = null, $sitnova = null, $observacao = null, $idempresa = null) {
