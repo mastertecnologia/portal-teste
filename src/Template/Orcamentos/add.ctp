@@ -12,7 +12,6 @@
 	}
 </style>
 <div class="col-md-12 orc-premium-page-root">
-<div class="orcamento-page">
 <div class="orc-premium-wrap orc-premium-form orcamento-content">
 
 	<?= $this->Form->create($orcamento, ['url' => ['action' => 'add'], 'enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material', 'id' => 'form-orc-add', 'data-turbo' => 'false']); ?>
@@ -61,7 +60,6 @@
 
 	<?= $this->Form->end(); ?>
 
-</div>
 </div>
 </div>
 

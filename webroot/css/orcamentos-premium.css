@@ -227,8 +227,14 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main {
   background: #f2f1ee !important;
 }
 
+body.pgm-app-shell-premium.layout-no-topbar:has(.orc-premium-page-root) #pgm-dynamic-content,
+body.layout-no-topbar:has(.orc-premium-page-root) #pgm-dynamic-content {
+  background-color: #f2f1ee !important;
+}
+
 body.layout-no-topbar:has(.orc-premium-page-root) .page-wrapper > .container-fluid {
   max-width: 100%;
+  background: #f2f1ee !important;
 }
 
 body.layout-no-topbar:has(.orc-premium-page-root) .orc-premium-page-root {
@@ -813,8 +819,21 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 }
 
 /* ========== Layout fluxo proposta — docs/reference/pgm_erp_completo.html #pg-novo ========== */
+/* Um plano de fundo (#f2f1ee); cartões brancos soltos — sem “folha branca” atrás do conteúdo */
+body.layout-no-topbar:has(.orcamento-content) .orc-premium-page-root {
+  padding: 0 !important;
+  min-height: 0;
+  background: transparent !important;
+}
+
+body.pgm-app-shell-premium.layout-no-topbar:has(.orcamento-content) #pgm-dynamic-content {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
 .orcamento-page {
-  min-height: 100%;
+  min-height: 0;
+  background: transparent;
 }
 
 .orcamento-content {
@@ -2968,6 +2987,26 @@ body.layout-no-topbar:has(.orc-premium-page-root) #main-wrapper,
 body.layout-no-topbar:has(.orc-premium-page-root) .page-wrapper,
 body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main {
   background: #f2f1ee !important;
+}
+
+body.pgm-app-shell-premium.layout-no-topbar:has(.orc-premium-page-root) #pgm-dynamic-content,
+body.layout-no-topbar:has(.orc-premium-page-root) #pgm-dynamic-content {
+  background-color: #f2f1ee !important;
+}
+
+body.layout-no-topbar:has(.orc-premium-page-root) .page-wrapper > .container-fluid {
+  background: #f2f1ee !important;
+}
+
+body.layout-no-topbar:has(.orcamento-content) .orc-premium-page-root {
+  padding: 0 !important;
+  min-height: 0;
+  background: transparent !important;
+}
+
+body.pgm-app-shell-premium.layout-no-topbar:has(.orcamento-content) #pgm-dynamic-content {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer {
