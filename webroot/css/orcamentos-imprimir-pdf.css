@@ -1,0 +1,220 @@
+/* PDF mPDF — layout premium (espelha orcamentos-premium .orc-paper) */
+body.orc-pdf-body {
+	font-family: DejaVu Sans, sans-serif;
+	font-size: 11px;
+	color: #1a1a18;
+	line-height: 1.6;
+	margin: 0;
+	padding: 0;
+}
+.orc-pdf-doc .orc-paper {
+	background: #fff;
+	color: #1a1a18;
+	font-size: 11px;
+	line-height: 1.6;
+	padding: 4px 0 0;
+}
+.orc-pdf-doc .orc-paper-logo {
+	width: 34px;
+	height: 34px;
+	background: #00c08b;
+	border-radius: 8px;
+	text-align: center;
+	line-height: 34px;
+}
+.orc-pdf-doc .orc-paper-co {
+	font-size: 15px;
+	font-weight: bold;
+	color: #1a1a18;
+}
+.orc-pdf-doc .orc-paper-co-sub {
+	font-size: 9px;
+	color: #888888;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+.orc-pdf-doc .orc-paper-addr {
+	font-size: 10px;
+	color: #666666;
+	line-height: 1.8;
+}
+.orc-pdf-doc .orc-paper-doc-title {
+	font-size: 19px;
+	font-weight: bold;
+	color: #1a1a18;
+}
+.orc-pdf-doc .orc-paper-meta {
+	font-size: 10px;
+	color: #888888;
+	margin-top: 3px;
+}
+.orc-pdf-doc .orc-paper-badge {
+	font-size: 10px;
+	color: #00c08b;
+}
+.orc-pdf-doc .orc-paper-badge--amber {
+	color: #c9a000;
+}
+.orc-pdf-doc .orc-paper-badge .dot {
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: #00c08b;
+	margin-right: 4px;
+	vertical-align: middle;
+}
+.orc-pdf-doc .orc-paper-badge--amber .dot {
+	background: #ffc107;
+}
+.orc-pdf-doc .orc-paper-lbl {
+	font-size: 9px;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	color: #999999;
+	font-weight: bold;
+	margin-bottom: 3px;
+}
+.orc-pdf-doc .orc-paper-val {
+	font-size: 12px;
+	font-weight: bold;
+	color: #1a1a18;
+}
+.orc-pdf-doc .orc-paper-val-sm {
+	font-size: 10px;
+	color: #666666;
+	margin-top: 2px;
+}
+.orc-pdf-doc .orc-paper-val--amber {
+	color: #c9a000;
+}
+.orc-pdf-doc .orc-ptbl {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 10px;
+	margin-bottom: 18px;
+}
+.orc-pdf-doc .orc-ptbl thead tr {
+	background: #00c08b;
+}
+.orc-pdf-doc .orc-ptbl thead th {
+	padding: 7px 9px;
+	color: #ffffff;
+	text-align: left;
+	font-weight: bold;
+	font-size: 9px;
+	text-transform: uppercase;
+}
+.orc-pdf-doc .orc-ptbl thead th.r {
+	text-align: right;
+}
+.orc-pdf-doc .orc-ptbl tbody tr {
+	border-bottom: 0.5px solid #eeeeee;
+}
+.orc-pdf-doc .orc-ptbl tbody tr:nth-child(even) {
+	background: #fafafa;
+}
+.orc-pdf-doc .orc-ptbl td {
+	padding: 8px 9px;
+	color: #333333;
+	vertical-align: top;
+}
+.orc-pdf-doc .orc-ptbl td.r {
+	text-align: right;
+}
+.orc-pdf-doc .orc-ptbl td.b {
+	font-weight: bold;
+	color: #1a1a18;
+}
+.orc-pdf-doc .orc-ptbl-item-obs {
+	font-size: 9px;
+	color: #666666;
+	font-weight: normal;
+	margin-top: 2px;
+}
+.orc-pdf-doc .orc-paper-totals {
+	text-align: right;
+	margin-bottom: 18px;
+}
+.orc-pdf-doc .orc-paper-totals-inner {
+	display: inline-block;
+	min-width: 210px;
+	text-align: left;
+}
+.orc-pdf-doc .orc-paper-tot-row {
+	padding: 3px 0;
+	font-size: 10px;
+	color: #666666;
+	border-bottom: 0.5px solid #eeeeee;
+}
+.orc-pdf-doc .orc-paper-tot-row span:first-child {
+	float: left;
+}
+.orc-pdf-doc .orc-paper-tot-row span:last-child {
+	float: right;
+}
+.orc-pdf-doc .orc-paper-tot-row.disc {
+	color: #e24b4a;
+}
+.orc-pdf-doc .orc-paper-tot-row.grand {
+	border-bottom: none;
+	padding: 7px 0 3px;
+	font-size: 13px;
+	font-weight: bold;
+	color: #1a1a18;
+}
+.orc-pdf-doc .orc-paper-tot-row.grand span:last-child {
+	color: #00c08b;
+}
+.orc-pdf-doc .orc-paper-obs {
+	background: #f9f9f9;
+	border-left: 3px solid #00c08b;
+	padding: 10px 13px;
+	margin-bottom: 16px;
+	font-size: 10px;
+	color: #444444;
+}
+.orc-pdf-doc .orc-paper-cond h4 {
+	font-size: 9px;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	color: #999999;
+	font-weight: bold;
+	margin: 0 0 6px;
+}
+.orc-pdf-doc .orc-pdf-cond {
+	font-size: 10px;
+	color: #555555;
+	line-height: 1.5;
+}
+.orc-pdf-doc .orc-pdf-cond .i {
+	display: inline-block;
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: #00c08b;
+	margin-right: 5px;
+	vertical-align: middle;
+}
+.orc-pdf-doc .orc-paper-sig-name {
+	font-size: 11px;
+	font-weight: bold;
+	color: #1a1a18;
+}
+.orc-pdf-doc .orc-paper-sig-role {
+	font-size: 9px;
+	color: #999999;
+}
+.orc-pdf-doc .orc-paper-foot {
+	text-align: center;
+	font-size: 9px;
+	color: #bbbbbb;
+	border-top: 0.5px solid #eeeeee;
+	padding-top: 10px;
+	margin-top: 14px;
+	line-height: 1.8;
+}
+.orc-pdf-doc .orc-paper-foot-em {
+	color: #00c08b;
+	font-weight: bold;
+}

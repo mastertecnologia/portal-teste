@@ -2742,8 +2742,29 @@ class OrcamentosController extends AppController {
 		}
 		$this->set('idorcamento', $id);
 		$this->set('orcamento', $orcamento);
+		$this->_setOrcamentoImprimirPaperViewVars($orcamento);
 
 		return true;
+	}
+
+	/**
+	 * Variáveis do documento premium (pré-visualização e PDF do e-mail).
+	 *
+	 * @param \Cake\Datasource\EntityInterface $orcamento
+	 */
+	protected function _setOrcamentoImprimirPaperViewVars($orcamento): void {
+		$idempresa = (int)$orcamento->idempresa;
+		$vid = (int)$orcamento->id;
+		$versaoMap = $this->_versaoRotuloPorOrcamentoIds($idempresa, [$vid]);
+		$this->set('orcVersaoLabel', $versaoMap[$vid] ?? 'v1');
+		try {
+			$empresaPdf = $this->Empresas->get($idempresa, [
+				'contain' => ['Cidades' => ['Estados']],
+			]);
+		} catch (\Throwable $e) {
+			$empresaPdf = null;
+		}
+		$this->set('empresaPdf', $empresaPdf);
 	}
 
 	public function imprimir($id = null) {
@@ -2757,18 +2778,6 @@ class OrcamentosController extends AppController {
 			$this->Flash->error('Orçamento não encontrado.');
 			return $this->redirect(['action' => 'index']);
 		}
-
-		$vid = (int)$id;
-		$versaoMap = $this->_versaoRotuloPorOrcamentoIds($this->Auth->user('idempresa'), [$vid]);
-		$this->set('orcVersaoLabel', $versaoMap[$vid] ?? 'v1');
-		try {
-			$empresaPdf = $this->Empresas->get($this->Auth->user('idempresa'), [
-				'contain' => ['Cidades' => ['Estados']],
-			]);
-		} catch (\Throwable $e) {
-			$empresaPdf = null;
-		}
-		$this->set('empresaPdf', $empresaPdf);
 
 		$this->set('title', 'Pré-visualização PDF');
 		$this->set('hideLayoutPageTitle', true);
