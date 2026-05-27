@@ -124,6 +124,21 @@ body.pgm-app-shell-premium #pgm-dynamic-content {
     padding-bottom: 8px;
 }
 
+/*
+ * Folha branca sobreposta: #pgm-dynamic-content (fundo implícito #fff) vs page-wrapper #f2f1ee.
+ * Mesmo ajuste do módulo Orçamentos, aplicado globalmente no ERP (equipe).
+ */
+body.pgm-app-shell-premium.layout-no-topbar:not(.pgm-portal-client) #pgm-dynamic-content,
+body.pgm-app-shell-premium.layout-no-topbar:not(.pgm-portal-client) #pgm-dynamic-content.row {
+    background-color: var(--pgm-bg-page, #f2f1ee) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+body.pgm-app-shell-premium.layout-no-topbar:not(.pgm-portal-client) .pgm-shell-main > #pgm-main-frame {
+    background: var(--pgm-bg-page, #f2f1ee) !important;
+}
+
 /* Cadastro OS: evita encolher o card / jsGrid dentro do flex da zona principal */
 body.pgm-app-shell-premium.os-add-page.layout-no-topbar #pgm-dynamic-content.row:has(.os-add-shell) {
     min-width: 0;

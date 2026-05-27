@@ -54,7 +54,7 @@ $pgmSidebarReactCss = $__pgmSbWebBase . '/js/pgm-sidebar-react/sidebar-assets.cs
 	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/layout-sidebar-shell.css?v=" . time()) ?>
 	<?php if (empty($disablePgmAppShellPremium)) : ?>
-	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=7") ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=8") ?>
 	<?php endif; ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-sidebar-premium.css?v=" . time()) ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'produtos-premium']) ?>

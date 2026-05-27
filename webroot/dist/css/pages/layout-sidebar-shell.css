@@ -1074,3 +1074,14 @@ body.layout-no-topbar .pgm-shell-main .footer a,
 body.layout-no-topbar .pgm-shell-main .footer a strong {
     color: var(--pgm-erp-teal, #1d9e75) !important;
 }
+
+/* ERP equipe: #pgm-dynamic-content alinhado ao fundo da página (sem folha branca no scroll) */
+body.layout-no-topbar:not(.pgm-portal-client) #pgm-dynamic-content,
+body.layout-no-topbar:not(.pgm-portal-client) #pgm-dynamic-content.row {
+    background-color: var(--pgm-bg-page, #f2f1ee) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+body.layout-no-topbar:not(.pgm-portal-client) .pgm-shell-main > #pgm-main-frame {
+    background: var(--pgm-bg-page, #f2f1ee) !important;
+}
