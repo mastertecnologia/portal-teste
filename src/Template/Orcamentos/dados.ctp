@@ -142,7 +142,7 @@
 		</div>
 	</div>
 
-	<div class="card orc-premium-card-inner orc-card-mb-14 orc-obs-block">
+	<div class="card orc-premium-card-inner orc-card-mb-14 orc-obs-card">
 		<div class="card-body">
 			<div class="orc-sec-title">Observações</div>
 			<?= $this->Form->textarea('solicitacao', [
@@ -156,19 +156,12 @@
 		</div>
 	</div>
 
-	<div class="orc-footer-bar">
-		<div class="orc-footer-bar-actions">
-			<?= $this->Html->link('Cancelar', ['action' => 'view', $orcamento->id], [
-				'class' => 'btn btn-orc-form-secondary',
-				'data-turbo' => 'false',
-			]) ?>
-			<?= $this->Form->button('Avançar para revisão →', [
-				'type' => 'submit',
-				'class' => 'btn btn-orc-premium-primary',
-				'escape' => false,
-			]) ?>
-		</div>
-	</div>
+	<?= $this->element('orcamentos_footer_proposta', [
+		'cancelUrl' => ['action' => 'view', $orcamento->id],
+		'submitLabel' => 'Avançar →',
+		'showLimpar' => false,
+		'cancelTurbo' => true,
+	]) ?>
 
 	<?= $this->Form->end(); ?>
 </div>

@@ -1314,7 +1314,44 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   margin-left: auto;
 }
 
-/* Observações: sem card aninhado (alinha ao protótipo / textarea simples) */
+/* Rodapé proposta (pg-novo): Limpar à esquerda, Cancelar + Avançar à direita */
+.orc-premium-form .orc-footer-bar--proposta {
+  width: 100%;
+  padding: 14px 0 0;
+  margin-top: 6px;
+  border-top: 1px solid var(--orc-border);
+}
+
+.orc-premium-form .orc-footer-bar--proposta .btn {
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.2;
+}
+
+.orc-premium-form .orc-footer-bar--proposta .btn-orc-premium-primary {
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.orc-premium-form .orc-footer-bar--proposta .btn svg {
+  flex-shrink: 0;
+}
+
+/* Card observações (protótipo .card + .sec-title) */
+.orc-premium-form .orc-obs-card .card-body {
+  padding: 18px 22px;
+}
+
+.orc-premium-form .orc-obs-card .orc-sec-title {
+  margin-bottom: 14px;
+}
+
+/* Observações em edit (sem card) */
 .orc-premium-form .orc-obs-block {
   margin-top: 6px;
   margin-bottom: 0;
@@ -1350,13 +1387,13 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 }
 
 .orc-premium-form .orc-obs-textarea {
-  min-height: 140px;
+  min-height: 88px;
   resize: vertical;
   border-radius: var(--orc-radius-sm);
   border: 1px solid var(--orc-border);
-  background: #fff;
+  background: var(--orc-bg-surface, #f9f9f8);
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.6;
 }
 
 .orc-premium-form .orc-obs-textarea:focus {
@@ -1373,7 +1410,7 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 .orc-premium-form form.form-material #observacao.form-control,
 .orc-premium-form form.form-material .orc-item-obs-field.form-control {
   background-image: none !important;
-  background-color: #fff !important;
+  background-color: var(--orc-bg-surface, #f9f9f8) !important;
   color: #1a1a18 !important;
   border: 1px solid var(--orc-border, #e5e4e0) !important;
   border-radius: var(--orc-radius-sm, 8px) !important;
@@ -1397,7 +1434,7 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 
 .orc-premium-form form.form-material textarea.orc-obs-textarea.form-control,
 .orc-premium-form form.form-material textarea#observacoes.form-control {
-  min-height: 140px !important;
+  min-height: 88px !important;
 }
 
 .orc-premium-form form.form-material textarea.orc-obs-textarea.form-control:focus,
@@ -1423,15 +1460,15 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   resize: none !important;
 }
 
-/* Botões do formulário premium (cancelar / limpar) */
+/* Botões do formulário premium (cancelar / limpar — protótipo .btn-ghost / .btn-red) */
 .orc-premium-wrap .btn-orc-form-secondary {
-  background: var(--orc-bg-surface, #f8f8f7);
+  background: transparent;
   border: 1px solid var(--orc-border, #e5e4e0);
-  color: var(--orc-text-muted, #6b6a65);
-  border-radius: 10px;
-  font-weight: 600;
+  color: var(--orc-text, #1a1a18);
+  border-radius: 8px;
+  font-weight: 500;
   font-size: 12px;
-  padding: 10px 18px;
+  padding: 7px 14px;
   line-height: 1.2;
 }
 
@@ -1444,21 +1481,21 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 }
 
 .orc-premium-wrap .btn-orc-outline-danger {
-  background: #fff;
-  border: 1px solid var(--orc-red, #e24b4a);
-  color: var(--orc-red, #e24b4a);
-  border-radius: 10px;
-  font-weight: 600;
+  background: var(--orc-red-light, #fcebeb);
+  border: 1px solid #f7c1c1;
+  color: var(--orc-red-dark, #791f1f);
+  border-radius: 8px;
+  font-weight: 500;
   font-size: 12px;
-  padding: 10px 18px;
+  padding: 7px 14px;
   line-height: 1.2;
 }
 
 .orc-premium-wrap .btn-orc-outline-danger:hover,
 .orc-premium-wrap .btn-orc-outline-danger:focus {
-  background: #fff5f5;
-  border-color: #c73e3d;
-  color: #b83534;
+  background: #f7c1c1;
+  border-color: #f7c1c1;
+  color: var(--orc-red-dark, #791f1f);
 }
 
 .orc-premium-wrap .btn-orc-danger-solid {
@@ -3044,15 +3081,16 @@ body.layout-no-topbar .orc-premium-wrap .btn-orc-form-secondary:focus {
 }
 
 body.layout-no-topbar .orc-premium-wrap .btn-orc-outline-danger {
-  background: #ffffff !important;
-  color: #b23432 !important;
+  background: #fcebeb !important;
+  border-color: #f7c1c1 !important;
+  color: #791f1f !important;
 }
 
 body.layout-no-topbar .orc-premium-wrap .btn-orc-outline-danger:hover,
 body.layout-no-topbar .orc-premium-wrap .btn-orc-outline-danger:focus {
-  background: rgba(226, 75, 74, 0.10) !important;
-  border-color: #e24b4a !important;
-  color: #8a1a18 !important;
+  background: #f7c1c1 !important;
+  border-color: #f7c1c1 !important;
+  color: #791f1f !important;
 }
 
 body.layout-no-topbar .orc-premium-wrap .btn-orc-outline-teal {
