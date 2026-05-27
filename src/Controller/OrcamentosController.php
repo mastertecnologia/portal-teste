@@ -1915,7 +1915,10 @@ class OrcamentosController extends AppController {
 
 	public function viewhash($hash = null) {
 		$this->viewBuilder()->setLayout('orcamentos');
-		$orcamento = $this->Orcamentos->findByHash($hash)->contain(['Users' => ['fields' => ['Users.name', 'Users.email']], 'Clientes' => ['fields' => ['Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome', 'Clientes.cpfcnpj', 'Clientes.fone', 'Clientes.fone2']]])->first();
+		$orcamento = $this->Orcamentos->findByHash($hash)->contain([
+			'Users' => ['fields' => ['Users.name', 'Users.email']],
+			'Clientes' => ['fields' => $this->_orcClienteFieldsSeguroProposta()],
+		])->first();
 		if(empty($orcamento)) {
 			$this->Flash->error(__('Não foi encontrado um orçamento!'));
 			return $this->redirect(['controller' => 'Users', 'action' => 'login']);
@@ -2003,7 +2006,7 @@ class OrcamentosController extends AppController {
 			$carrinho = $this->Orcamentosservicos->find('all')->where(['idorcamento' => $carrinhoItem->iditem])->order(['id'])->toArray();
 		}
 		$nomeClienteSeg = !empty($orcamento->cliente->razaosocial) ? $orcamento->cliente->razaosocial : $orcamento->cliente->nome;
-		$cnpjDigits = preg_replace('/\D/', '', (string)($orcamento->cliente->cpfcnpj ?? ''));
+		$cnpjDigits = $this->_clienteDocDigits($orcamento->cliente ?? null);
 		$cnpj4 = strlen($cnpjDigits) >= 4 ? substr($cnpjDigits, -4) : '0000';
 		$nomeClienteLower = mb_strtolower(trim((string)$nomeClienteSeg), 'UTF-8');
 		$parts = preg_split('/\s+/u', $nomeClienteLower, -1, PREG_SPLIT_NO_EMPTY);
@@ -2051,13 +2054,48 @@ class OrcamentosController extends AppController {
 	}
 
 	/**
+	 * Dígitos do CPF/CNPJ do cliente (colunas cnpj e cpf na tabela clientes).
+	 *
+	 * @param \Cake\Datasource\EntityInterface|null $cliente
+	 */
+	protected function _clienteDocDigits($cliente): string {
+		if ($cliente === null) {
+			return '';
+		}
+		$tipo = (int)($cliente->tipo ?? 0);
+		$raw = ($tipo === (int)C_ClientesTipoJuridica)
+			? (string)($cliente->cnpj ?? '')
+			: (string)($cliente->cpf ?? '');
+
+		return preg_replace('/\D/', '', $raw);
+	}
+
+	/**
+	 * Campos de Clientes usados em viewhash / acesso seguro da proposta.
+	 *
+	 * @return string[]
+	 */
+	protected function _orcClienteFieldsSeguroProposta(): array {
+		return [
+			'Clientes.razaosocial',
+			'Clientes.tipo',
+			'Clientes.nome',
+			'Clientes.cnpj',
+			'Clientes.cpf',
+			'Clientes.fone',
+			'Clientes.fone2',
+			'Clientes.email',
+		];
+	}
+
+	/**
 	 * @param string $hash
 	 * @return \App\Model\Entity\Orcamento|null
 	 */
 	protected function _findOrcamentoSeguroProposta($hash) {
 		return $this->Orcamentos->findByHash($hash)->contain([
 			'Users' => ['fields' => ['Users.name', 'Users.email']],
-			'Clientes' => ['fields' => ['Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome', 'Clientes.cpfcnpj', 'Clientes.fone', 'Clientes.fone2', 'Clientes.email']],
+			'Clientes' => ['fields' => $this->_orcClienteFieldsSeguroProposta()],
 		])->first();
 	}
 
@@ -2167,7 +2205,7 @@ class OrcamentosController extends AppController {
 			return $this->redirect(['action' => 'seguroProposta', $hash]);
 		}
 
-		$cnpjDigits = preg_replace('/\D/', '', (string)($orcamento->cliente->cpfcnpj ?? ''));
+		$cnpjDigits = $this->_clienteDocDigits($orcamento->cliente ?? null);
 		$cnpj4Expected = strlen($cnpjDigits) >= 4 ? substr($cnpjDigits, -4) : '0000';
 		$cnpjIn = preg_replace('/\D/', '', (string)$this->request->getData('cnpj_input'));
 		$nomeIn = (string)$this->request->getData('nome_input');

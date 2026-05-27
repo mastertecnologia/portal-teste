@@ -263,8 +263,15 @@
     <div class="orc-client-block">
       <div class="orc-client-label">Destinatário</div>
       <div class="orc-client-name"><?= $nomeCliente ?></div>
-      <?php if(!empty($orcamento->cliente->cpfcnpj)): ?>
-        <div class="orc-client-doc"><?= $orcamento->cliente->tipo == C_ClientesTipoJuridica ? 'CNPJ' : 'CPF' ?>: <?= h($orcamento->cliente->cpfcnpj) ?></div>
+      <?php
+        $cliDocLblHash = ($orcamento->cliente->tipo == C_ClientesTipoJuridica) ? 'CNPJ' : 'CPF';
+        $cliDocRawHash = ($orcamento->cliente->tipo == C_ClientesTipoJuridica)
+          ? ($orcamento->cliente->cnpj ?? '')
+          : ($orcamento->cliente->cpf ?? '');
+        $cliDocFmtHash = function_exists('formatCnpjCpf') ? formatCnpjCpf($cliDocRawHash) : (string)$cliDocRawHash;
+      ?>
+      <?php if ($cliDocFmtHash !== ''): ?>
+        <div class="orc-client-doc"><?= h($cliDocLblHash) ?>: <?= h($cliDocFmtHash) ?></div>
       <?php endif; ?>
     </div>
 
