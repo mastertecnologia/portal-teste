@@ -211,7 +211,7 @@ $solicitacaoHtml = str_replace(['text-white', 'dark:text-[#EBEBEB]'], '', $orcam
 	</div>
 	<?php endif; ?>
 
-	<table class="orc-ptbl" width="100%" cellpadding="0" cellspacing="0">
+	<table class="orc-ptbl" id="tableCarrinho" width="100%" cellpadding="0" cellspacing="0">
 		<thead>
 			<tr>
 				<th class="orc-ptbl-w60">Código</th>
