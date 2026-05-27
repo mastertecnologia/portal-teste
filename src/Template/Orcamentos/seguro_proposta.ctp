@@ -259,7 +259,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
 
     <div style="margin-bottom:18px;background:var(--blue-light);border-radius:var(--r);padding:12px 14px;font-size:12px;color:var(--blue-dark);line-height:1.6;display:flex;align-items:flex-start;gap:10px;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-dark)" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/></svg>
-      <div>O código de verificação será enviado para o e-mail de faturamento cadastrado: <strong><?= h($emailMaskedPreview ?? '••••@••••') ?></strong>.</div>
+      <div>O código de verificação será enviado para o mesmo e-mail que recebeu o link da proposta: <strong><?= h($emailMaskedPreview ?? '••••@••••') ?></strong>.</div>
     </div>
 
     <button type="submit" class="btn-main">

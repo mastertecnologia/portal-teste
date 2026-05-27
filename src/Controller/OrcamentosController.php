@@ -2048,7 +2048,8 @@ class OrcamentosController extends AppController {
 		$this->set('title', 'Acesso Seguro — Proposta PGM Soluções');
 		$this->set('totalPrazoFmtSeguro', $fmt($totalGeral));
 		$this->set('totalVistaFmtSeguro', $fmt($totalVista));
-		$emailMaskedPreview = $this->_maskEmailForDisplay((string)($orcamento->cliente->email ?? ''));
+		$emailOtpPreview = $this->_seguroOtpEmailPara($orcamento);
+		$emailMaskedPreview = $this->_maskEmailForDisplay($emailOtpPreview !== null ? $emailOtpPreview : '');
 		$this->set(compact(
 			'orcamento',
 			'nomeClienteSeg',
@@ -2328,6 +2329,30 @@ class OrcamentosController extends AppController {
 		return $e;
 	}
 
+	/**
+	 * E-mail do OTP: o mesmo do envio do link (passo 6), senão cadastro do cliente.
+	 *
+	 * @param \Cake\Datasource\EntityInterface $orcamento
+	 */
+	protected function _seguroOtpEmailPara($orcamento): ?string {
+		if ($this->_orcSchemaHasColumn('email_envio')) {
+			$envio = trim((string)($orcamento->email_envio ?? ''));
+			if ($envio !== '' && filter_var($envio, FILTER_VALIDATE_EMAIL)) {
+				return $envio;
+			}
+		}
+
+		return $this->_seguroClienteEmailValido($orcamento);
+	}
+
+	protected function _orcApplyEmailEnvio($orcamento, string $destinatario): void {
+		$destinatario = trim($destinatario);
+		if ($destinatario === '' || !$this->_orcSchemaHasColumn('email_envio')) {
+			return;
+		}
+		$orcamento->set('email_envio', $destinatario);
+	}
+
 	protected function _seguroPropostaValidateNomeParcial(string $nomeInput, string $nomeClienteSeg) {
 		$nomeIn = mb_strtolower(trim($nomeInput), 'UTF-8');
 		$nomeClienteLower = mb_strtolower(trim($nomeClienteSeg), 'UTF-8');
@@ -2374,9 +2399,9 @@ class OrcamentosController extends AppController {
 			return $this->redirect(['action' => 'seguroProposta', $hash]);
 		}
 
-		$to = $this->_seguroClienteEmailValido($orcamento);
+		$to = $this->_seguroOtpEmailPara($orcamento);
 		if ($to === null) {
-			$this->Flash->error(__('Não há e-mail de faturamento cadastrado para este cliente. Entre em contato com o vendedor.'));
+			$this->Flash->error(__('Não há e-mail registrado para esta proposta. Peça ao vendedor reenviar o link ou confira o cadastro do cliente.'));
 			return $this->redirect(['action' => 'seguroProposta', $hash]);
 		}
 
@@ -2401,7 +2426,7 @@ class OrcamentosController extends AppController {
 			'reenviar_count' => 0,
 			'email_masked' => $this->_maskEmailForDisplay($to),
 		]);
-		$this->Flash->success(__('Enviamos um código de 6 dígitos para o e-mail cadastrado.'));
+		$this->Flash->success(__('Enviamos um código de 6 dígitos para o mesmo e-mail que recebeu o link da proposta.'));
 		return $this->redirect(['action' => 'seguroProposta', $hash]);
 	}
 
@@ -2470,9 +2495,9 @@ class OrcamentosController extends AppController {
 			return $this->redirect(['action' => 'seguroProposta', $hash]);
 		}
 
-		$to = $this->_seguroClienteEmailValido($orcamento);
+		$to = $this->_seguroOtpEmailPara($orcamento);
 		if ($to === null) {
-			$this->Flash->error(__('Não há e-mail cadastrado para reenvio.'));
+			$this->Flash->error(__('Não há e-mail registrado para reenvio desta proposta.'));
 			return $this->redirect(['action' => 'seguroProposta', $hash]);
 		}
 
@@ -3308,6 +3333,7 @@ class OrcamentosController extends AppController {
 				// Atualiza status para "Enviado" e registra movimento.
 				$sitantiga = (int)($orcamento->status ?? C_OrcamentoStatusPendente);
 				$orcamento->status = C_OrcamentoStatusEnviado;
+				$this->_orcApplyEmailEnvio($orcamento, $destinatario);
 				$this->Orcamentos->save($orcamento);
 				$this->criarMov($idorcamento, $sitantiga, C_OrcamentoStatusEnviado, null);
 
