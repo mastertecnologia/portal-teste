@@ -97,7 +97,7 @@
 		</div>
 	</div>
 
-	<div class="card orc-premium-card-inner orc-card-mb-14 orc-obs-block">
+	<div class="card orc-premium-card-inner orc-card-mb-14 orc-obs-card">
 		<div class="card-body">
 			<div class="orc-sec-title">Observações</div>
 			<?= $this->Form->textarea('solicitacao', [
@@ -111,19 +111,11 @@
 		</div>
 	</div>
 
-	<div class="orc-footer-bar">
-		<button type="button" class="btn btn-orc-outline-danger" id="btn-orc-limpar-novo">
-			<i class="fa fa-trash"></i> Limpar
-		</button>
-		<div class="orc-footer-bar-actions">
-			<?= $this->Html->link('Cancelar', $orcListRoute, ['class' => 'btn btn-orc-form-secondary']) ?>
-			<?= $this->Form->button('Avançar →', [
-				'type' => 'submit',
-				'class' => 'btn btn-orc-premium-primary',
-				'escape' => false,
-			]) ?>
-		</div>
-	</div>
+	<?= $this->element('orcamentos_footer_proposta', [
+		'cancelUrl' => $orcListRoute,
+		'submitLabel' => 'Avançar →',
+		'showLimpar' => true,
+	]) ?>
 
 	<?= $this->Form->end(); ?>
 </div>
