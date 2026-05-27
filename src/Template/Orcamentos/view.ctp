@@ -9,10 +9,20 @@ $margem = (array)($orcRevisaoMargem ?? ['subVenda' => 0, 'subCusto' => 0, 'lucro
 $brl = function ($v) {
 	return 'R$ ' . number_format((float)$v, 2, ',', '.');
 };
-$nomeCliente = empty($orcamento->cliente->razaosocial) ? ($orcamento->cliente->nome ?? '—') : $orcamento->cliente->razaosocial;
-$cliTipo = (int)($orcamento->cliente->tipo ?? 0);
-$cliDocLbl = ($cliTipo === (int)C_ClientesTipoJuridica) ? 'CNPJ' : 'CPF';
-$cliDocRaw = ($cliTipo === (int)C_ClientesTipoJuridica) ? ($orcamento->cliente->cnpj ?? '') : ($orcamento->cliente->cpf ?? '');
+$orcCliente = $orcamento->cliente ?? null;
+$nomeCliente = '—';
+$cliTipo = 0;
+$cliDocLbl = 'CPF';
+$cliDocRaw = '';
+if ($orcCliente !== null) {
+	$nomeCliente = !empty($orcCliente->razaosocial) ? (string)$orcCliente->razaosocial : (string)($orcCliente->nome ?? '—');
+	if ($nomeCliente === '') {
+		$nomeCliente = '—';
+	}
+	$cliTipo = (int)($orcCliente->tipo ?? 0);
+	$cliDocLbl = ($cliTipo === (int)C_ClientesTipoJuridica) ? 'CNPJ' : 'CPF';
+	$cliDocRaw = ($cliTipo === (int)C_ClientesTipoJuridica) ? (string)($orcCliente->cnpj ?? '') : (string)($orcCliente->cpf ?? '');
+}
 $cliDocFmt = function_exists('formatCnpjCpf') ? formatCnpjCpf($cliDocRaw) : (string)$cliDocRaw;
 $validoateFmt = function_exists('pgm_format_date_br') ? pgm_format_date_br($orcamento->validoate ?? null) : (string)($orcamento->validoate ?? '—');
 $autorNome = ($orcamento->user && !empty($orcamento->user->name)) ? $orcamento->user->name : '—';
@@ -69,8 +79,8 @@ $versaoStatusBadge = function ($versaoEnt) {
 		<div class="orc-page-head-actions">
 			<?php if (isset($role) && (int)$role === 0) : ?>
 				<?= $this->Html->link('← Editar proposta', ['action' => 'dados', $orcamento->id], ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false, 'data-turbo' => 'false']) ?>
-				<?= $this->Html->link('Pré-visualizar PDF', ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
-				<?= $this->Html->link('Gerar e assinar →', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]) ?>
+				<?= $this->Html->link('Pré-visualizar PDF', ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false, 'data-turbo' => 'false']) ?>
+				<?= $this->Html->link('Gerar e assinar →', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false, 'data-turbo' => 'false']) ?>
 			<?php endif; ?>
 		</div>
 	</div>
@@ -287,7 +297,7 @@ $versaoStatusBadge = function ($versaoEnt) {
 			<?php if (isset($role) && (int)$role === 0) : ?>
 				<?= $this->Html->link('Pré-visualizar PDF', ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
 				<?php if ($gerOk || $st >= (int)C_OrcamentoStatusEnviado) : ?>
-					<?= $this->Html->link('Avançar para assinatura →', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]) ?>
+					<?= $this->Html->link('Avançar para assinatura →', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false, 'data-turbo' => 'false']) ?>
 				<?php endif; ?>
 			<?php endif; ?>
 		</div>

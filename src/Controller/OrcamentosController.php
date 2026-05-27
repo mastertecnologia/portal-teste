@@ -241,11 +241,16 @@ class OrcamentosController extends AppController {
 			return [];
 		}
 
-		return $this->Orcamentos->find()
+		$query = $this->Orcamentos->find()
 			->where(['Orcamentos.idempresa' => $idempresa, 'Orcamentos.idgrupoversao' => $grupoId])
-			->contain(['Users' => ['fields' => ['Users.id', 'Users.name']]])
-			->order(['Orcamentos.versao' => 'DESC', 'Orcamentos.id' => 'DESC'])
-			->toArray();
+			->contain(['Users' => ['fields' => ['Users.id', 'Users.name']]]);
+		if ($this->_orcSchemaHasColumn('versao')) {
+			$query->order(['Orcamentos.versao' => 'DESC', 'Orcamentos.id' => 'DESC']);
+		} else {
+			$query->order(['Orcamentos.id' => 'DESC']);
+		}
+
+		return $query->toArray();
 	}
 
 	protected function _orcDescontoAbsoluto($orcamento, float $subVenda): float {
@@ -1834,7 +1839,10 @@ class OrcamentosController extends AppController {
 			->where(['Orcamentos.idempresa' => $this->Auth->user('idempresa'), 'Orcamentos.id' => $id])
 			->contain([
 				'Users' => ['fields' => ['Users.name']],
-				'Clientes' => ['fields' => ['Clientes.razaosocial', 'Clientes.nome', 'Clientes.email', 'Clientes.tipo', 'Clientes.cnpj', 'Clientes.cpf']],
+				'Clientes' => [
+					'fields' => ['Clientes.razaosocial', 'Clientes.nome', 'Clientes.email', 'Clientes.tipo', 'Clientes.cnpj', 'Clientes.cpf'],
+					'joinType' => 'LEFT',
+				],
 			])
 		->first();
 

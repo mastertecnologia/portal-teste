@@ -383,7 +383,7 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 								id="em-para"
 								name="emailemail"
 								class="es-mail-inp"
-								value="<?= !empty($orcamento->cliente->email) ? h($orcamento->cliente->email) : '' ?>"
+								value="<?= !empty($orcamento->cliente) && !empty($orcamento->cliente->email) ? h($orcamento->cliente->email) : '' ?>"
 							/>
 						</div>
 						<div class="es-mail-row">
