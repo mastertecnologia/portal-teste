@@ -2920,8 +2920,14 @@ class OrcamentosController extends AppController {
 		}
 
 		$orcamento = $this->Orcamentos->find('all')
-			->where(['AND' => ['idempresa' => $this->Auth->user('idempresa'), 'id' => $id]])
-			->contain(['Users', 'Clientes'])
+			->where([
+				'Orcamentos.idempresa' => $this->Auth->user('idempresa'),
+				'Orcamentos.id' => $id,
+			])
+			->contain([
+				'Users',
+				'Clientes' => ['joinType' => 'LEFT'],
+			])
 			->first();
 
 		if (empty($orcamento)) {
