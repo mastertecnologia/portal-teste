@@ -48,9 +48,7 @@
 		'cancelTurbo' => true,
 	]) ?>
 
-	<section class="orcamento-stepper-card" aria-label="Etapas do orçamento">
-		<?= $this->element('orcamentos_stepper') ?>
-	</section>
+	<?= $this->element('orcamentos_stepper') ?>
 
 	<?= $this->element('orcamentos_card_cliente', [
 		'clientes' => $clientes,

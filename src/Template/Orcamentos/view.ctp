@@ -76,9 +76,7 @@ $versaoStatusBadge = function ($versaoEnt) {
 		</div>
 	</div>
 
-	<section class="orcamento-stepper-card" aria-label="Etapas do orçamento">
-		<?= $this->element('orcamentos_stepper') ?>
-	</section>
+	<?= $this->element('orcamentos_stepper') ?>
 
 	<section class="orcamento-card">
 			<div class="orc-sec-title">Controle de versões</div>
