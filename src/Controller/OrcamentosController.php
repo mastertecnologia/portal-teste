@@ -112,7 +112,8 @@ class OrcamentosController extends AppController {
 		$mov->sitnova = $sitnova;
 		$mov->idusuario = empty($this->Auth->user('id')) ? 0 : $this->Auth->user('id');
 		$mov->idempresa = !empty($idempresa) ? $idempresa : $this->Auth->user('idempresa');
-		$mov->datetime = date('d/m/Y H:i:s', time());
+		// PostgreSQL exige timestamp ISO (Y-m-d H:i:s), não d/m/Y.
+		$mov->datetime = date('Y-m-d H:i:s');
 
 		if (!empty($observacao)) $mov->observacao = $observacao;
 
