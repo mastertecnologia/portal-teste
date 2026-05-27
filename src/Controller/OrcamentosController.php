@@ -2447,10 +2447,38 @@ class OrcamentosController extends AppController {
 	}
 
 	public function limpacarrinho(){
-		if ($this->request->is(['ajax'])) $this->autoRender = false;
-		if(isset($_SESSION['idcarrinhoadd']) && !empty($_SESSION['idcarrinhoadd'])) {
-			$carrinho = $this->Orcamentosservicos->find('all')->where(['idorcamento' => $_SESSION['idcarrinhoadd']])->toArray();
-			foreach($carrinho as $item) $this->Orcamentosservicos->delete($item);
+		if ($this->request->is(['ajax'])) {
+			$this->autoRender = false;
+		}
+		$idempresa = $this->Auth->user('idempresa');
+		$idorcamentoServicos = null;
+
+		$idOrc = (int)($this->request->getData('id_orcamento') ?? 0);
+		if ($idOrc > 0) {
+			if (array_key_exists('idcarrinho', $_SESSION) && $_SESSION['idcarrinho'] !== '' && $_SESSION['idcarrinho'] !== null) {
+				$idorcamentoServicos = $_SESSION['idcarrinho'];
+			} else {
+				$resolved = $this->_orcamentoResolveIditemCarrinhoSession($idOrc);
+				if ($resolved !== null) {
+					$idorcamentoServicos = $resolved;
+					$_SESSION['idcarrinho'] = $resolved;
+				}
+			}
+		} elseif (isset($_SESSION['idcarrinhoadd']) && $_SESSION['idcarrinhoadd'] !== '' && $_SESSION['idcarrinhoadd'] !== null) {
+			$idorcamentoServicos = $_SESSION['idcarrinhoadd'];
+		} elseif (isset($_SESSION['idcarrinho']) && $_SESSION['idcarrinho'] !== '' && $_SESSION['idcarrinho'] !== null) {
+			$idorcamentoServicos = $_SESSION['idcarrinho'];
+		}
+
+		if ($idorcamentoServicos === null || $idorcamentoServicos === '') {
+			return;
+		}
+
+		$carrinho = $this->Orcamentosservicos->find('all')
+			->where(['idempresa' => $idempresa, 'idorcamento' => $idorcamentoServicos])
+			->toArray();
+		foreach ($carrinho as $item) {
+			$this->Orcamentosservicos->delete($item);
 		}
 	}
 	

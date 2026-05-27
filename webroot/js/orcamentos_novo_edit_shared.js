@@ -886,23 +886,49 @@
 
 	$('#btn-orc-limpar-novo').on('click', function (e) {
 		e.preventDefault();
-		$('#idcliente').val('').selectpicker('refresh');
-		var $fp = $('#formapagamento');
-		$fp.val('À vista');
-		if ($fp.data('selectpicker')) {
-			$fp.selectpicker('refresh');
+		if (cfg.mode === 'add') {
+			var $cliente = $('#idcliente');
+			if ($cliente.length) {
+				$cliente.val('');
+				if ($cliente.data('selectpicker')) {
+					$cliente.selectpicker('refresh');
+				}
+			}
+			var $fp = $('#formapagamento');
+			if ($fp.length) {
+				$fp.val('À vista');
+				if ($fp.data('selectpicker')) {
+					$fp.selectpicker('refresh');
+				}
+			}
+			if (typeof orcClienteMetaFill === 'function') {
+				orcClienteMetaFill();
+			}
+			$('#disc-val').val(0);
+			$('#disc-tipo').val('pct');
+			$('#observacoes').val('');
+			orcObsSolicitacaoPreviewSync();
+		} else {
+			if (editando) {
+				toggleModoEdicao(false);
+			} else {
+				limparFormularioEdicao();
+			}
 		}
-		orcClienteMetaFill();
-		$('#disc-val').val(0);
-		$('#disc-tipo').val('pct');
-		$('#observacoes').val('');
-		orcObsSolicitacaoPreviewSync();
+		var postData = {};
+		if (cfg.orcamentoId > 0) {
+			postData.id_orcamento = cfg.orcamentoId;
+		}
 		$.ajax({
 			type: 'POST',
 			url: cfg.limpacarrinhoUrl,
+			data: postData,
 			dataType: 'html',
 			complete: function () {
 				window.carrinho();
+				if (typeof window.valortotal === 'function') {
+					window.valortotal();
+				}
 			}
 		});
 	});
