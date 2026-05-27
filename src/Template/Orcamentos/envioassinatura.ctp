@@ -171,7 +171,7 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 		background: var(--bg-surface);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-lg);
-		overflow: hidden;
+		overflow: visible;
 		margin-bottom: 12px;
 	}
 	.orc-esign .es-mail-row {
@@ -181,6 +181,21 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 		padding: 9px 14px;
 		border-bottom: 1px solid var(--border-light);
 		font-size: 12px;
+		min-width: 0;
+	}
+	.orc-esign .es-mail-row > .input,
+	.orc-esign .es-mail-row > .form-group {
+		flex: 1 1 auto;
+		min-width: 0;
+		width: auto;
+		max-width: 100%;
+		margin: 0;
+	}
+	.orc-esign .es-mail-row > .input input,
+	.orc-esign .es-mail-row > .form-group input {
+		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
 	}
 	.orc-esign .es-mail-lbl {
 		font-size: 11px;
@@ -189,13 +204,19 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 		flex-shrink: 0;
 	}
 	.orc-esign .es-mail-inp {
-		flex: 1;
+		flex: 1 1 auto;
+		min-width: 0;
+		width: 100%;
+		max-width: 100%;
 		border: none;
 		background: transparent;
 		outline: none;
 		font-size: 12px;
 		font-family: inherit;
 		color: var(--text);
+		box-sizing: border-box;
+		overflow: visible;
+		text-overflow: unset;
 	}
 	.orc-esign .es-mail-body {
 		padding: 12px 14px;
@@ -386,6 +407,7 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 								'class' => 'es-mail-inp',
 								'label' => false,
 								'required' => true,
+								'templates' => ['inputContainer' => '{{content}}'],
 								'value' => !empty($orcamento->cliente) && !empty($orcamento->cliente->email)
 									? (string)$orcamento->cliente->email
 									: '',
