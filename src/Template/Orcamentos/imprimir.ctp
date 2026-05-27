@@ -7,7 +7,7 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'orcamentos-pr
 
 if ($role == 0) {
 	$this->Breadcrumbs->add('Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
-	$this->Breadcrumbs->add('Editar', ['controller' => 'Orcamentos', 'action' => 'edit', $orcamento->id], ['class' => 'breadcrumb-item']);
+	$this->Breadcrumbs->add('Dados da proposta', ['controller' => 'Orcamentos', 'action' => 'dados', $orcamento->id], ['class' => 'breadcrumb-item']);
 }
 if ($role == 1) {
 	$this->Breadcrumbs->add('Orçamentos', ['controller' => 'Financeiro', 'action' => 'orcamentos'], ['class' => 'breadcrumb-item']);
@@ -99,7 +99,7 @@ $totGeral = $totUnico + $totMensal;
 		<div>
 			<div class="orc-print-toolbar-back">
 				<?php if ($role == 0) : ?>
-					← <?= $this->Html->link('Revisão', ['action' => 'edit', $orcamento->id]) ?>
+					← <?= $this->Html->link('Revisão', ['action' => 'view', $orcamento->id], ['data-turbo' => 'false']) ?>
 				<?php else : ?>
 					← <?= $this->Html->link('Voltar', ['controller' => 'Financeiro', 'action' => 'orcamentos']) ?>
 				<?php endif; ?>
@@ -120,8 +120,8 @@ $totGeral = $totUnico + $totMensal;
 				) ?>
 				<?= $this->Html->link(
 					'Confirmar e salvar',
-					['action' => 'edit', $orcamento->id],
-					['class' => 'btn btn-orc-premium-primary btn-orc-compact']
+					['action' => 'dados', $orcamento->id],
+					['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'data-turbo' => 'false']
 				) ?>
 			<?php endif; ?>
 			<?= $this->Html->link(
