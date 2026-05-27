@@ -1473,6 +1473,10 @@ body.pgm-app-shell-premium.layout-no-topbar:has(.orcamento-content) #pgm-dynamic
   line-height: 1.2;
 }
 
+.orcamento-content .orcamento-footer .btn-orc-outline-danger {
+  border-radius: 999px;
+}
+
 .orc-premium-form .orc-footer-bar--proposta .btn-orc-premium-primary {
   font-weight: 500;
   box-shadow: none;
@@ -1616,19 +1620,36 @@ body.pgm-app-shell-premium.layout-no-topbar:has(.orcamento-content) #pgm-dynamic
   text-decoration: none;
 }
 
-.orc-premium-wrap .btn-orc-outline-danger {
+/* btn-red do protótipo pg-novo (Limpar no rodapé) */
+.orc-premium-wrap .btn-orc-outline-danger,
+.orcamento-content .orcamento-footer .btn-orc-outline-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   background: var(--orc-red-light, #fcebeb);
   border: 1px solid #f7c1c1;
   color: var(--orc-red-dark, #791f1f);
-  border-radius: 8px;
+  border-radius: 999px;
   font-weight: 500;
   font-size: 12px;
   padding: 7px 14px;
   line-height: 1.2;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.orc-premium-wrap .btn-orc-outline-danger svg,
+.orcamento-content .orcamento-footer .btn-orc-outline-danger svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
 }
 
 .orc-premium-wrap .btn-orc-outline-danger:hover,
-.orc-premium-wrap .btn-orc-outline-danger:focus {
+.orc-premium-wrap .btn-orc-outline-danger:focus,
+.orcamento-content .orcamento-footer .btn-orc-outline-danger:hover,
+.orcamento-content .orcamento-footer .btn-orc-outline-danger:focus {
   background: #f7c1c1;
   border-color: #f7c1c1;
   color: var(--orc-red-dark, #791f1f);

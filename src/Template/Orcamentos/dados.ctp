@@ -83,7 +83,7 @@
 	<?= $this->element('orcamentos_footer_proposta', [
 		'cancelUrl' => ['action' => 'view', $orcamento->id],
 		'submitLabel' => 'Avançar →',
-		'showLimpar' => false,
+		'showLimpar' => true,
 		'cancelTurbo' => true,
 	]) ?>
 

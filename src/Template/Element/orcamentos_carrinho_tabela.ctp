@@ -148,6 +148,3 @@ $badgeCls = ['prod' => 'orc-badge-tipo--prod', 'srv' => 'orc-badge-tipo--serv', 
 		</tbody>
 	</table>
 </div>
-<?php if ($mostrarAcoesItens && !$orcCarrinhoReadonly) : ?>
-	<button type="button" class="btn btn-sm btn-secondary float-right m-b-10 btn-limpacarrinho orc-btn-limpa-carrinho">Limpar carrinho</button>
-<?php endif; ?>
