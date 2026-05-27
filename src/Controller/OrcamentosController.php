@@ -3007,17 +3007,57 @@ class OrcamentosController extends AppController {
 	public function email() {
 		$this->autoRender = false;
 
-		if ($this->request->is('post')) {
-			$data = $this->request->getData();
-			$isStep6 = isset($data['step6']) && (int)$data['step6'] === 1;
-			$empresa = $this->Empresas->get($this->Auth->user('idempresa'));
-			$orcamento = $this->Orcamentos->findById($data['idorcamento'])->where(['idempresa' => $this->Auth->user('idempresa')])->first();
+		if (!$this->request->is('post')) {
+			return $this->redirect(['action' => 'index']);
+		}
+
+		$data = $this->request->getData();
+		$isStep6 = isset($data['step6']) && (int)$data['step6'] === 1;
+		$idorcamento = (int)($data['idorcamento'] ?? 0);
+		$idempresa = (int)$this->Auth->user('idempresa');
+
+		$orcamento = $this->Orcamentos->find()
+			->where(['Orcamentos.idempresa' => $idempresa, 'Orcamentos.id' => $idorcamento])
+			->first();
+		if ($orcamento === null) {
+			$this->Flash->error(__('Orçamento não encontrado.'));
+
+			return $this->redirect(['action' => 'index']);
+		}
+
+		if ($isStep6 && $this->_orcSchemaHasColumn('aprovacao_interna')) {
+			$ai = (string)($orcamento->aprovacao_interna ?? C_OrcamentoAprovacaoInternaPendente);
+			if ($ai !== C_OrcamentoAprovacaoInternaAprovado) {
+				$this->Flash->error(__('A proposta precisa da aprovação interna do gerente antes do envio ao cliente.'));
+
+				return $this->redirect(['action' => 'view', $orcamento->id]);
+			}
+		}
+
+		$destinatario = trim((string)($data['emailemail'] ?? ''));
+		if ($destinatario === '') {
+			$this->Flash->error(__('Informe o e-mail do destinatário.'));
+			if ($isStep6) {
+				return $this->redirect(['action' => 'envioassinatura', $orcamento->id]);
+			}
+
+			return $this->redirect(['action' => 'edit', $orcamento->id]);
+		}
+
+		$empresa = $this->Empresas->get($idempresa);
 			// Link de acesso 
-				$idorcamento = $data['idorcamento'];
-				$url = $this->Config->get(1)->urlfora."orcamentos/view/$idorcamento/$orcamento->idempresa";
-				$linkacesso = "<a href='$url'>Portal Web - Orçamentos</a>";
-				$urlHash = $this->Config->get(1)->urlfora.'orcamentos/seguro-proposta/'.$orcamento->hash;
-				$linkacesso .= " ou se não possuir login, acesse <a href='$urlHash'>este link</a> (acesso seguro com verificação)";
+				$linkacesso = '';
+				try {
+					$base = $this->Config->get(1)->urlfora ?? '';
+					if ($base !== '' && !empty($orcamento->hash)) {
+						$url = $base . 'orcamentos/view/' . $idorcamento . '/' . (int)$orcamento->idempresa;
+						$linkacesso = "<a href='" . h($url) . "'>Portal Web - Orçamentos</a>";
+						$urlHash = $base . 'orcamentos/seguro-proposta/' . $orcamento->hash;
+						$linkacesso .= " ou se não possuir login, acesse <a href='" . h($urlHash) . "'>este link</a> (acesso seguro com verificação)";
+					}
+				} catch (\Throwable $e) {
+					$linkacesso = '';
+				}
 			// Subistitui as tags 
 				$mensagem = $empresa->orcamentomensagem;
 				$mensagem = str_replace("#LINKACESSO#", $linkacesso, $empresa->orcamentomensagem);
@@ -3061,7 +3101,6 @@ class OrcamentosController extends AppController {
 				else $nomeempresa = $empresa->razaosocial;
 			//
 
-			$destinatario = $data['emailemail'];
 			$email = new Email();
 			
 			$email->transport(((int)$this->Auth->user('idempresa') === (int)C_EmpresaMaster) ? 'master' : 'pgm');
@@ -3086,22 +3125,21 @@ class OrcamentosController extends AppController {
 				}
 
 				if ($isStep6) {
-					return $this->redirect(['action' => 'envioassinatura', $data['idorcamento'], '?' => ['ok' => 1]]);
+					return $this->redirect(['action' => 'envioassinatura', $orcamento->id, '?' => ['ok' => 1]]);
 				}
-				return $this->redirect(['action' => 'edit', $data['idorcamento']]);
-			} else $this->Flash->error('Erro ao enviar e-mail.');
+				return $this->redirect(['action' => 'edit', $orcamento->id]);
+			}
+			$this->Flash->error('Erro ao enviar e-mail.');
 
 			if (!empty($tmpGeneratedPdfPath) && is_file($tmpGeneratedPdfPath)) {
 				@unlink($tmpGeneratedPdfPath);
 			}
 
 			if ($isStep6) {
-				$this->Flash->error('Erro ao enviar e-mail.');
-				return $this->redirect(['action' => 'envioassinatura', $data['idorcamento']]);
+				return $this->redirect(['action' => 'envioassinatura', $orcamento->id]);
 			}
 
-			return $this->redirect(['action' => 'edit', $data['idorcamento']]);
-		}
+			return $this->redirect(['action' => 'edit', $orcamento->id]);
 	}
 
 	public function novaordem($idorcamento) {

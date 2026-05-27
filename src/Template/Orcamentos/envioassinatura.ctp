@@ -341,10 +341,12 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 		<?= $this->Form->create(null, [
 			'url' => ['action' => 'email'],
 			'type' => 'file',
-			'id' => 'form-envioassinatura'
+			'enctype' => 'multipart/form-data',
+			'id' => 'form-envioassinatura',
+			'data-turbo' => 'false',
 		]); ?>
-		<input type="hidden" name="idorcamento" value="<?= h((string)$orcamento->id) ?>" />
-		<input type="hidden" name="step6" value="1" />
+		<?= $this->Form->hidden('idorcamento', ['value' => (int)$orcamento->id]) ?>
+		<?= $this->Form->hidden('step6', ['value' => '1']) ?>
 
 		<div class="es-page-head">
 			<div>
@@ -378,13 +380,16 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 					<div class="es-mail-stack">
 						<div class="es-mail-row">
 							<span class="es-mail-lbl">Para:</span>
-							<input
-								type="email"
-								id="em-para"
-								name="emailemail"
-								class="es-mail-inp"
-								value="<?= !empty($orcamento->cliente) && !empty($orcamento->cliente->email) ? h($orcamento->cliente->email) : '' ?>"
-							/>
+							<?= $this->Form->control('emailemail', [
+								'type' => 'email',
+								'id' => 'em-para',
+								'class' => 'es-mail-inp',
+								'label' => false,
+								'required' => true,
+								'value' => !empty($orcamento->cliente) && !empty($orcamento->cliente->email)
+									? (string)$orcamento->cliente->email
+									: '',
+							]) ?>
 						</div>
 						<div class="es-mail-row">
 							<span class="es-mail-lbl">CC:</span>
