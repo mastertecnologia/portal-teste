@@ -7,12 +7,8 @@
 ### Auditoria automática (após colocar o HTML no repo)
 
 ```bash
-python3 bin/generate_pgm_erp_coverage.py
 php bin/audit_pgm_erp_mock.php
-bash bin/homologacao_pgm_erp.sh
 ```
-
-Matriz e integrações: [PGM_ERP_COBERTURA_TELAS.md](PGM_ERP_COBERTURA_TELAS.md) · [PGM_ERP_INTEGRACOES_GRID.md](PGM_ERP_INTEGRACOES_GRID.md) · [PGM_ERP_HOMOLOGACAO_GO_LIVE.md](PGM_ERP_HOMOLOGACAO_GO_LIVE.md) · registry `config/pgm_erp_screens.json`.
 
 ### Switchover por módulo (sem apagar legado)
 
@@ -32,7 +28,7 @@ Helper: `App\Utility\PortalUi::isPremiumModule('clientes')` — use em controlle
 | **Escopo** | Tudo (87 telas — sem PCP) |
 | **Estratégia** | Lado-a-lado: rotas `/portal/{modulo}-prototype/*` convivem com legado |
 | **Stack** | Cake `.ctp` + jQuery (padrão `ServicedeskPrototype` atual) |
-| **PCP/Indústria** | Pular (13 telas adiadas) |
+| **PCP/Indústria** | Implementado (`PcpPrototype` + migrations `pcp_*`) |
 | **Switchover** | Decidido por módulo, após validação |
 
 **Implicações:**
