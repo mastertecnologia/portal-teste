@@ -7,8 +7,12 @@
 ### Auditoria automática (após colocar o HTML no repo)
 
 ```bash
+python3 bin/generate_pgm_erp_coverage.py
 php bin/audit_pgm_erp_mock.php
+bash bin/homologacao_pgm_erp.sh
 ```
+
+Matriz e integrações: [PGM_ERP_COBERTURA_TELAS.md](PGM_ERP_COBERTURA_TELAS.md) · [PGM_ERP_INTEGRACOES_GRID.md](PGM_ERP_INTEGRACOES_GRID.md) · [PGM_ERP_HOMOLOGACAO_GO_LIVE.md](PGM_ERP_HOMOLOGACAO_GO_LIVE.md) · registry `config/pgm_erp_screens.json`.
 
 ### Switchover por módulo (sem apagar legado)
 

@@ -59,8 +59,8 @@ $sections = [
 		'title' => __('Operações'),
 		'items' => [
 			['key' => 'orc-lista', 'label' => __('Orçamentos'), 'url' => ['controller' => 'OrcamentosPrototype', 'action' => 'lista']],
-			['key' => 'vendedores', 'label' => __('Vendedores · Ranking'), 'url' => null, 'indent' => true],
-			['key' => 'relatorios-vendas', 'label' => __('Relatórios vendas'), 'url' => null, 'indent' => true],
+			['key' => 'vendedores', 'label' => __('Vendedores · Ranking'), 'url' => ['controller' => 'Relatorios', 'action' => 'index'], 'indent' => true],
+			['key' => 'relatorios-vendas', 'label' => __('Relatórios vendas'), 'url' => ['controller' => 'Relatorios', 'action' => 'index'], 'indent' => true],
 			['key' => 'os-lista', 'label' => __('Ordens de Serviço'), 'url' => ['controller' => 'OrdensservicoPrototype', 'action' => 'lista']],
 			['key' => 'os-kanban', 'label' => __('OS · Kanban'), 'url' => ['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'kanban'], 'indent' => true],
 			['key' => 'sd', 'label' => __('Service Desk'), 'url' => ['controller' => 'ServicedeskPrototype', 'action' => 'index']],

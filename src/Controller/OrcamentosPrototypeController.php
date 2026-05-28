@@ -205,6 +205,25 @@ class OrcamentosPrototypeController extends AppController {
 		if (in_array($page, ['revisao', 'print', 'esign', 'sucesso'], true)) {
 			return $this->redirect(['action' => 'lista']);
 		}
+		$orcExtras = [
+			'negociacao', 'portal-cliente', 'versoes', 'alcadas', 'config-aprovacao',
+			'regra-editar', 'solicitar',
+		];
+		if (in_array($page, $orcExtras, true)) {
+			if ($orcId > 0) {
+				$legacy = ['controller' => 'Orcamentos', 'action' => 'view', $orcId];
+				if ($page === 'versoes') {
+					$legacy = ['controller' => 'Orcamentos', 'action' => 'novaversao', $orcId];
+				}
+				if ($page === 'solicitar') {
+					return $this->redirect(['controller' => 'Orcamentos', 'action' => 'solicitar']);
+				}
+
+				return $this->redirect($legacy);
+			}
+
+			return $this->redirect(['action' => 'lista']);
+		}
 		$wizard = ['novo' => 1, 'revisao' => 2, 'print' => 3, 'esign' => 4, 'sucesso' => 5];
 		$allowed = array_merge(array_keys($wizard), ['faturamento', 'cobranca']);
 		if (!in_array($page, $allowed, true)) {

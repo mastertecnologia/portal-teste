@@ -775,6 +775,16 @@ Router::scope("/", function ($routes) {
         "action" => "view",
     ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
 
+    // ===== Dashboard ERP unificado (mockup pg-home) =====
+    $routes->connect("/erp-home-prototype", [
+        "controller" => "ErpHomePrototype",
+        "action" => "index",
+    ]);
+    $routes->connect("/erp-home-prototype/", [
+        "controller" => "ErpHomePrototype",
+        "action" => "index",
+    ]);
+
     // ===== Protótipo PCP / Indústria (mockup pg-pcp-dashboard e demais 12 telas) =====
     $routes->connect("/pcp-prototype", [
         "controller" => "PcpPrototype",
@@ -784,6 +794,10 @@ Router::scope("/", function ($routes) {
         "controller" => "PcpPrototype",
         "action" => "lista",
     ]);
+    $routes->connect("/pcp-prototype/op-detalhe/:id", [
+        "controller" => "PcpPrototype",
+        "action" => "opDetalhe",
+    ], ["pass" => ["id"], "id" => "\d+"]);
     $routes->connect("/pcp-prototype/:page", [
         "controller" => "PcpPrototype",
         "action" => "view",

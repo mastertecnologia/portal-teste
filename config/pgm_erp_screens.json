@@ -1,0 +1,1897 @@
+{
+  "version": 1,
+  "reference_html": "docs/reference/pgm_erp_completo.html",
+  "screens": [
+    {
+      "id": "pg-acesso-auditoria",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/acesso-auditoria",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-acesso-central",
+      "module": "sistema",
+      "status": "implemented",
+      "route": "/sistema-prototype/acesso-central",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-acesso-filiais",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/acesso-filiais",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-acesso-papeis",
+      "module": "sistema",
+      "status": "implemented",
+      "route": "/sistema-prototype/acesso-papeis",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-acesso-papel-editar",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/acesso-papel-editar",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-acesso-usuario",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/acesso-usuario",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-apontamento",
+      "module": "pcp",
+      "status": "implemented",
+      "route": "/pcp-prototype/apontamento",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-auditoria",
+      "module": "sistema",
+      "status": "implemented",
+      "route": "/sistema-prototype/auditoria",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-bancos",
+      "module": "bancos",
+      "status": "implemented",
+      "route": "/bancos-prototype/bancos",
+      "tables": [
+        "financeiro_bancos",
+        "financeiro_extrato_bancario",
+        "financeiro_lancamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-bom",
+      "module": "pcp",
+      "status": "implemented",
+      "route": "/pcp-prototype/bom",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-centro-trabalho",
+      "module": "pcp",
+      "status": "implemented",
+      "route": "/pcp-prototype/centro-trabalho",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-cliente-360",
+      "module": "clientes",
+      "status": "implemented",
+      "route": "/clientes-prototype/visao360/:id",
+      "tables": [
+        "clientes",
+        "faturas",
+        "clicontratos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI Grid → clientes"
+    },
+    {
+      "id": "pg-cliente-novo",
+      "module": "clientes",
+      "status": "bridge",
+      "route": "/clientes-prototype/novo",
+      "tables": [
+        "clientes"
+      ],
+      "grid_erp": "send",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-clientes",
+      "module": "clientes",
+      "status": "implemented",
+      "route": "/clientes-prototype/lista",
+      "tables": [
+        "clientes",
+        "faturas",
+        "clicontratos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI Grid → clientes"
+    },
+    {
+      "id": "pg-conciliacao",
+      "module": "bancos",
+      "status": "implemented",
+      "route": "/bancos-prototype/conciliacao",
+      "tables": [
+        "financeiro_bancos",
+        "financeiro_extrato_bancario",
+        "financeiro_lancamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-config",
+      "module": "sistema",
+      "status": "implemented",
+      "route": "/sistema-prototype/config",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-configurador",
+      "module": "pcp",
+      "status": "placeholder",
+      "route": "/pcp-prototype/configurador",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-contas",
+      "module": "bancos",
+      "status": "bridge",
+      "route": "/bancos-prototype/contas",
+      "tables": [
+        "financeiro_bancos",
+        "financeiro_extrato_bancario",
+        "financeiro_lancamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-contas-pagar",
+      "module": "financeiro",
+      "status": "implemented",
+      "route": "/financeiro-prototype/contas-pagar",
+      "tables": [
+        "faturas",
+        "financeiro_lancamentos",
+        "fiscal_notas"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-cotacoes",
+      "module": "pcp",
+      "status": "placeholder",
+      "route": "/pcp-prototype/cotacoes",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-custos-producao",
+      "module": "pcp",
+      "status": "placeholder",
+      "route": "/pcp-prototype/custos-producao",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-dre",
+      "module": "financeiro",
+      "status": "implemented",
+      "route": "/financeiro-prototype/dre",
+      "tables": [
+        "faturas",
+        "financeiro_lancamentos",
+        "fiscal_notas"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-empresa",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/empresa",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-empresa-branding",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/empresa-branding",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-empresa-contatos",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/empresa-contatos",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-empresa-enderecos",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/empresa-enderecos",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-empresa-fiscal",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/empresa-fiscal",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-empresa-nova",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/empresas-prototype/nova",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-empresas",
+      "module": "sistema",
+      "status": "implemented",
+      "route": "/empresas-prototype/lista",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-engenharia",
+      "module": "pcp",
+      "status": "implemented",
+      "route": "/pcp-prototype/engenharia",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-esign",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/esign",
+      "tables": [
+        "orcamentos",
+        "orcamentositens",
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-estoque",
+      "module": "produtos",
+      "status": "implemented",
+      "route": "/produtos-prototype/estoque",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-estoque-log",
+      "module": "produtos",
+      "status": "bridge",
+      "route": "/produtos-prototype/estoque-log",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-expedicao",
+      "module": "pcp",
+      "status": "placeholder",
+      "route": "/pcp-prototype/expedicao",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-export-clientes",
+      "module": "clientes",
+      "status": "bridge",
+      "route": "/clientes-prototype/export",
+      "tables": [
+        "clientes",
+        "faturas",
+        "clicontratos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI Grid → clientes"
+    },
+    {
+      "id": "pg-extrato",
+      "module": "bancos",
+      "status": "implemented",
+      "route": "/bancos-prototype/extrato",
+      "tables": [
+        "financeiro_bancos",
+        "financeiro_extrato_bancario",
+        "financeiro_lancamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-filial-nova",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/filial-nova",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-financeiro",
+      "module": "financeiro",
+      "status": "implemented",
+      "route": "/financeiro-prototype/lista",
+      "tables": [
+        "faturas",
+        "financeiro_lancamentos",
+        "fiscal_notas"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-fluxo-caixa",
+      "module": "bancos",
+      "status": "implemented",
+      "route": "/bancos-prototype/fluxo-caixa",
+      "tables": [
+        "financeiro_bancos",
+        "financeiro_extrato_bancario",
+        "financeiro_lancamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-fornecedor-360",
+      "module": "fornecedores",
+      "status": "bridge",
+      "route": "/fornecedores-prototype/360",
+      "tables": [
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-fornecedor-novo",
+      "module": "fornecedores",
+      "status": "bridge",
+      "route": "/fornecedores-prototype/novo",
+      "tables": [
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-fornecedores",
+      "module": "fornecedores",
+      "status": "implemented",
+      "route": "/fornecedores-prototype/lista",
+      "tables": [
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-grupo-editar",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/grupo-editar",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-grupos",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/grupos",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-historico-precos",
+      "module": "produtos",
+      "status": "bridge",
+      "route": "/produtos-prototype/historico-precos",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-home",
+      "module": "home",
+      "status": "implemented",
+      "route": "/erp-home-prototype",
+      "tables": [
+        "orcamentos",
+        "ordensservico",
+        "tickets",
+        "clientes",
+        "faturas"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-import-clientes",
+      "module": "clientes",
+      "status": "bridge",
+      "route": "/clientes-prototype/import",
+      "tables": [
+        "clientes",
+        "faturas",
+        "clicontratos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI Grid → clientes"
+    },
+    {
+      "id": "pg-import-produtos",
+      "module": "produtos",
+      "status": "bridge",
+      "route": "/produtos-prototype/import",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-inv-historico",
+      "module": "produtos",
+      "status": "bridge",
+      "route": "/produtos-prototype/inv-historico",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-inventario",
+      "module": "produtos",
+      "status": "bridge",
+      "route": "/produtos-prototype/inventario",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-lista",
+      "module": "orcamentos",
+      "status": "implemented",
+      "route": "/orcamentos-prototype/lista",
+      "tables": [
+        "orcamentos",
+        "orcamentositens",
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-log-acessos",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/log-acessos",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-mrp",
+      "module": "pcp",
+      "status": "placeholder",
+      "route": "/pcp-prototype/mrp",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-nfe",
+      "module": "financeiro",
+      "status": "implemented",
+      "route": "/financeiro-prototype/nfe",
+      "tables": [
+        "faturas",
+        "financeiro_lancamentos",
+        "fiscal_notas"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-novo",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/novo",
+      "tables": [
+        "orcamentos",
+        "orcamentositens",
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-op-detalhe",
+      "module": "pcp",
+      "status": "implemented",
+      "route": "/pcp-prototype/op-detalhe",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-op-lista",
+      "module": "pcp",
+      "status": "implemented",
+      "route": "/pcp-prototype/op-lista",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-orc-alcadas",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/alcadas",
+      "tables": [
+        "orcamentos",
+        "orcamentositens"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-orc-cobranca",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/cobranca",
+      "tables": [
+        "orcamentos",
+        "orcamentositens",
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-orc-config-aprovacao",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/config-aprovacao",
+      "tables": [
+        "orcamentos",
+        "orcamentositens"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-orc-faturamento",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/faturamento",
+      "tables": [
+        "orcamentos",
+        "orcamentositens",
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-orc-negociacao",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/negociacao",
+      "tables": [
+        "orcamentos",
+        "orcamentositens"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-orc-portal-cliente",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/portal-cliente",
+      "tables": [
+        "orcamentos",
+        "orcamentositens"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-orc-regra-editar",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/regra-editar",
+      "tables": [
+        "orcamentos",
+        "orcamentositens"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-orc-solicitar",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/solicitar",
+      "tables": [
+        "orcamentos",
+        "orcamentositens"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-orc-versoes",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/versoes",
+      "tables": [
+        "orcamentos",
+        "orcamentositens"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-os-abertura",
+      "module": "ordensservico",
+      "status": "bridge",
+      "route": "/ordens-prototype/abertura",
+      "tables": [
+        "ordensservico",
+        "ordensitens",
+        "clientes",
+        "produtos"
+      ],
+      "grid_erp": "receive",
+      "grid_note": "listAPI/refreshAPI + SOAP preço estoque em itens"
+    },
+    {
+      "id": "pg-os-aprovacao",
+      "module": "ordensservico",
+      "status": "bridge",
+      "route": "/ordens-prototype/aprovacao",
+      "tables": [
+        "ordensservico",
+        "ordensitens",
+        "clientes",
+        "produtos"
+      ],
+      "grid_erp": "receive",
+      "grid_note": "listAPI/refreshAPI + SOAP preço estoque em itens"
+    },
+    {
+      "id": "pg-os-cobranca",
+      "module": "ordensservico",
+      "status": "bridge",
+      "route": "/ordens-prototype/cobranca",
+      "tables": [
+        "ordensservico",
+        "ordensitens",
+        "clientes",
+        "produtos"
+      ],
+      "grid_erp": "receive",
+      "grid_note": "listAPI/refreshAPI + SOAP preço estoque em itens"
+    },
+    {
+      "id": "pg-os-conclusao",
+      "module": "ordensservico",
+      "status": "bridge",
+      "route": "/ordens-prototype/conclusao",
+      "tables": [
+        "ordensservico",
+        "ordensitens",
+        "clientes",
+        "produtos"
+      ],
+      "grid_erp": "receive",
+      "grid_note": "listAPI/refreshAPI + SOAP preço estoque em itens"
+    },
+    {
+      "id": "pg-os-execucao",
+      "module": "ordensservico",
+      "status": "bridge",
+      "route": "/ordens-prototype/execucao",
+      "tables": [
+        "ordensservico",
+        "ordensitens",
+        "clientes",
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "listAPI/refreshAPI + SOAP preço estoque em itens"
+    },
+    {
+      "id": "pg-os-faturamento",
+      "module": "ordensservico",
+      "status": "bridge",
+      "route": "/ordens-prototype/faturamento",
+      "tables": [
+        "ordensservico",
+        "ordensitens",
+        "clientes",
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "listAPI/refreshAPI + SOAP preço estoque em itens"
+    },
+    {
+      "id": "pg-os-kanban",
+      "module": "ordensservico",
+      "status": "bridge",
+      "route": "/ordens-prototype/kanban",
+      "tables": [
+        "ordensservico",
+        "ordensitens",
+        "clientes",
+        "produtos"
+      ],
+      "grid_erp": "receive",
+      "grid_note": "listAPI/refreshAPI + SOAP preço estoque em itens"
+    },
+    {
+      "id": "pg-os-lista",
+      "module": "ordensservico",
+      "status": "implemented",
+      "route": "/ordens-prototype/lista",
+      "tables": [
+        "ordensservico",
+        "ordensitens",
+        "clientes",
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "listAPI/refreshAPI + SOAP preço estoque em itens"
+    },
+    {
+      "id": "pg-os-sucesso",
+      "module": "ordensservico",
+      "status": "bridge",
+      "route": "/ordens-prototype/sucesso",
+      "tables": [
+        "ordensservico",
+        "ordensitens",
+        "clientes",
+        "produtos"
+      ],
+      "grid_erp": "receive",
+      "grid_note": "listAPI/refreshAPI + SOAP preço estoque em itens"
+    },
+    {
+      "id": "pg-pc-lista",
+      "module": "produtos",
+      "status": "bridge",
+      "route": "/produtos-prototype/pc-lista",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-pc-novo",
+      "module": "produtos",
+      "status": "bridge",
+      "route": "/produtos-prototype/pc-novo",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-pcp-cronograma",
+      "module": "pcp",
+      "status": "placeholder",
+      "route": "/pcp-prototype/pcp-cronograma",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-pcp-dashboard",
+      "module": "pcp",
+      "status": "implemented",
+      "route": "/pcp-prototype/dashboard",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-pedido-compra",
+      "module": "pcp",
+      "status": "placeholder",
+      "route": "/pcp-prototype/pedido-compra",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-permissao-nova",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/permissao-nova",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-precificacao",
+      "module": "produtos",
+      "status": "implemented",
+      "route": "/produtos-prototype/precificacao",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-precos",
+      "module": "produtos",
+      "status": "implemented",
+      "route": "/produtos-prototype/precos",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-print",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/print",
+      "tables": [
+        "orcamentos",
+        "orcamentositens",
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-produto-detalhe",
+      "module": "produtos",
+      "status": "bridge",
+      "route": "/produtos-prototype/detalhe",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-produto-novo",
+      "module": "produtos",
+      "status": "bridge",
+      "route": "/produtos-prototype/novo",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-produtos",
+      "module": "produtos",
+      "status": "implemented",
+      "route": "/produtos-prototype/lista",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-qualidade-ind",
+      "module": "pcp",
+      "status": "placeholder",
+      "route": "/pcp-prototype/qualidade-ind",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-recebimento",
+      "module": "pcp",
+      "status": "placeholder",
+      "route": "/pcp-prototype/recebimento",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-relatorios-fin",
+      "module": "financeiro",
+      "status": "bridge",
+      "route": "/financeiro-prototype/relatorios-fin",
+      "tables": [
+        "faturas",
+        "financeiro_lancamentos",
+        "fiscal_notas"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-relatorios-vendas",
+      "module": "comercial",
+      "status": "bridge",
+      "route": "/relatorios",
+      "tables": [
+        "orcamentos",
+        "ordensservico"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-requisicoes",
+      "module": "pcp",
+      "status": "placeholder",
+      "route": "/pcp-prototype/requisicoes",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-revisao",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/revisao",
+      "tables": [
+        "orcamentos",
+        "orcamentositens",
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-roteiro",
+      "module": "pcp",
+      "status": "placeholder",
+      "route": "/pcp-prototype/roteiro",
+      "tables": [
+        "pcp_ordens_producao",
+        "pcp_centros_trabalho",
+        "pcp_engenharia_fichas",
+        "pcp_bom_itens",
+        "pcp_apontamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-aprovacoes",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/aprovacoes",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-automacoes-editor",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/automacoes-editor",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-calendar",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/calendar",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-cmdb",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/cmdb",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-config",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/config",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-contratos",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/contratos",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "soap",
+      "grid_note": "Contratos SLA / faturamento via legado ou ERP"
+    },
+    {
+      "id": "pg-sd-csat",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/csat",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-dashboard",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/dashboard",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-detalhe-fatura",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/detalhe-fatura",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-detalhe-kb",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/detalhe-kb",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-fat",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/fat",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "soap",
+      "grid_note": "Contratos SLA / faturamento via legado ou ERP"
+    },
+    {
+      "id": "pg-sd-fila",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/fila",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-grupo",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/grupo",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-integracoes",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/integracoes",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-kanban",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/kanban",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-kb",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/kb",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-kb-editar",
+      "module": "servicedesk",
+      "status": "bridge",
+      "route": "/servicedesk-prototype/kb-editar",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-kb-historico",
+      "module": "servicedesk",
+      "status": "bridge",
+      "route": "/servicedesk-prototype/kb-historico",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-kb-preview",
+      "module": "servicedesk",
+      "status": "bridge",
+      "route": "/servicedesk-prototype/kb-preview",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-meus",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/meus",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-mudancas",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/mudancas",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-perm",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/perm",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-portal",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/portal",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-portal-novo",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/portal_novo",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-problemas",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/problemas",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-relatorios",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/relatorios",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-templates",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/templates",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sd-ticket",
+      "module": "servicedesk",
+      "status": "implemented",
+      "route": "/servicedesk-prototype/ticket/:id",
+      "tables": [
+        "tickets",
+        "ticket_histories",
+        "ativos",
+        "clicontratos",
+        "faturas",
+        "approval_requests"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sessoes-ativas",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/sessoes-ativas",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-sucesso",
+      "module": "orcamentos",
+      "status": "bridge",
+      "route": "/orcamentos-prototype/sucesso",
+      "tables": [
+        "orcamentos",
+        "orcamentositens",
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-titulos",
+      "module": "financeiro",
+      "status": "implemented",
+      "route": "/financeiro-prototype/titulos",
+      "tables": [
+        "faturas",
+        "financeiro_lancamentos",
+        "fiscal_notas"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-transferencias",
+      "module": "bancos",
+      "status": "implemented",
+      "route": "/bancos-prototype/transferencias",
+      "tables": [
+        "financeiro_bancos",
+        "financeiro_extrato_bancario",
+        "financeiro_lancamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-usuario-editar",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/usuario-editar",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-usuario-novo",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/usuario-novo",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-usuarios",
+      "module": "sistema",
+      "status": "implemented",
+      "route": "/sistema-prototype/usuarios",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-usuarios-cruzados",
+      "module": "sistema",
+      "status": "bridge",
+      "route": "/sistema-prototype/usuarios-cruzados",
+      "tables": [
+        "users",
+        "empresas",
+        "rbac_roles",
+        "rbac_users_roles",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-vendedores",
+      "module": "comercial",
+      "status": "bridge",
+      "route": "/relatorios/vendedores",
+      "tables": [
+        "orcamentos",
+        "users"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    }
+  ],
+  "grid_api_endpoints": [
+    {
+      "path": "/clientes/add-api",
+      "controller": "Clientes",
+      "action": "addAPI",
+      "direction": "ERP→Portal",
+      "tables": "clientes, clicontratos"
+    },
+    {
+      "path": "/clientes/list-api",
+      "controller": "Clientes",
+      "action": "listAPI",
+      "direction": "ERP→Portal",
+      "tables": "clientes"
+    },
+    {
+      "path": "/produtos/add-api",
+      "controller": "Produtos",
+      "action": "addAPI",
+      "direction": "ERP→Portal",
+      "tables": "produtos"
+    },
+    {
+      "path": "/produtos/list-api",
+      "controller": "Produtos",
+      "action": "listAPI",
+      "direction": "ERP→Portal",
+      "tables": "produtos"
+    },
+    {
+      "path": "/ordensservico/list-api",
+      "controller": "Ordensservico",
+      "action": "listAPI",
+      "direction": "Portal→ERP",
+      "tables": "ordensservico"
+    },
+    {
+      "path": "/ordensservico/refresh-api",
+      "controller": "Ordensservico",
+      "action": "refreshAPI",
+      "direction": "ERP→Portal",
+      "tables": "ordensservico"
+    }
+  ],
+  "grid_soap_notes": [
+    "URL base: `empresas.urlerp` (não em config estático).",
+    "Produtos/OS: SOAP estoque/preço (`ErpGridUrl::wsdl`, GetEstoqueProdutos).",
+    "Contratos: WSDL contratos em `ClicontratosController`.",
+    "NF-e: `FiscalNotasController::sincronizarErp` — envio para WebGrid sem alterar contrato público."
+  ]
+}

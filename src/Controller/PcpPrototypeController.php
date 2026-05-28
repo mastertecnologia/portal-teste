@@ -48,29 +48,13 @@ class PcpPrototypeController extends AppController {
 	}
 
 	/**
-	 * Dashboard PCP demo com gráficos Chart.js (dados sintéticos).
+	 * Dashboard PCP — KPIs reais das tabelas pcp_* (sem dados inventados).
 	 */
 	public function dashboard() {
-		// Dados demo: OEE últimos 14 dias, OPs por status, produção × meta
-		$dias = [];
-		$oee = [];
-		$disponibilidade = [];
-		$performance = [];
-		$qualidade = [];
-		for ($i = 13; $i >= 0; $i--) {
-			$d = \Cake\I18n\Time::now()->subDays($i);
-			$dias[] = $d->format('d/m');
-			// Simulação determinística baseada em dia da semana
-			$dow = (int)$d->format('w');
-			$base = $dow === 0 || $dow === 6 ? 65 : 82;
-			$disp = $base + (($i * 3) % 12);
-			$perf = $base + (($i * 7) % 14);
-			$qual = 88 + (($i * 5) % 10);
-			$disponibilidade[] = min(100, $disp);
-			$performance[] = min(100, $perf);
-			$qualidade[] = min(100, $qual);
-			$oee[] = round(($disp / 100) * ($perf / 100) * ($qual / 100) * 100, 1);
-		}
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new PcpPrototypeDataService($empresa);
+		$kpi = $svc->dashboardKpis();
+		$migrationHint = !$svc->tablesAvailable();
 
 		$this->set([
 			'title' => __('PCP · Dashboard'),
@@ -81,18 +65,47 @@ class PcpPrototypeController extends AppController {
 				['label' => __('Dashboard'), 'cur' => true],
 			],
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
-			'useChartJs' => true,
-			'pcpChart' => [
-				'labels' => $dias,
-				'oee' => $oee,
-				'disp' => $disponibilidade,
-				'perf' => $performance,
-				'qual' => $qualidade,
-				'opsKpi' => ['abertas' => 18, 'em_execucao' => 7, 'aguardando_mat' => 3, 'concluidas' => 142],
-			],
+			'pcpKpi' => $kpi,
+			'pcpMigrationHint' => $migrationHint,
+			'pcpOrdensRecentes' => array_slice($svc->listOrdens(8), 0, 8),
 		]);
 
 		return $this->render('dashboard');
+	}
+
+	/**
+	 * GET /pcp-prototype/op-detalhe/:id
+	 *
+	 * @param string|int|null $id
+	 */
+	public function opDetalhe($id = null) {
+		$opId = (int)$id;
+		if ($opId <= 0) {
+			$opId = (int)$this->request->getQuery('id', 0);
+		}
+		if ($opId <= 0) {
+			throw new NotFoundException(__('Ordem de produção inválida.'));
+		}
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new PcpPrototypeDataService($empresa);
+		$ordem = $svc->getOrdem($opId);
+		if ($ordem === null) {
+			throw new NotFoundException(__('OP não encontrada.'));
+		}
+		$this->set([
+			'title' => __('OP {0}', $ordem['numero']),
+			'erpNavActive' => 'op-lista',
+			'erpBreadcrumb' => [
+				['label' => 'PGM ERP'],
+				['label' => __('Indústria'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'lista']],
+				['label' => __('Ordens de Produção'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'view', 'op-lista']],
+				['label' => $ordem['numero'], 'cur' => true],
+			],
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+			'pcpOrdem' => $ordem,
+		]);
+
+		return $this->render('op_detalhe');
 	}
 
 	/**
