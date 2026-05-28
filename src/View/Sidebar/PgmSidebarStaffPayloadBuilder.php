@@ -44,149 +44,146 @@ final class PgmSidebarStaffPayloadBuilder
             ];
         }
 
-        if ($roleNav === 0 && PortalUi::showPremiumNav()) {
-            $premiumItems = [];
-            $premiumItems[] = self::item(
-                'sparkles',
-                ' Painel ERP (referência)',
-                ['controller' => 'ErpHomePrototype', 'action' => 'index'],
-                ['data-turbo' => 'false'],
-                (bool)($ctx['erpHomeActive'] ?? false),
-                '',
-                'Painel ERP'
+        $useUnifiedNav = $roleNav === 0 && (
+            PortalUi::hasAnyPremiumModule()
+            || PortalUi::mode() === 'premium'
+            || PortalUi::showPremiumNav()
+        );
+
+        if ($useUnifiedNav) {
+            $userId = (int)($v['iduser'] ?? $v['id'] ?? 0);
+            $mkItem = static function (
+                string $icon,
+                string $label,
+                $url,
+                array $linkOpts,
+                bool $active,
+                string $badgeHtml,
+                string $dataLabel
+            ) {
+                return self::item($icon, $label, $url, $linkOpts, $active, $badgeHtml, $dataLabel);
+            };
+            $mkGroup = static function (
+                string $labelPlain,
+                string $groupId,
+                array $children,
+                bool $defaultOpen
+            ) {
+                return self::navGroup($labelPlain, $groupId, $children, $defaultOpen);
+            };
+            $sections = PgmSidebarStaffNavRegistry::buildMergedSections(
+                $ctx,
+                $sg,
+                $roleNav,
+                $admin,
+                $userId,
+                $ctrl,
+                $mkItem,
+                $mkGroup
             );
-            $fornRoute = PortalUi::listRoute('fornecedores');
-            if ($fornRoute !== null) {
-                $premiumItems[] = self::item(
-                    'building-2',
-                    ' Fornecedores',
-                    $fornRoute,
-                    ['data-turbo' => 'false'],
-                    $ctrl === 'FornecedoresPrototype',
-                    '',
-                    'Fornecedores'
-                );
+        } else {
+            $sgCadGrp = ($sg['clientes'] ?? true) || ($sg['produtos'] ?? true) || ($sg['ativos'] ?? true);
+            if ($sgCadGrp) {
+                $items = [];
+                if (($sg['clientes'] ?? true)) {
+                    $clientesList = PortalUi::listRoute('clientes') ?? ['controller' => 'Clientes', 'action' => 'index'];
+                    $items[] = self::item('users', ' Clientes', $clientesList, ['data-turbo' => 'false'], $ctx['clientesListNavActive'], '', 'Clientes');
+                }
+                if (($sg['clientes'] ?? true)) {
+                    $items[] = self::item('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], [], $ctx['clientesAddActive'], '', 'Cadastrar clientes');
+                }
+                if (($sg['produtos'] ?? true)) {
+                    $produtosList = PortalUi::listRoute('produtos') ?? ['controller' => 'Produtos', 'action' => 'index'];
+                    $items[] = self::item('package', ' Produtos', $produtosList, [], (bool)($ctx['produtosListNavActive'] ?? false), '', 'Produtos');
+                }
+                if (($sg['ativos'] ?? true)) {
+                    $items[] = self::item('cpu', ' Ativos', ['controller' => 'Ativos', 'action' => 'index'], ['data-turbo' => 'false'], (bool)($ctx['ativosActive'] ?? false), '', 'Ativos de TI');
+                }
+                $sections[] = [
+                    'id' => 'cadastros',
+                    'title' => 'Cadastros',
+                    'defaultOpen' => (bool)$ctx['pgmSbOpenCadastros'],
+                    'items' => array_values(array_filter($items)),
+                ];
             }
-            if (PortalUi::isPremiumModule('pcp') || PortalUi::mode() === 'premium') {
-                $premiumItems[] = self::item(
-                    'factory',
-                    ' PCP / Indústria',
-                    ['controller' => 'PcpPrototype', 'action' => 'lista'],
-                    ['data-turbo' => 'false'],
-                    $ctrl === 'PcpPrototype',
-                    '',
-                    'PCP'
-                );
-            }
-            $sections[] = [
-                'id' => 'erp-premium',
-                'title' => 'Interface ERP',
-                'defaultOpen' => (bool)($ctx['erpPremiumNavOpen'] ?? false),
-                'items' => array_values(array_filter($premiumItems)),
-            ];
-        }
 
-        $sgCadGrp = ($sg['clientes'] ?? true) || ($sg['produtos'] ?? true) || ($sg['ativos'] ?? true);
-        if ($sgCadGrp) {
-            $items = [];
-            if (($sg['clientes'] ?? true)) {
-                $clientesList = PortalUi::listRoute('clientes') ?? ['controller' => 'Clientes', 'action' => 'index'];
-                $items[] = self::item('users', ' Clientes', $clientesList, ['data-turbo' => 'false'], $ctx['clientesListNavActive'], '', 'Clientes');
+            $sgIncGrp = ($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true);
+            if ($sgIncGrp) {
+                $items = [];
+                if (($sg['tickets_servicedesk'] ?? true)) {
+                    $items[] = self::item(
+                        'headphones',
+                        ' Service Desk',
+                        PortalUi::servicedeskHomeRoute(),
+                        ['data-turbo' => 'false'],
+                        (bool)($ctx['ticketsServicedeskHomeActive'] ?? false),
+                        '',
+                        'Service Desk'
+                    );
+                }
+                if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) {
+                    $items[] = self::item('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], (bool)($ctx['ticketsOperacionalActive'] ?? false), '', 'Dashboard operacional');
+                    $items[] = self::item('bar-chart-3', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ctx['ticketsSlaRelatorioActive'] ?? false), '', 'Relatório SLA');
+                }
+                $configChildren = [];
+                if ($roleNav === 0 && (($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true))) {
+                    $configChildren[] = self::item(
+                        'git-branch',
+                        ' Workflow & SLA',
+                        '/servicedesk/workflow-sla-admin',
+                        ['data-turbo' => 'false'],
+                        (bool)($ctx['ticketsWorkflowSlaActive'] ?? false),
+                        '',
+                        'Workflow e SLA'
+                    );
+                }
+                if ($roleNav === 0 && ($sg['tickets_historico'] ?? true)) {
+                    $configChildren[] = self::item('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ctx['ticketsHistoricoActive'], '', 'Histórico');
+                }
+                if ($roleNav === 0 && $configChildren !== []) {
+                    $items[] = self::navGroup(
+                        'Configurações',
+                        'gestao-incidentes-config',
+                        $configChildren,
+                        (bool)($ctx['ticketsIncidentesConfigOpen'] ?? false)
+                    );
+                }
+                if ($roleNav !== 0 && ($sg['tickets_historico'] ?? true)) {
+                    $items[] = self::item('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ctx['ticketsHistoricoActive'], '', 'Histórico');
+                }
+                $sections[] = [
+                    'id' => 'gestao-incidentes',
+                    'title' => 'Gestão de Incidentes',
+                    'defaultOpen' => (bool)$ctx['pgmSbOpenIncidentes'],
+                    'items' => array_values(array_filter($items)),
+                ];
             }
-            if (($sg['clientes'] ?? true)) {
-                $items[] = self::item('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], [], $ctx['clientesAddActive'], '', 'Cadastrar clientes');
-            }
-            if (($sg['produtos'] ?? true)) {
-                $produtosList = PortalUi::listRoute('produtos') ?? ['controller' => 'Produtos', 'action' => 'index'];
-                $items[] = self::item('package', ' Produtos', $produtosList, [], (bool)($ctx['produtosListNavActive'] ?? false), '', 'Produtos');
-            }
-            if (($sg['ativos'] ?? true)) {
-                $items[] = self::item('cpu', ' Ativos', ['controller' => 'Ativos', 'action' => 'index'], ['data-turbo' => 'false'], (bool)($ctx['ativosActive'] ?? false), '', 'Ativos de TI');
-            }
-            $sections[] = [
-                'id' => 'cadastros',
-                'title' => 'Cadastros',
-                'defaultOpen' => (bool)$ctx['pgmSbOpenCadastros'],
-                'items' => array_values(array_filter($items)),
-            ];
-        }
 
-        $sgIncGrp = ($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true);
-        if ($sgIncGrp) {
-            $items = [];
-            if (($sg['tickets_servicedesk'] ?? true)) {
-                $items[] = self::item(
-                    'headphones',
-                    ' Service Desk',
-                    PortalUi::servicedeskHomeRoute(),
-                    ['data-turbo' => 'false'],
-                    (bool)($ctx['ticketsServicedeskHomeActive'] ?? false),
-                    '',
-                    'Service Desk'
-                );
+            $sgOsGrp = ($sg['ordensservico_list'] ?? true) || ($roleNav === 0 && ($sg['ordensservico_nova'] ?? true))
+                || ($admin && ($sg['queues'] ?? true));
+            if ($sgOsGrp) {
+                $items = [];
+                if ($roleNav === 0 && ($sg['ordensservico_nova'] ?? true)) {
+                    $items[] = self::item('file-plus', ' Nova ordem', ['controller' => 'Ordensservico', 'action' => 'add'], ['target' => '_blank', 'rel' => 'noopener noreferrer'], $ctx['osAddActive'], '', 'Nova ordem');
+                }
+                if (($sg['ordensservico_list'] ?? true)) {
+                    $badgeOs = $ctx['osIndexActive'] ? '<span class="pgm-os-badge badge badge-warning hide-menu" id="badge-exec-os">—</span>' : '';
+                    $osListRoute = PortalUi::listRoute('ordens') ?? ['controller' => 'Ordensservico', 'action' => 'index'];
+                    $items[] = self::item('clipboard-list', ' Ordens de Serviço', $osListRoute, ['data-turbo' => 'false'], $ctx['osIndexActive'], $badgeOs, 'Ordens de Serviço');
+                }
+                if ($admin && ($sg['queues'] ?? true)) {
+                    $items[] = self::item('layers', ' Filas / técnicos', ['controller' => 'Queues', 'action' => 'adminIndex'], [], (bool)($v['queuesAtendimentoActive'] ?? ''), '<span class="badge badge-warning hide-menu">7</span>', 'Filas / técnicos');
+                }
+                if (($sg['ordensservico_list'] ?? true)) {
+                    $items[] = self::item('bar-chart-2', ' Relatórios', ['controller' => 'Ordensservico', 'action' => 'relatorios'], [], $ctx['relatoriosOsActive'], '', 'Relatórios');
+                }
+                $sections[] = [
+                    'id' => 'ordens-servico',
+                    'title' => 'Ordens de Serviço',
+                    'defaultOpen' => (bool)$ctx['pgmSbOpenOrdens'],
+                    'items' => array_values(array_filter($items)),
+                ];
             }
-            if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) {
-                $items[] = self::item('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], (bool)($ctx['ticketsOperacionalActive'] ?? false), '', 'Dashboard operacional');
-                $items[] = self::item('bar-chart-3', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ctx['ticketsSlaRelatorioActive'] ?? false), '', 'Relatório SLA');
-            }
-            $configChildren = [];
-            if ($roleNav === 0 && (($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true))) {
-                $configChildren[] = self::item(
-                    'git-branch',
-                    ' Workflow & SLA',
-                    '/servicedesk/workflow-sla-admin',
-                    ['data-turbo' => 'false'],
-                    (bool)($ctx['ticketsWorkflowSlaActive'] ?? false),
-                    '',
-                    'Workflow e SLA'
-                );
-            }
-            if ($roleNav === 0 && ($sg['tickets_historico'] ?? true)) {
-                $configChildren[] = self::item('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ctx['ticketsHistoricoActive'], '', 'Histórico');
-            }
-            if ($roleNav === 0 && $configChildren !== []) {
-                $items[] = self::navGroup(
-                    'Configurações',
-                    'gestao-incidentes-config',
-                    $configChildren,
-                    (bool)($ctx['ticketsIncidentesConfigOpen'] ?? false)
-                );
-            }
-            if ($roleNav !== 0 && ($sg['tickets_historico'] ?? true)) {
-                $items[] = self::item('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ctx['ticketsHistoricoActive'], '', 'Histórico');
-            }
-            $sections[] = [
-                'id' => 'gestao-incidentes',
-                'title' => 'Gestão de Incidentes',
-                'defaultOpen' => (bool)$ctx['pgmSbOpenIncidentes'],
-                'items' => array_values(array_filter($items)),
-            ];
-        }
-
-        $sgOsGrp = ($sg['ordensservico_list'] ?? true) || ($roleNav === 0 && ($sg['ordensservico_nova'] ?? true))
-            || ($admin && ($sg['queues'] ?? true));
-        if ($sgOsGrp) {
-            $items = [];
-            if ($roleNav === 0 && ($sg['ordensservico_nova'] ?? true)) {
-                $items[] = self::item('file-plus', ' Nova ordem', ['controller' => 'Ordensservico', 'action' => 'add'], ['target' => '_blank', 'rel' => 'noopener noreferrer'], $ctx['osAddActive'], '', 'Nova ordem');
-            }
-            if (($sg['ordensservico_list'] ?? true)) {
-                $badgeOs = $ctx['osIndexActive'] ? '<span class="pgm-os-badge badge badge-warning hide-menu" id="badge-exec-os">—</span>' : '';
-                $osListRoute = PortalUi::listRoute('ordens') ?? ['controller' => 'Ordensservico', 'action' => 'index'];
-                $items[] = self::item('clipboard-list', ' Ordens de Serviço', $osListRoute, ['data-turbo' => 'false'], $ctx['osIndexActive'], $badgeOs, 'Ordens de Serviço');
-            }
-            if ($admin && ($sg['queues'] ?? true)) {
-                $items[] = self::item('layers', ' Filas / técnicos', ['controller' => 'Queues', 'action' => 'adminIndex'], [], (bool)($v['queuesAtendimentoActive'] ?? ''), '<span class="badge badge-warning hide-menu">7</span>', 'Filas / técnicos');
-            }
-            if (($sg['ordensservico_list'] ?? true)) {
-                $items[] = self::item('bar-chart-2', ' Relatórios', ['controller' => 'Ordensservico', 'action' => 'relatorios'], [], $ctx['relatoriosOsActive'], '', 'Relatórios');
-            }
-            $sections[] = [
-                'id' => 'ordens-servico',
-                'title' => 'Ordens de Serviço',
-                'defaultOpen' => (bool)$ctx['pgmSbOpenOrdens'],
-                'items' => array_values(array_filter($items)),
-            ];
         }
 
         // Laudos / Parecer Técnico
@@ -237,7 +234,7 @@ final class PgmSidebarStaffPayloadBuilder
             ];
         }
 
-        if (($sg['orcamentos'] ?? true)) {
+        if (!$useUnifiedNav && ($sg['orcamentos'] ?? true)) {
             $sections[] = [
                 'id' => 'comercial',
                 'title' => 'Comercial',
@@ -256,72 +253,74 @@ final class PgmSidebarStaffPayloadBuilder
             ];
         }
 
-        $sgFatGrp = (($sg['prefaturamento_fila'] ?? true) || ($sg['prefaturamento_conferencia'] ?? true)) || ($sg['faturamento'] ?? true);
-        if ($sgFatGrp) {
-            $items = [];
-            $sgPrefSec = ($sg['prefaturamento_fila'] ?? true) || ($sg['prefaturamento_conferencia'] ?? true);
-            if ($sgPrefSec) {
-                $items[] = self::item('clipboard-check', ' Pré-faturamento', ['controller' => 'Prefaturamento', 'action' => 'index'], [], (bool)($v['prefaturamentoActive'] ?? ''), '', 'Pré-faturamento');
+        if (!$useUnifiedNav) {
+            $sgFatGrp = (($sg['prefaturamento_fila'] ?? true) || ($sg['prefaturamento_conferencia'] ?? true)) || ($sg['faturamento'] ?? true);
+            if ($sgFatGrp) {
+                $items = [];
+                $sgPrefSec = ($sg['prefaturamento_fila'] ?? true) || ($sg['prefaturamento_conferencia'] ?? true);
+                if ($sgPrefSec) {
+                    $items[] = self::item('clipboard-check', ' Pré-faturamento', ['controller' => 'Prefaturamento', 'action' => 'index'], [], (bool)($v['prefaturamentoActive'] ?? ''), '', 'Pré-faturamento');
+                }
+                if (($sg['faturamento'] ?? true)) {
+                    $items[] = self::item('file-check', ' Faturamento', ['controller' => 'Faturamento', 'action' => 'index'], [], (bool)($v['faturamentoActive'] ?? ''), '', 'Faturamento');
+                }
+                $sections[] = [
+                    'id' => 'faturamento',
+                    'title' => 'Faturamento',
+                    'defaultOpen' => (bool)$ctx['pgmSbOpenFaturamento'],
+                    'items' => array_values(array_filter($items)),
+                ];
             }
-            if (($sg['faturamento'] ?? true)) {
-                $items[] = self::item('file-check', ' Faturamento', ['controller' => 'Faturamento', 'action' => 'index'], [], (bool)($v['faturamentoActive'] ?? ''), '', 'Faturamento');
+
+            if (($sg['financeiro'] ?? true)) {
+                $sections[] = [
+                    'id' => 'financeiro',
+                    'title' => 'Financeiro',
+                    'defaultOpen' => (bool)$ctx['pgmSbOpenFinanceiro'],
+                    'items' => [
+                        self::item(
+                            'pie-chart',
+                            ' Painel',
+                            PortalUi::listRoute('financeiro') ?? ['controller' => 'Financeiro', 'action' => 'index'],
+                            ['data-turbo' => 'false'],
+                            $ctx['finDashAct'],
+                            '',
+                            'Painel financeiro'
+                        ),
+                        self::item('arrow-down-circle', ' Contas a receber', ['controller' => 'Financeiro', 'action' => 'contasReceber'], ['data-turbo' => 'false'], $ctx['finRecAct'], '', 'Contas a receber'),
+                        self::item('arrow-up-circle', ' Contas a pagar', ['controller' => 'Financeiro', 'action' => 'contasPagar'], ['data-turbo' => 'false'], $ctx['finPagAct'], '', 'Contas a pagar'),
+                        self::item('activity', ' Fluxo de caixa', ['controller' => 'Financeiro', 'action' => 'fluxoCaixa'], ['data-turbo' => 'false'], $ctx['finFluxoAct'], '', 'Fluxo de caixa'),
+                        self::item('repeat', ' Recorrentes', ['controller' => 'Financeiro', 'action' => 'recorrentes'], ['data-turbo' => 'false'], $ctx['finRecorAct'], '', 'Recorrentes'),
+                        self::item('shuffle', ' Conciliação', ['controller' => 'Financeiro', 'action' => 'conciliacao'], ['data-turbo' => 'false'], $ctx['finConcAct'], '', 'Conciliação bancária'),
+                        self::item('line-chart', ' DRE', ['controller' => 'Financeiro', 'action' => 'dre'], ['data-turbo' => 'false'], $ctx['finDreAct'], '', 'DRE'),
+                        self::item('bar-chart-2', ' Relatórios financeiros', ['controller' => 'FinanceiroRelatorios', 'action' => 'index'], ['data-turbo' => 'false'], $ctx['finRelAct'], '', 'Relatórios financeiros'),
+                        self::item('book-open', ' Plano de contas', ['controller' => 'FinanceiroConfig', 'action' => 'planoContas'], ['data-turbo' => 'false'], $ctx['finPlanoAct'], '', 'Plano de contas'),
+                        self::item('folder-tree', ' Centros de custo', ['controller' => 'FinanceiroConfig', 'action' => 'centrosCusto'], ['data-turbo' => 'false'], $ctx['finCcAct'], '', 'Centros de custo'),
+                    ],
+                ];
             }
-            $sections[] = [
-                'id' => 'faturamento',
-                'title' => 'Faturamento',
-                'defaultOpen' => (bool)$ctx['pgmSbOpenFaturamento'],
-                'items' => array_values(array_filter($items)),
-            ];
-        }
 
-        if (($sg['financeiro'] ?? true)) {
-            $sections[] = [
-                'id' => 'financeiro',
-                'title' => 'Financeiro',
-                'defaultOpen' => (bool)$ctx['pgmSbOpenFinanceiro'],
-                'items' => [
-                    self::item(
-                        'pie-chart',
-                        ' Painel',
-                        PortalUi::listRoute('financeiro') ?? ['controller' => 'Financeiro', 'action' => 'index'],
-                        ['data-turbo' => 'false'],
-                        $ctx['finDashAct'],
-                        '',
-                        'Painel financeiro'
-                    ),
-                    self::item('arrow-down-circle', ' Contas a receber', ['controller' => 'Financeiro', 'action' => 'contasReceber'], ['data-turbo' => 'false'], $ctx['finRecAct'], '', 'Contas a receber'),
-                    self::item('arrow-up-circle', ' Contas a pagar', ['controller' => 'Financeiro', 'action' => 'contasPagar'], ['data-turbo' => 'false'], $ctx['finPagAct'], '', 'Contas a pagar'),
-                    self::item('activity', ' Fluxo de caixa', ['controller' => 'Financeiro', 'action' => 'fluxoCaixa'], ['data-turbo' => 'false'], $ctx['finFluxoAct'], '', 'Fluxo de caixa'),
-                    self::item('repeat', ' Recorrentes', ['controller' => 'Financeiro', 'action' => 'recorrentes'], ['data-turbo' => 'false'], $ctx['finRecorAct'], '', 'Recorrentes'),
-                    self::item('shuffle', ' Conciliação', ['controller' => 'Financeiro', 'action' => 'conciliacao'], ['data-turbo' => 'false'], $ctx['finConcAct'], '', 'Conciliação bancária'),
-                    self::item('line-chart', ' DRE', ['controller' => 'Financeiro', 'action' => 'dre'], ['data-turbo' => 'false'], $ctx['finDreAct'], '', 'DRE'),
-                    self::item('bar-chart-2', ' Relatórios financeiros', ['controller' => 'FinanceiroRelatorios', 'action' => 'index'], ['data-turbo' => 'false'], $ctx['finRelAct'], '', 'Relatórios financeiros'),
-                    self::item('book-open', ' Plano de contas', ['controller' => 'FinanceiroConfig', 'action' => 'planoContas'], ['data-turbo' => 'false'], $ctx['finPlanoAct'], '', 'Plano de contas'),
-                    self::item('folder-tree', ' Centros de custo', ['controller' => 'FinanceiroConfig', 'action' => 'centrosCusto'], ['data-turbo' => 'false'], $ctx['finCcAct'], '', 'Centros de custo'),
-                ],
-            ];
-        }
-
-        if (($sg['financeiro'] ?? true)) {
-            $sections[] = [
-                'id' => 'bancos',
-                'title' => 'Bancos',
-                'defaultOpen' => (bool)$ctx['pgmSbOpenBancos'],
-                'items' => [
-                    self::item(
-                        'landmark',
-                        ' Cadastro',
-                        PortalUi::listRoute('bancos') ?? ['controller' => 'FinanceiroBancos', 'action' => 'index'],
-                        ['data-turbo' => 'false'],
-                        $ctx['finBancosAct'],
-                        '',
-                        'Cadastro de bancos'
-                    ),
-                    self::item('send', ' Remessa', ['controller' => 'FinanceiroBancos', 'action' => 'remessa'], ['data-turbo' => 'false'], $ctx['finRemessaAct'], '', 'Remessa'),
-                    self::item('inbox', ' Retorno', ['controller' => 'FinanceiroBancos', 'action' => 'retorno'], ['data-turbo' => 'false'], $ctx['finRetornoAct'], '', 'Retorno'),
-                    self::item('table-2', ' Relatórios bancos', ['controller' => 'FinanceiroBancos', 'action' => 'relatorios'], ['data-turbo' => 'false'], $ctx['finRelBancosAct'], '', 'Relatórios bancos'),
-                ],
-            ];
+            if (($sg['financeiro'] ?? true)) {
+                $sections[] = [
+                    'id' => 'bancos',
+                    'title' => 'Bancos',
+                    'defaultOpen' => (bool)$ctx['pgmSbOpenBancos'],
+                    'items' => [
+                        self::item(
+                            'landmark',
+                            ' Cadastro',
+                            PortalUi::listRoute('bancos') ?? ['controller' => 'FinanceiroBancos', 'action' => 'index'],
+                            ['data-turbo' => 'false'],
+                            $ctx['finBancosAct'],
+                            '',
+                            'Cadastro de bancos'
+                        ),
+                        self::item('send', ' Remessa', ['controller' => 'FinanceiroBancos', 'action' => 'remessa'], ['data-turbo' => 'false'], $ctx['finRemessaAct'], '', 'Remessa'),
+                        self::item('inbox', ' Retorno', ['controller' => 'FinanceiroBancos', 'action' => 'retorno'], ['data-turbo' => 'false'], $ctx['finRetornoAct'], '', 'Retorno'),
+                        self::item('table-2', ' Relatórios bancos', ['controller' => 'FinanceiroBancos', 'action' => 'relatorios'], ['data-turbo' => 'false'], $ctx['finRelBancosAct'], '', 'Relatórios bancos'),
+                    ],
+                ];
+            }
         }
 
         $sgFiscalSec = ($sg['fiscal_modulo'] ?? true);

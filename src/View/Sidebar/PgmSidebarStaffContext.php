@@ -20,6 +20,8 @@ final class PgmSidebarStaffContext
     {
         $ctrl = (string)$request->getParam('controller');
         $act = (string)$request->getParam('action');
+        $pass = $request->getParam('pass');
+        $erpViewPage = is_array($pass) && isset($pass[0]) ? (string)$pass[0] : '';
 
         $roleNav = (int)($v['role'] ?? 1);
         $sg = isset($v['sidebarMenuGates']) && is_array($v['sidebarMenuGates']) ? $v['sidebarMenuGates'] : [];
@@ -29,6 +31,8 @@ final class PgmSidebarStaffContext
         $clientesAddActive = ($ctrl === 'Clientes' && $act === 'add');
         $clientesListNavActive = PortalUi::isClientesListNavActive($ctrl, $act);
         $produtosListNavActive = PortalUi::isProdutosNavActive($ctrl, $act);
+        $produtosEstoqueNavActive = $ctrl === 'ProdutosPrototype' && $act === 'estoque';
+        $fornecedoresNavActive = $ctrl === 'FornecedoresPrototype';
         $orcamentosListNavActive = PortalUi::isOrcamentosNavActive($ctrl, $act);
         $ativosActive = ($ctrl === 'Ativos');
         $ticketsOperacionalActive = ($ctrl === 'Servicedesk' && $act === 'operacional');
@@ -49,8 +53,10 @@ final class PgmSidebarStaffContext
         $relatoriosIndicadoresAdvActive = ($ctrl === 'AdvancedReports');
 
         $finDashAct = PortalUi::isFinanceiroNavActive($ctrl, $act);
-        $finRecAct = ($ctrl === 'Financeiro' && in_array($act, ['contasReceber', 'addReceita', 'editReceita'], true));
-        $finPagAct = ($ctrl === 'Financeiro' && in_array($act, ['contasPagar', 'addDespesa', 'editDespesa'], true));
+        $finRecAct = ($ctrl === 'Financeiro' && in_array($act, ['contasReceber', 'addReceita', 'editReceita'], true))
+            || ($ctrl === 'FinanceiroPrototype' && $act === 'titulos');
+        $finPagAct = ($ctrl === 'Financeiro' && in_array($act, ['contasPagar', 'addDespesa', 'editDespesa'], true))
+            || ($ctrl === 'FinanceiroPrototype' && $act === 'contasPagar');
         $finFluxoAct = ($ctrl === 'Financeiro' && $act === 'fluxoCaixa');
         $finRecorAct = ($ctrl === 'Financeiro' && in_array($act, ['recorrentes', 'addRecorrente', 'editRecorrente'], true));
         $finConcAct = ($ctrl === 'Financeiro' && $act === 'conciliacao');
@@ -97,15 +103,21 @@ final class PgmSidebarStaffContext
         $pgmSbOpenIndicadores = $relatoriosPainelActive || $relatoriosIndicadoresAdvActive;
         $pgmSbOpenPlanner = (bool)$visitasActive;
         $pgmSbOpenCofre = (bool)$senhasActive;
+        $erpHomeActive = PortalUi::isErpHomeNavActive($ctrl, $act);
         $pgmSbOpenCadastros = (bool)$clientesActive || $clientesAddActive || (bool)$produtosActive
-            || $produtosListNavActive || $ativosActive;
+            || $produtosListNavActive || $produtosEstoqueNavActive || $ativosActive || $fornecedoresNavActive;
+        $pgmSbOpenPrincipal = $pgmSbOpenCadastros || $erpHomeActive;
         $ticketsIncidentesConfigOpen = $ticketsWorkflowSlaActive || ($roleNav === 0 && $ticketsHistoricoActive);
         $pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsSdPrototypeActive || $ticketsHistoricoActive || $ticketsOperacionalActive || $ticketsWorkflowSlaActive || $ticketsSlaRelatorioActive;
+        $pgmSbOpenOperacoes = (bool)$orcamentosListNavActive || $pgmSbOpenOrdens || $pgmSbOpenIncidentes
+            || (bool)$orcamentosActive;
+        $pgmSbOpenSdModulos = $ctrl === 'ServicedeskPrototype';
+        $pgmSbOpenPcp = $ctrl === 'PcpPrototype';
+        $pgmSbOpenSistema = in_array($ctrl, ['SistemaPrototype', 'EmpresasPrototype', 'PrototypeHistory'], true);
         $pgmSbOpenComercial = (bool)$orcamentosActive || $orcamentosListNavActive;
         $pgmSbOpenFaturamento = (bool)$prefaturamentoActive || (bool)$faturamentoActive;
         $pgmSbOpenFinanceiro = $finDashAct || $finRecAct || $finPagAct || $finFluxoAct || $finRecorAct || $finConcAct || $finDreAct || $finRelAct || $finPlanoAct || $finCcAct;
         $pgmSbOpenBancos = $finBancosAct || $finRemessaAct || $finRetornoAct || $finRelBancosAct;
-        $erpHomeActive = PortalUi::isErpHomeNavActive($ctrl, $act);
         $erpPremiumNavOpen = PortalUi::showPremiumNav() && (
             $erpHomeActive
             || in_array($ctrl, [
@@ -153,6 +165,10 @@ final class PgmSidebarStaffContext
             'clientesAddActive' => $clientesAddActive,
             'clientesListNavActive' => $clientesListNavActive,
             'produtosListNavActive' => $produtosListNavActive,
+            'produtosEstoqueNavActive' => $produtosEstoqueNavActive,
+            'fornecedoresNavActive' => $fornecedoresNavActive,
+            'erpNavActive' => (string)($v['erpNavActive'] ?? ''),
+            'erpViewPage' => $erpViewPage,
             'orcamentosListNavActive' => $orcamentosListNavActive,
             'ativosActive' => $ativosActive,
             'ticketsServicedeskActive' => $ticketsServicedeskActive,
@@ -204,6 +220,11 @@ final class PgmSidebarStaffContext
             'pgmSbOpenPlanner' => $pgmSbOpenPlanner,
             'pgmSbOpenCofre' => $pgmSbOpenCofre,
             'pgmSbOpenCadastros' => $pgmSbOpenCadastros,
+            'pgmSbOpenPrincipal' => $pgmSbOpenPrincipal,
+            'pgmSbOpenOperacoes' => $pgmSbOpenOperacoes,
+            'pgmSbOpenSdModulos' => $pgmSbOpenSdModulos,
+            'pgmSbOpenPcp' => $pgmSbOpenPcp,
+            'pgmSbOpenSistema' => $pgmSbOpenSistema,
             'pgmSbOpenIncidentes' => $pgmSbOpenIncidentes,
             'pgmSbOpenComercial' => $pgmSbOpenComercial,
             'pgmSbOpenFaturamento' => $pgmSbOpenFaturamento,

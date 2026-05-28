@@ -56,6 +56,9 @@ $pgmSidebarReactCss = $__pgmSbWebBase . '/js/pgm-sidebar-react/sidebar-assets.cs
 	<?php if (empty($disablePgmAppShellPremium)) : ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=8") ?>
 	<?php endif; ?>
+	<?php if (!empty($pgmLoadErpPrototypeAssets)) : ?>
+	<?= $this->element('ErpPrototype/head_assets', ['includeServicedeskPrototypeCss' => !empty($loadServicedeskPrototypeCss)]) ?>
+	<?php endif; ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-sidebar-premium.css?v=" . time()) ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'produtos-premium']) ?>
 	<?php if ($pgmReactSidebar) : ?>
@@ -164,7 +167,7 @@ $pgmSidebarReactCss = $__pgmSbWebBase . '/js/pgm-sidebar-react/sidebar-assets.cs
 	<!-- Páginas que precisam vencer o tema global (ex.: estoque em modo escuro) -->
 	<?= $this->fetch('css_late'); ?>
 </head>
-<body class="fixed-layout skin-green mini layout-no-topbar <?= empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium ' : '' ?><?= !empty($pgmPortalClient) ? 'pgm-portal-client ' : '' ?><?= h($bodyPageClass ?? '') ?>">
+<body class="fixed-layout skin-green mini layout-no-topbar <?= empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium ' : '' ?><?= !empty($pgmLoadErpPrototypeAssets) ? 'pgm-erp-prototype-page ' : '' ?><?= !empty($pgmPortalClient) ? 'pgm-portal-client ' : '' ?><?= h($bodyPageClass ?? '') ?>">
 	<!--- Pre loader -->
 	<div class="preloader">
         <div class="loader">

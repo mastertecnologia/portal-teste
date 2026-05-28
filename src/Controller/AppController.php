@@ -241,6 +241,8 @@ class AppController extends Controller
 
     public function beforeRender(Event $event)
     {
+        $this->applyUnifiedPortalLayoutForPrototypeScreens();
+
         $c = (string) $this->request->getParam("controller");
         if (
             preg_match(
@@ -594,5 +596,42 @@ class AppController extends Controller
                     JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
                 ),
             );
+    }
+
+    /**
+     * Telas *Prototype no layout padrão (sidebar única) + CSS do mock.
+     */
+    protected function applyUnifiedPortalLayoutForPrototypeScreens(): void
+    {
+        $controller = (string)$this->request->getParam('controller');
+        $path = (string)$this->request->getPath();
+        $isPrototype = (substr($controller, -9) === 'Prototype')
+            || $controller === 'PrototypeHistory'
+            || strpos($path, '-prototype') !== false;
+        if (!$isPrototype) {
+            return;
+        }
+
+        $this->viewBuilder()->setLayout('default');
+        $this->set('pgmLoadErpPrototypeAssets', true);
+        if (empty($this->viewVars['hideLayoutPageTitle'])) {
+            $this->set('hideLayoutPageTitle', true);
+        }
+        if (!empty($this->viewVars['disablePgmAppShellPremium'])) {
+            $this->set('disablePgmAppShellPremium', false);
+        }
+        if (!empty($this->viewVars['erpBreadcrumb']) && is_array($this->viewVars['erpBreadcrumb'])) {
+            $crumbs = $this->viewVars['erpBreadcrumb'];
+            $last = end($crumbs);
+            if (is_array($last) && !empty($last['cur'])) {
+                $this->set('topbarCurrentLabel', (string)($last['label'] ?? ''));
+            }
+            if (count($crumbs) > 1) {
+                $prev = $crumbs[count($crumbs) - 2];
+                if (is_array($prev)) {
+                    $this->set('topbarParentLabel', (string)($prev['label'] ?? ''));
+                }
+            }
+        }
     }
 }
