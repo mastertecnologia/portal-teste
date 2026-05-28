@@ -313,6 +313,35 @@ html:has(.pgm-erp-shell:not(.pgm-erp-shell--in-portal)) body {
 .pgm-erp-shell .field textarea { resize: vertical; min-height: 60px; line-height: 1.6; }
 .pgm-erp-shell .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .pgm-erp-shell .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.pgm-erp-shell .pgm-home-tile-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+.pgm-erp-shell a.pgm-home-tile {
+	display: block;
+	padding: 14px;
+	background: var(--bg-surface);
+	border-radius: var(--radius);
+	border: 1px solid var(--border-light);
+	text-decoration: none;
+	color: inherit;
+	transition: background .15s, border-color .15s;
+}
+.pgm-erp-shell a.pgm-home-tile:hover {
+	background: var(--teal-light);
+	border-color: var(--teal-mid);
+	text-decoration: none;
+	color: inherit;
+}
+.pgm-erp-shell a.pgm-home-tile--blue:hover {
+	background: var(--blue-light);
+	border-color: var(--blue);
+}
+.pgm-erp-shell a.pgm-home-tile--purple:hover {
+	background: #ede9fe;
+	border-color: #6b21a8;
+}
 .pgm-erp-shell input[type="number"] { text-align: right; }
 
 /* ===== BADGES ===== */

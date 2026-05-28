@@ -34,7 +34,6 @@ class ErpHomePrototypeController extends AppController {
 		$this->Auth->setConfig('loginAction', $staffLogin);
 		$this->Auth->setConfig('unauthorizedRedirect', $staffLogin);
 		parent::beforeFilter($event);
-		$this->viewBuilder()->setLayout('erp_prototype');
 	}
 
 	public function index() {
@@ -117,16 +116,41 @@ class ErpHomePrototypeController extends AppController {
 		} catch (\Throwable $e) {
 		}
 
+		$user = (array)$this->Auth->user();
+		$nomeCompleto = trim((string)($user['nome'] ?? $user['username'] ?? ''));
+		$primeiroNome = $nomeCompleto !== '' ? explode(' ', $nomeCompleto)[0] : __('usuário');
+
+		$activity = [];
+		foreach ($recentOrc as $r) {
+			$activity[] = [
+				'icon' => '📧',
+				'bg' => '#FAEEDA',
+				'title' => sprintf('%s · %s', $r['label'], $r['cliente']),
+				'sub' => sprintf(__('Orçamento · %s'), 'R$ ' . number_format((float)$r['valor'], 2, ',', '.')),
+			];
+		}
+		foreach ($recentOs as $r) {
+			$activity[] = [
+				'icon' => '🔧',
+				'bg' => 'var(--blue-light)',
+				'title' => sprintf('%s · %s', $r['label'], $r['cliente']),
+				'sub' => __('Ordem de serviço recente'),
+			];
+		}
+		$activity = array_slice($activity, 0, 5);
+
 		$this->set([
-			'title' => __('Dashboard ERP'),
+			'title' => __('Dashboard'),
 			'erpNavActive' => 'erp-home',
 			'erpBreadcrumb' => [
-				['label' => 'PGM ERP', 'cur' => true],
+				['label' => __('Dashboard'), 'cur' => true],
 			],
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
 			'homeKpi' => $kpi,
 			'homeRecentOrc' => $recentOrc,
 			'homeRecentOs' => $recentOs,
+			'homeActivity' => $activity,
+			'homeUserFirstName' => $primeiroNome,
 			'homeDataLabel' => $now->i18nFormat('EEEE, dd/MM/yyyy'),
 		]);
 

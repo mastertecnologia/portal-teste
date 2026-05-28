@@ -233,21 +233,29 @@ body.pgm-app-shell-premium.pgm-erp-prototype-page .page-wrapper > .container-flu
     max-width: 100%;
 }
 
+body.pgm-app-shell-premium.pgm-erp-prototype-page #pgm-dynamic-content.pgm-erp-prototype-dynamic,
 body.pgm-app-shell-premium.pgm-erp-prototype-page #pgm-dynamic-content.row {
     margin-left: 0;
     margin-right: 0;
     width: 100%;
     max-width: 100%;
     padding: 30px 28px 24px;
+    display: block;
+    box-sizing: border-box;
+}
+
+body.pgm-app-shell-premium.pgm-erp-prototype-page #pgm-dynamic-content.row {
     align-items: flex-start;
     align-content: flex-start;
 }
 
+body.pgm-app-shell-premium.pgm-erp-prototype-page .pgm-erp-prototype-flash,
 body.pgm-app-shell-premium.pgm-erp-prototype-page #pgm-dynamic-content.row > .col-md-12.aquivaiosalert {
-    flex: 0 0 100%;
+    width: 100%;
     max-width: 100%;
     padding-left: 0;
     padding-right: 0;
+    margin-bottom: 8px;
 }
 
 body.pgm-app-shell-premium.pgm-erp-prototype-page .pgm-erp-shell--in-portal.pgm-erp-content {
