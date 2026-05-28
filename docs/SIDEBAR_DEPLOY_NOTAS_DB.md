@@ -26,14 +26,24 @@ O erro `connection to server at "localhost"` após o deploy da sidebar veio de *
 ## Verificação no servidor
 
 ```bash
-# Como o FPM (ajuste o usuário: www-data, nginx, apache)
+# Obrigatório: mesmo usuário do PHP-FPM (não só root)
 sudo -u www-data php bin/check_db_env.php
 
-grep '^DB_HOST=' /var/www/portal/.env
+grep '^DB_' /var/www/portal/.env
 ls -la /var/www/portal/.env
 
 bin/cake cache clear_all
 systemctl restart php8.1-fpm   # versão conforme o servidor
+```
+
+### Sintoma: root OK, www-data com `DB_HOST (não definido)` e `no password supplied`
+
+O `.env` está com permissão só para root (`600` / dono root). O bootstrap do Cake **não lê** o ficheiro → sem `DB_PASSWORD` → PostgreSQL recusa.
+
+```bash
+chown root:www-data /var/www/portal/.env
+chmod 640 /var/www/portal/.env
+sudo -u www-data php bin/check_db_env.php   # deve mostrar DB_HOST e PDO OK
 ```
 
 ## Referência
