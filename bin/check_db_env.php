@@ -1,50 +1,133 @@
 #!/usr/bin/env php
 <?php
 /**
- * Diagnóstico rápido: host/porta/user/database efetivos e teste TCP ao PostgreSQL.
+ * Diagnóstico: variáveis DB_* (.env), overrides em app_local.php, TCP e PDO.
+ * Não usa bootstrap completo do Cake (evita Router em CLI).
  *
  * Uso: php bin/check_db_env.php
+ *      php bin/check_db_env.php --cake   (testa também ConnectionManager via bin/cake)
  */
 declare(strict_types=1);
 
 $root = dirname(__DIR__);
-require $root . '/config/bootstrap.php';
+$useCake = in_array('--cake', $argv ?? [], true);
 
-use Cake\Core\Configure;
-use Cake\Datasource\ConnectionManager;
+/**
+ * @return void
+ */
+function pgmCheckDbLoadDotEnv(string $root): void
+{
+	$envFile = $root . DIRECTORY_SEPARATOR . '.env';
+	if (!is_file($envFile) || !is_readable($envFile)) {
+		return;
+	}
+	$raw = file_get_contents($envFile);
+	if ($raw === false) {
+		return;
+	}
+	if (strncmp($raw, "\xEF\xBB\xBF", 3) === 0) {
+		$raw = substr($raw, 3);
+	}
+	foreach (preg_split('/\R/', $raw) ?: [] as $line) {
+		$line = trim($line);
+		if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) {
+			continue;
+		}
+		if (stripos($line, 'export ') === 0) {
+			$line = trim(substr($line, 7));
+		}
+		[$name, $value] = explode('=', $line, 2);
+		$name = ltrim(trim($name), "\xEF\xBB\xBF");
+		$value = trim($value, " \t\"'");
+		if ($name !== '') {
+			putenv("$name=$value");
+			$_ENV[$name] = $value;
+			$_SERVER[$name] = $value;
+		}
+	}
+}
 
-$ds = (array)Configure::read('Datasources.default');
-$host = (string)($ds['host'] ?? '?');
-$port = (string)($ds['port'] ?? '5432');
-$user = (string)($ds['username'] ?? '');
-$db = (string)($ds['database'] ?? '');
-$fromEnv = getenv('DB_HOST') ?: '(não definido em putenv)';
+/**
+ * Mesma ordem que Cake: app.php (via env) + merge app_local.php (local ganha).
+ *
+ * @return array{host:string,port:string,username:string,password:string,database:string}
+ */
+function pgmCheckDbResolveConfig(string $root): array
+{
+	$cfg = [
+		'host' => getenv('DB_HOST') ?: '10.0.2.23',
+		'port' => getenv('DB_PORT') ?: '5432',
+		'username' => getenv('DB_USERNAME') ?: 'postgres',
+		'password' => getenv('DB_PASSWORD') ?: '',
+		'database' => getenv('DB_DATABASE') ?: 'pgm',
+	];
+	$localFile = $root . '/config/app_local.php';
+	if (!is_file($localFile)) {
+		return $cfg;
+	}
+	$local = include $localFile;
+	if (!is_array($local) || !isset($local['Datasources']['default']) || !is_array($local['Datasources']['default'])) {
+		return $cfg;
+	}
+	foreach (['host', 'port', 'username', 'password', 'database'] as $key) {
+		if (isset($local['Datasources']['default'][$key]) && $local['Datasources']['default'][$key] !== '') {
+			$cfg[$key] = (string)$local['Datasources']['default'][$key];
+		}
+	}
 
-echo "DB_HOST (.env / putenv): {$fromEnv}\n";
-echo "Datasources.default.host (efetivo): {$host}\n";
-echo "port={$port} database={$db} username={$user}\n";
+	return $cfg;
+}
 
-if ($host === 'localhost' || $host === '127.0.0.1') {
-	echo "\nAVISO: host é loopback. Em produção PGM use DB_HOST=10.0.2.23 no .env\n";
+pgmCheckDbLoadDotEnv($root);
+$cfg = pgmCheckDbResolveConfig($root);
+
+echo "=== Diagnóstico PostgreSQL (PGM Portal) ===\n\n";
+echo "DB_HOST (.env): " . (getenv('DB_HOST') !== false && getenv('DB_HOST') !== '' ? getenv('DB_HOST') : '(não definido)') . "\n";
+echo "Host efetivo (env + app_local.php): {$cfg['host']}\n";
+echo "port={$cfg['port']} database={$cfg['database']} username={$cfg['username']}\n";
+
+if (in_array($cfg['host'], ['localhost', '127.0.0.1', '::1'], true)) {
+	echo "\nAVISO: host é loopback. Produção PGM: DB_HOST=10.0.2.23 no .env e sem host localhost em config/app_local.php\n";
 }
 
 $errno = 0;
 $errstr = '';
-$fp = @fsockopen($host, (int)$port, $errno, $errstr, 3);
+$fp = @fsockopen($cfg['host'], (int)$cfg['port'], $errno, $errstr, 5);
 if ($fp) {
 	fclose($fp);
-	echo "\nTCP {$host}:{$port} — OK (porta aceita conexão)\n";
+	echo "\nTCP {$cfg['host']}:{$cfg['port']} — OK\n";
 } else {
-	echo "\nTCP {$host}:{$port} — FALHOU ({$errno}) {$errstr}\n";
-	echo "Verifique PostgreSQL, firewall e DB_HOST no .env\n";
+	echo "\nTCP {$cfg['host']}:{$cfg['port']} — FALHOU ({$errno}) {$errstr}\n";
+	echo "Verifique PostgreSQL em 10.0.2.23, firewall e pg_hba.conf (portal 10.0.2.25).\n";
 	exit(1);
 }
 
 try {
-	ConnectionManager::get('default')->connect();
-	echo "PDO Cake (default) — OK\n";
-	exit(0);
+	$pdo = new PDO(
+		sprintf('pgsql:host=%s;port=%s;dbname=%s', $cfg['host'], $cfg['port'], $cfg['database']),
+		$cfg['username'],
+		$cfg['password'],
+		[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+	);
+	$pdo->query('SELECT 1');
+	echo "PDO direto — OK\n";
 } catch (Throwable $e) {
-	echo "PDO Cake — FALHOU: " . $e->getMessage() . "\n";
+	echo "PDO direto — FALHOU: " . $e->getMessage() . "\n";
 	exit(1);
 }
+
+if ($useCake) {
+	require $root . '/vendor/autoload.php';
+	require $root . '/config/bootstrap.php';
+	try {
+		\Cake\Datasource\ConnectionManager::get('default')->connect();
+		echo "Cake ConnectionManager — OK\n";
+	} catch (Throwable $e) {
+		echo "Cake ConnectionManager — FALHOU: " . $e->getMessage() . "\n";
+		exit(1);
+	}
+}
+
+echo "\nConexão ao banco está OK com a configuração acima.\n";
+echo "Se o site ainda der erro, limpe cache: bin/cake cache clear_all\n";
+exit(0);
