@@ -1037,15 +1037,22 @@ input[type=number] {text-align:right;}
       <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Módulo comercial</div>
       <h1 style="font-size:22px;font-weight:600;color:var(--text);">Orçamentos</h1>
     </div>
-    <button class="btn btn-primary" onclick="goTo('pg-novo')">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
-      Gerar Orçamento
-    </button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-orc-alcadas')">⚖ Aprovações <span class="badge" style="background:#FEF3C7;color:#92400E;font-size:9px;margin-left:4px;">3</span></button>
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-orc-config-aprovacao')">⚙ Regras de aprovação</button>
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-orc-negociacao')">💬 Em negociação <span class="badge" style="background:#DBEAFE;color:#1E40AF;font-size:9px;margin-left:4px;">2</span></button>
+      <button class="btn btn-primary" onclick="goTo('pg-novo')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+        Gerar Orçamento
+      </button>
+    </div>
   </div>
 
   <div class="stats">
     <div class="stat active" style="--sc:#E9A025;" onclick="filtStat('pend',this)"><div class="stat-l">Andamento</div><div class="stat-n" id="cnt-pend">0</div></div>
     <div class="stat" style="--sc:#1D9E75;" onclick="filtStat('env',this)"><div class="stat-l">Enviados</div><div class="stat-n" id="cnt-env">0</div></div>
+    <div class="stat" style="--sc:#F59E0B;" onclick="goTo('pg-orc-negociacao')"><div class="stat-l">Em negociação</div><div class="stat-n">2</div></div>
+    <div class="stat" style="--sc:#6B21A8;" onclick="goTo('pg-orc-alcadas')"><div class="stat-l">Aguardando alçada</div><div class="stat-n">3</div></div>
     <div class="stat" style="--sc:#378ADD;" onclick="filtStat('aprov',this)"><div class="stat-l">Aprovados</div><div class="stat-n" id="cnt-aprov">0</div></div>
     <div class="stat" style="--sc:#E24B4A;" onclick="filtStat('recus',this)"><div class="stat-l">Recusados</div><div class="stat-n" id="cnt-recus">0</div></div>
     <div class="stat" style="--sc:#888780;" onclick="filtStat('all',this)"><div class="stat-l">Total</div><div class="stat-n" id="cnt-all">0</div></div>
@@ -12146,9 +12153,10 @@ Darli · PGM Soluções
     <div>
       <div style="font-size:11px;opacity:.85;text-transform:uppercase;letter-spacing:.4px;font-weight:600;">PORTAL DO CLIENTE · Mobles Fab. de Móveis</div>
       <h1 style="font-size:22px;font-weight:700;margin-top:4px;">Olá, Cristiane! 👋</h1>
-      <div style="font-size:13px;opacity:.9;margin-top:2px;">Você tem 2 tickets em andamento · contrato Premium · suporte 24/7</div>
+      <div style="font-size:13px;opacity:.9;margin-top:2px;">Você tem 2 tickets em andamento · 1 orçamento aguardando sua resposta · contrato Premium</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);" onclick="goTo('pg-orc-portal-cliente')">📄 Meus orçamentos</button>
       <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);" onclick="goTo('pg-sd-portal-novo')">📚 Base de conhecimento</button>
       <button class="btn btn-sm" style="background:#fff;color:var(--teal-dark);font-weight:600;" onclick="goTo('pg-sd-portal-novo')">+ Novo chamado</button>
     </div>
@@ -12160,6 +12168,7 @@ Darli · PGM Soluções
     <div class="summary-card" style="border-left:3px solid #6B5B95;"><div class="lbl">Aguardando você</div><div class="val" style="color:#3D2D63;">1</div><div style="font-size:11px;color:#3D2D63;">ação necessária</div></div>
     <div class="summary-card" style="border-left:3px solid var(--amber);"><div class="lbl">Tempo médio</div><div class="val" style="color:#8A4D02;">3h 42m</div><div style="font-size:11px;color:var(--text-muted);">resolução</div></div>
     <div class="summary-card" style="border-left:3px solid #D946A0;"><div class="lbl">Satisfação</div><div class="val" style="color:#7A1B5C;">⭐ 4.8</div><div style="font-size:11px;color:var(--text-muted);">de 5,0</div></div>
+    <div class="summary-card" style="background:#FFFBEB;border-left:3px solid var(--amber);cursor:pointer;" onclick="goTo('pg-orc-portal-cliente')"><div class="lbl">Orçamentos ativos</div><div class="val" style="color:#8A4D02;">2</div><div style="font-size:11px;color:#8A4D02;">1 aguarda você</div></div>
   </div>
 
   <div class="g2" style="margin-bottom:14px;">
@@ -12197,12 +12206,47 @@ Darli · PGM Soluções
     </div>
   </div>
 
+  <!-- ===== MEUS ORÇAMENTOS (integração comercial no portal) ===== -->
+  <div class="card" style="margin-bottom:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <div class="sec-title" style="margin:0;">📄 Meus orçamentos</div>
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-orc-portal-cliente')">Ver todos →</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <!-- Orçamento aguardando resposta do cliente -->
+      <div style="padding:12px;background:#FFFBEB;border-left:3px solid var(--amber);border-radius:var(--radius);cursor:pointer;" onclick="goTo('pg-orc-portal-cliente')">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px;">
+          <strong style="font-size:13px;">ORÇ-2026-0432 · Chapas MDF + ferragens</strong>
+          <span class="badge" style="background:#FAEEDA;color:#8A4D02;font-size:10px;">⏰ AGUARDANDO VOCÊ</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);">Vendedor: Darli · v2 (sua contraproposta) enviada · valor R$ 42.500,00</div>
+        <div style="font-size:12px;color:#8A4D02;margin-top:4px;font-weight:600;">⏰ Darli respondeu sua contraproposta — revise a nova proposta</div>
+      </div>
+      <!-- Orçamento aprovado -->
+      <div style="padding:12px;background:var(--bg-surface);border-left:3px solid var(--teal);border-radius:var(--radius);cursor:pointer;" onclick="goTo('pg-orc-portal-cliente')">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px;">
+          <strong style="font-size:13px;">ORÇ-2026-0419 · Painéis melamínicos</strong>
+          <span class="badge b-paga" style="font-size:10px;">✓ APROVADO</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);">Aprovado em 28/04 · valor R$ 31.200,00 · pedido PED-2026-0288 em produção</div>
+      </div>
+      <!-- Orçamento em análise -->
+      <div style="padding:12px;background:var(--bg-surface);border-left:3px solid var(--blue);border-radius:var(--radius);cursor:pointer;" onclick="goTo('pg-orc-portal-cliente')">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px;">
+          <strong style="font-size:13px;">ORÇ-2026-0440 · Ferragens diversas</strong>
+          <span class="badge" style="background:var(--blue-light);color:#0C447C;font-size:10px;">📤 RECEBIDO</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);">Recebido hoje 09:15 · valor R$ 8.740,00 · aguardando sua análise</div>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="sec-title">📚 Artigos populares · resolva sozinho</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-      <div style="padding:12px;background:var(--bg-surface);border-radius:var(--radius);cursor:pointer;" onclick="abrirArtigoKB('KB-042')"><div style="font-size:12px;font-weight:600;margin-bottom:4px;">📄 Como redefinir minha senha</div><div style="font-size:11px;color:var(--text-muted);">⭐ 4.9 · 3 min · 124 visualizações</div></div>
-      <div style="padding:12px;background:var(--bg-surface);border-radius:var(--radius);cursor:pointer;" onclick="abrirArtigoKB('KB-018')"><div style="font-size:12px;font-weight:600;margin-bottom:4px;">📄 Configurar e-mail no celular</div><div style="font-size:11px;color:var(--text-muted);">⭐ 4.7 · 5 min · 89 visualizações</div></div>
-      <div style="padding:12px;background:var(--bg-surface);border-radius:var(--radius);cursor:pointer;" onclick="abrirArtigoKB('KB-027')"><div style="font-size:12px;font-weight:600;margin-bottom:4px;">📄 Conectar VPN da empresa</div><div style="font-size:11px;color:var(--text-muted);">⭐ 4.8 · 7 min · 67 visualizações</div></div>
+      <div style="padding:12px;background:var(--bg-surface);border-radius:var(--radius);cursor:pointer;" onclick="goTo('pg-sd-detalhe-kb')"><div style="font-size:12px;font-weight:600;margin-bottom:4px;">📄 Como redefinir minha senha</div><div style="font-size:11px;color:var(--text-muted);">⭐ 4.9 · 3 min · 124 visualizações</div></div>
+      <div style="padding:12px;background:var(--bg-surface);border-radius:var(--radius);cursor:pointer;" onclick="goTo('pg-sd-detalhe-kb')"><div style="font-size:12px;font-weight:600;margin-bottom:4px;">📄 Configurar e-mail no celular</div><div style="font-size:11px;color:var(--text-muted);">⭐ 4.7 · 5 min · 89 visualizações</div></div>
+      <div style="padding:12px;background:var(--bg-surface);border-radius:var(--radius);cursor:pointer;" onclick="goTo('pg-sd-detalhe-kb')"><div style="font-size:12px;font-weight:600;margin-bottom:4px;">📄 Conectar VPN da empresa</div><div style="font-size:11px;color:var(--text-muted);">⭐ 4.8 · 7 min · 67 visualizações</div></div>
     </div>
   </div>
 </div>
@@ -20019,6 +20063,7 @@ Atenciosamente,
       <div style="font-size:12px;color:var(--text-muted);">RBAC + ABAC · papéis, permissões, escopo de dados e auditoria — em um só lugar</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-orc-config-aprovacao')">⚖ Aprovação de orçamentos</button>
       <button class="btn btn-ghost btn-sm" onclick="goTo('pg-acesso-auditoria')">📜 Auditoria de acessos</button>
       <button class="btn btn-ghost btn-sm" onclick="goTo('pg-acesso-papeis')">👥 Papéis</button>
       <button class="btn btn-primary btn-sm" onclick="goTo('pg-acesso-usuario')">+ Configurar usuário</button>
@@ -23556,6 +23601,1213 @@ Atenciosamente,
   </div>
 </div>
 
+
+<!-- ===== NEGOCIAÇÃO DE ORÇAMENTO ===== -->
+<!-- ================================================================= -->
+<!-- MÓDULO NEGOCIAÇÃO DE ORÇAMENTO                                    -->
+<!-- ================================================================= -->
+
+<!-- ===================== PAINEL DE NEGOCIAÇÃO (VENDEDOR) ===================== -->
+<div class="pg" id="pg-orc-negociacao">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">PGM ERP › Comercial › <span style="color:var(--teal);cursor:pointer;" onclick="goTo('pg-lista')">Orçamentos</span> › ORÇ-2026-0432 › Negociação</div>
+      <h1 style="font-size:22px;font-weight:600;">💬 Negociação — ORÇ-2026-0432</h1>
+      <div style="font-size:12px;color:var(--text-muted);">Trianon Móveis Bento · Carlos Eduardo (comprador) · iniciado 12/05/2026</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-lista')">← Orçamentos</button>
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-orc-versoes')">📊 Comparar versões</button>
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-orc-portal-cliente')">👁 Ver como cliente vê</button>
+      <button class="btn btn-primary btn-sm" onclick="kbCompartilhar()">📤 Reenviar link</button>
+    </div>
+  </div>
+
+  <!-- Status da negociação -->
+  <div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,#0a3d2c,#1D9E75);color:#fff;border:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;opacity:.85;margin-bottom:6px;">Status atual da negociação</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <span style="background:#F59E0B;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600;">⏳ Aguardando sua resposta</span>
+          <span style="font-size:13px;opacity:.9;">Cliente solicitou alteração há <strong>2h 14min</strong></span>
+        </div>
+        <div style="font-size:12px;opacity:.85;margin-top:6px;">⚠ Sua resposta dentro de <strong>24h</strong> mantém boa percepção do cliente · SLA interno</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <div style="background:rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;text-align:center;">
+          <div style="font-size:10px;opacity:.85;">Valor original</div>
+          <div style="font-size:14px;font-weight:700;">R$ 47.890</div>
+        </div>
+        <div style="background:rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;text-align:center;">
+          <div style="font-size:10px;opacity:.85;">Pedido pelo cliente</div>
+          <div style="font-size:14px;font-weight:700;color:#FEE2E2;">R$ 42.500</div>
+        </div>
+        <div style="background:rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;text-align:center;">
+          <div style="font-size:10px;opacity:.85;">Desconto solicitado</div>
+          <div style="font-size:14px;font-weight:700;color:#FBBF24;">11,3%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerta de alçada -->
+  <div class="alert-box alert-amber" style="margin-bottom:14px;font-size:12px;">
+    ⚠ <strong>Atenção — alçada necessária:</strong> o desconto de 11,3% pedido pelo cliente está <strong>acima da sua alçada (10%)</strong>. Se você aceitar, será encaminhado para aprovação do <strong>Roberto Maia (gestor)</strong>.
+  </div>
+
+  <div class="g2" style="gap:14px;">
+    <!-- =========== Coluna principal: thread de mensagens =========== -->
+    <div>
+      <div class="card">
+        <div class="sec-title">💬 Thread de negociação</div>
+
+        <!-- Mensagem 1: envio inicial -->
+        <div style="border-left:3px solid var(--teal);padding:10px 14px;background:var(--bg-surface);border-radius:0 8px 8px 0;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;">DG</div>
+              <strong style="font-size:12px;">Darli Gonçalves</strong>
+              <span class="badge b-paga" style="font-size:9px;">📤 Enviado</span>
+            </div>
+            <span style="font-size:10px;color:var(--text-muted);">12/05/2026 14:32</span>
+          </div>
+          <div style="font-size:12px;line-height:1.5;color:var(--text-color);">
+            Olá Carlos, segue o orçamento <strong>v1</strong> conforme conversamos. Inclui 50 chapas MDF 18mm, ferragens completas e frete CIF até a fábrica. Prazo de 7 dias úteis para produção + 3 para entrega.
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+            <span style="font-size:10px;padding:2px 8px;background:#DBEAFE;color:#1E40AF;border-radius:10px;">v1 · R$ 47.890</span>
+            <span style="font-size:10px;color:var(--text-muted);">📎 ORC-2026-0432-v1.pdf</span>
+          </div>
+        </div>
+
+        <!-- Mensagem 2: cliente abriu (sistema) -->
+        <div style="text-align:center;padding:4px;font-size:10px;color:var(--text-muted);font-style:italic;margin-bottom:8px;">
+          👁 Cliente visualizou em 12/05/2026 16:48 — aberto 3 vezes — última: 13/05 09:12
+        </div>
+
+        <!-- Mensagem 3: cliente comentou -->
+        <div style="border-left:3px solid #0C447C;padding:10px 14px;background:#EFF6FF;border-radius:0 8px 8px 0;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:#0C447C;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;">CE</div>
+              <strong style="font-size:12px;">Carlos Eduardo</strong> <span style="font-size:10px;color:var(--text-muted);">(Trianon Móveis)</span>
+              <span class="badge" style="background:#DBEAFE;color:#1E40AF;font-size:9px;">💬 Comentário</span>
+            </div>
+            <span style="font-size:10px;color:var(--text-muted);">13/05/2026 10:24</span>
+          </div>
+          <div style="font-size:12px;line-height:1.5;color:var(--text-color);">
+            Darli, valeu! Recebi e analisei. <strong>Tenho 3 pontos para conversar:</strong>
+            <ul style="padding-left:20px;margin-top:6px;">
+              <li>O fornecedor da Madeireira Bento nos atende com <strong>R$ 36/m²</strong> nas chapas — pode revisar esse preço?</li>
+              <li>Não precisamos do frete CIF, podemos retirar com nossa frota — abater isso ajudaria.</li>
+              <li>Prazo de 7 dias está apertado para nós, conseguimos esticar pra 10?</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Mensagem 4: cliente fez contraproposta -->
+        <div style="border-left:3px solid var(--amber);padding:10px 14px;background:#FFFBEB;border-radius:0 8px 8px 0;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:#0C447C;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;">CE</div>
+              <strong style="font-size:12px;">Carlos Eduardo</strong>
+              <span class="badge" style="background:#FEF3C7;color:#92400E;font-size:9px;">📝 Contraproposta</span>
+            </div>
+            <span style="font-size:10px;color:var(--text-muted);">13/05/2026 10:31</span>
+          </div>
+          <div style="font-size:12px;line-height:1.5;color:var(--text-color);margin-bottom:8px;">
+            Considerando os pontos acima, minha contraproposta:
+          </div>
+          <div style="background:#fff;border:1px solid var(--amber);border-radius:6px;padding:10px;font-size:11px;">
+            <table style="width:100%;border-collapse:collapse;">
+              <tr><td style="padding:4px;color:var(--text-muted);">Chapa MDF 18mm (50 un)</td><td style="text-align:right;color:#991B1B;text-decoration:line-through;">R$ 1.945</td><td style="text-align:right;font-weight:600;color:#065F46;">R$ 1.800 /un</td></tr>
+              <tr><td style="padding:4px;color:var(--text-muted);">Subtotal mercadoria</td><td style="text-align:right;color:#991B1B;text-decoration:line-through;">R$ 47.890</td><td style="text-align:right;font-weight:600;color:#065F46;">R$ 45.000</td></tr>
+              <tr><td style="padding:4px;color:var(--text-muted);">Frete (CIF → FOB)</td><td style="text-align:right;color:#991B1B;text-decoration:line-through;">R$ 2.500</td><td style="text-align:right;font-weight:600;color:#065F46;">— R$ 2.500</td></tr>
+              <tr style="border-top:1px solid var(--border-light);"><td style="padding:6px 4px;font-weight:700;">Total proposto pelo cliente</td><td></td><td style="text-align:right;font-weight:700;font-size:14px;color:var(--teal-dark);">R$ 42.500</td></tr>
+              <tr><td style="padding:4px;color:var(--text-muted);">Prazo</td><td></td><td style="text-align:right;color:#065F46;">10 dias úteis</td></tr>
+            </table>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-xs" onclick="aceitarContraproposta()">✓ Aceitar contraproposta</button>
+            <button class="btn btn-ghost btn-xs" onclick="rolarParaResposta()">↩ Responder com nova proposta</button>
+            <button class="btn btn-ghost btn-xs">🤝 Negociar item a item</button>
+            <button class="btn btn-ghost btn-xs" style="color:#991B1B;">✕ Recusar contraproposta</button>
+          </div>
+        </div>
+
+        <!-- Editor de resposta -->
+        <div id="orc-editor-resposta" style="border-top:2px dashed var(--border);padding-top:14px;margin-top:14px;">
+          <div class="sec-title" style="font-size:13px;">✏ Sua resposta</div>
+
+          <!-- Toolbar de ação rápida -->
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+            <button class="btn btn-ghost btn-xs" onclick="pgmToast({tipo:'info',msg:'Template inserido na mensagem'})">📋 Template "Aceitar"</button>
+            <button class="btn btn-ghost btn-xs" onclick="pgmToast({tipo:'info',msg:'Template inserido'})">📋 Template "Contraproposta"</button>
+            <button class="btn btn-ghost btn-xs" onclick="pgmToast({tipo:'info',msg:'Template inserido'})">📋 Template "Recusar"</button>
+            <button class="btn btn-ghost btn-xs" onclick="kbVincularArtigo()">🔗 Anexar item do catálogo</button>
+          </div>
+
+          <textarea rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;margin-bottom:10px;" placeholder="Escreva sua resposta para o cliente... Pode mencionar @Roberto se precisar de aprovação."></textarea>
+
+          <!-- Ajustes propostos por vc -->
+          <div style="background:var(--teal-light);border:1px solid var(--teal-mid);border-radius:6px;padding:10px;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:600;color:var(--teal-dark);margin-bottom:8px;">💼 Ajustes propostos na nova versão (v3)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11px;">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" checked/> Aceitar preço R$ 1.800/m²</label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" checked/> Mudar para FOB (cliente retira)</label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox"/> Aceitar prazo 10 dias</label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox"/> Aplicar desconto adicional</label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox"/> Mudar condição de pagamento</label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox"/> Incluir brinde/cortesia</label>
+            </div>
+          </div>
+
+          <!-- Opções de envio -->
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div style="display:flex;gap:10px;font-size:11px;">
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" checked/> 📧 Notificar cliente por e-mail</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox"/> 💬 Enviar também por WhatsApp</label>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-ghost btn-sm">💾 Salvar rascunho</button>
+              <button class="btn btn-primary btn-sm" onclick="enviarContraproposta()">📤 Enviar nova proposta (gera v3)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========== Coluna lateral =========== -->
+    <div>
+      <!-- Versões -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="sec-title">📊 Versões deste orçamento</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="padding:10px;background:var(--bg-surface);border-radius:6px;border-left:3px solid #6B5B95;cursor:pointer;" onclick="goTo('pg-orc-versoes')">
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;"><span>v1 · Original</span><span style="font-size:11px;color:var(--text-muted);">R$ 47.890</span></div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">12/05 14:32 · enviada · 👁 visualizada 3×</div>
+          </div>
+          <div style="padding:10px;background:#FFFBEB;border-radius:6px;border-left:3px solid var(--amber);cursor:pointer;" onclick="goTo('pg-orc-versoes')">
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;"><span>v2 · Contraproposta cliente</span><span style="font-size:11px;color:#92400E;">R$ 42.500</span></div>
+            <div style="font-size:10px;color:#92400E;margin-top:2px;">13/05 10:31 · ⏳ aguardando sua resposta</div>
+          </div>
+          <div style="padding:10px;background:#F0FDF4;border-radius:6px;border-left:3px solid var(--teal);opacity:.7;font-style:italic;">
+            <div style="font-size:12px;font-weight:600;color:var(--teal-dark);">v3 · Em rascunho</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Sua resposta — ainda não enviada</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-xs" style="width:100%;margin-top:8px;" onclick="goTo('pg-orc-versoes')">📊 Comparar lado a lado</button>
+      </div>
+
+      <!-- Status de alçada -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="sec-title">⚖ Alçadas</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:11px;">
+          <div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg-surface);border-radius:6px;">
+            <span>Sua alçada (Darli)</span>
+            <strong>Desconto até <span style="color:var(--teal-dark);">10%</span></strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px;background:#FFFBEB;border-radius:6px;border-left:3px solid var(--amber);">
+            <span>Necessário aprovar</span>
+            <strong style="color:#8A4D02;">11,3% → +1,3% acima</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg-surface);border-radius:6px;">
+            <span>Aprovador</span>
+            <strong>Roberto Maia (até 20%)</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cliente -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="sec-title">🏢 Sobre o cliente</div>
+        <div style="font-size:12px;line-height:1.6;">
+          <div><strong>Trianon Móveis Bento</strong></div>
+          <div style="color:var(--text-muted);font-size:11px;">CNPJ 04.872.331/0001-55</div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border-light);">
+            <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:var(--text-muted);">Cliente há</span><strong>4 anos</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:var(--text-muted);">Faturamento (12m)</span><strong>R$ 287 mil</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:var(--text-muted);">Margem média</span><strong>22%</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:var(--text-muted);">Inadimplência</span><strong style="color:#065F46;">0%</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:var(--text-muted);">Negociações ganhas</span><strong>8 de 11 (73%)</strong></div>
+          </div>
+          <button class="btn btn-ghost btn-xs" style="width:100%;margin-top:8px;" onclick="goTo('pg-cliente-360')">Ver ficha 360°</button>
+        </div>
+      </div>
+
+      <!-- Linha do tempo -->
+      <div class="card">
+        <div class="sec-title">📅 Linha do tempo</div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:11px;">
+          <div style="display:flex;gap:8px;"><span style="color:var(--text-muted);min-width:60px;">12/05 14:32</span><span>📤 Enviado v1</span></div>
+          <div style="display:flex;gap:8px;"><span style="color:var(--text-muted);min-width:60px;">12/05 16:48</span><span>👁 Cliente abriu</span></div>
+          <div style="display:flex;gap:8px;"><span style="color:var(--text-muted);min-width:60px;">13/05 09:12</span><span>👁 Cliente abriu novamente</span></div>
+          <div style="display:flex;gap:8px;"><span style="color:var(--text-muted);min-width:60px;">13/05 10:24</span><span>💬 Cliente comentou</span></div>
+          <div style="display:flex;gap:8px;"><span style="color:var(--text-muted);min-width:60px;">13/05 10:31</span><span>📝 Cliente fez contraproposta (v2)</span></div>
+          <div style="display:flex;gap:8px;font-weight:600;"><span style="color:var(--amber);min-width:60px;">agora</span><span style="color:var(--amber);">⏳ Aguardando sua resposta</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PORTAL DO CLIENTE (visão externa) ===================== -->
+<div class="pg" id="pg-orc-portal-cliente">
+  <!-- Topbar externa (sem sidebar PGM) -->
+  <div style="background:#fff;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;margin:-20px -20px 20px;flex-wrap:wrap;gap:10px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="width:42px;height:42px;background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;">PGM</div>
+      <div>
+        <strong style="font-size:14px;">PGM Soluções</strong>
+        <div style="font-size:11px;color:var(--text-muted);">Portal do cliente · Trianon Móveis</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-size:11px;color:var(--text-muted);">🔒 Conexão segura · link expira em 7 dias</span>
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-sd-portal')">← Voltar ao portal</button>
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-orc-negociacao')">👁 Modo interno</button>
+    </div>
+  </div>
+
+  <!-- Aviso -->
+  <div class="alert-box alert-blue" style="margin-bottom:14px;font-size:12px;">
+    👁 <strong>Modo "visão do cliente":</strong> esta é a tela que <strong>Carlos Eduardo (Trianon)</strong> vê. O cliente acessa de duas formas: <strong>(1)</strong> pelo link assinado enviado por e-mail/WhatsApp, ou <strong>(2)</strong> logado no portal do cliente, na seção "Meus orçamentos".
+  </div>
+
+  <!-- Lista de orçamentos do cliente (quando acessa logado pelo portal) -->
+  <div style="max-width:880px;margin:0 auto 14px;">
+    <div class="card">
+      <div class="sec-title">📄 Meus orçamentos na PGM</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="padding:12px;background:#FFFBEB;border-left:3px solid var(--amber);border-radius:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div>
+            <strong style="font-size:13px;">ORÇ-2026-0432 · Chapas MDF + ferragens</strong>
+            <div style="font-size:11px;color:var(--text-muted);">v2 · sua contraproposta · R$ 42.500,00</div>
+          </div>
+          <span class="badge" style="background:#FAEEDA;color:#8A4D02;font-size:10px;">⏰ aguardando você · ABERTO ABAIXO ↓</span>
+        </div>
+        <div style="padding:12px;background:var(--bg-surface);border-left:3px solid var(--teal);border-radius:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div>
+            <strong style="font-size:13px;">ORÇ-2026-0419 · Painéis melamínicos</strong>
+            <div style="font-size:11px;color:var(--text-muted);">aprovado em 28/04 · R$ 31.200,00 · em produção</div>
+          </div>
+          <span class="badge b-paga" style="font-size:10px;">✓ aprovado</span>
+        </div>
+        <div style="padding:12px;background:var(--bg-surface);border-left:3px solid var(--blue);border-radius:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div>
+            <strong style="font-size:13px;">ORÇ-2026-0440 · Ferragens diversas</strong>
+            <div style="font-size:11px;color:var(--text-muted);">recebido hoje · R$ 8.740,00 · aguardando sua análise</div>
+          </div>
+          <button class="btn btn-ghost btn-xs">Abrir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:880px;margin:0 auto;">
+    <!-- Cabeçalho do orçamento -->
+    <div class="card" style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;margin-bottom:14px;">
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Orçamento</div>
+          <h1 style="font-size:24px;font-weight:700;margin:4px 0;">ORÇ-2026-0432</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Versão atual: <strong>v2 (sua contraproposta)</strong> · ⏳ aguardando resposta de Darli</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:var(--text-muted);">Validade</div>
+          <div style="font-size:14px;font-weight:600;color:var(--teal-dark);">até 22/05/2026</div>
+          <div style="font-size:11px;color:var(--text-muted);">9 dias restantes</div>
+        </div>
+      </div>
+
+      <!-- Quem é o vendedor -->
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-surface);border-radius:6px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">DG</div>
+        <div style="flex:1;">
+          <strong style="font-size:13px;">Seu contato comercial: Darli Gonçalves</strong>
+          <div style="font-size:11px;color:var(--text-muted);">darli@pgmsolucoes.com.br · (54) 99999-1100</div>
+        </div>
+        <button class="btn btn-ghost btn-sm">💬 Falar agora</button>
+      </div>
+    </div>
+
+    <!-- Status de versões / negociação -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="sec-title">📊 Histórico de propostas</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="padding:12px;background:var(--bg-surface);border-radius:6px;border-left:3px solid #6B5B95;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+            <div>
+              <strong style="font-size:13px;">v1 · Proposta inicial</strong>
+              <div style="font-size:11px;color:var(--text-muted);">Enviado por Darli em 12/05/2026 14:32</div>
+            </div>
+            <strong style="font-size:14px;">R$ 47.890,00</strong>
+          </div>
+        </div>
+        <div style="padding:12px;background:#FFFBEB;border-radius:6px;border-left:3px solid var(--amber);">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+            <div>
+              <strong style="font-size:13px;">v2 · Sua contraproposta</strong> <span class="badge" style="background:#FEF3C7;color:#92400E;font-size:10px;">⏳ Aguardando análise</span>
+              <div style="font-size:11px;color:#92400E;">Enviado por você em 13/05/2026 10:31</div>
+            </div>
+            <strong style="font-size:14px;color:var(--teal-dark);">R$ 42.500,00</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Itens do orçamento (versão atual) -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="sec-title">📦 Itens da proposta v2</div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="background:var(--bg-surface);border-bottom:1px solid var(--border);">
+            <th style="padding:10px;text-align:left;font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Item</th>
+            <th style="padding:10px;text-align:right;font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Qtd</th>
+            <th style="padding:10px;text-align:right;font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Unitário</th>
+            <th style="padding:10px;text-align:right;font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Total</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border-light);"><td style="padding:10px;font-weight:600;">Chapa MDF 18mm Branco TX</td><td style="padding:10px;text-align:right;">50 m²</td><td style="padding:10px;text-align:right;">R$ 900,00</td><td style="padding:10px;text-align:right;font-weight:600;">R$ 45.000,00</td></tr>
+            <tr style="border-bottom:1px solid var(--border-light);"><td style="padding:10px;font-weight:600;">Frete CIF</td><td style="padding:10px;text-align:right;">—</td><td style="padding:10px;text-align:right;">R$ 0,00</td><td style="padding:10px;text-align:right;color:var(--text-muted);">FOB (cliente retira)</td></tr>
+          </tbody>
+          <tfoot>
+            <tr style="background:var(--teal-light);"><td colspan="3" style="padding:10px;text-align:right;font-weight:700;color:var(--teal-dark);">TOTAL</td><td style="padding:10px;text-align:right;font-weight:700;font-size:15px;color:var(--teal-dark);">R$ 42.500,00</td></tr>
+          </tfoot>
+        </table>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:10px;font-size:11px;color:var(--text-muted);flex-wrap:wrap;">
+        <span><strong>Prazo de entrega:</strong> 10 dias úteis</span>
+        <span><strong>Pagamento:</strong> 28/35/42 dias</span>
+        <span><strong>Validade:</strong> 22/05/2026</span>
+      </div>
+    </div>
+
+    <!-- AÇÕES DO CLIENTE -->
+    <div class="card" style="background:linear-gradient(135deg,var(--teal-light),#fff);">
+      <div class="sec-title">O que você gostaria de fazer?</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+        <button onclick="acaoCliente('aprovar')" style="padding:18px;background:var(--teal);color:#fff;border:none;border-radius:8px;cursor:pointer;text-align:left;transition:transform .1s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+          <div style="font-size:24px;margin-bottom:4px;">✓</div>
+          <strong style="font-size:14px;">Aprovar este orçamento</strong>
+          <div style="font-size:11px;opacity:.9;margin-top:4px;">Aceito a proposta atual (v2) e quero seguir para o pedido</div>
+        </button>
+        <button onclick="acaoCliente('comentar')" style="padding:18px;background:#0C447C;color:#fff;border:none;border-radius:8px;cursor:pointer;text-align:left;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+          <div style="font-size:24px;margin-bottom:4px;">💬</div>
+          <strong style="font-size:14px;">Comentar / Tirar dúvida</strong>
+          <div style="font-size:11px;opacity:.9;margin-top:4px;">Envio uma mensagem sem alterar valores</div>
+        </button>
+        <button onclick="acaoCliente('contrapor')" style="padding:18px;background:var(--amber);color:#fff;border:none;border-radius:8px;cursor:pointer;text-align:left;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+          <div style="font-size:24px;margin-bottom:4px;">📝</div>
+          <strong style="font-size:14px;">Fazer nova contraproposta</strong>
+          <div style="font-size:11px;opacity:.9;margin-top:4px;">Ajusto valores, prazo ou condições e devolvo</div>
+        </button>
+        <button onclick="acaoCliente('recusar')" style="padding:18px;background:#fff;color:#7A1822;border:2px solid #FCA5A5;border-radius:8px;cursor:pointer;text-align:left;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+          <div style="font-size:24px;margin-bottom:4px;">✕</div>
+          <strong style="font-size:14px;">Recusar e encerrar</strong>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Não tenho interesse no momento</div>
+        </button>
+      </div>
+
+      <!-- Compartilhar com colega -->
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-light);font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <span>📤 Quer mostrar para um colega antes de decidir?</span>
+        <button class="btn btn-ghost btn-xs" onclick="kbCompartilhar()">Compartilhar link</button>
+      </div>
+    </div>
+
+    <!-- Conversa -->
+    <div class="card" style="margin-top:14px;">
+      <div class="sec-title">💬 Conversa com Darli</div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-height:280px;overflow-y:auto;padding-right:6px;">
+        <div style="display:flex;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">DG</div>
+          <div style="flex:1;background:var(--bg-surface);border-radius:8px 8px 8px 0;padding:10px;font-size:12px;">
+            <strong>Darli</strong> <span style="font-size:10px;color:var(--text-muted);">12/05 14:32</span>
+            <div style="margin-top:4px;">Segue o orçamento v1, qualquer dúvida me avise!</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-direction:row-reverse;">
+          <div style="width:28px;height:28px;border-radius:50%;background:#0C447C;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">CE</div>
+          <div style="flex:1;background:#EFF6FF;border-radius:8px 8px 0 8px;padding:10px;font-size:12px;">
+            <strong>Você</strong> <span style="font-size:10px;color:var(--text-muted);">13/05 10:24</span>
+            <div style="margin-top:4px;">Darli, ajustes em 3 pontos (preço chapa, frete e prazo). Detalhei na contraproposta v2.</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px;border-top:1px solid var(--border-light);padding-top:10px;">
+        <textarea rows="2" placeholder="Escreva uma mensagem..." style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;"></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+          <button class="btn btn-primary btn-sm" onclick="pgmToast({tipo:'ok',titulo:'Mensagem enviada',msg:'Darli será notificado por e-mail.'})">📤 Enviar mensagem</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== COMPARADOR DE VERSÕES ===================== -->
+<div class="pg" id="pg-orc-versoes">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">PGM ERP › Comercial › <span style="color:var(--teal);cursor:pointer;" onclick="goTo('pg-lista')">Orçamentos</span> › <span style="color:var(--teal);cursor:pointer;" onclick="goTo('pg-orc-negociacao')">ORÇ-2026-0432</span> › Versões</div>
+      <h1 style="font-size:22px;font-weight:600;">📊 Comparar Versões — ORÇ-2026-0432</h1>
+      <div style="font-size:12px;color:var(--text-muted);">3 versões nesta negociação · Trianon Móveis Bento</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-orc-negociacao')">← Negociação</button>
+      <button class="btn btn-ghost btn-sm">📥 Exportar comparativo PDF</button>
+    </div>
+  </div>
+
+  <!-- Toolbar de comparação -->
+  <div class="card" style="margin-bottom:14px;padding:12px 14px;">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;">
+      <span style="font-weight:600;">Comparar:</span>
+      <select style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;">
+        <option selected>v1 (original)</option>
+        <option>v2 (contraproposta cliente)</option>
+        <option>v3 (sua resposta - rascunho)</option>
+      </select>
+      <span>↔</span>
+      <select style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;">
+        <option>v1 (original)</option>
+        <option selected>v2 (contraproposta cliente)</option>
+        <option>v3 (sua resposta - rascunho)</option>
+      </select>
+      <span style="margin:0 10px;color:var(--border);">|</span>
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" checked/> Destacar diferenças</label>
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox"/> Mostrar só campos alterados</label>
+    </div>
+  </div>
+
+  <!-- Resumo das diferenças -->
+  <div class="summary-grid" style="margin-bottom:14px;">
+    <div class="summary-card" style="border-left:3px solid #991B1B;"><div class="lbl">Diferença total</div><div class="val" style="color:#7A1822;">−R$ 5.390</div><div style="font-size:11px;color:#7A1822;">−11,3%</div></div>
+    <div class="summary-card" style="border-left:3px solid var(--amber);"><div class="lbl">Itens alterados</div><div class="val" style="color:#8A4D02;">3</div><div style="font-size:11px;color:#8A4D02;">preço, frete, prazo</div></div>
+    <div class="summary-card" style="border-left:3px solid var(--teal);"><div class="lbl">Margem v1</div><div class="val" style="color:var(--teal-dark);">22%</div></div>
+    <div class="summary-card" style="background:#FFFBEB;border-left:3px solid var(--amber);"><div class="lbl">Margem v2 (se aceitar)</div><div class="val" style="color:#8A4D02;">14%</div><div style="font-size:11px;color:#8A4D02;">−8 pontos</div></div>
+    <div class="summary-card" style="border-left:3px solid #0C447C;"><div class="lbl">Prazo v1</div><div class="val" style="color:#0C447C;font-size:14px;">7 dias úteis</div></div>
+    <div class="summary-card" style="border-left:3px solid #0C447C;"><div class="lbl">Prazo v2</div><div class="val" style="color:#0C447C;font-size:14px;">10 dias úteis</div></div>
+  </div>
+
+  <!-- Comparação lado a lado -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="background:var(--bg-surface);border-bottom:2px solid var(--border);">
+            <th style="padding:12px;text-align:left;font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;width:200px;">Campo</th>
+            <th style="padding:12px;text-align:left;font-size:12px;color:#6B5B95;background:#F3F0FA;">
+              📄 v1 — Original<div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;">Enviado por Darli · 12/05 14:32</div>
+            </th>
+            <th style="padding:12px;text-align:left;font-size:12px;color:#92400E;background:#FFFBEB;">
+              📝 v2 — Contraproposta cliente<div style="font-size:10px;color:#92400E;font-weight:400;margin-top:2px;">Enviado por Carlos Eduardo · 13/05 10:31</div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border-light);">
+            <td style="padding:10px 12px;font-weight:600;background:var(--bg-surface);">Chapa MDF 18mm — preço unitário</td>
+            <td style="padding:10px 12px;">R$ 1.945,00</td>
+            <td style="padding:10px 12px;background:#FFFBEB;">
+              <span style="text-decoration:line-through;color:var(--text-muted);font-size:11px;">R$ 1.945,00</span>
+              <span style="color:#7A1822;font-weight:700;margin-left:6px;">R$ 1.800,00</span>
+              <span style="font-size:10px;color:#7A1822;margin-left:4px;">↓ R$ 145</span>
+            </td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-light);">
+            <td style="padding:10px 12px;font-weight:600;background:var(--bg-surface);">Quantidade</td>
+            <td style="padding:10px 12px;">50 m²</td>
+            <td style="padding:10px 12px;background:#FFFBEB;">50 m² <span style="font-size:10px;color:#065F46;margin-left:4px;">✓ sem alteração</span></td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-light);">
+            <td style="padding:10px 12px;font-weight:600;background:var(--bg-surface);">Subtotal mercadoria</td>
+            <td style="padding:10px 12px;">R$ 47.890,00</td>
+            <td style="padding:10px 12px;background:#FFFBEB;">
+              <span style="text-decoration:line-through;color:var(--text-muted);font-size:11px;">R$ 47.890,00</span>
+              <span style="color:#7A1822;font-weight:700;margin-left:6px;">R$ 45.000,00</span>
+            </td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-light);">
+            <td style="padding:10px 12px;font-weight:600;background:var(--bg-surface);">Frete</td>
+            <td style="padding:10px 12px;">CIF — incluso (R$ 2.500)</td>
+            <td style="padding:10px 12px;background:#FFFBEB;">
+              <span style="text-decoration:line-through;color:var(--text-muted);font-size:11px;">CIF — incluso</span>
+              <span style="color:#7A1822;font-weight:700;margin-left:6px;">FOB (cliente retira)</span>
+              <span style="font-size:10px;color:#7A1822;display:block;margin-top:2px;">economia para o cliente: R$ 2.500</span>
+            </td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-light);">
+            <td style="padding:10px 12px;font-weight:600;background:var(--bg-surface);">Prazo de entrega</td>
+            <td style="padding:10px 12px;">7 dias úteis</td>
+            <td style="padding:10px 12px;background:#FFFBEB;">
+              <span style="text-decoration:line-through;color:var(--text-muted);font-size:11px;">7 dias</span>
+              <span style="color:#0C447C;font-weight:700;margin-left:6px;">10 dias úteis</span>
+              <span style="font-size:10px;color:var(--text-muted);display:block;margin-top:2px;">cliente quer + 3 dias</span>
+            </td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-light);">
+            <td style="padding:10px 12px;font-weight:600;background:var(--bg-surface);">Condição de pagamento</td>
+            <td style="padding:10px 12px;">28/35/42 dias</td>
+            <td style="padding:10px 12px;background:#FFFBEB;">28/35/42 dias <span style="font-size:10px;color:#065F46;margin-left:4px;">✓ sem alteração</span></td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-light);">
+            <td style="padding:10px 12px;font-weight:600;background:var(--bg-surface);">Validade</td>
+            <td style="padding:10px 12px;">22/05/2026</td>
+            <td style="padding:10px 12px;background:#FFFBEB;">22/05/2026 <span style="font-size:10px;color:#065F46;margin-left:4px;">✓ sem alteração</span></td>
+          </tr>
+          <tr style="background:var(--teal-light);border-top:2px solid var(--teal);">
+            <td style="padding:14px 12px;font-weight:700;color:var(--teal-dark);">TOTAL</td>
+            <td style="padding:14px 12px;font-weight:700;font-size:15px;color:var(--teal-dark);">R$ 47.890,00</td>
+            <td style="padding:14px 12px;background:#FFFBEB;">
+              <span style="font-weight:700;font-size:15px;color:#7A1822;">R$ 42.500,00</span>
+              <span style="font-size:11px;color:#7A1822;display:block;">Δ −R$ 5.390 (−11,3%)</span>
+            </td>
+          </tr>
+          <tr style="background:#fafafa;">
+            <td style="padding:10px 12px;font-weight:600;font-size:11px;color:var(--text-muted);">Análise de margem (interno)</td>
+            <td style="padding:10px 12px;font-size:11px;">
+              <div>Custo: R$ 37.350</div>
+              <div style="color:#065F46;font-weight:600;">Margem: 22% (R$ 10.540)</div>
+            </td>
+            <td style="padding:10px 12px;font-size:11px;background:#FFFBEB;">
+              <div>Custo: R$ 36.550 (sem frete)</div>
+              <div style="color:#8A4D02;font-weight:600;">Margem: 14% (R$ 5.950)</div>
+              <div style="font-size:10px;color:#7A1822;margin-top:2px;">⚠ abaixo da margem mínima da empresa (15%)</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recomendação do sistema -->
+  <div class="card" style="margin-top:14px;background:linear-gradient(135deg,#0a3d2c,#1D9E75);color:#fff;border:none;">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;opacity:.85;margin-bottom:6px;">🤖 Análise do sistema</div>
+    <div style="font-size:13px;line-height:1.7;">
+      A contraproposta do cliente <strong>reduz a margem de 22% para 14%</strong>, abaixo do mínimo da empresa (15%).
+      Sugestão: <strong>contraproposta intermediária</strong> — manter o preço da chapa em R$ 1.850 e aceitar FOB. Isso fica em <strong>R$ 43.250 (margem 18%)</strong>, próximo do pedido do cliente sem perder margem.
+    </div>
+    <button class="btn btn-sm" style="margin-top:10px;background:#fff;color:var(--teal-dark);" onclick="goTo('pg-orc-negociacao')">📝 Aplicar sugestão na v3</button>
+  </div>
+</div>
+
+<!-- ===================== FILA DE ALÇADAS (GESTOR) ===================== -->
+<div class="pg" id="pg-orc-alcadas">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">PGM ERP › Comercial › Aprovações de Alçada</div>
+      <h1 style="font-size:22px;font-weight:600;">⚖ Aprovações de Alçada</h1>
+      <div style="font-size:12px;color:var(--text-muted);">Contrapropostas/descontos que excedem a alçada do vendedor · Roberto Maia (até 20%)</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-lista')">← Orçamentos</button>
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-orc-config-aprovacao')">⚙ Configurar aprovações</button>
+    </div>
+  </div>
+
+  <div class="summary-grid" style="margin-bottom:14px;">
+    <div class="summary-card" style="background:#FAEEDA;border-left:3px solid var(--amber);"><div class="lbl">Pendentes</div><div class="val" style="color:#8A4D02;">3</div><div style="font-size:11px;color:#8A4D02;">aguardando você</div></div>
+    <div class="summary-card" style="background:#F8D8DA;border-left:3px solid var(--red);"><div class="lbl">Urgentes</div><div class="val" style="color:#7A1822;">1</div><div style="font-size:11px;color:#7A1822;">> 4h sem resposta</div></div>
+    <div class="summary-card" style="border-left:3px solid #10B981;"><div class="lbl">Aprovadas (mês)</div><div class="val" style="color:#065F46;">14</div></div>
+    <div class="summary-card" style="border-left:3px solid var(--red);"><div class="lbl">Recusadas (mês)</div><div class="val" style="color:#7A1822;">3</div></div>
+    <div class="summary-card" style="border-left:3px solid var(--blue);"><div class="lbl">Desconto médio liberado</div><div class="val" style="color:#0C447C;font-size:14px;">12,4%</div></div>
+    <div class="summary-card" style="border-left:3px solid #6B5B95;"><div class="lbl">Tempo médio</div><div class="val" style="color:#3D2D63;font-size:14px;">42min</div></div>
+  </div>
+
+  <!-- Card de aprovação destacado -->
+  <div class="card" style="margin-bottom:14px;border-left:4px solid var(--amber);">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;margin-bottom:12px;">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span class="badge" style="background:#FEF3C7;color:#92400E;font-size:10px;">⏳ Pendente</span>
+          <span style="font-size:11px;color:var(--text-muted);">há 2h 14min</span>
+        </div>
+        <strong style="font-size:15px;">ORÇ-2026-0432 · Trianon Móveis Bento</strong>
+        <div style="font-size:11px;color:var(--text-muted);">Solicitado por Darli Gonçalves</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-orc-versoes')">📊 Ver comparativo</button>
+    </div>
+
+    <div class="g3" style="gap:10px;margin-bottom:12px;">
+      <div style="padding:10px;background:var(--bg-surface);border-radius:6px;">
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Valor original</div>
+        <strong style="font-size:14px;">R$ 47.890</strong>
+      </div>
+      <div style="padding:10px;background:#FFFBEB;border-radius:6px;">
+        <div style="font-size:10px;color:#92400E;text-transform:uppercase;">Aceitar contraproposta</div>
+        <strong style="font-size:14px;color:#8A4D02;">R$ 42.500</strong>
+        <div style="font-size:10px;color:#8A4D02;">desconto 11,3%</div>
+      </div>
+      <div style="padding:10px;background:#FEF2F2;border-radius:6px;">
+        <div style="font-size:10px;color:#7A1822;text-transform:uppercase;">Margem resultante</div>
+        <strong style="font-size:14px;color:#7A1822;">14%</strong>
+        <div style="font-size:10px;color:#7A1822;">mínimo: 15%</div>
+      </div>
+    </div>
+
+    <!-- Justificativa do vendedor -->
+    <div style="background:var(--bg-surface);padding:10px;border-radius:6px;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">💬 Justificativa de Darli:</div>
+      <div style="font-size:12px;line-height:1.5;">"Cliente é parceiro há 4 anos, faturamento de R$ 287 mil/12m, inadimplência zero. Negociações ganhas: 73%. Concorrente Madeireira Bento está oferecendo R$ 36/m² (R$ 1.800). Se perdermos, perdemos a relação inteira. Sugiro aceitar mesmo com margem 14% (abaixo do mínimo)."</div>
+    </div>
+
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+      <button class="btn btn-ghost btn-sm" style="color:#991B1B;" onclick="pgmToast({tipo:'err',titulo:'Recusado',msg:'Darli foi notificado para reabrir negociação.'})">✕ Recusar</button>
+      <button class="btn btn-ghost btn-sm" onclick="pgmModal({titulo:'💬 Solicitar mais informações',html:'<p>Pergunte algo a Darli antes de decidir.</p><textarea rows=\'4\' style=\'width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px;margin-top:6px;\' placeholder=\'Sua pergunta...\'></textarea>',acoes:[{label:'Cancelar'},{label:'Enviar',primario:true,handler:()=>pgmToast({tipo:'ok',msg:'Pergunta enviada a Darli.'})}]})">💬 Pedir info</button>
+      <button class="btn btn-ghost btn-sm" onclick="pgmModal({titulo:'📝 Aprovar com contraproposta',html:'<p style=\'font-size:12px;color:var(--text-muted);margin-bottom:8px;\'>Aprovar com valor diferente do solicitado.</p><div class=\'field\'><label>Valor máximo aprovado</label><input type=\'text\' value=\'R$ 43.250\' style=\'font-family:monospace;\'/></div><div class=\'field\'><label>Observação</label><textarea rows=\'3\' style=\'width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px;\'>Aceito até R$ 43.250 (margem 18%). Acima disso, escala para diretoria.</textarea></div>',acoes:[{label:'Cancelar'},{label:'Aprovar com limite',primario:true,handler:()=>pgmToast({tipo:'ok',titulo:'Aprovado com limite',msg:'Darli pode fechar até R$ 43.250.'})}]})">📝 Aprovar com limite</button>
+      <button class="btn btn-primary btn-sm" onclick="pgmModal({titulo:'✓ Aprovar contraproposta',html:'<p>Você aprovará o desconto de <strong>11,3%</strong> em ORÇ-2026-0432.</p><p style=\'font-size:12px;color:var(--text-muted);margin-top:8px;\'>Margem resultante: 14% (abaixo do mínimo de 15%). Sua aprovação ficará registrada em auditoria.</p>',acoes:[{label:'Cancelar'},{label:'✓ Aprovar',primario:true,handler:()=>{pgmToast({tipo:'ok',titulo:'Aprovado!',msg:'Darli foi notificado. Pode aceitar contraproposta.'});setTimeout(()=>goTo('pg-orc-alcadas'),500);}}]})">✓ Aprovar integralmente</button>
+    </div>
+  </div>
+
+  <!-- Outras pendentes (resumidas) -->
+  <div class="card">
+    <div class="sec-title">Outras aprovações pendentes</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg-surface);border-radius:6px;cursor:pointer;" onclick="pgmToast({tipo:'info',msg:'Em produção: navega para o orçamento'})">
+        <div style="font-size:20px;">⚠</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;">ORÇ-2026-0421 · Artetílica Iluminação</div>
+          <div style="font-size:11px;color:var(--text-muted);">Desconto 18% · solicitado por Fernanda Alves · há 28min</div>
+        </div>
+        <strong style="color:#8A4D02;">R$ 28.400</strong>
+        <button class="btn btn-ghost btn-xs">Analisar →</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:#FEF2F2;border-radius:6px;border-left:3px solid var(--red);cursor:pointer;" onclick="pgmToast({tipo:'info',msg:'Em produção: navega para o orçamento'})">
+        <div style="font-size:20px;">🔥</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;">ORÇ-2026-0418 · R-Cork Metalúrgica <span class="badge" style="background:#FEE2E2;color:#991B1B;font-size:9px;margin-left:6px;">URGENTE</span></div>
+          <div style="font-size:11px;color:#7A1822;">Desconto 22% · acima da sua alçada (20%) — escalar para diretoria · há 4h 18min</div>
+        </div>
+        <strong style="color:#7A1822;">R$ 156.800</strong>
+        <button class="btn btn-ghost btn-xs">Analisar →</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg-surface);border-radius:6px;cursor:pointer;" onclick="pgmToast({tipo:'info',msg:'Em produção: navega para o orçamento'})">
+        <div style="font-size:20px;">⏰</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;">ORÇ-2026-0415 · Móveis Premium SA</div>
+          <div style="font-size:11px;color:var(--text-muted);">Desconto 13% · solicitado por Mariana Costa · há 1h 42min</div>
+        </div>
+        <strong style="color:#8A4D02;">R$ 18.900</strong>
+        <button class="btn btn-ghost btn-xs">Analisar →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== APROVAÇÃO DE ORÇAMENTOS ===== -->
+<!-- ================================================================= -->
+<!-- CONFIGURAÇÃO DE APROVAÇÃO DE ORÇAMENTOS                           -->
+<!-- ================================================================= -->
+
+<!-- ===================== MATRIZ DE APROVAÇÃO ===================== -->
+<div class="pg" id="pg-orc-config-aprovacao">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">PGM ERP › Comercial › <span style="color:var(--teal);cursor:pointer;" onclick="goTo('pg-lista')">Orçamentos</span> › Configuração de Aprovação</div>
+      <h1 style="font-size:22px;font-weight:600;">⚖ Matriz de Aprovação de Orçamentos</h1>
+      <div style="font-size:12px;color:var(--text-muted);">Quem pode solicitar, quem precisa de aprovação, quem aprova cada faixa e quem recebe e-mail</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-orc-alcadas')">📋 Fila de aprovações</button>
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-acesso-central')">🔐 Controle de Acesso</button>
+      <button class="btn btn-primary btn-sm" onclick="goTo('pg-orc-regra-editar')">+ Nova regra</button>
+    </div>
+  </div>
+
+  <!-- Como funciona -->
+  <div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,#0a3d2c,#1D9E75);color:#fff;border:none;">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;opacity:.85;margin-bottom:10px;">Como o fluxo de aprovação funciona</div>
+    <div class="g3" style="gap:14px;">
+      <div style="background:rgba(255,255,255,.12);border-radius:10px;padding:14px;">
+        <div style="font-size:22px;margin-bottom:6px;">1️⃣</div>
+        <strong style="font-size:13px;">Quem pode solicitar</strong>
+        <div style="font-size:12px;opacity:.9;margin-top:4px;line-height:1.5;">Qualquer usuário com permissão "criar orçamento" pode montar uma proposta. Mas não pode enviar ao cliente sem aprovação (se a regra exigir).</div>
+      </div>
+      <div style="background:rgba(255,255,255,.12);border-radius:10px;padding:14px;">
+        <div style="font-size:22px;margin-bottom:6px;">2️⃣</div>
+        <strong style="font-size:13px;">Quando precisa aprovação</strong>
+        <div style="font-size:12px;opacity:.9;margin-top:4px;line-height:1.5;">Depende do papel de quem criou (júnior sempre, sênior não) e do valor/desconto. Configurável por regra.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.12);border-radius:10px;padding:14px;">
+        <div style="font-size:22px;margin-bottom:6px;">3️⃣</div>
+        <strong style="font-size:13px;">Cascata de aprovadores</strong>
+        <div style="font-size:12px;opacity:.9;margin-top:4px;line-height:1.5;">Gestor da área aprova até um teto; acima disso sobe para o diretor. E-mail vai automático para os aprovadores.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="summary-grid" style="margin-bottom:14px;">
+    <div class="summary-card" style="border-left:3px solid var(--teal);"><div class="lbl">Regras ativas</div><div class="val" style="color:var(--teal-dark);">5</div></div>
+    <div class="summary-card" style="background:#FAEEDA;border-left:3px solid var(--amber);"><div class="lbl">Pendentes agora</div><div class="val" style="color:#8A4D02;">3</div></div>
+    <div class="summary-card" style="border-left:3px solid var(--blue);"><div class="lbl">Aprovadores cadastrados</div><div class="val" style="color:#0C447C;">4</div></div>
+    <div class="summary-card" style="border-left:3px solid #10B981;"><div class="lbl">Aprovados sem revisão (mês)</div><div class="val" style="color:#065F46;">62%</div><div style="font-size:11px;color:var(--text-muted);">vendedores sênior</div></div>
+    <div class="summary-card" style="border-left:3px solid #6B5B95;"><div class="lbl">Tempo médio aprovação</div><div class="val" style="color:#3D2D63;font-size:15px;">42min</div></div>
+  </div>
+
+  <!-- ===== Bloco 1: Quem pode SOLICITAR e quem precisa de aprovação (por papel) ===== -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="sec-title">1️⃣ Por papel — quem precisa de aprovação?</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Configure se cada papel pode enviar orçamento direto ou precisa passar por aprovação.</div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:var(--bg-surface);border-bottom:1px solid var(--border);">
+          <th style="padding:10px;text-align:left;font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Papel</th>
+          <th style="padding:10px;text-align:center;font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Pode criar orçamento</th>
+          <th style="padding:10px;text-align:center;font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Precisa aprovação</th>
+          <th style="padding:10px;text-align:left;font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Regra aplicada</th>
+          <th style="padding:10px;text-align:center;font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Ações</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border-light);">
+            <td style="padding:10px;"><span class="badge" style="background:var(--teal-light);color:var(--teal-dark);font-size:10px;">💼 Vendedor Júnior</span></td>
+            <td style="padding:10px;text-align:center;"><span style="color:var(--teal);font-size:16px;">●</span></td>
+            <td style="padding:10px;text-align:center;"><label style="position:relative;display:inline-block;width:38px;height:20px;"><input type="checkbox" checked style="opacity:0;width:0;height:0;"/><span style="position:absolute;cursor:pointer;inset:0;background:var(--teal);border-radius:20px;transition:.2s;"></span><span style="position:absolute;height:14px;width:14px;left:21px;top:3px;background:#fff;border-radius:50%;transition:.2s;"></span></label></td>
+            <td style="padding:10px;"><span style="font-size:11px;">⚠ <strong>Sempre</strong> — todo orçamento vai para aprovação</span></td>
+            <td style="padding:10px;text-align:center;"><button class="btn btn-ghost btn-xs" onclick="goTo('pg-orc-regra-editar')">Editar</button></td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-light);">
+            <td style="padding:10px;"><span class="badge" style="background:var(--teal-light);color:var(--teal-dark);font-size:10px;">💼 Vendedor Sênior</span></td>
+            <td style="padding:10px;text-align:center;"><span style="color:var(--teal);font-size:16px;">●</span></td>
+            <td style="padding:10px;text-align:center;"><label style="position:relative;display:inline-block;width:38px;height:20px;"><input type="checkbox" style="opacity:0;width:0;height:0;"/><span style="position:absolute;cursor:pointer;inset:0;background:#CBD5E1;border-radius:20px;transition:.2s;"></span><span style="position:absolute;height:14px;width:14px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;"></span></label></td>
+            <td style="padding:10px;"><span style="font-size:11px;color:#065F46;">✓ <strong>Só se</strong> desconto &gt; 10% ou valor &gt; R$ 50 mil</span></td>
+            <td style="padding:10px;text-align:center;"><button class="btn btn-ghost btn-xs" onclick="goTo('pg-orc-regra-editar')">Editar</button></td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-light);">
+            <td style="padding:10px;"><span class="badge" style="background:#FCE7F3;color:#BE185D;font-size:10px;">⭐ Gerente Comercial</span></td>
+            <td style="padding:10px;text-align:center;"><span style="color:var(--teal);font-size:16px;">●</span></td>
+            <td style="padding:10px;text-align:center;"><label style="position:relative;display:inline-block;width:38px;height:20px;"><input type="checkbox" style="opacity:0;width:0;height:0;"/><span style="position:absolute;cursor:pointer;inset:0;background:#CBD5E1;border-radius:20px;transition:.2s;"></span><span style="position:absolute;height:14px;width:14px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;"></span></label></td>
+            <td style="padding:10px;"><span style="font-size:11px;color:#065F46;">✓ <strong>Só se</strong> desconto &gt; 20% (vai pro diretor)</span></td>
+            <td style="padding:10px;text-align:center;"><button class="btn btn-ghost btn-xs" onclick="goTo('pg-orc-regra-editar')">Editar</button></td>
+          </tr>
+          <tr>
+            <td style="padding:10px;"><span class="badge" style="background:#FEE2E2;color:#991B1B;font-size:10px;">👑 Diretor</span></td>
+            <td style="padding:10px;text-align:center;"><span style="color:var(--teal);font-size:16px;">●</span></td>
+            <td style="padding:10px;text-align:center;"><label style="position:relative;display:inline-block;width:38px;height:20px;"><input type="checkbox" style="opacity:0;width:0;height:0;"/><span style="position:absolute;cursor:pointer;inset:0;background:#CBD5E1;border-radius:20px;transition:.2s;"></span><span style="position:absolute;height:14px;width:14px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;"></span></label></td>
+            <td style="padding:10px;"><span style="font-size:11px;color:#065F46;">✓ Nunca — autonomia total</span></td>
+            <td style="padding:10px;text-align:center;"><button class="btn btn-ghost btn-xs" onclick="goTo('pg-orc-regra-editar')">Editar</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== Bloco 2: Cascata de valor (quem aprova cada faixa) ===== -->
+  <div class="card" style="margin-bottom:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <div class="sec-title" style="margin:0;">2️⃣ Cascata de aprovação por valor/desconto</div>
+      <button class="btn btn-ghost btn-xs" onclick="goTo('pg-orc-regra-editar')">+ Adicionar nível</button>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Quando um orçamento precisa de aprovação, o sistema escolhe o aprovador conforme o valor/desconto. Você pode adicionar, editar, remover ou trocar quem aprova cada nível.</div>
+
+    <!-- Nível 1 -->
+    <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;border-left:4px solid var(--teal);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+        <div style="flex:1;min-width:240px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;">1</span>
+            <strong style="font-size:14px;">Nível 1 — Gestor da área</strong>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Faixa: desconto até <strong>15%</strong> OU valor até <strong>R$ 50.000</strong></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <span style="font-size:11px;color:var(--text-muted);">Aprovadores:</span>
+            <span style="padding:3px 10px;background:var(--teal-light);color:var(--teal-dark);border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">👤 Roberto Maia (gestor comercial) <span style="cursor:pointer;font-weight:700;">✕</span></span>
+            <span style="padding:3px 10px;background:var(--bg-surface);border:1px dashed var(--border);border-radius:12px;font-size:11px;cursor:pointer;" onclick="goTo('pg-orc-regra-editar')">+ adicionar/trocar</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-xs" onclick="goTo('pg-orc-regra-editar')">✏ Editar</button>
+          <button class="btn btn-ghost btn-xs" style="color:#991B1B;">🗑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seta -->
+    <div style="text-align:center;color:var(--text-muted);font-size:18px;margin:-2px 0;">↓ <span style="font-size:11px;">se exceder a faixa, sobe para</span></div>
+
+    <!-- Nível 2 -->
+    <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;border-left:4px solid #6B21A8;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+        <div style="flex:1;min-width:240px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="width:26px;height:26px;border-radius:50%;background:#6B21A8;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;">2</span>
+            <strong style="font-size:14px;">Nível 2 — Diretor Comercial</strong>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Faixa: desconto de <strong>15% a 25%</strong> OU valor de <strong>R$ 50 mil a R$ 200 mil</strong></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <span style="font-size:11px;color:var(--text-muted);">Aprovadores:</span>
+            <span style="padding:3px 10px;background:#EDE9FE;color:#6B21A8;border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">👤 Darli Gonçalves (diretor) <span style="cursor:pointer;font-weight:700;">✕</span></span>
+            <span style="padding:3px 10px;background:var(--bg-surface);border:1px dashed var(--border);border-radius:12px;font-size:11px;cursor:pointer;" onclick="goTo('pg-orc-regra-editar')">+ adicionar/trocar</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-xs" onclick="goTo('pg-orc-regra-editar')">✏ Editar</button>
+          <button class="btn btn-ghost btn-xs" style="color:#991B1B;">🗑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seta -->
+    <div style="text-align:center;color:var(--text-muted);font-size:18px;margin:-2px 0;">↓ <span style="font-size:11px;">se exceder a faixa, sobe para</span></div>
+
+    <!-- Nível 3 -->
+    <div style="border:1px solid var(--border);border-radius:10px;padding:14px;border-left:4px solid #991B1B;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+        <div style="flex:1;min-width:240px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="width:26px;height:26px;border-radius:50%;background:#991B1B;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;">3</span>
+            <strong style="font-size:14px;">Nível 3 — Diretoria (decisão conjunta)</strong>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Faixa: desconto <strong>acima de 25%</strong> OU valor <strong>acima de R$ 200 mil</strong></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <span style="font-size:11px;color:var(--text-muted);">Aprovadores:</span>
+            <span style="padding:3px 10px;background:#FEE2E2;color:#991B1B;border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">👤 Darli Gonçalves <span style="cursor:pointer;font-weight:700;">✕</span></span>
+            <span style="padding:3px 10px;background:#FEE2E2;color:#991B1B;border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">👤 Sócio-Diretor <span style="cursor:pointer;font-weight:700;">✕</span></span>
+            <span style="padding:3px 10px;background:var(--bg-surface);border:1px dashed var(--border);border-radius:12px;font-size:11px;cursor:pointer;" onclick="goTo('pg-orc-regra-editar')">+ adicionar/trocar</span>
+          </div>
+          <div style="font-size:11px;color:#7A1822;margin-top:8px;">⚠ Exige aprovação de <strong>ambos</strong> os diretores (decisão conjunta)</div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-xs" onclick="goTo('pg-orc-regra-editar')">✏ Editar</button>
+          <button class="btn btn-ghost btn-xs" style="color:#991B1B;">🗑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Bloco 3: Notificações por e-mail ===== -->
+  <div class="card">
+    <div class="sec-title">3️⃣ Notificações por e-mail</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Quem recebe e-mail quando um orçamento entra para aprovação. Por padrão, busca automaticamente o gestor da área; você pode adicionar diretores para ciência.</div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <!-- Regra padrão -->
+      <div style="padding:12px;background:var(--teal-light);border-radius:8px;border-left:3px solid var(--teal);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <input type="checkbox" checked/>
+          <strong style="font-size:13px;color:var(--teal-dark);">📧 Gestor da área (automático)</strong>
+          <span class="badge b-paga" style="font-size:9px;">Padrão</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-left:24px;">O sistema identifica o gestor responsável pela carteira do vendedor que criou o orçamento e envia o e-mail de aprovação automaticamente. <strong>Não pode ser desativado.</strong></div>
+      </div>
+
+      <!-- Diretores -->
+      <div style="padding:12px;background:#fff;border:1px solid var(--border);border-radius:8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <input type="checkbox" checked/>
+          <strong style="font-size:13px;">📧 Diretores (para ciência ou aprovação de nível superior)</strong>
+        </div>
+        <div style="margin-left:24px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <span style="padding:3px 10px;background:#EDE9FE;color:#6B21A8;border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">👑 Darli Gonçalves (Diretor Comercial) <span style="cursor:pointer;font-weight:700;">✕</span></span>
+          <span style="padding:3px 10px;background:#EDE9FE;color:#6B21A8;border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">👑 Sócio-Diretor <span style="cursor:pointer;font-weight:700;">✕</span></span>
+          <select style="padding:3px 10px;border:1px dashed var(--border);border-radius:12px;font-size:11px;background:transparent;cursor:pointer;">
+            <option>+ adicionar diretor</option>
+            <option>Maria Silva (Financeiro)</option>
+            <option>Carlos Souza (Produção)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Cópia para o solicitante -->
+      <div style="padding:12px;background:#fff;border:1px solid var(--border);border-radius:8px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" checked/>
+          <strong style="font-size:13px;">📧 Notificar o vendedor que criou (cópia)</strong>
+        </label>
+        <div style="font-size:11px;color:var(--text-muted);margin-left:24px;margin-top:4px;">O solicitante recebe cópia confirmando que foi enviado e acompanha o status.</div>
+      </div>
+
+      <!-- Configurações de e-mail -->
+      <div style="padding:12px;background:var(--bg-surface);border-radius:8px;">
+        <div style="font-size:12px;font-weight:600;margin-bottom:8px;">⚙ Comportamento do e-mail</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;"><input type="checkbox" checked/> Incluir botões "Aprovar / Recusar" direto no e-mail (1 clique)</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;"><input type="checkbox" checked/> Anexar PDF do orçamento ao e-mail</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;"><input type="checkbox" checked/> Reenviar lembrete se não aprovado em 4 horas</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;"><input type="checkbox"/> Escalar automaticamente para o próximo nível após 24h sem resposta</label>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:14px;gap:8px;">
+      <button class="btn btn-ghost btn-sm">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="pgmToast({tipo:'ok',titulo:'Configuração salva',msg:'Regras de aprovação atualizadas. Vale para novos orçamentos.'})">💾 Salvar configuração</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== EDITOR DE REGRA DE APROVAÇÃO ===================== -->
+<div class="pg" id="pg-orc-regra-editar">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">PGM ERP › Comercial › <span style="color:var(--teal);cursor:pointer;" onclick="goTo('pg-orc-config-aprovacao')">Matriz de Aprovação</span> › Editar regra</div>
+      <h1 style="font-size:22px;font-weight:600;">✏ Regra de Aprovação</h1>
+      <div style="font-size:12px;color:var(--text-muted);">Defina o gatilho, a faixa de valor/desconto e quem aprova</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-orc-config-aprovacao')">← Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="pgmToast({tipo:'ok',titulo:'Regra salva',msg:'A regra entra em vigor para novos orçamentos.'});setTimeout(()=>goTo('pg-orc-config-aprovacao'),700)">💾 Salvar regra</button>
+    </div>
+  </div>
+
+  <div class="g2" style="gap:14px;align-items:start;">
+    <!-- Coluna principal -->
+    <div>
+      <!-- Identificação -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="sec-title">📋 Identificação</div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Nome da regra *</label>
+          <input type="text" value="Nível 1 — Gestor da área"/>
+        </div>
+        <div class="field">
+          <label>Descrição</label>
+          <input type="text" value="Aprovação do gestor comercial para descontos/valores moderados"/>
+        </div>
+      </div>
+
+      <!-- Gatilho: quando aplica -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="sec-title">🎯 Quando esta regra se aplica?</div>
+
+        <div class="field" style="margin-bottom:12px;">
+          <label>Vale para quais papéis (quem criou o orçamento)</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;padding:8px;border:1px solid var(--border);border-radius:6px;">
+            <span style="padding:3px 10px;background:var(--teal-light);color:var(--teal-dark);border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">Vendedor Júnior <span style="cursor:pointer;font-weight:700;">✕</span></span>
+            <span style="padding:3px 10px;background:var(--teal-light);color:var(--teal-dark);border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">Vendedor Sênior <span style="cursor:pointer;font-weight:700;">✕</span></span>
+            <select style="border:1px dashed var(--border);border-radius:12px;font-size:11px;background:transparent;cursor:pointer;padding:2px 6px;"><option>+ papel</option><option>Gerente Comercial</option><option>Inside Sales</option></select>
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:12px;">
+          <label>Condição de gatilho</label>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg-surface);border-radius:6px;cursor:pointer;font-size:12px;"><input type="radio" name="gatilho"/> Sempre exige aprovação (qualquer orçamento)</label>
+            <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--teal-light);border:1px solid var(--teal-mid);border-radius:6px;cursor:pointer;font-size:12px;"><input type="radio" name="gatilho" checked/> Só quando ultrapassar a faixa abaixo</label>
+            <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg-surface);border-radius:6px;cursor:pointer;font-size:12px;"><input type="radio" name="gatilho"/> Nunca exige (autonomia total)</label>
+          </div>
+        </div>
+
+        <!-- Faixa -->
+        <div style="background:var(--bg-surface);border-radius:8px;padding:14px;">
+          <div style="font-size:12px;font-weight:600;margin-bottom:10px;">Faixa de aplicação (operador OU entre as condições)</div>
+          <div class="g2" style="gap:10px;">
+            <div class="field" style="margin:0;">
+              <label>Desconto a partir de (%)</label>
+              <input type="number" value="0" style="text-align:right;"/>
+            </div>
+            <div class="field" style="margin:0;">
+              <label>Desconto até (%)</label>
+              <input type="number" value="15" style="text-align:right;"/>
+            </div>
+            <div class="field" style="margin:0;">
+              <label>Valor a partir de (R$)</label>
+              <input type="text" value="0" style="text-align:right;"/>
+            </div>
+            <div class="field" style="margin:0;">
+              <label>Valor até (R$)</label>
+              <input type="text" value="50.000" style="text-align:right;"/>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">💡 Acima desta faixa, o orçamento sobe automaticamente para o próximo nível da cascata.</div>
+        </div>
+      </div>
+
+      <!-- Quem aprova -->
+      <div class="card">
+        <div class="sec-title">👤 Quem aprova nesta regra</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Adicione, remova ou troque os aprovadores. Por padrão, o sistema busca o gestor da área da carteira do vendedor.</div>
+
+        <!-- Modo de busca do aprovador -->
+        <div class="field" style="margin-bottom:12px;">
+          <label>Como identificar o aprovador</label>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="display:flex;align-items:flex-start;gap:8px;padding:10px;background:var(--teal-light);border:1px solid var(--teal-mid);border-radius:6px;cursor:pointer;font-size:12px;"><input type="radio" name="aprovador-modo" checked/> <div><strong>Automático — gestor da área</strong><div style="font-size:11px;color:var(--text-muted);">Sistema busca o gestor responsável pela carteira/área do vendedor que criou o orçamento</div></div></label>
+            <label style="display:flex;align-items:flex-start;gap:8px;padding:10px;background:#fff;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;"><input type="radio" name="aprovador-modo"/> <div><strong>Pessoa específica (fixa)</strong><div style="font-size:11px;color:var(--text-muted);">Sempre a mesma pessoa, independente de quem criou</div></div></label>
+            <label style="display:flex;align-items:flex-start;gap:8px;padding:10px;background:#fff;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;"><input type="radio" name="aprovador-modo"/> <div><strong>Qualquer um do grupo</strong><div style="font-size:11px;color:var(--text-muted);">Primeiro do grupo que aprovar resolve</div></div></label>
+          </div>
+        </div>
+
+        <!-- Lista de aprovadores -->
+        <div class="field">
+          <label>Aprovadores designados</label>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-surface);border-radius:6px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;">RM</div>
+              <div style="flex:1;font-size:12px;"><strong>Roberto Maia</strong><div style="font-size:10px;color:var(--text-muted);">Gestor Comercial · roberto@pgmsolucoes.com.br</div></div>
+              <button class="btn btn-ghost btn-xs">🔄 Trocar</button>
+              <button class="btn btn-ghost btn-xs" style="color:#991B1B;">✕ Remover</button>
+            </div>
+            <select style="padding:8px 10px;border:1px dashed var(--border);border-radius:6px;font-size:12px;background:transparent;cursor:pointer;">
+              <option>+ Adicionar aprovador</option>
+              <option>Darli Gonçalves (Diretor)</option>
+              <option>Fernanda Alves (Gerente)</option>
+              <option>Sócio-Diretor</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coluna lateral: pré-visualização -->
+    <div>
+      <div class="card" style="margin-bottom:14px;position:sticky;top:14px;">
+        <div class="sec-title">👁 Resumo da regra</div>
+        <div style="font-size:12px;line-height:1.8;">
+          <div style="padding:10px;background:var(--bg-surface);border-radius:6px;margin-bottom:8px;">
+            <div style="color:var(--text-muted);font-size:11px;">QUANDO</div>
+            <div>Vendedor <strong>Júnior ou Sênior</strong> cria orçamento com desconto <strong>até 15%</strong> ou valor <strong>até R$ 50 mil</strong></div>
+          </div>
+          <div style="text-align:center;color:var(--text-muted);">↓</div>
+          <div style="padding:10px;background:var(--teal-light);border-radius:6px;margin-top:8px;">
+            <div style="color:var(--teal-dark);font-size:11px;">ENTÃO</div>
+            <div>Envia para aprovação de <strong>Roberto Maia</strong> (gestor da área) e dispara e-mail automático.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec-title">⚙ Opções</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" checked/> Regra ativa</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" checked/> Enviar e-mail ao aprovador</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox"/> Bloquear envio ao cliente até aprovar</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" checked/> Registrar em auditoria</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SOLICITAR APROVAÇÃO (VENDEDOR) ===================== -->
+<div class="pg" id="pg-orc-solicitar">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">PGM ERP › Comercial › <span style="color:var(--teal);cursor:pointer;" onclick="goTo('pg-lista')">Orçamentos</span> › ORÇ-2026-0445 › Solicitar aprovação</div>
+      <h1 style="font-size:22px;font-weight:600;">📤 Solicitar Aprovação</h1>
+      <div style="font-size:12px;color:var(--text-muted);">Este orçamento precisa de aprovação antes de ir ao cliente</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="goTo('pg-lista')">← Voltar</button>
+    </div>
+  </div>
+
+  <!-- Por que precisa aprovação -->
+  <div class="alert-box alert-amber" style="margin-bottom:14px;font-size:12px;">
+    ⚠ <strong>Aprovação necessária:</strong> você (Mariana Costa · <strong>Vendedor Júnior</strong>) precisa de aprovação para todos os orçamentos. Além disso, o desconto de <strong>14%</strong> exige o gestor da área.
+  </div>
+
+  <div class="g2" style="gap:14px;align-items:start;">
+    <!-- Coluna principal -->
+    <div>
+      <!-- Resumo do orçamento -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="sec-title">📄 Resumo do orçamento</div>
+        <div class="g2" style="gap:10px;margin-bottom:10px;">
+          <div style="padding:10px;background:var(--bg-surface);border-radius:6px;">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Cliente</div>
+            <strong style="font-size:13px;">Móveis Premium SA</strong>
+          </div>
+          <div style="padding:10px;background:var(--bg-surface);border-radius:6px;">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Valor total</div>
+            <strong style="font-size:13px;">R$ 38.200,00</strong>
+          </div>
+          <div style="padding:10px;background:#FFFBEB;border-radius:6px;">
+            <div style="font-size:10px;color:#92400E;text-transform:uppercase;">Desconto aplicado</div>
+            <strong style="font-size:13px;color:#8A4D02;">14%</strong>
+          </div>
+          <div style="padding:10px;background:var(--bg-surface);border-radius:6px;">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Margem resultante</div>
+            <strong style="font-size:13px;color:#065F46;">19%</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Para quem vai (cascata calculada) -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="sec-title">🎯 Esta solicitação vai para</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Conforme a matriz de aprovação, com desconto de 14% (faixa até 15%), o aprovador é o gestor da sua área:</div>
+
+        <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--teal-light);border-radius:8px;border-left:3px solid var(--teal);margin-bottom:10px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">RM</div>
+          <div style="flex:1;">
+            <strong style="font-size:13px;">Roberto Maia</strong> <span class="badge b-paga" style="font-size:9px;">Aprovador principal</span>
+            <div style="font-size:11px;color:var(--text-muted);">Gestor Comercial · receberá o e-mail de aprovação</div>
+          </div>
+        </div>
+
+        <!-- Adicionar diretores -->
+        <div class="field">
+          <label>Adicionar diretores para ciência/aprovação (opcional)</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px;border:1px solid var(--border);border-radius:6px;">
+            <span style="padding:3px 10px;background:#EDE9FE;color:#6B21A8;border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">👑 Darli Gonçalves <span style="cursor:pointer;font-weight:700;">✕</span></span>
+            <select style="border:1px dashed var(--border);border-radius:12px;font-size:11px;background:transparent;cursor:pointer;padding:2px 6px;">
+              <option>+ adicionar diretor</option>
+              <option>Sócio-Diretor</option>
+              <option>Fernanda Alves (Gerente)</option>
+            </select>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Por padrão buscamos o gestor da área. Diretores adicionados aqui recebem o e-mail também.</div>
+        </div>
+      </div>
+
+      <!-- Justificativa -->
+      <div class="card">
+        <div class="sec-title">💬 Justificativa para o aprovador</div>
+        <textarea rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;" placeholder="Explique o porquê do desconto/condição, contexto do cliente, concorrência...">Cliente novo com potencial de recompra mensal. Desconto de 14% para fechar o primeiro pedido — concorrente ofereceu condição similar. Margem mantida em 19%, acima do mínimo.</textarea>
+      </div>
+    </div>
+
+    <!-- Coluna lateral -->
+    <div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="sec-title">📧 E-mail que será enviado</div>
+        <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:11px;">
+          <div style="background:var(--bg-surface);padding:8px 10px;border-bottom:1px solid var(--border);">
+            <div><strong>Para:</strong> roberto@pgmsolucoes.com.br</div>
+            <div><strong>Cc:</strong> darli@pgmsolucoes.com.br, mariana@pgmsolucoes.com.br</div>
+            <div><strong>Assunto:</strong> [Aprovação] ORÇ-2026-0445 · Móveis Premium · R$ 38.200</div>
+          </div>
+          <div style="padding:10px;line-height:1.5;">
+            <p style="margin-bottom:6px;">Olá Roberto,</p>
+            <p style="margin-bottom:6px;">Mariana Costa solicitou aprovação de um orçamento que exige sua autorização:</p>
+            <div style="background:var(--bg-surface);border-radius:6px;padding:8px;margin-bottom:6px;">
+              <div>• Cliente: <strong>Móveis Premium SA</strong></div>
+              <div>• Valor: <strong>R$ 38.200,00</strong></div>
+              <div>• Desconto: <strong>14%</strong> · Margem: 19%</div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:8px;">
+              <span style="padding:6px 12px;background:var(--teal);color:#fff;border-radius:6px;font-weight:600;">✓ Aprovar</span>
+              <span style="padding:6px 12px;background:#fff;color:#991B1B;border:1px solid #FCA5A5;border-radius:6px;font-weight:600;">✕ Recusar</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">💡 Aprovação com 1 clique direto do e-mail, ou pela fila no sistema.</div>
+      </div>
+
+      <div class="card">
+        <div class="sec-title">⏱ O que acontece depois</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:11px;">
+          <div style="display:flex;gap:8px;"><span style="color:var(--teal);">1.</span> Aprovador recebe e-mail + notificação</div>
+          <div style="display:flex;gap:8px;"><span style="color:var(--teal);">2.</span> Lembrete automático em 4h se não responder</div>
+          <div style="display:flex;gap:8px;"><span style="color:var(--teal);">3.</span> Aprovado → você libera para o cliente</div>
+          <div style="display:flex;gap:8px;"><span style="color:var(--teal);">4.</span> Recusado → volta para ajuste</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ações -->
+  <div class="card" style="margin-top:14px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;">
+    <button class="btn btn-ghost btn-sm" onclick="goTo('pg-lista')">Cancelar</button>
+    <button class="btn btn-ghost btn-sm">💾 Salvar sem enviar</button>
+    <button class="btn btn-primary btn-sm" onclick="pgmModal({titulo:'📤 Enviar para aprovação',html:'<p>O orçamento <strong>ORÇ-2026-0445</strong> será enviado para aprovação de <strong>Roberto Maia</strong>, com cópia para Darli Gonçalves.</p><p style=\'font-size:12px;color:var(--text-muted);margin-top:8px;\'>Você será notificado assim que houver resposta. O orçamento fica bloqueado para envio ao cliente até a aprovação.</p>',acoes:[{label:'Cancelar'},{label:'📤 Enviar agora',primario:true,handler:()=>{pgmToast({tipo:'ok',titulo:'Enviado para aprovação!',msg:'Roberto Maia foi notificado por e-mail. Acompanhe na fila.'});setTimeout(()=>goTo('pg-orc-alcadas'),900);}}]})">📤 Enviar para aprovação</button>
+  </div>
+</div>
+
 </div><!-- /content -->
 </div><!-- /main -->
 </div><!-- /app -->
@@ -25972,6 +27224,122 @@ function kbFeedback(tipo) {
   }
 }
 
+// ============= AÇÕES DE NEGOCIAÇÃO DE ORÇAMENTO =============
+function aceitarContraproposta() {
+  pgmModal({
+    titulo: '✓ Aceitar contraproposta do cliente',
+    html: `<p>Você vai aceitar a contraproposta <strong>v2 (R$ 42.500)</strong> de Carlos Eduardo.</p>
+           <div style="margin-top:10px;padding:10px;background:#FFFBEB;border-left:3px solid var(--amber);border-radius:6px;">
+             <div style="font-size:12px;color:#8A4D02;"><strong>⚠ Atenção:</strong> o desconto de 11,3% está acima da sua alçada (10%).</div>
+             <div style="font-size:11px;color:#92400E;margin-top:4px;">A aceitação ficará <strong>pendente de aprovação</strong> do gestor Roberto Maia. Você será notificado quando ele responder.</div>
+           </div>
+           <div class="field" style="margin-top:14px;"><label>Justificativa para o gestor (obrigatório)</label><textarea rows="3" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;" placeholder="Ex: Cliente parceiro há 4 anos, concorrente oferece preço similar...">Cliente é parceiro há 4 anos, faturamento de R$ 287 mil/12m, inadimplência zero. Negociações ganhas: 73%. Concorrente Madeireira Bento está oferecendo R$ 36/m².</textarea></div>`,
+    acoes: [
+      {label: 'Cancelar'},
+      {label: '📤 Enviar para aprovação', primario: true, handler: () => {
+        pgmToast({tipo: 'ok', titulo: 'Encaminhado!', msg: 'Roberto Maia foi notificado. Você verá a resposta aqui na thread.'});
+        setTimeout(() => goTo('pg-orc-alcadas'), 800);
+      }}
+    ]
+  });
+}
+
+function rolarParaResposta() {
+  const editor = document.getElementById('orc-editor-resposta');
+  if (editor) editor.scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+function enviarContraproposta() {
+  pgmModal({
+    titulo: '📤 Enviar nova proposta (v3)',
+    html: `<p>Você vai enviar a <strong>v3</strong> ao cliente. O orçamento entrará novamente em análise pelo Carlos.</p>
+           <ul style="font-size:12px;padding-left:20px;margin-top:10px;line-height:1.7;">
+             <li>Cliente recebe e-mail com link assinado</li>
+             <li>Pode aprovar, fazer nova contraproposta ou comentar</li>
+             <li>Você é notificado de qualquer resposta</li>
+           </ul>`,
+    acoes: [
+      {label: 'Cancelar'},
+      {label: '📤 Enviar agora', primario: true, handler: () => {
+        pgmToast({tipo: 'ok', titulo: 'v3 enviada!', msg: 'Cliente recebeu por e-mail. Aguardando resposta.'});
+        setTimeout(() => goTo('pg-orc-negociacao'), 600);
+      }}
+    ]
+  });
+}
+
+function acaoCliente(tipo) {
+  if (tipo === 'aprovar') {
+    pgmModal({
+      titulo: '✓ Aprovar orçamento (visão do cliente)',
+      html: `<p>Você (cliente) está aprovando o orçamento <strong>v2 - R$ 42.500,00</strong>.</p>
+             <p style="margin-top:10px;font-size:12px;color:var(--text-muted);">Próximos passos automáticos:</p>
+             <ul style="font-size:12px;padding-left:20px;margin-top:4px;line-height:1.7;">
+               <li>Sistema gera pedido de venda</li>
+               <li>Darli é notificado para iniciar produção</li>
+               <li>NF-e será emitida após confirmação de pagamento</li>
+             </ul>
+             <div class="field" style="margin-top:14px;"><label>Sua assinatura digital</label>
+               <div style="border:2px dashed var(--border);border-radius:6px;padding:30px;text-align:center;color:var(--text-muted);font-size:12px;">✍ Clique aqui para assinar</div>
+             </div>`,
+      acoes: [
+        {label: 'Cancelar'},
+        {label: '✓ Confirmar aprovação', primario: true, handler: () => {
+          pgmToast({tipo: 'ok', titulo: 'Aprovado!', msg: 'Pedido sendo gerado. Darli foi notificado.'});
+          setTimeout(() => goTo('pg-orc-negociacao'), 800);
+        }}
+      ]
+    });
+  } else if (tipo === 'comentar') {
+    pgmModal({
+      titulo: '💬 Enviar comentário ao Darli',
+      html: `<p style="font-size:12px;margin-bottom:10px;">Envie uma mensagem sem alterar valores. Útil para tirar dúvidas ou pedir informação.</p>
+             <textarea rows="5" placeholder="Sua mensagem..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;"></textarea>`,
+      acoes: [
+        {label: 'Cancelar'},
+        {label: '📤 Enviar', primario: true, handler: () => pgmToast({tipo: 'ok', msg: 'Comentário enviado. Darli foi notificado.'})}
+      ]
+    });
+  } else if (tipo === 'contrapor') {
+    pgmModal({
+      titulo: '📝 Fazer nova contraproposta',
+      html: `<p style="font-size:12px;margin-bottom:10px;">Ajuste os valores e condições que você gostaria de propor:</p>
+             <div class="g2" style="gap:10px;">
+               <div class="field"><label>Preço unitário pretendido</label><input type="text" placeholder="R$ ..." style="font-family:monospace;"/></div>
+               <div class="field"><label>Prazo desejado</label><input type="text" placeholder="Ex: 12 dias úteis"/></div>
+             </div>
+             <div class="field"><label>Condição de pagamento</label><select><option>28/35/42 dias (atual)</option><option>30/60/90 dias</option><option>À vista com 5% de desconto</option><option>Outra (especificar)</option></select></div>
+             <div class="field"><label>Observação para o vendedor</label><textarea rows="3" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;" placeholder="Explique seus pedidos..."></textarea></div>`,
+      acoes: [
+        {label: 'Cancelar'},
+        {label: '📤 Enviar contraproposta', primario: true, handler: () => {
+          pgmToast({tipo: 'ok', titulo: 'Contraproposta enviada', msg: 'v3 (sua nova proposta) foi criada e Darli foi notificado.'});
+          setTimeout(() => goTo('pg-orc-negociacao'), 800);
+        }}
+      ]
+    });
+  } else if (tipo === 'recusar') {
+    pgmModal({
+      titulo: '✕ Recusar orçamento',
+      html: `<p style="margin-bottom:10px;">Por favor, indique o motivo da recusa. Isso ajuda a PGM a melhorar futuras propostas.</p>
+             <div class="field"><label>Motivo</label><select>
+               <option>Preço acima do orçado</option>
+               <option>Prazo de entrega não atende</option>
+               <option>Encontrei fornecedor melhor</option>
+               <option>Projeto cancelado / adiado</option>
+               <option>Outro (especificar)</option>
+             </select></div>
+             <div class="field"><label>Comentário (opcional)</label><textarea rows="3" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;"></textarea></div>`,
+      acoes: [
+        {label: 'Voltar'},
+        {label: 'Confirmar recusa', primario: true, handler: () => {
+          pgmToast({tipo: 'warn', titulo: 'Orçamento recusado', msg: 'Darli foi notificado. Obrigado pelo feedback.'});
+        }}
+      ]
+    });
+  }
+}
+
 function goTo(id){
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('show'));
   const tgt = document.getElementById(id);
@@ -26023,6 +27391,13 @@ function goTo(id){
       'pg-sd-kb-editar':'Service Desk › Base de Conhecimento › Editor de artigo',
       'pg-sd-kb-preview':'Service Desk › Base de Conhecimento › Pré-visualização',
       'pg-sd-kb-historico':'Service Desk › Base de Conhecimento › Histórico de versões',
+      'pg-orc-negociacao':'Comercial › Orçamentos › Negociação',
+      'pg-orc-portal-cliente':'Portal do Cliente · Orçamento',
+      'pg-orc-versoes':'Comercial › Orçamentos › Comparar Versões',
+      'pg-orc-alcadas':'Comercial › Aprovações de Alçada',
+      'pg-orc-config-aprovacao':'Comercial › Orçamentos › Matriz de Aprovação',
+      'pg-orc-regra-editar':'Comercial › Matriz de Aprovação › Editar regra',
+      'pg-orc-solicitar':'Comercial › Orçamentos › Solicitar Aprovação',
       'pg-pcp-dashboard':'Indústria › Dashboard PCP',
       'pg-engenharia':'Indústria › Engenharia · Fichas Técnicas',
       'pg-bom':'Indústria › Engenharia › Estrutura BOM',
@@ -26968,11 +28343,8 @@ function trocarTabPerm(btn, tab){
 }
 
 function abrirArtigoKB(idArt){
-  const m=document.getElementById('modal-bg'),mi=document.getElementById('modal-icon'),mt=document.getElementById('modal-title'),md=document.getElementById('modal-desc');
-  if(mi){mi.style.background='var(--blue-light)';mi.innerHTML='📄';mi.style.fontSize='28px';mi.style.lineHeight='1';}
-  if(mt) mt.textContent = `Abrindo artigo ${idArt||''}`;
-  if(md) md.textContent = 'Artigo da base de conhecimento abre em modal com conteúdo formatado · botões "Foi útil?" · opção de inserir trechos na resposta ao cliente · estatísticas de uso atualizadas.';
-  if(m) m.classList.add('open');
+  // Agora navega para a tela real do artigo (antes abria modal placeholder)
+  goTo('pg-sd-detalhe-kb');
 }
 
 function abrirVincularKB(){
