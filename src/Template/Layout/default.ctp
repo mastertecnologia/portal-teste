@@ -54,7 +54,7 @@ $pgmSidebarReactCss = $__pgmSbWebBase . '/js/pgm-sidebar-react/sidebar-assets.cs
 	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/layout-sidebar-shell.css?v=" . time()) ?>
 	<?php if (empty($disablePgmAppShellPremium)) : ?>
-	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=8") ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=9") ?>
 	<?php endif; ?>
 	<?php if (!empty($pgmLoadErpPrototypeAssets)) : ?>
 	<?= $this->element('ErpPrototype/head_assets', ['includeServicedeskPrototypeCss' => !empty($loadServicedeskPrototypeCss)]) ?>

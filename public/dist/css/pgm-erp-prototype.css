@@ -58,10 +58,20 @@
 }
 .pgm-erp-shell * { box-sizing: border-box; }
 
-html:has(.pgm-erp-shell),
-html:has(.pgm-erp-shell) body {
+/* Só no layout erp_prototype (sidebar própria); não no portal (sidebar React/Cake). */
+html:has(.pgm-erp-shell:not(.pgm-erp-shell--in-portal)),
+html:has(.pgm-erp-shell:not(.pgm-erp-shell--in-portal)) body {
 	height: 100%;
 	overflow: hidden;
+}
+
+/* Portal: variáveis e tipografia do mock sem chrome duplicado (sidebar/topbar do shell). */
+.pgm-erp-shell.pgm-erp-shell--in-portal {
+	background: transparent;
+	min-height: 0;
+	height: auto;
+	width: 100%;
+	max-width: 100%;
 }
 
 /* ===== APP / SHELL ===== */

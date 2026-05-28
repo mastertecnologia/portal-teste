@@ -222,3 +222,36 @@ body.pgm-app-shell-premium.pgm-orcamentos-shell #pgm-dynamic-content {
     background-color: var(--pgm-bg-page, #f2f1ee);
     color: var(--pgm-text, #1a1a18);
 }
+
+/*
+ * Telas *Prototype no layout default (sidebar unificada + topbar premium).
+ * O mock usa .pgm-erp-shell; o portal embute com .pgm-erp-shell--in-portal (ver content.ctp).
+ */
+body.pgm-app-shell-premium.pgm-erp-prototype-page .page-wrapper > .container-fluid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 100%;
+}
+
+body.pgm-app-shell-premium.pgm-erp-prototype-page #pgm-dynamic-content.row {
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    max-width: 100%;
+    padding: 30px 28px 24px;
+    align-items: flex-start;
+    align-content: flex-start;
+}
+
+body.pgm-app-shell-premium.pgm-erp-prototype-page #pgm-dynamic-content.row > .col-md-12.aquivaiosalert {
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+body.pgm-app-shell-premium.pgm-erp-prototype-page .pgm-erp-shell--in-portal.pgm-erp-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+}
