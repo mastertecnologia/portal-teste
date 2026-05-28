@@ -633,5 +633,41 @@ class AppController extends Controller
                 }
             }
         }
+        if (empty($this->viewVars['erpEmpresas']) || !is_array($this->viewVars['erpEmpresas'])) {
+            $this->set('erpEmpresas', $this->loadErpEmpresasForPrototypeTopbar());
+        }
+    }
+
+    /**
+     * @return array<int,array<string,mixed>>
+     */
+    protected function loadErpEmpresasForPrototypeTopbar(): array
+    {
+        try {
+            $tbl = $this->loadModel('Empresas');
+        } catch (\Throwable $e) {
+            return [];
+        }
+        $user = (array)$this->Auth->user();
+        $active = (int)($user['idempresa'] ?? 0);
+        $out = [];
+        try {
+            foreach ($tbl->find()->order(['id' => 'ASC'])->limit(20)->all() as $e) {
+                $nome = (string)($e->get('razaosocial') ?? $e->get('nome') ?? '');
+                if ($nome === '') {
+                    continue;
+                }
+                $out[] = [
+                    'id' => (int)$e->get('id'),
+                    'nome' => $nome,
+                    'cnpj' => (string)($e->get('cnpj') ?? ''),
+                    'current' => (int)$e->get('id') === $active,
+                ];
+            }
+        } catch (\Throwable $e) {
+            return [];
+        }
+
+        return $out;
     }
 }

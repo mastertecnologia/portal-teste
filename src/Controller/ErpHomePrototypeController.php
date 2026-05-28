@@ -44,10 +44,17 @@ class ErpHomePrototypeController extends AppController {
 		$kpi = [
 			'orcamentos_mes' => 0,
 			'orcamentos_valor' => 0.0,
+			'orcamentos_abertos_valor' => 0.0,
+			'orcamentos_negociacao' => 0,
 			'os_abertas' => 0,
 			'tickets_abertos' => 0,
 			'clientes_ativos' => 0,
 			'cr_receber' => 0.0,
+			'titulos_pendentes' => 0,
+			'saldo_bancos' => 0.0,
+			'faturado_mes' => 0.0,
+			'vencendo_7d' => 0.0,
+			'vencendo_7d_qtd' => 0,
 		];
 		$recentOrc = [];
 		$recentOs = [];
@@ -106,12 +113,50 @@ class ErpHomePrototypeController extends AppController {
 		} catch (\Throwable $e) {
 		}
 
+		$aprovado = defined('C_OrcamentoStatusAprovado') ? (int)C_OrcamentoStatusAprovado : 2;
+		$recusado = defined('C_OrcamentoStatusRecusado') ? (int)C_OrcamentoStatusRecusado : 3;
+		try {
+			foreach ($this->Orcamentos->find()
+				->where(['Orcamentos.idempresa' => $empresa])
+				->all() as $o) {
+				$st = (int)$o->get('status');
+				if ($st !== $aprovado && $st !== $recusado) {
+					$kpi['orcamentos_abertos_valor'] += (float)($o->get('valortotal') ?? $o->get('valor') ?? 0);
+					$kpi['orcamentos_negociacao']++;
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+
+		$sevenDays = $now->copy()->addDays(7);
 		try {
 			foreach ($this->Faturas->find()->where(['Faturas.idempresa' => $empresa])->all() as $f) {
+				$valor = (float)($f->get('valor') ?? 0);
 				$st = strtolower((string)($f->get('status') ?? ''));
-				if (strpos($st, 'pag') === false && !$f->get('dtretorno') instanceof \DateTimeInterface) {
-					$kpi['cr_receber'] += (float)($f->get('valor') ?? 0);
+				$pago = strpos($st, 'pag') !== false || $f->get('dtretorno') instanceof \DateTimeInterface;
+				if (!$pago) {
+					$kpi['cr_receber'] += $valor;
+					$kpi['titulos_pendentes']++;
+					$venc = $f->get('dtvencimento') ?? $f->get('datavencimento') ?? $f->get('vencimento');
+					if ($venc instanceof \DateTimeInterface && $venc <= $sevenDays && $venc >= $now) {
+						$kpi['vencendo_7d'] += $valor;
+						$kpi['vencendo_7d_qtd']++;
+					}
 				}
+				$ret = $f->get('dtretorno');
+				if ($ret instanceof \DateTimeInterface && $ret >= $monthStart) {
+					$kpi['faturado_mes'] += $valor;
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+
+		try {
+			$this->loadModel('FinanceiroBancos');
+			foreach ($this->FinanceiroBancos->find()
+				->where(['FinanceiroBancos.idempresa' => $empresa, 'FinanceiroBancos.ativo' => 1])
+				->all() as $b) {
+				$kpi['saldo_bancos'] += (float)($b->get('saldo') ?? $b->get('saldo_atual') ?? 0);
 			}
 		} catch (\Throwable $e) {
 		}
@@ -120,26 +165,8 @@ class ErpHomePrototypeController extends AppController {
 		$nomeCompleto = trim((string)($user['nome'] ?? $user['username'] ?? ''));
 		$primeiroNome = $nomeCompleto !== '' ? explode(' ', $nomeCompleto)[0] : __('usuário');
 
-		$activity = [];
-		foreach ($recentOrc as $r) {
-			$activity[] = [
-				'icon' => '📧',
-				'bg' => '#FAEEDA',
-				'title' => sprintf('%s · %s', $r['label'], $r['cliente']),
-				'sub' => sprintf(__('Orçamento · %s'), 'R$ ' . number_format((float)$r['valor'], 2, ',', '.')),
-			];
-		}
-		foreach ($recentOs as $r) {
-			$activity[] = [
-				'icon' => '🔧',
-				'bg' => 'var(--blue-light)',
-				'title' => sprintf('%s · %s', $r['label'], $r['cliente']),
-				'sub' => __('Ordem de serviço recente'),
-			];
-		}
-		$activity = array_slice($activity, 0, 5);
-
 		$this->set([
+			'bodyPageClass' => 'pgm-erp-home-page',
 			'title' => __('Dashboard'),
 			'erpNavActive' => 'erp-home',
 			'erpBreadcrumb' => [
@@ -147,9 +174,6 @@ class ErpHomePrototypeController extends AppController {
 			],
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
 			'homeKpi' => $kpi,
-			'homeRecentOrc' => $recentOrc,
-			'homeRecentOs' => $recentOs,
-			'homeActivity' => $activity,
 			'homeUserFirstName' => $primeiroNome,
 			'homeDataLabel' => $now->i18nFormat('EEEE, dd/MM/yyyy'),
 		]);
