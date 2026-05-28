@@ -78,10 +78,35 @@ function pgmCheckDbResolveConfig(string $root): array
 	return $cfg;
 }
 
-pgmCheckDbLoadDotEnv($root);
+$envFile = $root . DIRECTORY_SEPARATOR . '.env';
+$envExists = is_file($envFile);
+$envReadable = $envExists && is_readable($envFile);
+$runUser = 'desconhecido';
+if (function_exists('posix_getpwuid') && function_exists('posix_geteuid')) {
+	$pw = posix_getpwuid(posix_geteuid());
+	$runUser = is_array($pw) ? (string)($pw['name'] ?? $runUser) : $runUser;
+}
+
+if ($envExists && !$envReadable) {
+	echo "ERRO: .env existe mas o usuário atual ({$runUser}) não pode ler {$envFile}\n";
+	echo "Correção típica (PHP-FPM www-data):\n";
+	echo "  chown root:www-data {$envFile}\n";
+	echo "  chmod 640 {$envFile}\n";
+	echo "Depois: sudo -u www-data php bin/check_db_env.php\n";
+	exit(1);
+}
+
+if ($envReadable) {
+	pgmCheckDbLoadDotEnv($root);
+} elseif (!$envExists) {
+	echo "AVISO: {$envFile} não encontrado — usando defaults de app.php / app_local.php\n";
+}
+
 $cfg = pgmCheckDbResolveConfig($root);
 
 echo "=== Diagnóstico PostgreSQL (PGM Portal) ===\n\n";
+echo "Usuário PHP: {$runUser}\n";
+echo ".env legível: " . ($envReadable ? 'sim' : 'não') . "\n";
 echo "DB_HOST (.env): " . (getenv('DB_HOST') !== false && getenv('DB_HOST') !== '' ? getenv('DB_HOST') : '(não definido)') . "\n";
 echo "Host efetivo (env + app_local.php): {$cfg['host']}\n";
 echo "port={$cfg['port']} database={$cfg['database']} username={$cfg['username']}\n";
@@ -100,6 +125,12 @@ if ($fp) {
 	echo "\nTCP {$cfg['host']}:{$cfg['port']} — FALHOU ({$errno}) {$errstr}\n";
 	echo "Verifique PostgreSQL em 10.0.2.23, firewall e pg_hba.conf (portal 10.0.2.25).\n";
 	exit(1);
+}
+
+if ($cfg['password'] === '' && $envReadable) {
+	echo "\nAVISO: DB_PASSWORD vazio após ler .env — confira a linha DB_PASSWORD= no .env\n";
+} elseif ($cfg['password'] === '' && !$envReadable) {
+	echo "\nAVISO: sem senha ( .env não foi lido ) — fe_sendauth no PostgreSQL é esperado\n";
 }
 
 try {
