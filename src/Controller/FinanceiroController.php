@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Utility\PortalUi;
 use Cake\Event\Event;
 
 $__pgmUserConstants =
@@ -53,6 +54,11 @@ class FinanceiroController extends AppController
     /* ── Dashboard financeiro ──────────────────────────────────────────── */
     public function index()
     {
+        $prototypeLista = PortalUi::redirectToPrototypeIfEnabled('financeiro', 'FinanceiroPrototype', 'lista');
+        if ($prototypeLista !== null) {
+            return $this->redirect($prototypeLista);
+        }
+
         $idempresa = $this->Auth->user("idempresa");
 
         $lancamentos = $this->FinanceiroLancamentos

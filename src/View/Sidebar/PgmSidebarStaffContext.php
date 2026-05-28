@@ -24,7 +24,7 @@ final class PgmSidebarStaffContext
         $roleNav = (int)($v['role'] ?? 1);
         $sg = isset($v['sidebarMenuGates']) && is_array($v['sidebarMenuGates']) ? $v['sidebarMenuGates'] : [];
 
-        $osIndexActive = ($ctrl === 'Ordensservico' && $act === 'index');
+        $osIndexActive = PortalUi::isOrdensNavActive($ctrl, $act);
         $osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
         $clientesAddActive = ($ctrl === 'Clientes' && $act === 'add');
         $clientesListNavActive = PortalUi::isClientesListNavActive($ctrl, $act);
@@ -48,7 +48,7 @@ final class PgmSidebarStaffContext
         $relatoriosPainelActive = ($ctrl === 'Relatorios');
         $relatoriosIndicadoresAdvActive = ($ctrl === 'AdvancedReports');
 
-        $finDashAct = ($ctrl === 'Financeiro' && $act === 'index');
+        $finDashAct = PortalUi::isFinanceiroNavActive($ctrl, $act);
         $finRecAct = ($ctrl === 'Financeiro' && in_array($act, ['contasReceber', 'addReceita', 'editReceita'], true));
         $finPagAct = ($ctrl === 'Financeiro' && in_array($act, ['contasPagar', 'addDespesa', 'editDespesa'], true));
         $finFluxoAct = ($ctrl === 'Financeiro' && $act === 'fluxoCaixa');
@@ -58,7 +58,8 @@ final class PgmSidebarStaffContext
         $finRelAct = ($ctrl === 'FinanceiroRelatorios');
         $finPlanoAct = ($ctrl === 'FinanceiroConfig' && in_array($act, ['planoContas', 'planoContasAdd', 'planoContasEdit'], true));
         $finCcAct = ($ctrl === 'FinanceiroConfig' && in_array($act, ['centrosCusto', 'centroCustoAdd', 'centroCustoEdit'], true));
-        $finBancosAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['index', 'cadastrar', 'add', 'edit', 'delete', 'buscarCatalogo', 'bootstrapBancoPorCodigo'], true));
+        $finBancosAct = PortalUi::isBancosNavActive($ctrl, $act)
+            || ($ctrl === 'FinanceiroBancos' && in_array($act, ['cadastrar', 'add', 'edit', 'delete', 'buscarCatalogo', 'bootstrapBancoPorCodigo'], true));
         $finRemessaAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['remessa', 'remessaMultiempresas'], true));
         $finRetornoAct = ($ctrl === 'FinanceiroBancos' && $act === 'retorno');
         $finRelBancosAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['relatorios', 'relacaoBancos', 'relacaoRemessas', 'historicoRetorno', 'previsaoRecebimentosPorBanco', 'previsaoPorBancos'], true));
@@ -104,6 +105,19 @@ final class PgmSidebarStaffContext
         $pgmSbOpenFaturamento = (bool)$prefaturamentoActive || (bool)$faturamentoActive;
         $pgmSbOpenFinanceiro = $finDashAct || $finRecAct || $finPagAct || $finFluxoAct || $finRecorAct || $finConcAct || $finDreAct || $finRelAct || $finPlanoAct || $finCcAct;
         $pgmSbOpenBancos = $finBancosAct || $finRemessaAct || $finRetornoAct || $finRelBancosAct;
+        $erpHomeActive = PortalUi::isErpHomeNavActive($ctrl, $act);
+        $erpPremiumNavOpen = PortalUi::showPremiumNav() && (
+            $erpHomeActive
+            || in_array($ctrl, [
+                'FornecedoresPrototype',
+                'FinanceiroPrototype',
+                'BancosPrototype',
+                'PcpPrototype',
+                'EmpresasPrototype',
+                'SistemaPrototype',
+            ], true)
+        );
+
         $pgmSbOpenFiscal = $fiscalDashAct || $fiscalDfeRecAct || $fiscalNotasAct || $fiscalEntradaAct
             || $fiscalInutActSaida || $fiscalInutActEntrada || $fiscalSeriesSaidaAct || $fiscalSeriesEntradaAct
             || $fiscalCertAct || $fiscalCfgAct || $fiscalRelAct || $fiscalConsultaChaveAct || $fiscalConsultaCadastroAct
@@ -196,6 +210,8 @@ final class PgmSidebarStaffContext
             'pgmSbOpenFinanceiro' => $pgmSbOpenFinanceiro,
             'pgmSbOpenBancos' => $pgmSbOpenBancos,
             'pgmSbOpenFiscal' => $pgmSbOpenFiscal,
+            'erpHomeActive' => $erpHomeActive,
+            'erpPremiumNavOpen' => $erpPremiumNavOpen,
             'userInitials' => $userInitials,
             'multiEmpresa' => $multiEmpresa,
             'empresasOptSidebar' => $empresasOptSidebar,

@@ -14,6 +14,29 @@ class PortalUi {
         return (string)Configure::read('PortalUi.mode', 'mixed');
     }
 
+    public static function hasAnyPremiumModule(): bool {
+        $map = Configure::read('PortalUi.premium_modules');
+        if (!is_array($map)) {
+            return false;
+        }
+
+        return $map !== [];
+    }
+
+    /**
+     * Exibe seção “Interface ERP” na sidebar legado (atalhos *-prototype).
+     */
+    public static function showPremiumNav(): bool {
+        if (self::mode() === 'premium') {
+            return true;
+        }
+        if (self::hasAnyPremiumModule()) {
+            return true;
+        }
+
+        return filter_var(env('PORTAL_ERP_PREMIUM_NAV', '0'), FILTER_VALIDATE_BOOLEAN);
+    }
+
     public static function isPremiumModule(string $module): bool {
         $module = strtolower(trim($module));
         if ($module === '') {
@@ -59,6 +82,19 @@ class PortalUi {
      *
      * @return array<string, mixed>|null null se o módulo não estiver mapeado
      */
+    /**
+     * Dashboard equipe: pg-home do mock ou dashboard legado.
+     *
+     * @return array<string, mixed>
+     */
+    public static function dashboardRoute(): array {
+        if (self::mode() === 'premium' || self::isPremiumModule('home')) {
+            return ['controller' => 'ErpHomePrototype', 'action' => 'index', 'prefix' => false];
+        }
+
+        return ['controller' => 'Users', 'action' => 'dashboard', 'prefix' => false];
+    }
+
     public static function listRoute(string $module): ?array {
         $module = strtolower(trim($module));
         $legacy = [
@@ -66,12 +102,22 @@ class PortalUi {
             'orcamentos' => ['controller' => 'Orcamentos', 'action' => 'index', 'prefix' => false],
             'produtos' => ['controller' => 'Produtos', 'action' => 'index', 'prefix' => false],
             'servicedesk' => ['controller' => 'Servicedesk', 'action' => 'index', 'prefix' => false],
+            'ordens' => ['controller' => 'Ordensservico', 'action' => 'index', 'prefix' => false],
+            'financeiro' => ['controller' => 'Financeiro', 'action' => 'index', 'prefix' => false],
+            'bancos' => ['controller' => 'FinanceiroBancos', 'action' => 'index', 'prefix' => false],
+            'fornecedores' => ['controller' => 'Clientes', 'action' => 'index', 'prefix' => false],
+            'home' => ['controller' => 'Users', 'action' => 'dashboard', 'prefix' => false],
         ];
         $prototype = [
             'clientes' => ['controller' => 'ClientesPrototype', 'action' => 'lista', 'prefix' => false],
             'orcamentos' => ['controller' => 'OrcamentosPrototype', 'action' => 'lista', 'prefix' => false],
             'produtos' => ['controller' => 'ProdutosPrototype', 'action' => 'lista', 'prefix' => false],
             'servicedesk' => ['controller' => 'ServicedeskPrototype', 'action' => 'index', 'prefix' => false],
+            'ordens' => ['controller' => 'OrdensservicoPrototype', 'action' => 'lista', 'prefix' => false],
+            'financeiro' => ['controller' => 'FinanceiroPrototype', 'action' => 'lista', 'prefix' => false],
+            'bancos' => ['controller' => 'BancosPrototype', 'action' => 'lista', 'prefix' => false],
+            'fornecedores' => ['controller' => 'FornecedoresPrototype', 'action' => 'lista', 'prefix' => false],
+            'home' => ['controller' => 'ErpHomePrototype', 'action' => 'index', 'prefix' => false],
         ];
         if (!isset($legacy[$module])) {
             return null;
@@ -202,6 +248,34 @@ class PortalUi {
     /**
      * Item principal Service Desk na sidebar (protótipo só com premium).
      */
+    public static function isOrdensNavActive(string $controller, string $action): bool {
+        if ($controller === 'OrdensservicoPrototype') {
+            return in_array($action, ['lista', 'detalhe', 'view', 'exportcsv'], true);
+        }
+
+        return $controller === 'Ordensservico' && $action === 'index';
+    }
+
+    public static function isFinanceiroNavActive(string $controller, string $action): bool {
+        if ($controller === 'FinanceiroPrototype') {
+            return in_array($action, ['lista', 'titulos', 'contasPagar', 'view'], true);
+        }
+
+        return $controller === 'Financeiro' && $action === 'index';
+    }
+
+    public static function isBancosNavActive(string $controller, string $action): bool {
+        if ($controller === 'BancosPrototype') {
+            return in_array($action, ['lista', 'view'], true);
+        }
+
+        return $controller === 'FinanceiroBancos' && $action === 'index';
+    }
+
+    public static function isErpHomeNavActive(string $controller, string $action): bool {
+        return $controller === 'ErpHomePrototype' && $action === 'index';
+    }
+
     public static function isServicedeskHomeNavActive(string $controller, string $action): bool {
         if ($controller === 'ServicedeskPrototype') {
             return self::isPremiumModule('servicedesk')

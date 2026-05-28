@@ -6,6 +6,7 @@ use App\Service\OrdemServico\TicketOsPrefillService;
 use App\Service\Ticket\TicketHistoryLogger;
 use App\Utility\ErpGridUrl;
 use App\Utility\ErpIntegrationRequest;
+use App\Utility\PortalUi;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Routing\Router;
@@ -500,6 +501,10 @@ class OrdensservicoController extends AppController {
 		if ($this->Auth->user('role') == C_RoleCliente) {
 			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+		$prototypeLista = PortalUi::redirectToPrototypeIfEnabled('ordens', 'OrdensservicoPrototype', 'lista');
+		if ($prototypeLista !== null) {
+			return $this->redirect($prototypeLista);
 		}
 
 		$idempresa = $this->Auth->user('idempresa');

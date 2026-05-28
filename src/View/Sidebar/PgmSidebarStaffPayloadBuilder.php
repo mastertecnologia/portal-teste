@@ -23,6 +23,7 @@ final class PgmSidebarStaffPayloadBuilder
         $sg = $ctx['sg'];
         $roleNav = (int)$ctx['roleNav'];
         $admin = !empty($v['admin']);
+        $ctrl = (string)($ctx['ctrl'] ?? $request->getParam('controller'));
 
         $activePath = self::requestActivePath($request);
 
@@ -30,15 +31,58 @@ final class PgmSidebarStaffPayloadBuilder
         $dashboardItem = null;
 
         if (($sg['dashboard'] ?? true)) {
+            $dashRoute = PortalUi::dashboardRoute();
             $dashboardItem = [
                 'icon' => 'layout-dashboard',
                 'label' => ' Dashboard',
-                'href' => self::u(['controller' => 'Users', 'action' => 'dashboard']),
+                'href' => self::u($dashRoute),
                 'dataLabel' => 'Dashboard',
-                'active' => (bool)($v['dashboard'] ?? ''),
+                'active' => (bool)($v['dashboard'] ?? '') || (bool)($ctx['erpHomeActive'] ?? false),
                 'badgeHtml' => '',
                 'target' => null,
                 'rel' => null,
+            ];
+        }
+
+        if ($roleNav === 0 && PortalUi::showPremiumNav()) {
+            $premiumItems = [];
+            $premiumItems[] = self::item(
+                'sparkles',
+                ' Painel ERP (referência)',
+                ['controller' => 'ErpHomePrototype', 'action' => 'index'],
+                ['data-turbo' => 'false'],
+                (bool)($ctx['erpHomeActive'] ?? false),
+                '',
+                'Painel ERP'
+            );
+            $fornRoute = PortalUi::listRoute('fornecedores');
+            if ($fornRoute !== null) {
+                $premiumItems[] = self::item(
+                    'building-2',
+                    ' Fornecedores',
+                    $fornRoute,
+                    ['data-turbo' => 'false'],
+                    $ctrl === 'FornecedoresPrototype',
+                    '',
+                    'Fornecedores'
+                );
+            }
+            if (PortalUi::isPremiumModule('pcp') || PortalUi::mode() === 'premium') {
+                $premiumItems[] = self::item(
+                    'factory',
+                    ' PCP / Indústria',
+                    ['controller' => 'PcpPrototype', 'action' => 'lista'],
+                    ['data-turbo' => 'false'],
+                    $ctrl === 'PcpPrototype',
+                    '',
+                    'PCP'
+                );
+            }
+            $sections[] = [
+                'id' => 'erp-premium',
+                'title' => 'Interface ERP',
+                'defaultOpen' => (bool)($ctx['erpPremiumNavOpen'] ?? false),
+                'items' => array_values(array_filter($premiumItems)),
             ];
         }
 
@@ -128,7 +172,8 @@ final class PgmSidebarStaffPayloadBuilder
             }
             if (($sg['ordensservico_list'] ?? true)) {
                 $badgeOs = $ctx['osIndexActive'] ? '<span class="pgm-os-badge badge badge-warning hide-menu" id="badge-exec-os">—</span>' : '';
-                $items[] = self::item('clipboard-list', ' Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['data-turbo' => 'false'], $ctx['osIndexActive'], $badgeOs, 'Ordens de Serviço');
+                $osListRoute = PortalUi::listRoute('ordens') ?? ['controller' => 'Ordensservico', 'action' => 'index'];
+                $items[] = self::item('clipboard-list', ' Ordens de Serviço', $osListRoute, ['data-turbo' => 'false'], $ctx['osIndexActive'], $badgeOs, 'Ordens de Serviço');
             }
             if ($admin && ($sg['queues'] ?? true)) {
                 $items[] = self::item('layers', ' Filas / técnicos', ['controller' => 'Queues', 'action' => 'adminIndex'], [], (bool)($v['queuesAtendimentoActive'] ?? ''), '<span class="badge badge-warning hide-menu">7</span>', 'Filas / técnicos');
@@ -235,7 +280,15 @@ final class PgmSidebarStaffPayloadBuilder
                 'title' => 'Financeiro',
                 'defaultOpen' => (bool)$ctx['pgmSbOpenFinanceiro'],
                 'items' => [
-                    self::item('pie-chart', ' Painel', ['controller' => 'Financeiro', 'action' => 'index'], ['data-turbo' => 'false'], $ctx['finDashAct'], '', 'Painel financeiro'),
+                    self::item(
+                        'pie-chart',
+                        ' Painel',
+                        PortalUi::listRoute('financeiro') ?? ['controller' => 'Financeiro', 'action' => 'index'],
+                        ['data-turbo' => 'false'],
+                        $ctx['finDashAct'],
+                        '',
+                        'Painel financeiro'
+                    ),
                     self::item('arrow-down-circle', ' Contas a receber', ['controller' => 'Financeiro', 'action' => 'contasReceber'], ['data-turbo' => 'false'], $ctx['finRecAct'], '', 'Contas a receber'),
                     self::item('arrow-up-circle', ' Contas a pagar', ['controller' => 'Financeiro', 'action' => 'contasPagar'], ['data-turbo' => 'false'], $ctx['finPagAct'], '', 'Contas a pagar'),
                     self::item('activity', ' Fluxo de caixa', ['controller' => 'Financeiro', 'action' => 'fluxoCaixa'], ['data-turbo' => 'false'], $ctx['finFluxoAct'], '', 'Fluxo de caixa'),
@@ -255,7 +308,15 @@ final class PgmSidebarStaffPayloadBuilder
                 'title' => 'Bancos',
                 'defaultOpen' => (bool)$ctx['pgmSbOpenBancos'],
                 'items' => [
-                    self::item('landmark', ' Cadastro', ['controller' => 'FinanceiroBancos', 'action' => 'index'], ['data-turbo' => 'false'], $ctx['finBancosAct'], '', 'Cadastro de bancos'),
+                    self::item(
+                        'landmark',
+                        ' Cadastro',
+                        PortalUi::listRoute('bancos') ?? ['controller' => 'FinanceiroBancos', 'action' => 'index'],
+                        ['data-turbo' => 'false'],
+                        $ctx['finBancosAct'],
+                        '',
+                        'Cadastro de bancos'
+                    ),
                     self::item('send', ' Remessa', ['controller' => 'FinanceiroBancos', 'action' => 'remessa'], ['data-turbo' => 'false'], $ctx['finRemessaAct'], '', 'Remessa'),
                     self::item('inbox', ' Retorno', ['controller' => 'FinanceiroBancos', 'action' => 'retorno'], ['data-turbo' => 'false'], $ctx['finRetornoAct'], '', 'Retorno'),
                     self::item('table-2', ' Relatórios bancos', ['controller' => 'FinanceiroBancos', 'action' => 'relatorios'], ['data-turbo' => 'false'], $ctx['finRelBancosAct'], '', 'Relatórios bancos'),

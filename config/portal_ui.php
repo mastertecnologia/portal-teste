@@ -13,7 +13,10 @@
  *
  * .env (opcional):
  *   PORTAL_UI_MODE=legacy|premium|mixed   (default mixed)
- *   PORTAL_PREMIUM_MODULES=clientes,orcamentos,servicedesk
+ *   PORTAL_PREMIUM_MODULES=clientes,orcamentos,produtos,servicedesk,ordens,financeiro,bancos,fornecedores,home
+ *   PORTAL_ERP_PREMIUM_NAV=1   (menu “Interface ERP” quando há módulos premium ou mode=premium)
+ *
+ * Ativação no servidor: bash scripts/enable-portal-premium-ui.sh [/caminho/.env]
  */
 
 $mode = strtolower(trim((string)env('PORTAL_UI_MODE', 'mixed')));

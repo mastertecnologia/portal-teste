@@ -132,7 +132,7 @@
 				<li class="nav-section-flat">
 					<div class="nav-section-items" style="padding: 2px 0;">
 						<?php if (($sg['dashboard'] ?? true)) : ?>
-						<?= $pgmSbLink('layout-dashboard', ' Dashboard', ['controller' => 'Users', 'action' => 'dashboard'], ['aria-label' => 'Dashboard'], (bool)($dashboard ?? ''), '', 'Dashboard') ?>
+						<?= $pgmSbLink('layout-dashboard', ' Dashboard', PortalUi::dashboardRoute(), ['aria-label' => 'Dashboard'], (bool)($dashboard ?? '') || PortalUi::isErpHomeNavActive((string)$this->request->getParam('controller'), (string)$this->request->getParam('action')), '', 'Dashboard') ?>
 						<?php endif; ?>
 					</div>
 				</li>

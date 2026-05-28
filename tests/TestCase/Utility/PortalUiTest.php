@@ -89,6 +89,21 @@ class PortalUiTest extends TestCase {
 		$this->assertSame('Produtos', PortalUi::produtosEstoqueRoute()['controller']);
 	}
 
+	public function testDashboardAndOrdensRoutesSwitchWithPremium(): void {
+		Configure::write('PortalUi.premium_modules', ['home' => true, 'ordens' => true]);
+		$this->assertSame('ErpHomePrototype', PortalUi::dashboardRoute()['controller']);
+		$this->assertSame('OrdensservicoPrototype', PortalUi::listRoute('ordens')['controller']);
+		Configure::write('PortalUi.premium_modules', []);
+		$this->assertSame('Users', PortalUi::dashboardRoute()['controller']);
+	}
+
+	public function testShowPremiumNavWhenModulesConfigured(): void {
+		Configure::write('PortalUi.premium_modules', ['clientes' => true]);
+		$this->assertTrue(PortalUi::showPremiumNav());
+		Configure::write('PortalUi.premium_modules', []);
+		$this->assertFalse(PortalUi::showPremiumNav());
+	}
+
 	public function testVisao360RouteSwitchesWithPremium(): void {
 		Configure::write('PortalUi.premium_modules', ['clientes' => true]);
 		$route = PortalUi::visao360Route(42, ['tab' => 'historico']);

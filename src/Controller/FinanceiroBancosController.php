@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use App\Utility\FinanceiroBancosCatalogo;
+use App\Utility\PortalUi;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Utility\Hash;
@@ -99,6 +100,11 @@ class FinanceiroBancosController extends AppController
      */
     public function index()
     {
+        $prototypeLista = PortalUi::redirectToPrototypeIfEnabled('bancos', 'BancosPrototype', 'lista');
+        if ($prototypeLista !== null) {
+            return $this->redirect($prototypeLista);
+        }
+
         $idempresa = (int) $this->Auth->user("idempresa");
 
         $totais = [

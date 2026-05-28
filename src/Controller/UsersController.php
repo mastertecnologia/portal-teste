@@ -8,6 +8,7 @@ use App\Service\Common\ModelService;
 use App\Service\ClienteDomain\ClienteDomainBridge;
 use App\Service\Ticket\DashboardService;
 use App\Utility\ClienteDomainEventType;
+use App\Utility\PortalUi;
 use App\Utility\RbacClientePortal;
 use App\Utility\SupportInboxMail;
 use Cake\Auth\DefaultPasswordHasher;
@@ -210,6 +211,13 @@ class UsersController extends AppController {
 	}
 
 	public function dashboard($erro = null) {
+		if ((int)$this->Auth->user('role') === (int)C_RoleFuncionario
+			&& (string)$this->request->getQuery('legacy') !== '1') {
+			$protoHome = PortalUi::redirectToPrototypeIfEnabled('home', 'ErpHomePrototype', 'index');
+			if ($protoHome !== null) {
+				return $this->redirect($protoHome);
+			}
+		}
 		$this->set('title', 'Dashboard');
 		// Título e breadcrumb próprios em dashboard.ctp (evita duplicar "Dashboard" com .page-titles).
 		$this->set('hideLayoutPageTitle', true);
