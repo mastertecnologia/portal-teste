@@ -2,12 +2,14 @@
 
 > Plano de reestruturação do portal para adotar o **layout, telas e fluxos** do mockup (~100 telas SPA em JavaScript).
 > Referência preferida: **`docs/reference/pgm_erp_completo_2.html`** (copiar do `Downloads` do posto de trabalho).
-> Status: **EM EXECUÇÃO** — Fases 0–5 com protótipos lado-a-lado; legado Clientes com `clientes-layout-unificado` em produção.
+> Status: **CONCLUÍDO (plano `migracao-erp-completo`)** — Registry `config/pgm_erp_screens.json` (131 telas, 0 placeholders). Matriz: [PGM_ERP_COBERTURA_TELAS.md](PGM_ERP_COBERTURA_TELAS.md) · Integrações: [PGM_ERP_INTEGRACOES_GRID.md](PGM_ERP_INTEGRACOES_GRID.md) · Go-live: [PGM_ERP_HOMOLOGACAO_GO_LIVE.md](PGM_ERP_HOMOLOGACAO_GO_LIVE.md).
 
 ### Auditoria automática (após colocar o HTML no repo)
 
 ```bash
+python3 bin/generate_pgm_erp_coverage.py
 php bin/audit_pgm_erp_mock.php
+bash bin/homologacao_pgm_erp.sh
 ```
 
 ### Switchover por módulo (sem apagar legado)
@@ -28,7 +30,7 @@ Helper: `App\Utility\PortalUi::isPremiumModule('clientes')` — use em controlle
 | **Escopo** | Tudo (87 telas — sem PCP) |
 | **Estratégia** | Lado-a-lado: rotas `/portal/{modulo}-prototype/*` convivem com legado |
 | **Stack** | Cake `.ctp` + jQuery (padrão `ServicedeskPrototype` atual) |
-| **PCP/Indústria** | Implementado (`PcpPrototype` + migrations `pcp_*`) |
+| **PCP/Indústria** | Pular (13 telas adiadas) |
 | **Switchover** | Decidido por módulo, após validação |
 
 **Implicações:**
