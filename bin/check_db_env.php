@@ -129,5 +129,9 @@ if ($useCake) {
 }
 
 echo "\nConexão ao banco está OK com a configuração acima.\n";
+if (function_exists('posix_geteuid') && posix_geteuid() === 0) {
+	echo "Dica: este teste rodou como root. No browser o PHP-FPM usa outro usuário.\n";
+	echo "Confirme com: sudo -u www-data php bin/check_db_env.php\n";
+}
 echo "Se o site ainda der erro, limpe cache: bin/cake cache clear_all\n";
 exit(0);
