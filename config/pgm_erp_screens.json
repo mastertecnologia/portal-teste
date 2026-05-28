@@ -233,14 +233,12 @@
     {
       "id": "pg-configurador",
       "module": "pcp",
-      "status": "placeholder",
+      "status": "implemented",
       "route": "/pcp-prototype/configurador",
       "tables": [
-        "pcp_ordens_producao",
-        "pcp_centros_trabalho",
         "pcp_engenharia_fichas",
         "pcp_bom_itens",
-        "pcp_apontamentos"
+        "produtos"
       ],
       "grid_erp": "none",
       "grid_note": ""
@@ -274,14 +272,10 @@
     {
       "id": "pg-cotacoes",
       "module": "pcp",
-      "status": "placeholder",
+      "status": "implemented",
       "route": "/pcp-prototype/cotacoes",
       "tables": [
-        "pcp_ordens_producao",
-        "pcp_centros_trabalho",
-        "pcp_engenharia_fichas",
-        "pcp_bom_itens",
-        "pcp_apontamentos"
+        "pcp_requisicoes_compra"
       ],
       "grid_erp": "none",
       "grid_note": ""
@@ -289,14 +283,11 @@
     {
       "id": "pg-custos-producao",
       "module": "pcp",
-      "status": "placeholder",
+      "status": "implemented",
       "route": "/pcp-prototype/custos-producao",
       "tables": [
-        "pcp_ordens_producao",
-        "pcp_centros_trabalho",
-        "pcp_engenharia_fichas",
-        "pcp_bom_itens",
-        "pcp_apontamentos"
+        "pcp_apontamentos",
+        "pcp_centros_trabalho"
       ],
       "grid_erp": "none",
       "grid_note": ""
@@ -472,14 +463,10 @@
     {
       "id": "pg-expedicao",
       "module": "pcp",
-      "status": "placeholder",
+      "status": "implemented",
       "route": "/pcp-prototype/expedicao",
       "tables": [
-        "pcp_ordens_producao",
-        "pcp_centros_trabalho",
-        "pcp_engenharia_fichas",
-        "pcp_bom_itens",
-        "pcp_apontamentos"
+        "pcp_ordens_producao"
       ],
       "grid_erp": "none",
       "grid_note": ""
@@ -717,14 +704,11 @@
     {
       "id": "pg-mrp",
       "module": "pcp",
-      "status": "placeholder",
+      "status": "implemented",
       "route": "/pcp-prototype/mrp",
       "tables": [
         "pcp_ordens_producao",
-        "pcp_centros_trabalho",
-        "pcp_engenharia_fichas",
-        "pcp_bom_itens",
-        "pcp_apontamentos"
+        "pcp_bom_itens"
       ],
       "grid_erp": "none",
       "grid_note": ""
@@ -1046,14 +1030,10 @@
     {
       "id": "pg-pcp-cronograma",
       "module": "pcp",
-      "status": "placeholder",
+      "status": "implemented",
       "route": "/pcp-prototype/pcp-cronograma",
       "tables": [
-        "pcp_ordens_producao",
-        "pcp_centros_trabalho",
-        "pcp_engenharia_fichas",
-        "pcp_bom_itens",
-        "pcp_apontamentos"
+        "pcp_ordens_producao"
       ],
       "grid_erp": "none",
       "grid_note": ""
@@ -1076,14 +1056,10 @@
     {
       "id": "pg-pedido-compra",
       "module": "pcp",
-      "status": "placeholder",
+      "status": "implemented",
       "route": "/pcp-prototype/pedido-compra",
       "tables": [
-        "pcp_ordens_producao",
-        "pcp_centros_trabalho",
-        "pcp_engenharia_fichas",
-        "pcp_bom_itens",
-        "pcp_apontamentos"
+        "pcp_requisicoes_compra"
       ],
       "grid_erp": "none",
       "grid_note": ""
@@ -1174,13 +1150,9 @@
     {
       "id": "pg-qualidade-ind",
       "module": "pcp",
-      "status": "placeholder",
+      "status": "implemented",
       "route": "/pcp-prototype/qualidade-ind",
       "tables": [
-        "pcp_ordens_producao",
-        "pcp_centros_trabalho",
-        "pcp_engenharia_fichas",
-        "pcp_bom_itens",
         "pcp_apontamentos"
       ],
       "grid_erp": "none",
@@ -1189,14 +1161,10 @@
     {
       "id": "pg-recebimento",
       "module": "pcp",
-      "status": "placeholder",
+      "status": "implemented",
       "route": "/pcp-prototype/recebimento",
       "tables": [
-        "pcp_ordens_producao",
-        "pcp_centros_trabalho",
-        "pcp_engenharia_fichas",
-        "pcp_bom_itens",
-        "pcp_apontamentos"
+        "pcp_requisicoes_compra"
       ],
       "grid_erp": "none",
       "grid_note": ""
@@ -1229,14 +1197,10 @@
     {
       "id": "pg-requisicoes",
       "module": "pcp",
-      "status": "placeholder",
+      "status": "implemented",
       "route": "/pcp-prototype/requisicoes",
       "tables": [
-        "pcp_ordens_producao",
-        "pcp_centros_trabalho",
-        "pcp_engenharia_fichas",
-        "pcp_bom_itens",
-        "pcp_apontamentos"
+        "pcp_requisicoes_compra"
       ],
       "grid_erp": "none",
       "grid_note": ""
@@ -1257,14 +1221,12 @@
     {
       "id": "pg-roteiro",
       "module": "pcp",
-      "status": "placeholder",
+      "status": "implemented",
       "route": "/pcp-prototype/roteiro",
       "tables": [
-        "pcp_ordens_producao",
+        "pcp_roteiro_operacoes",
         "pcp_centros_trabalho",
-        "pcp_engenharia_fichas",
-        "pcp_bom_itens",
-        "pcp_apontamentos"
+        "produtos"
       ],
       "grid_erp": "none",
       "grid_note": ""

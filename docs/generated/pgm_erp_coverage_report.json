@@ -1,25 +1,12 @@
 {
-  "generated_at": "2026-05-28T15:43:15.152322+00:00",
+  "generated_at": "2026-05-28T15:55:41.520796+00:00",
   "html_path": "/workspace/docs/referencias/pgm_erp_completo_2.html",
   "html_screen_count": 124,
   "registry_count": 131,
   "missing_in_registry": [],
-  "placeholder_screens": [
-    "pg-configurador",
-    "pg-cotacoes",
-    "pg-custos-producao",
-    "pg-expedicao",
-    "pg-mrp",
-    "pg-pcp-cronograma",
-    "pg-pedido-compra",
-    "pg-qualidade-ind",
-    "pg-recebimento",
-    "pg-requisicoes",
-    "pg-roteiro"
-  ],
+  "placeholder_screens": [],
   "status_counts": {
     "bridge": 62,
-    "implemented": 58,
-    "placeholder": 11
+    "implemented": 69
   }
 }

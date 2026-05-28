@@ -1,6 +1,6 @@
 # Cobertura de telas — PGM ERP Completo
 
-Gerado em: 2026-05-28 15:43 UTC
+Gerado em: 2026-05-28 15:55 UTC
 Referência HTML: `docs/referencias/pgm_erp_completo_2.html`
 Registry: `config/pgm_erp_screens.json`
 
@@ -10,9 +10,9 @@ Registry: `config/pgm_erp_screens.json`
 |---------|------:|
 | Telas `pg-*` no HTML | 124 |
 | Entradas no registry | 131 |
-| Implementadas (premium) | 58 |
+| Implementadas (premium) | 69 |
 | Bridge (legado/API intacta) | 62 |
-| Placeholder / roadmap | 11 |
+| Placeholder / roadmap | 0 |
 | Planejadas | 0 |
 
 ## Registry sem `pg-*` no HTML (revisar)
@@ -79,21 +79,21 @@ Registry: `config/pgm_erp_screens.json`
 | pcp | `pg-apontamento` | OK | `/pcp-prototype/apontamento` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
 | pcp | `pg-bom` | OK | `/pcp-prototype/bom` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
 | pcp | `pg-centro-trabalho` | OK | `/pcp-prototype/centro-trabalho` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
-| pcp | `pg-configurador` | PLACEHOLDER | `/pcp-prototype/configurador` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
-| pcp | `pg-cotacoes` | PLACEHOLDER | `/pcp-prototype/cotacoes` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
-| pcp | `pg-custos-producao` | PLACEHOLDER | `/pcp-prototype/custos-producao` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
+| pcp | `pg-configurador` | OK | `/pcp-prototype/configurador` | pcp_engenharia_fichas, pcp_bom_itens, produtos | none |
+| pcp | `pg-cotacoes` | OK | `/pcp-prototype/cotacoes` | pcp_requisicoes_compra | none |
+| pcp | `pg-custos-producao` | OK | `/pcp-prototype/custos-producao` | pcp_apontamentos, pcp_centros_trabalho | none |
 | pcp | `pg-engenharia` | OK | `/pcp-prototype/engenharia` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
-| pcp | `pg-expedicao` | PLACEHOLDER | `/pcp-prototype/expedicao` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
-| pcp | `pg-mrp` | PLACEHOLDER | `/pcp-prototype/mrp` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
+| pcp | `pg-expedicao` | OK | `/pcp-prototype/expedicao` | pcp_ordens_producao | none |
+| pcp | `pg-mrp` | OK | `/pcp-prototype/mrp` | pcp_ordens_producao, pcp_bom_itens | none |
 | pcp | `pg-op-detalhe` | OK | `/pcp-prototype/op-detalhe` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
 | pcp | `pg-op-lista` | OK | `/pcp-prototype/op-lista` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
-| pcp | `pg-pcp-cronograma` | PLACEHOLDER | `/pcp-prototype/pcp-cronograma` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
+| pcp | `pg-pcp-cronograma` | OK | `/pcp-prototype/pcp-cronograma` | pcp_ordens_producao | none |
 | pcp | `pg-pcp-dashboard` | OK | `/pcp-prototype/dashboard` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
-| pcp | `pg-pedido-compra` | PLACEHOLDER | `/pcp-prototype/pedido-compra` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
-| pcp | `pg-qualidade-ind` | PLACEHOLDER | `/pcp-prototype/qualidade-ind` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
-| pcp | `pg-recebimento` | PLACEHOLDER | `/pcp-prototype/recebimento` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
-| pcp | `pg-requisicoes` | PLACEHOLDER | `/pcp-prototype/requisicoes` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
-| pcp | `pg-roteiro` | PLACEHOLDER | `/pcp-prototype/roteiro` | pcp_ordens_producao, pcp_centros_trabalho, pcp_engenharia_fichas, pcp_bom_itens, pcp_apontamentos | none |
+| pcp | `pg-pedido-compra` | OK | `/pcp-prototype/pedido-compra` | pcp_requisicoes_compra | none |
+| pcp | `pg-qualidade-ind` | OK | `/pcp-prototype/qualidade-ind` | pcp_apontamentos | none |
+| pcp | `pg-recebimento` | OK | `/pcp-prototype/recebimento` | pcp_requisicoes_compra | none |
+| pcp | `pg-requisicoes` | OK | `/pcp-prototype/requisicoes` | pcp_requisicoes_compra | none |
+| pcp | `pg-roteiro` | OK | `/pcp-prototype/roteiro` | pcp_roteiro_operacoes, pcp_centros_trabalho, produtos | none |
 | produtos | `pg-estoque` | OK | `/produtos-prototype/estoque` | produtos | both |
 | produtos | `pg-estoque-log` | BRIDGE | `/produtos-prototype/estoque-log` | produtos | both |
 | produtos | `pg-historico-precos` | BRIDGE | `/produtos-prototype/historico-precos` | produtos | both |

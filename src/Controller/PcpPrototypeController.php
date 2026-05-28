@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Controller\Traits\ErpPrototypeRbacTrait;
 use Cake\Event\Event;
+use App\Service\Pcp\PcpPrototypeDataService;
 use Cake\Http\Exception\NotFoundException;
 
 /**
@@ -13,10 +14,12 @@ use Cake\Http\Exception\NotFoundException;
  * pg-op-lista, pg-op-detalhe, pg-apontamento, pg-qualidade-ind, pg-expedicao).
  *
  * Módulo INTEIRO NOVO no portal — não existem tabelas dedicadas hoje. Esta classe
- * entrega placeholders premium com o roteiro de cada tela e a estimativa de
+ * telas premium com dados reais via ORM (tabelas pcp_*) e a estimativa de
  * implementação. Roadmap completo: BOM/roteiros/MRP/OPs/apontamento.
  */
 class PcpPrototypeController extends AppController {
+
+	use ErpPrototypeRbacTrait;
 
 	public function beforeFilter(Event $event) {
 		$redirect = $this->request->getRequestTarget();
@@ -115,12 +118,87 @@ class PcpPrototypeController extends AppController {
 		if ($page === 'dashboard') {
 			return $this->dashboard();
 		}
+		if ($page === 'op-lista') {
+			return $this->opLista();
+		}
+		if ($page === 'op-detalhe') {
+			$id = (int)$this->request->getQuery('id', 0);
+
+			return $this->opDetalhe($id > 0 ? $id : null);
+		}
 		$pages = $this->buildPages();
 		if (!isset($pages[$page])) {
 			throw new NotFoundException(__('Tela PCP não encontrada.'));
 		}
 		$meta = $pages[$page];
-		$this->set([
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new PcpPrototypeDataService($empresa);
+		$migrationHint = !$svc->tablesAvailable();
+		$template = 'pagina';
+		$extra = [];
+		switch ($page) {
+			case 'engenharia':
+				$template = 'engenharia';
+				$extra['pcpRows'] = $svc->listFichas();
+				break;
+			case 'bom':
+				$template = 'bom';
+				$extra['pcpRows'] = $svc->listBom();
+				break;
+			case 'centro-trabalho':
+				$template = 'centro_trabalho';
+				$extra['pcpRows'] = $svc->listCentros();
+				break;
+			case 'apontamento':
+				$template = 'apontamento';
+				$extra['pcpRows'] = $svc->listApontamentosRecentes();
+				break;
+			case 'roteiro':
+				$template = 'roteiro';
+				$extra['pcpRows'] = $svc->listRoteiros();
+				break;
+			case 'configurador':
+				$template = 'configurador';
+				$extra['pcpRows'] = $svc->listProdutosConfigurador();
+				break;
+			case 'mrp':
+				$template = 'mrp';
+				$extra['pcpRows'] = $svc->listMrpNecessidades();
+				break;
+			case 'pcp-cronograma':
+				$template = 'cronograma';
+				$extra['pcpRows'] = $svc->listCronograma();
+				break;
+			case 'qualidade-ind':
+				$template = 'qualidade';
+				$extra['pcpRows'] = $svc->listQualidadeRefugo();
+				break;
+			case 'expedicao':
+				$template = 'expedicao';
+				$extra['pcpRows'] = $svc->listExpedicaoPendente();
+				break;
+			case 'requisicoes':
+				$template = 'requisicoes';
+				$extra['pcpRows'] = $svc->listRequisicoesCompra('requisicao');
+				break;
+			case 'cotacoes':
+				$template = 'cotacoes';
+				$extra['pcpRows'] = $svc->listRequisicoesCompra('cotacao');
+				break;
+			case 'pedido-compra':
+				$template = 'pedido_compra';
+				$extra['pcpRows'] = $svc->listRequisicoesCompra('pedido');
+				break;
+			case 'recebimento':
+				$template = 'recebimento';
+				$extra['pcpRows'] = $svc->listRequisicoesCompra('recebimento');
+				break;
+			case 'custos-producao':
+				$template = 'custos';
+				$extra['pcpRows'] = $svc->listCustosProducao();
+				break;
+		}
+		$this->set(array_merge([
 			'title' => 'PCP · ' . $meta['title'],
 			'erpNavActive' => 'pcp',
 			'erpBreadcrumb' => [
@@ -130,9 +208,30 @@ class PcpPrototypeController extends AppController {
 			],
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
 			'pageMeta' => $meta + ['key' => $page],
+			'pcpMigrationHint' => $migrationHint,
+		], $extra));
+
+		return $this->render($template);
+	}
+
+	public function opLista() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new PcpPrototypeDataService($empresa);
+		$this->set([
+			'title' => __('Ordens de Produção'),
+			'erpNavActive' => 'op-lista',
+			'erpBreadcrumb' => [
+				['label' => 'PGM ERP'],
+				['label' => __('Indústria'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'lista']],
+				['label' => __('Ordens de Produção'), 'cur' => true],
+			],
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+			'pcpOrdens' => $svc->listOrdens(),
+			'pcpKpi' => $svc->dashboardKpis(),
+			'pcpMigrationHint' => !$svc->tablesAvailable(),
 		]);
 
-		return $this->render('pagina');
+		return $this->render('op_lista');
 	}
 
 	/**

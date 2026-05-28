@@ -269,4 +269,325 @@ class PcpPrototypeDataService {
 
 		return $items;
 	}
+
+	public function tableExists(string $alias): bool {
+		try {
+			return TableRegistry::getTableLocator()->exists($alias);
+		} catch (\Throwable $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listRoteiros(int $limit = 120): array {
+		if (!$this->tablesAvailable() || !$this->tableExists('PcpRoteiroOperacoes')) {
+			return [];
+		}
+		$items = [];
+		try {
+			$tbl = TableRegistry::getTableLocator()->get('PcpRoteiroOperacoes');
+			$rows = $tbl->find()
+				->contain(['Produtos', 'PcpCentrosTrabalho'])
+				->where(['PcpRoteiroOperacoes.idempresa' => $this->idempresa])
+				->order(['PcpRoteiroOperacoes.idproduto' => 'ASC', 'PcpRoteiroOperacoes.sequencia' => 'ASC'])
+				->limit($limit)
+				->all();
+			foreach ($rows as $r) {
+				$p = $r->produto ?? null;
+				$ct = $r->pcp_centros_trabalho ?? null;
+				$items[] = [
+					'produto' => $p ? (string)($p->get('descricao') ?? '') : '—',
+					'sequencia' => (int)$r->get('sequencia'),
+					'operacao' => (string)$r->get('operacao'),
+					'centro' => $ct ? (string)$ct->get('nome') : '—',
+					'setup' => (float)($r->get('tempo_setup_min') ?? 0),
+					'run' => (float)($r->get('tempo_run_min') ?? 0),
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $items;
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listMrpNecessidades(int $limit = 150): array {
+		if (!$this->tablesAvailable()) {
+			return [];
+		}
+		$needs = [];
+		try {
+			$ops = TableRegistry::getTableLocator()->get('PcpOrdensProducao');
+			$bom = TableRegistry::getTableLocator()->get('PcpBomItens');
+			$open = $ops->find()
+				->where(['idempresa' => $this->idempresa])
+				->andWhere(function ($exp) {
+					return $exp->notIn('status', ['concluida', 'fechada', 'encerrada', 'cancelada']);
+				})
+				->all();
+			foreach ($open as $o) {
+				$parentId = (int)($o->get('idproduto') ?? 0);
+				if ($parentId <= 0) {
+					continue;
+				}
+				$opQty = (float)$o->get('quantidade');
+				$opNum = (string)$o->get('numero');
+				foreach ($bom->find()->contain(['ChildProdutos'])->where([
+					'idempresa' => $this->idempresa,
+					'parent_produto_id' => $parentId,
+				])->all() as $b) {
+					$child = $b->child_produto ?? null;
+					$childId = (int)$b->get('child_produto_id');
+					$scrap = 1 + ((float)($b->get('scrap_pct') ?? 0) / 100);
+					$qtd = $opQty * (float)$b->get('quantidade') * $scrap;
+					$key = $childId . '|' . $opNum;
+					if (!isset($needs[$key])) {
+						$needs[$key] = [
+							'componente' => $child ? (string)($child->get('descricao') ?? '') : '—',
+							'op' => $opNum,
+							'necessidade' => 0.0,
+						];
+					}
+					$needs[$key]['necessidade'] += $qtd;
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+		$items = array_values($needs);
+		usort($items, static function ($a, $b) {
+			return strcmp((string)$a['componente'], (string)$b['componente']);
+		});
+
+		return array_slice($items, 0, $limit);
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listCronograma(int $limit = 80): array {
+		if (!$this->tablesAvailable()) {
+			return [];
+		}
+		$items = [];
+		try {
+			$ops = TableRegistry::getTableLocator()->get('PcpOrdensProducao');
+			$rows = $ops->find()
+				->contain(['Produtos'])
+				->where(['idempresa' => $this->idempresa])
+				->order(['data_inicio_prev' => 'ASC', 'numero' => 'ASC'])
+				->limit($limit)
+				->all();
+			foreach ($rows as $o) {
+				$p = $o->produto ?? null;
+				$items[] = [
+					'numero' => (string)$o->get('numero'),
+					'produto' => $p ? (string)($p->get('descricao') ?? '') : (string)($o->get('descricao') ?? '—'),
+					'inicio' => $o->get('data_inicio_prev'),
+					'fim' => $o->get('data_fim_prev'),
+					'status' => (string)$o->get('status'),
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $items;
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listQualidadeRefugo(int $limit = 80): array {
+		if (!$this->tablesAvailable()) {
+			return [];
+		}
+		$items = [];
+		try {
+			$tbl = TableRegistry::getTableLocator()->get('PcpApontamentos');
+			$rows = $tbl->find()
+				->contain(['PcpOrdensProducao'])
+				->where([
+					'PcpApontamentos.idempresa' => $this->idempresa,
+					'PcpApontamentos.quantidade_refugo >' => 0,
+				])
+				->order(['PcpApontamentos.inicio' => 'DESC'])
+				->limit($limit)
+				->all();
+			foreach ($rows as $a) {
+				$op = $a->pcp_ordens_producao ?? null;
+				$items[] = [
+					'ordem' => $op ? (string)$op->get('numero') : '—',
+					'operacao' => (string)($a->get('operacao') ?? ''),
+					'boa' => (float)$a->get('quantidade_boa'),
+					'refugo' => (float)$a->get('quantidade_refugo'),
+					'inicio' => $a->get('inicio'),
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $items;
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listExpedicaoPendente(int $limit = 80): array {
+		if (!$this->tablesAvailable()) {
+			return [];
+		}
+		$items = [];
+		try {
+			$ops = TableRegistry::getTableLocator()->get('PcpOrdensProducao');
+			$rows = $ops->find()
+				->contain(['Produtos'])
+				->where(['idempresa' => $this->idempresa])
+				->andWhere(function ($exp) {
+					return $exp->in('status', [
+						'concluida',
+						'expedicao',
+						'pronta_expedicao',
+						'pronta',
+						'fechada',
+					]);
+				})
+				->order(['modified' => 'DESC', 'created' => 'DESC'])
+				->limit($limit)
+				->all();
+			foreach ($rows as $o) {
+				$p = $o->produto ?? null;
+				$items[] = [
+					'numero' => (string)$o->get('numero'),
+					'produto' => $p ? (string)($p->get('descricao') ?? '') : (string)($o->get('descricao') ?? '—'),
+					'quantidade' => (float)$o->get('quantidade_produzida') ?: (float)$o->get('quantidade'),
+					'status' => (string)$o->get('status'),
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $items;
+	}
+
+	/**
+	 * @param string|null $tipo
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listRequisicoesCompra(?string $tipo = null, int $limit = 100): array {
+		if (!$this->tablesAvailable() || !$this->tableExists('PcpRequisicoesCompra')) {
+			return [];
+		}
+		$items = [];
+		try {
+			$q = TableRegistry::getTableLocator()->get('PcpRequisicoesCompra')->find()
+				->contain(['Produtos'])
+				->where(['idempresa' => $this->idempresa]);
+			if ($tipo !== null && $tipo !== '') {
+				$q->andWhere(['tipo' => $tipo]);
+			}
+			foreach ($q->order(['created' => 'DESC'])->limit($limit)->all() as $r) {
+				$p = $r->produto ?? null;
+				$items[] = [
+					'numero' => (string)$r->get('numero'),
+					'tipo' => (string)$r->get('tipo'),
+					'descricao' => (string)($r->get('descricao') ?? ($p ? $p->get('descricao') : '')),
+					'quantidade' => (float)$r->get('quantidade'),
+					'status' => (string)$r->get('status'),
+					'created' => $r->get('created'),
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $items;
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listCustosProducao(int $limit = 80): array {
+		if (!$this->tablesAvailable()) {
+			return [];
+		}
+		$items = [];
+		try {
+			$tbl = TableRegistry::getTableLocator()->get('PcpApontamentos');
+			$rows = $tbl->find()
+				->contain(['PcpOrdensProducao', 'PcpCentrosTrabalho'])
+				->where(['PcpApontamentos.idempresa' => $this->idempresa])
+				->order(['PcpApontamentos.inicio' => 'DESC'])
+				->limit($limit)
+				->all();
+			foreach ($rows as $a) {
+				$op = $a->pcp_ordens_producao ?? null;
+				$ct = $a->pcp_centros_trabalho ?? null;
+				$horas = 0.0;
+				$ini = $a->get('inicio');
+				$fim = $a->get('fim');
+				if ($ini instanceof \DateTimeInterface && $fim instanceof \DateTimeInterface) {
+					$horas = max(0, ($fim->getTimestamp() - $ini->getTimestamp()) / 3600);
+				}
+				$custoH = $ct ? (float)($ct->get('custo_h') ?? 0) : 0.0;
+				$items[] = [
+					'ordem' => $op ? (string)$op->get('numero') : '—',
+					'centro' => $ct ? (string)$ct->get('nome') : '—',
+					'horas' => round($horas, 2),
+					'custo' => round($horas * $custoH, 2),
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $items;
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listProdutosConfigurador(int $limit = 80): array {
+		if (!$this->tablesAvailable()) {
+			return [];
+		}
+		$byId = [];
+		try {
+			$fichas = TableRegistry::getTableLocator()->get('PcpEngenhariaFichas');
+			foreach ($fichas->find()->contain(['Produtos'])->where(['idempresa' => $this->idempresa])->limit($limit)->all() as $f) {
+				$pid = (int)($f->get('idproduto') ?? 0);
+				if ($pid <= 0) {
+					continue;
+				}
+				$p = $f->produto ?? null;
+				$byId[$pid] = [
+					'produto' => $p ? (string)($p->get('descricao') ?? '') : '—',
+					'codigo' => $p ? (string)($p->get('codigo') ?? '') : '',
+					'fichas' => 1,
+					'bom_itens' => 0,
+				];
+			}
+			$bom = TableRegistry::getTableLocator()->get('PcpBomItens');
+			foreach ($bom->find()->contain(['ParentProdutos'])->where(['idempresa' => $this->idempresa])->limit($limit * 2)->all() as $b) {
+				$pid = (int)$b->get('parent_produto_id');
+				if ($pid <= 0) {
+					continue;
+				}
+				$p = $b->parent_produto ?? null;
+				if (!isset($byId[$pid])) {
+					$byId[$pid] = [
+						'produto' => $p ? (string)($p->get('descricao') ?? '') : '—',
+						'codigo' => $p ? (string)($p->get('codigo') ?? '') : '',
+						'fichas' => 0,
+						'bom_itens' => 0,
+					];
+				}
+				$byId[$pid]['bom_itens']++;
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return array_slice(array_values($byId), 0, $limit);
+	}
+
 }
