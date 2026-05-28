@@ -5,6 +5,7 @@
  * @var array<string,mixed> $homeKpi
  * @var string $homeDataLabel
  * @var string $homeUserFirstName
+ * @var array<int,array<string,mixed>> $homeActivity
  */
 use App\Utility\PortalUi;
 
@@ -42,7 +43,7 @@ $kpiCard = function (string $label, string $value, string $sub, array $route, st
 	);
 };
 ?>
-<div class="pgm-erp-home">
+<div class="pgm-erp-home" id="pg-home">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
 	<div>
 		<h1 style="font-size:22px;font-weight:600;margin:0;"><?= h(sprintf(__('Bom dia, %s 👋'), $homeUserFirstName ?? '')) ?></h1>
@@ -142,6 +143,76 @@ $kpiCard = function (string $label, string $value, string $sub, array $route, st
 			<?= $tile('📝', __('Requisições de Compra'), __('Compras urgentes'), ['controller' => 'PcpPrototype', 'action' => 'view', 'requisicoes'], 'purple') ?>
 			<?= $tile('📊', __('Custos de Produção'), __('Análise de custos'), ['controller' => 'PcpPrototype', 'action' => 'view', 'custos-producao'], 'purple') ?>
 		</div>
+	</div>
+</div>
+
+<div class="g2" style="margin-top:14px;">
+	<div class="card">
+		<div class="sec-title">⚡ <?= h(__('Atividade recente · todos os módulos')) ?></div>
+		<?php if (!empty($homeActivity)) : ?>
+			<?php foreach ((array)$homeActivity as $ev) : ?>
+				<div class="tl-item">
+					<div class="tl-dot" style="background:<?= h((string)($ev['bg'] ?? 'var(--teal-light)')) ?>;"><?= h((string)($ev['icon'] ?? '•')) ?></div>
+					<div class="tl-body">
+						<div class="tl-title"><?= h((string)($ev['title'] ?? '')) ?></div>
+						<div class="tl-sub"><?= h((string)($ev['sub'] ?? '')) ?></div>
+					</div>
+				</div>
+			<?php endforeach; ?>
+		<?php else : ?>
+			<p style="font-size:12px;color:var(--text-muted);margin:0;"><?= h(__('Nenhuma atividade recente no período.')) ?></p>
+		<?php endif; ?>
+	</div>
+
+	<div class="card">
+		<div class="sec-title">⏰ <?= h(__('Pendências & próximas ações')) ?></div>
+		<?php if ((float)($k['vencendo_7d'] ?? 0) > 0) : ?>
+			<div style="padding:10px 12px;background:#FAEEDA;border-radius:var(--radius);border-left:3px solid var(--amber);margin-bottom:8px;">
+				<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+					<div>
+						<div style="font-size:13px;font-weight:600;color:#8A4D02;"><?= h(sprintf(__('%d títulos vencem em 7 dias'), (int)($k['vencendo_7d_qtd'] ?? 0))) ?></div>
+						<div style="font-size:11px;color:var(--text-muted);margin-top:2px;"><?= h($brl((float)($k['vencendo_7d'] ?? 0))) ?></div>
+					</div>
+					<?= $this->Html->link(__('Ver'), ['controller' => 'FinanceiroPrototype', 'action' => 'titulos'], ['class' => 'btn btn-amber btn-xs']) ?>
+				</div>
+			</div>
+		<?php endif; ?>
+		<?php if ((float)($k['cr_receber'] ?? 0) > 0) : ?>
+			<div style="padding:10px 12px;background:#FFF5F5;border-radius:var(--radius);border-left:3px solid var(--red);margin-bottom:8px;">
+				<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+					<div>
+						<div style="font-size:13px;font-weight:600;color:#7A1822;"><?= h(__('Contas a receber em aberto')) ?></div>
+						<div style="font-size:11px;color:var(--text-muted);margin-top:2px;"><?= h($brl((float)($k['cr_receber'] ?? 0))) ?></div>
+					</div>
+					<?= $this->Html->link(__('Cobrar'), ['controller' => 'FinanceiroPrototype', 'action' => 'titulos'], ['class' => 'btn btn-red btn-xs']) ?>
+				</div>
+			</div>
+		<?php endif; ?>
+		<?php if ((int)($k['tickets_abertos'] ?? 0) > 0) : ?>
+			<div style="padding:10px 12px;background:var(--blue-light);border-radius:var(--radius);border-left:3px solid var(--blue);margin-bottom:8px;">
+				<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+					<div>
+						<div style="font-size:13px;font-weight:600;color:#0C447C;"><?= h(__('Tickets no seu escopo')) ?></div>
+						<div style="font-size:11px;color:var(--text-muted);margin-top:2px;"><?= h(sprintf(__('%d aguardando atenção'), (int)($k['tickets_abertos'] ?? 0))) ?></div>
+					</div>
+					<?= $this->Html->link(__('Abrir'), PortalUi::servicedeskHomeRoute(), ['class' => 'btn btn-blue btn-xs']) ?>
+				</div>
+			</div>
+		<?php endif; ?>
+		<?php if ((int)($k['os_abertas'] ?? 0) > 0) : ?>
+			<div style="padding:10px 12px;background:var(--teal-light);border-radius:var(--radius);border-left:3px solid var(--teal);">
+				<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+					<div>
+						<div style="font-size:13px;font-weight:600;color:var(--teal-dark);"><?= h(__('Ordens de serviço')) ?></div>
+						<div style="font-size:11px;color:var(--text-muted);margin-top:2px;"><?= h(sprintf(__('%d registros na empresa'), (int)($k['os_abertas'] ?? 0))) ?></div>
+					</div>
+					<?= $this->Html->link(__('Acompanhar'), ['controller' => 'OrdensservicoPrototype', 'action' => 'lista'], ['class' => 'btn btn-primary btn-xs']) ?>
+				</div>
+			</div>
+		<?php endif; ?>
+		<?php if ((float)($k['vencendo_7d'] ?? 0) <= 0 && (float)($k['cr_receber'] ?? 0) <= 0 && (int)($k['tickets_abertos'] ?? 0) <= 0 && (int)($k['os_abertas'] ?? 0) <= 0) : ?>
+			<p style="font-size:12px;color:var(--text-muted);margin:0;"><?= h(__('Nenhuma pendência crítica no momento.')) ?></p>
+		<?php endif; ?>
 	</div>
 </div>
 </div>

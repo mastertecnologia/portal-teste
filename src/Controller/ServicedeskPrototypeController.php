@@ -38,7 +38,6 @@ class ServicedeskPrototypeController extends AppController {
 		$this->Auth->setConfig('unauthorizedRedirect', $staffLogin);
 
 		parent::beforeFilter($event);
-		$this->viewBuilder()->setLayout('erp_prototype');
 		$this->set([
 			'loadServicedeskPrototypeCss' => true,
 			'disablePgmAppShellPremium' => true,

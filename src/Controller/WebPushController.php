@@ -28,7 +28,6 @@ class WebPushController extends AppController {
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-		$this->viewBuilder()->setLayout('erp_prototype');
 		// CSRF protege POST; precisamos liberar API JSON do bloqueio Security
 		if (isset($this->Security)) {
 			$this->Security->setConfig('unlockedActions', ['subscribe', 'unsubscribe']);

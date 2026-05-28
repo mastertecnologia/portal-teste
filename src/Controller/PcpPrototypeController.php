@@ -32,7 +32,6 @@ class PcpPrototypeController extends AppController {
 		$this->Auth->setConfig('loginAction', $staffLogin);
 		$this->Auth->setConfig('unauthorizedRedirect', $staffLogin);
 		parent::beforeFilter($event);
-		$this->viewBuilder()->setLayout('erp_prototype');
 	}
 
 	public function lista() {
@@ -368,6 +367,36 @@ class PcpPrototypeController extends AppController {
 					__('Etiquetas, romaneios, conferência'),
 					__('Integração transportadora'),
 				],
+			],
+			'requisicoes' => [
+				'icon' => '📝',
+				'title' => __('Requisições de Compra'),
+				'subtitle' => __('Demandas de material e compras urgentes'),
+				'roteiro' => [],
+			],
+			'cotacoes' => [
+				'icon' => '💬',
+				'title' => __('Cotações'),
+				'subtitle' => __('Comparativo de fornecedores'),
+				'roteiro' => [],
+			],
+			'pedido-compra' => [
+				'icon' => '🛒',
+				'title' => __('Pedido de Compra'),
+				'subtitle' => __('Ordens emitidas a fornecedores'),
+				'roteiro' => [],
+			],
+			'recebimento' => [
+				'icon' => '📥',
+				'title' => __('Recebimento'),
+				'subtitle' => __('Entrada de materiais no estoque'),
+				'roteiro' => [],
+			],
+			'custos-producao' => [
+				'icon' => '📊',
+				'title' => __('Custos de Produção'),
+				'subtitle' => __('Análise de custo real × padrão'),
+				'roteiro' => [],
 			],
 		];
 	}

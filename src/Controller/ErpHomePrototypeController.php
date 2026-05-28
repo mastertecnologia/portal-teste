@@ -165,6 +165,25 @@ class ErpHomePrototypeController extends AppController {
 		$nomeCompleto = trim((string)($user['nome'] ?? $user['username'] ?? ''));
 		$primeiroNome = $nomeCompleto !== '' ? explode(' ', $nomeCompleto)[0] : __('usuário');
 
+		$homeActivity = [];
+		foreach ($recentOrc as $r) {
+			$homeActivity[] = [
+				'icon' => '📧',
+				'bg' => '#FAEEDA',
+				'title' => sprintf('%s · %s', $r['label'], $r['cliente']),
+				'sub' => sprintf(__('Orçamento · %s'), 'R$ ' . number_format((float)$r['valor'], 2, ',', '.')),
+			];
+		}
+		foreach ($recentOs as $r) {
+			$homeActivity[] = [
+				'icon' => '🔧',
+				'bg' => 'var(--blue-light)',
+				'title' => sprintf('%s · %s', $r['label'], $r['cliente']),
+				'sub' => __('Ordem de serviço recente'),
+			];
+		}
+		$homeActivity = array_slice($homeActivity, 0, 5);
+
 		$this->set([
 			'bodyPageClass' => 'pgm-erp-home-page',
 			'title' => __('Dashboard'),
@@ -176,6 +195,7 @@ class ErpHomePrototypeController extends AppController {
 			'homeKpi' => $kpi,
 			'homeUserFirstName' => $primeiroNome,
 			'homeDataLabel' => $now->i18nFormat('EEEE, dd/MM/yyyy'),
+			'homeActivity' => $homeActivity,
 		]);
 
 		return $this->render('index');

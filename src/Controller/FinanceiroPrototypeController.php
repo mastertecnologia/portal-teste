@@ -36,7 +36,6 @@ class FinanceiroPrototypeController extends AppController {
 		$this->Auth->setConfig('loginAction', $staffLogin);
 		$this->Auth->setConfig('unauthorizedRedirect', $staffLogin);
 		parent::beforeFilter($event);
-		$this->viewBuilder()->setLayout('erp_prototype');
 	}
 
 	/**

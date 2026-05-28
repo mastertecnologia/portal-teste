@@ -27,7 +27,6 @@ class TicketCsatController extends AppController {
 		parent::beforeFilter($event);
 		// CSAT é público (cliente sem login)
 		$this->Auth->allow(['responder', 'sucesso']);
-		$this->viewBuilder()->setLayout('erp_prototype');
 	}
 
 	public function isAuthorized($user) {

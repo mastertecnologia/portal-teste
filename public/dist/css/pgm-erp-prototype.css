@@ -58,9 +58,9 @@
 }
 .pgm-erp-shell * { box-sizing: border-box; }
 
-/* Só no layout erp_prototype (sidebar própria); não no portal (sidebar React/Cake). */
-html:has(.pgm-erp-shell:not(.pgm-erp-shell--in-portal)),
-html:has(.pgm-erp-shell:not(.pgm-erp-shell--in-portal)) body {
+/* Só no layout erp_prototype standalone (.app = sidebar mock própria). */
+html:has(.pgm-erp-shell .app),
+html:has(.pgm-erp-shell .app) body {
 	height: 100%;
 	overflow: hidden;
 }
@@ -936,6 +936,30 @@ body.pgm-erp-prototype-page .pgm-erp-topbar-avatar {
 
 .pgm-erp-shell .pgm-erp-home-modules > .card {
 	margin-bottom: 0;
+}
+
+/* Listas / tabelas — largura total no portal (todas as telas *Prototype) */
+.pgm-erp-shell--in-portal .card {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+.pgm-erp-shell--in-portal .tbl-wrap,
+.pgm-erp-shell--in-portal .tbl {
+	max-width: 100%;
+}
+.pgm-erp-shell--in-portal .g2,
+.pgm-erp-shell--in-portal .g3 {
+	width: 100%;
+}
+.pgm-erp-shell--in-portal .summary-grid:not(.pgm-erp-home-kpis) {
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+.pgm-erp-shell--in-portal .stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+	gap: 10px;
+	margin-bottom: 20px;
 }
 
 .pgm-erp-shell .summary-card .val {

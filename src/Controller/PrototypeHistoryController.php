@@ -27,7 +27,6 @@ class PrototypeHistoryController extends AppController {
 		$this->Auth->setConfig('unauthorizedRedirect', $staffLogin);
 		parent::beforeFilter($event);
 		$this->_applyErpLocaleFromSession();
-		$this->viewBuilder()->setLayout('erp_prototype');
 		$action = (string)$this->request->getParam('action');
 		if ($action === 'index' && (int)$this->Auth->user('admin') !== 1) {
 			$this->Flash->error(__('Histórico de transições restrito a administradores.'));

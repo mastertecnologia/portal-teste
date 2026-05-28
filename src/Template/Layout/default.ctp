@@ -54,7 +54,7 @@ $pgmSidebarReactCss = $__pgmSbWebBase . '/js/pgm-sidebar-react/sidebar-assets.cs
 	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/layout-sidebar-shell.css?v=" . time()) ?>
 	<?php if (empty($disablePgmAppShellPremium)) : ?>
-	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=11") ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=12") ?>
 	<?php endif; ?>
 	<?php if (!empty($pgmLoadErpPrototypeAssets)) : ?>
 	<?= $this->element('ErpPrototype/head_assets', ['includeServicedeskPrototypeCss' => !empty($loadServicedeskPrototypeCss)]) ?>
@@ -196,8 +196,8 @@ $pgmSidebarReactCss = $__pgmSbWebBase . '/js/pgm-sidebar-react/sidebar-assets.cs
 		<a href="javascript:void(0)" class="nav-toggler d-flex d-md-none pgm-shell-mobile-nav waves-effect waves-dark" aria-label="Abrir menu"><i class="ti-menu"></i></a>
 		<turbo-frame id="pgm-main-frame" data-turbo-action="advance">
 		<?php if (empty($disablePgmAppShellPremium)) : ?>
-		<?php if (!empty($pgmLoadErpPrototypeAssets) && !empty($erpEmpresas)) : ?>
-		<?= $this->element('pgm_shell_topbar_erp', ['erpEmpresas' => (array)$erpEmpresas]) ?>
+		<?php if (!empty($pgmLoadErpPrototypeAssets)) : ?>
+		<?= $this->element('pgm_shell_topbar_erp', ['erpEmpresas' => (array)($erpEmpresas ?? [])]) ?>
 		<?php else : ?>
 		<?= $this->element('pgm_shell_topbar') ?>
 		<?php endif; ?>
