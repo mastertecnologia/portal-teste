@@ -4,24 +4,34 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Controller\Traits\ErpPrototypeRbacTrait;
+use App\Utility\FinanceiroBancosCatalogo;
+use App\Utility\FinanceiroBancosPrototypeUi;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
+use Cake\Utility\Hash;
 
 /**
  * Bancos — protótipo (mockup pg-bancos, pg-contas, pg-extrato, pg-conciliacao,
  * pg-transferencias, pg-fluxo-caixa).
- *
- * Lado-a-lado com FinanceiroBancosController. Somente leitura.
  */
 class BancosPrototypeController extends AppController {
 
 	use ErpPrototypeRbacTrait;
+
+	/** @var bool */
+	protected $financeiroExtratoDisponivel = false;
 
 	public function initialize() {
 		parent::initialize();
 		$this->loadModel('FinanceiroBancos');
 		$this->loadModel('Faturas');
 		$this->loadModel('FinanceiroLancamentos');
+		try {
+			$this->loadModel('FinanceiroExtratoBancario');
+			$this->financeiroExtratoDisponivel = true;
+		} catch (\Throwable $e) {
+			$this->financeiroExtratoDisponivel = false;
+		}
 	}
 
 	public function beforeFilter(Event $event) {
@@ -38,53 +48,83 @@ class BancosPrototypeController extends AppController {
 	}
 
 	/**
-	 * pg-bancos — dashboard de contas bancárias.
+	 * pg-bancos — dashboard consolidado.
 	 */
 	public function lista() {
-		$empresa = (int)$this->Auth->user('idempresa');
-		$rows = [];
-		try {
-			$rows = $this->FinanceiroBancos->find()
-				->where(['FinanceiroBancos.idempresa' => $empresa])
-				->order(['FinanceiroBancos.id' => 'ASC'])
-				->limit(50)
-				->all()
-				->toArray();
-		} catch (\Throwable $e) {
-			$rows = [];
-		}
-
-		$items = [];
-		$totalContas = 0;
-		$totalAtivas = 0;
-		foreach ($rows as $b) {
-			$ativo = (int)$b->get('ativo') === 1;
-			$totalContas++;
-			if ($ativo) {
-				$totalAtivas++;
-			}
-			$items[] = [
-				'id' => (int)$b->get('id'),
-				'nome' => (string)($b->get('nome') ?? ''),
-				'codigo' => (string)($b->get('codigo_banco') ?? $b->get('numero_banco') ?? ''),
-				'agencia' => trim((string)$b->get('numero_agencia') . ((string)$b->get('digito_agencia') !== '' ? '-' . $b->get('digito_agencia') : '')),
-				'conta' => trim((string)$b->get('numero_conta') . ((string)$b->get('digito_conta') !== '' ? '-' . $b->get('digito_conta') : '')),
-				'carteira' => (string)($b->get('carteira') ?? ''),
-				'ativo' => $ativo,
-			];
-		}
-
+		$ctx = $this->buildBancosContext();
 		$this->set([
-			'title' => __('Bancos'),
+			'title' => __('Bancos · Visão consolidada'),
 			'erpNavActive' => 'bancos',
 			'erpBreadcrumb' => [
 				['label' => 'PGM ERP'],
 				['label' => __('Bancos'), 'cur' => true],
 			],
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
-			'bcItems' => $items,
-			'bcKpi' => ['total' => $totalContas, 'ativas' => $totalAtivas, 'inativas' => $totalContas - $totalAtivas],
+			'bcItems' => $ctx['items'],
+			'bcKpi' => $ctx['kpi'],
+			'chart7d' => $ctx['chart7d'],
+			'distribuicao' => $ctx['distribuicao'],
+			'ultimosMov' => $ctx['ultimosMov'],
+			'bancosCatalogo' => FinanceiroBancosCatalogo::todos(),
+			'abrirModalConta' => $this->request->getQuery('nova') === '1',
 		]);
+
+		return $this->render('dashboard');
+	}
+
+	/**
+	 * pg-contas — lista tabular + integrações.
+	 */
+	public function contas() {
+		$ctx = $this->buildBancosContext();
+		$this->set([
+			'title' => __('Contas Bancárias'),
+			'erpNavActive' => 'contas',
+			'erpBreadcrumb' => [
+				['label' => 'PGM ERP'],
+				['label' => __('Bancos'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'lista']],
+				['label' => __('Contas Bancárias'), 'cur' => true],
+			],
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+			'bcItems' => $ctx['items'],
+			'bcKpi' => $ctx['kpi'],
+			'integracoes' => $ctx['integracoes'],
+			'bancosCatalogo' => FinanceiroBancosCatalogo::todos(),
+			'abrirModalConta' => $this->request->getQuery('nova') === '1',
+		]);
+
+		return $this->render('contas');
+	}
+
+	/**
+	 * POST — cadastro de conta bancária (modal Nova conta).
+	 */
+	public function salvarConta() {
+		$this->request->allowMethod(['post']);
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$data = $this->_normalizarDadosBancoModal((array)$this->request->getData());
+		$data['idempresa'] = $idempresa;
+		$data['ativo'] = true;
+
+		if (empty($data['nome']) && !empty($data['codigo_banco'])) {
+			$catalogo = FinanceiroBancosCatalogo::porCodigo($data['codigo_banco']);
+			if (!empty($catalogo)) {
+				$data['nome'] = $catalogo['nome'];
+				$data['numero_banco'] = $data['numero_banco'] ?: $catalogo['codigo'];
+				$data['cnab'] = $data['cnab'] ?: $catalogo['cnab'];
+			}
+		}
+
+		$banco = $this->FinanceiroBancos->newEntity($data);
+		if ($this->FinanceiroBancos->save($banco)) {
+			$this->Flash->success(__('Conta bancária cadastrada com sucesso.'));
+
+			return $this->redirect(['action' => 'view', 'contas']);
+		}
+
+		$this->Flash->error(__('Não foi possível salvar a conta. Verifique os campos obrigatórios.'));
+
+		return $this->redirect(['action' => 'view', 'contas', '?' => ['nova' => '1']]);
 	}
 
 	/**
@@ -95,7 +135,7 @@ class BancosPrototypeController extends AppController {
 			return $this->lista();
 		}
 		if ($page === 'contas') {
-			return $this->redirect(['action' => 'lista']);
+			return $this->contas();
 		}
 		$allowed = ['contas', 'extrato', 'conciliacao', 'transferencias', 'fluxo-caixa'];
 		if (!in_array($page, $allowed, true)) {
@@ -606,6 +646,496 @@ class BancosPrototypeController extends AppController {
 			'saidas' => $saidas,
 			'saldo' => $saldo,
 		];
+	}
+
+	/**
+	 * @return array{items:array<int,array<string,mixed>>,kpi:array<string,mixed>,chart7d:array<string,mixed>,distribuicao:array<int,array<string,mixed>>,ultimosMov:array<int,array<string,mixed>>,integracoes:array<string,mixed>}
+	 */
+	protected function buildBancosContext(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$rows = [];
+		try {
+			$rows = $this->FinanceiroBancos->find()
+				->where(['FinanceiroBancos.idempresa' => $empresa])
+				->order(['FinanceiroBancos.nome' => 'ASC'])
+				->limit(80)
+				->all()
+				->toArray();
+		} catch (\Throwable $e) {
+			$rows = [];
+		}
+
+		$movPorBanco = $this->_resumoMovimentosPorBanco($empresa, $rows);
+		$extratoPorBanco = $this->_resumoExtratoPorBanco($empresa, $rows);
+		$hoje = \Cake\I18n\Time::now();
+		$inicioHoje = $hoje->copy()->startOfDay();
+		$fimHoje = $hoje->copy()->endOfDay();
+
+		$items = [];
+		$totalAtivas = 0;
+		$saldoTotal = 0.0;
+		$ultimaSyncGlobal = null;
+
+		foreach ($rows as $b) {
+			$id = (int)$b->get('id');
+			$ativo = (bool)$b->get('ativo');
+			if ($ativo) {
+				$totalAtivas++;
+			}
+			$codigo = (string)($b->get('codigo_banco') ?? $b->get('numero_banco') ?? '');
+			$nome = (string)($b->get('nome') ?? '');
+			$brand = FinanceiroBancosPrototypeUi::branding($codigo, $nome);
+			[$agFmt, $ccFmt] = FinanceiroBancosPrototypeUi::formatAgenciaConta($b);
+			$mov = $movPorBanco[$id] ?? ['receber' => 0.0, 'recebido' => 0.0, 'pagar' => 0.0, 'pago' => 0.0];
+			$saldo = (float)$mov['receber'] + (float)$mov['recebido'] - (float)$mov['pagar'] - (float)$mov['pago'];
+			$saldoTotal += $saldo;
+			$ext = $extratoPorBanco[$id] ?? ['ultima' => null, 'entradas_hoje' => 0.0, 'saidas_hoje' => 0.0];
+			$ultima = $ext['ultima'];
+			if ($ultima instanceof \DateTimeInterface) {
+				if ($ultimaSyncGlobal === null || $ultima > $ultimaSyncGlobal) {
+					$ultimaSyncGlobal = $ultima;
+				}
+			}
+			$syncLabel = $this->_labelUltimaSync($ultima, $hoje);
+			$syncStale = $ultima instanceof \DateTimeInterface && $ultima < $hoje->copy()->subHours(3);
+			$variacaoHoje = (float)$ext['entradas_hoje'] - (float)$ext['saidas_hoje'];
+			$tipoLabel = FinanceiroBancosPrototypeUi::tipoContaLabel((string)$b->get('observacoes'));
+			$tipoKind = 'aprov';
+			if (stripos($tipoLabel, 'invest') !== false) {
+				$tipoKind = 'pendente';
+			} elseif (stripos($tipoLabel, 'cooper') !== false) {
+				$tipoKind = 'prod';
+			}
+
+			$items[] = [
+				'id' => $id,
+				'nome' => $nome,
+				'codigo' => $codigo,
+				'codigo_fmt' => str_pad(ltrim($codigo, '0') ?: $codigo, 3, '0', STR_PAD_LEFT),
+				'agencia' => $agFmt,
+				'conta' => $ccFmt,
+				'carteira' => (string)($b->get('carteira') ?? ''),
+				'convenio' => (string)($b->get('convenio') ?? ''),
+				'ativo' => $ativo,
+				'saldo' => $saldo,
+				'variacao_hoje' => $variacaoHoje,
+				'ultima_sync' => $ultima,
+				'sync_label' => $syncLabel,
+				'sync_stale' => $syncStale,
+				'tipo_label' => $tipoLabel,
+				'tipo_kind' => $tipoKind,
+				'brand' => $brand,
+				'conta_extrato' => $this->_formatarContaBanco($b),
+			];
+		}
+
+		usort($items, static function ($a, $b) {
+			return ($b['saldo'] <=> $a['saldo']);
+		});
+
+		$distribuicao = [];
+		foreach ($items as $it) {
+			$pct = $saldoTotal > 0 ? round(100 * (float)$it['saldo'] / $saldoTotal, 1) : 0.0;
+			$distribuicao[] = [
+				'nome' => $it['nome'],
+				'saldo' => (float)$it['saldo'],
+				'pct' => $pct,
+				'bar' => $it['brand']['bar'],
+			];
+		}
+
+		$kpiHoje = $this->_kpiExtratoHoje($empresa, $inicioHoje, $fimHoje);
+		$conc = $this->buildConciliacaoPayload();
+		$pendValor = 0.0;
+		foreach ($conc['concItems'] ?? [] as $row) {
+			if (($row['status'] ?? '') === 'pendente' || ($row['status'] ?? '') === 'sugerido') {
+				$pendValor += abs((float)($row['valor'] ?? 0));
+			}
+		}
+		$aPagar7d = $this->_totalPagarProximosDias($empresa, 7);
+
+		$kpi = [
+			'total' => count($rows),
+			'ativas' => $totalAtivas,
+			'inativas' => count($rows) - $totalAtivas,
+			'saldo_total' => $saldoTotal,
+			'entradas_hoje' => $kpiHoje['entradas'],
+			'saidas_hoje' => $kpiHoje['saidas'],
+			'mov_entradas_hoje' => $kpiHoje['mov_entradas'],
+			'mov_saidas_hoje' => $kpiHoje['mov_saidas'],
+			'variacao_hoje' => $kpiHoje['entradas'] - $kpiHoje['saidas'],
+			'pendentes_valor' => $pendValor,
+			'pendentes_count' => (int)($conc['concKpi']['pendentes'] ?? 0) + (int)($conc['concKpi']['divergentes'] ?? 0),
+			'a_pagar_7d' => $aPagar7d['valor'],
+			'a_pagar_count' => $aPagar7d['count'],
+			'ultima_sync' => $ultimaSyncGlobal,
+			'ultima_sync_label' => $this->_labelUltimaSync($ultimaSyncGlobal, $hoje, true),
+		];
+
+		$cnabCount = 0;
+		foreach ($rows as $b) {
+			if (trim((string)$b->get('carteira')) !== '' || trim((string)$b->get('convenio')) !== '') {
+				$cnabCount++;
+			}
+		}
+
+		return [
+			'items' => $items,
+			'kpi' => $kpi,
+			'chart7d' => $this->_chartMovimentacao7d($empresa),
+			'distribuicao' => $distribuicao,
+			'ultimosMov' => $this->_ultimosMovimentos($empresa, 5),
+			'integracoes' => [
+				'cnab_bancos' => $cnabCount,
+				'extrato_auto' => $this->financeiroExtratoDisponivel,
+				'contas_ativas' => $totalAtivas,
+			],
+		];
+	}
+
+	/**
+	 * @param array<string,mixed> $data
+	 * @return array<string,mixed>
+	 */
+	protected function _normalizarDadosBancoModal(array $data): array {
+		$codigo = trim((string)Hash::get($data, 'codigo_banco', ''));
+		[$ag, $dgAg] = FinanceiroBancosPrototypeUi::splitNumeroDigito((string)Hash::get($data, 'agencia', ''));
+		[$cc, $dgCc] = FinanceiroBancosPrototypeUi::splitNumeroDigito((string)Hash::get($data, 'conta', ''));
+		$apelido = trim((string)Hash::get($data, 'apelido', ''));
+		$tipo = trim((string)Hash::get($data, 'tipo_conta', ''));
+		$obs = [];
+		if ($tipo !== '') {
+			$obs[] = 'tipo_conta:' . $tipo;
+		}
+		if (!empty($data['integracao_cnab'])) {
+			$obs[] = 'integracao:cnab240';
+		}
+		if (!empty($data['integracao_ofx'])) {
+			$obs[] = 'integracao:ofx';
+		}
+		if (!empty($data['integracao_pix'])) {
+			$obs[] = 'integracao:pix';
+		}
+
+		$out = [
+			'codigo_banco' => $codigo,
+			'numero_banco' => $codigo,
+			'cnab' => trim((string)Hash::get($data, 'cnab', '')),
+			'nome' => $apelido,
+			'numero_agencia' => $ag,
+			'digito_agencia' => $dgAg,
+			'numero_conta' => $cc,
+			'digito_conta' => $dgCc,
+			'carteira' => trim((string)Hash::get($data, 'carteira', '')),
+			'convenio' => trim((string)Hash::get($data, 'convenio', '')),
+			'proxima_remessa' => (int)Hash::get($data, 'proxima_remessa', 1),
+			'cnab_tipo' => '240',
+			'observacoes' => implode(' | ', $obs),
+			'ativo' => true,
+		];
+		if ($out['cnab'] === '' && $codigo !== '') {
+			$cat = FinanceiroBancosCatalogo::porCodigo($codigo);
+			if (!empty($cat['cnab'])) {
+				$out['cnab'] = (string)$cat['cnab'];
+			}
+		}
+		if ($out['proxima_remessa'] <= 0) {
+			$out['proxima_remessa'] = 1;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @param array<int,object> $bancos
+	 * @return array<int,array{receber:float,recebido:float,pagar:float,pago:float}>
+	 */
+	protected function _resumoMovimentosPorBanco(int $idempresa, array $bancos): array {
+		$out = [];
+		foreach ($bancos as $banco) {
+			$out[(int)$banco->get('id')] = [
+				'receber' => 0.0,
+				'recebido' => 0.0,
+				'pagar' => 0.0,
+				'pago' => 0.0,
+			];
+		}
+		try {
+			$rows = $this->FinanceiroLancamentos->find()
+				->where(['FinanceiroLancamentos.idempresa' => $idempresa])
+				->all();
+			foreach ($rows as $row) {
+				$bid = (int)$row->get('financeiro_banco_id');
+				if (!isset($out[$bid])) {
+					continue;
+				}
+				$valor = (float)$row->get('valor');
+				$tipo = (string)$row->get('tipo');
+				$status = (string)$row->get('status');
+				if ($tipo === 'receita' && $status === 'aberto') {
+					$out[$bid]['receber'] += $valor;
+				} elseif ($tipo === 'receita' && $status === 'recebido') {
+					$out[$bid]['recebido'] += $valor;
+				} elseif ($tipo === 'despesa' && $status === 'aberto') {
+					$out[$bid]['pagar'] += $valor;
+				} elseif ($tipo === 'despesa' && $status === 'pago') {
+					$out[$bid]['pago'] += $valor;
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @param array<int,object> $bancos
+	 * @return array<int,array{ultima:?\\DateTimeInterface,entradas_hoje:float,saidas_hoje:float}>
+	 */
+	protected function _resumoExtratoPorBanco(int $idempresa, array $bancos): array {
+		$out = [];
+		$hojeIni = \Cake\I18n\Time::now()->startOfDay();
+		foreach ($bancos as $banco) {
+			$out[(int)$banco->get('id')] = [
+				'ultima' => null,
+				'entradas_hoje' => 0.0,
+				'saidas_hoje' => 0.0,
+			];
+		}
+		if (!$this->financeiroExtratoDisponivel || $bancos === []) {
+			return $out;
+		}
+		try {
+			$rows = $this->FinanceiroExtratoBancario->find()
+				->where(['FinanceiroExtratoBancario.idempresa' => $idempresa])
+				->order(['FinanceiroExtratoBancario.data' => 'DESC'])
+				->limit(5000)
+				->all();
+			foreach ($bancos as $banco) {
+				$id = (int)$banco->get('id');
+				$refs = $this->_contasReferenciaExtrato($banco);
+				if ($refs === []) {
+					continue;
+				}
+				foreach ($rows as $r) {
+					$conta = (string)$r->get('conta_bancaria');
+					if (!in_array($conta, $refs, true)) {
+						continue;
+					}
+					$dt = $r->get('data');
+					if ($dt instanceof \DateTimeInterface) {
+						if ($out[$id]['ultima'] === null || $dt > $out[$id]['ultima']) {
+							$out[$id]['ultima'] = $dt;
+						}
+						if ($dt >= $hojeIni) {
+							$valor = abs((float)$r->get('valor'));
+							$tipo = strtolower((string)$r->get('tipo'));
+							$entrada = $tipo === 'c' || $tipo === 'credito' || $tipo === 'cr';
+							if ($entrada) {
+								$out[$id]['entradas_hoje'] += $valor;
+							} else {
+								$out[$id]['saidas_hoje'] += $valor;
+							}
+						}
+					}
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @param object $banco
+	 * @return array<int,string>
+	 */
+	protected function _contasReferenciaExtrato($banco): array {
+		$refs = [];
+		$fmt = $this->_formatarContaBanco($banco);
+		if ($fmt !== '') {
+			$refs[] = $fmt;
+			$refs[] = str_replace(' / ', '/', $fmt);
+		}
+		$nome = trim((string)$banco->get('nome'));
+		if ($nome !== '') {
+			$refs[] = $nome;
+		}
+
+		return array_values(array_unique(array_filter($refs)));
+	}
+
+	/**
+	 * @param object $banco
+	 */
+	protected function _formatarContaBanco($banco): string {
+		[$ag, $cc] = FinanceiroBancosPrototypeUi::formatAgenciaConta($banco);
+		if ($ag === '—' && $cc === '—') {
+			return '';
+		}
+		if ($ag !== '—' && $cc !== '—') {
+			return $ag . ' / ' . $cc;
+		}
+
+		return $ag !== '—' ? $ag : $cc;
+	}
+
+	protected function _labelUltimaSync(?\DateTimeInterface $dt, \DateTimeInterface $agora, bool $longo = false): string {
+		if ($dt === null) {
+			return __('Sem sync');
+		}
+		$diffH = (int)floor(($agora->getTimestamp() - $dt->getTimestamp()) / 3600);
+		if ($diffH < 1) {
+			return $longo
+				? __('Hoje {0}', $dt->format('H:i'))
+				: __('Hoje {0}', $dt->format('H:i'));
+		}
+		if ($diffH < 24) {
+			return __('{0}h atrás', $diffH);
+		}
+
+		return $dt->format('d/m H:i');
+	}
+
+	/**
+	 * @return array{entradas:float,saidas:float,mov_entradas:int,mov_saidas:int}
+	 */
+	protected function _kpiExtratoHoje(int $empresa, \DateTimeInterface $ini, \DateTimeInterface $fim): array {
+		$kpi = ['entradas' => 0.0, 'saidas' => 0.0, 'mov_entradas' => 0, 'mov_saidas' => 0];
+		if (!$this->financeiroExtratoDisponivel) {
+			return $kpi;
+		}
+		try {
+			$rows = $this->FinanceiroExtratoBancario->find()
+				->where([
+					'FinanceiroExtratoBancario.idempresa' => $empresa,
+					'FinanceiroExtratoBancario.data >=' => $ini,
+					'FinanceiroExtratoBancario.data <=' => $fim,
+				])
+				->all();
+			foreach ($rows as $r) {
+				$valor = abs((float)$r->get('valor'));
+				$tipo = strtolower((string)$r->get('tipo'));
+				$entrada = $tipo === 'c' || $tipo === 'credito' || $tipo === 'cr';
+				if ($entrada) {
+					$kpi['entradas'] += $valor;
+					$kpi['mov_entradas']++;
+				} else {
+					$kpi['saidas'] += $valor;
+					$kpi['mov_saidas']++;
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $kpi;
+	}
+
+	/**
+	 * @return array{valor:float,count:int}
+	 */
+	protected function _totalPagarProximosDias(int $empresa, int $dias): array {
+		$total = 0.0;
+		$count = 0;
+		$fim = \Cake\I18n\Time::now()->addDays($dias)->endOfDay();
+		try {
+			$rows = $this->FinanceiroLancamentos->find()
+				->where([
+					'FinanceiroLancamentos.idempresa' => $empresa,
+					'FinanceiroLancamentos.tipo' => 'despesa',
+					'FinanceiroLancamentos.status' => 'aberto',
+					'FinanceiroLancamentos.data_vencimento <=' => $fim,
+				])
+				->all();
+			foreach ($rows as $r) {
+				$total += (float)$r->get('valor');
+				$count++;
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return ['valor' => $total, 'count' => $count];
+	}
+
+	/**
+	 * @return array{labels:array<int,string>,entradas:array<int,float>,saidas:array<int,float>,max:float}
+	 */
+	protected function _chartMovimentacao7d(int $empresa): array {
+		$labels = [];
+		$entradas = [];
+		$saidas = [];
+		$max = 1.0;
+		$now = \Cake\I18n\Time::now();
+		$diasSem = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+		for ($i = 6; $i >= 0; $i--) {
+			$day = $now->copy()->subDays($i)->startOfDay();
+			$dayEnd = $day->copy()->endOfDay();
+			$labels[] = $i === 0 ? __('Hoje') : $diasSem[(int)$day->format('w')];
+			$e = 0.0;
+			$s = 0.0;
+			if ($this->financeiroExtratoDisponivel) {
+				try {
+					$rows = $this->FinanceiroExtratoBancario->find()
+						->where([
+							'FinanceiroExtratoBancario.idempresa' => $empresa,
+							'FinanceiroExtratoBancario.data >=' => $day,
+							'FinanceiroExtratoBancario.data <=' => $dayEnd,
+						])
+						->all();
+					foreach ($rows as $r) {
+						$valor = abs((float)$r->get('valor'));
+						$tipo = strtolower((string)$r->get('tipo'));
+						if ($tipo === 'c' || $tipo === 'credito' || $tipo === 'cr') {
+							$e += $valor;
+						} else {
+							$s += $valor;
+						}
+					}
+				} catch (\Throwable $ex) {
+				}
+			}
+			$entradas[] = round($e, 2);
+			$saidas[] = round($s, 2);
+			$max = max($max, $e, $s);
+		}
+
+		return compact('labels', 'entradas', 'saidas', 'max');
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function _ultimosMovimentos(int $empresa, int $limit): array {
+		$items = [];
+		if (!$this->financeiroExtratoDisponivel) {
+			return $items;
+		}
+		try {
+			$rows = $this->FinanceiroExtratoBancario->find()
+				->where(['FinanceiroExtratoBancario.idempresa' => $empresa])
+				->order(['FinanceiroExtratoBancario.data' => 'DESC'])
+				->limit($limit)
+				->all();
+			foreach ($rows as $r) {
+				$valor = abs((float)$r->get('valor'));
+				$tipo = strtolower((string)$r->get('tipo'));
+				$entrada = $tipo === 'c' || $tipo === 'credito' || $tipo === 'cr';
+				$conc = (int)$r->get('conciliado') === 1 || (int)$r->get('financeiro_lancamento_id') > 0;
+				$dt = $r->get('data');
+				$items[] = [
+					'data' => $dt,
+					'data_label' => $dt instanceof \DateTimeInterface ? $dt->format('d/m H:i') : '',
+					'descricao' => (string)$r->get('descricao'),
+					'conta' => (string)$r->get('conta_bancaria'),
+					'entrada' => $entrada,
+					'valor' => $valor,
+					'conciliado' => $conc,
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $items;
 	}
 
 	/**

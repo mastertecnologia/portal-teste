@@ -108,6 +108,7 @@ return [
 		'BancosPrototype' => [
 			'rejeitarmatch' => 'write',
 			'conciliar' => 'write',
+			'salvarconta' => 'write',
 		],
 	],
 	// Chaves do menu (sidebar.ctp item key) → códigos OR (string ou array)

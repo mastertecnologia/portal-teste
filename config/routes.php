@@ -860,6 +860,10 @@ Router::scope("/", function ($routes) {
         "controller" => "BancosPrototype",
         "action" => "rejeitarMatch",
     ]);
+    $routes->connect("/bancos-prototype/salvar-conta", [
+        "controller" => "BancosPrototype",
+        "action" => "salvarConta",
+    ]);
     $routes->connect("/bancos-prototype/:page", [
         "controller" => "BancosPrototype",
         "action" => "view",
