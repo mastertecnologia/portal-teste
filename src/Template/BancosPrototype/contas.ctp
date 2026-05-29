@@ -12,6 +12,7 @@
 $H = $this->ErpPrototype;
 $urlBancos = ['controller' => 'BancosPrototype', 'action' => 'lista'];
 $urlExtrato = ['controller' => 'BancosPrototype', 'action' => 'view', 'extrato'];
+echo $this->element('BancosPrototype/modal_stub');
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
 	<div>
@@ -29,14 +30,14 @@ $urlExtrato = ['controller' => 'BancosPrototype', 'action' => 'view', 'extrato']
 			) ?>
 		</div>
 	</div>
-	<button type="button" class="btn btn-primary" data-pgm-open-conta-modal>+ <?= h(__('Nova conta bancária')) ?></button>
+	<button type="button" class="btn btn-primary" data-pgm-open-conta-modal onclick="return abrirCadastroConta();">+ <?= h(__('Nova conta bancária')) ?></button>
 </div>
 
 <?php if ($bcItems === []) : ?>
 	<div class="card" style="text-align:center;padding:32px 22px;color:var(--text-muted);">
 		<?= h(__('Nenhuma conta bancária cadastrada.')) ?>
 		<div style="margin-top:14px;">
-			<button type="button" class="btn btn-primary btn-sm" data-pgm-open-conta-modal>+ <?= h(__('Nova conta bancária')) ?></button>
+			<button type="button" class="btn btn-primary btn-sm" data-pgm-open-conta-modal onclick="return abrirCadastroConta();">+ <?= h(__('Nova conta bancária')) ?></button>
 		</div>
 	</div>
 <?php else : ?>
@@ -123,5 +124,7 @@ $urlExtrato = ['controller' => 'BancosPrototype', 'action' => 'view', 'extrato']
 	</div>
 <?php endif; ?>
 
-<?= $this->element('BancosPrototype/modal_conta', ['bancosCatalogo' => $bancosCatalogo]) ?>
-<?= $this->element('BancosPrototype/modal_scripts', ['abrirModalConta' => !empty($abrirModalConta)]) ?>
+<?= $this->element('BancosPrototype/modal_conta', [
+	'bancosCatalogo' => $bancosCatalogo,
+	'abrirModalConta' => !empty($abrirModalConta),
+]) ?>

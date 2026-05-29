@@ -441,12 +441,27 @@ html:has(.pgm-erp-shell .app) body {
 .pgm-erp-shell .tab.active { background: var(--teal-light); color: var(--teal-dark); font-weight: 500; }
 
 /* ===== MODAL ===== */
-.pgm-erp-shell .modal-bg {
-	display: none; position: fixed; inset: 0;
-	background: rgba(0,0,0,.4); z-index: 300;
-	align-items: center; justify-content: center;
+.pgm-erp-shell .modal-bg,
+body.pgm-erp-prototype-page > .modal-bg,
+body.pgm-erp-prototype-page .modal-bg#modal-conta {
+	display: none;
+	position: fixed;
+	inset: 0;
+	background: rgba(0,0,0,.4);
+	z-index: 10050;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+	box-sizing: border-box;
 }
-.pgm-erp-shell .modal-bg.open { display: flex; }
+.pgm-erp-shell .modal-bg.open,
+body.pgm-erp-prototype-page > .modal-bg.open,
+body.pgm-erp-prototype-page .modal-bg#modal-conta.open {
+	display: flex;
+}
+body.pgm-erp-prototype-page.pgm-bancos-modal-open {
+	overflow: hidden;
+}
 .pgm-erp-shell .modal {
 	background: #fff; border-radius: var(--radius-xl); padding: 28px;
 	max-width: 460px; width: 90%;

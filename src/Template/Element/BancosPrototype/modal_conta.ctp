@@ -4,10 +4,12 @@
  *
  * @var \App\View\AppView $this
  * @var array<int,array<string,string>> $bancosCatalogo
+ * @var bool $abrirModalConta
  */
 $bancosCatalogo = $bancosCatalogo ?? [];
+$abrirModalConta = !empty($abrirModalConta);
 ?>
-<div class="modal-bg" id="modal-conta" role="dialog" aria-labelledby="modal-conta-title" aria-modal="true">
+<div class="modal-bg" id="modal-conta" role="dialog" aria-labelledby="modal-conta-title" aria-modal="true" aria-hidden="true">
 	<div style="background:#fff;border-radius:var(--radius-lg);width:min(680px,95vw);max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg);">
 		<div style="padding:16px 20px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,var(--teal-light),#fff);">
 			<div>
@@ -156,3 +158,80 @@ $bancosCatalogo = $bancosCatalogo ?? [];
 		<?= $this->Form->end() ?>
 	</div>
 </div>
+<script>
+(function () {
+	function mountModal() {
+		var m = document.getElementById('modal-conta');
+		if (!m || m.parentNode === document.body) {
+			return m;
+		}
+		document.body.appendChild(m);
+		return m;
+	}
+	function abrirCadastroConta() {
+		var m = mountModal();
+		if (!m) {
+			return false;
+		}
+		m.classList.add('open');
+		m.setAttribute('aria-hidden', 'false');
+		document.body.classList.add('pgm-bancos-modal-open');
+		var first = m.querySelector('select, input:not([type="hidden"])');
+		if (first) {
+			setTimeout(function () { first.focus(); }, 80);
+		}
+		return false;
+	}
+	function closeModalOrc(id) {
+		var m = document.getElementById(id || 'modal-conta');
+		if (!m) {
+			return false;
+		}
+		m.classList.remove('open');
+		m.setAttribute('aria-hidden', 'true');
+		document.body.classList.remove('pgm-bancos-modal-open');
+		return false;
+	}
+	window.abrirCadastroConta = abrirCadastroConta;
+	window.closeModalOrc = closeModalOrc;
+
+	function bindModalUi() {
+		mountModal();
+		document.addEventListener('click', function (e) {
+			var openBtn = e.target.closest('[data-pgm-open-conta-modal]');
+			if (openBtn) {
+				e.preventDefault();
+				abrirCadastroConta();
+				return;
+			}
+			var closeBtn = e.target.closest('[data-pgm-close-modal]');
+			if (closeBtn) {
+				e.preventDefault();
+				closeModalOrc(closeBtn.getAttribute('data-pgm-close-modal'));
+			}
+		});
+		var modal = document.getElementById('modal-conta');
+		if (modal) {
+			modal.addEventListener('click', function (e) {
+				if (e.target === modal) {
+					closeModalOrc('modal-conta');
+				}
+			});
+		}
+		document.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape') {
+				closeModalOrc('modal-conta');
+			}
+		});
+		<?php if ($abrirModalConta) : ?>
+		abrirCadastroConta();
+		<?php endif; ?>
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', bindModalUi);
+	} else {
+		bindModalUi();
+	}
+})();
+</script>

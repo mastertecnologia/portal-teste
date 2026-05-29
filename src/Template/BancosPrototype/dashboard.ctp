@@ -16,6 +16,7 @@ $urlExtrato = ['controller' => 'BancosPrototype', 'action' => 'view', 'extrato']
 $urlConc = ['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao'];
 $urlTf = ['controller' => 'BancosPrototype', 'action' => 'view', 'transferencias'];
 $maxChart = max(1.0, (float)($chart7d['max'] ?? 1));
+echo $this->element('BancosPrototype/modal_stub');
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
 	<div>
@@ -31,7 +32,7 @@ $maxChart = max(1.0, (float)($chart7d['max'] ?? 1));
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
 		<?= $this->Html->link('🔄 ' . __('Sincronizar tudo'), ['controller' => 'BancosPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('🔗 ' . __('Conciliar'), $urlConc, ['class' => 'btn btn-blue btn-sm']) ?>
-		<button type="button" class="btn btn-primary btn-sm" data-pgm-open-conta-modal>+ <?= h(__('Nova conta')) ?></button>
+		<button type="button" class="btn btn-primary btn-sm" data-pgm-open-conta-modal onclick="return abrirCadastroConta();">+ <?= h(__('Nova conta')) ?></button>
 	</div>
 </div>
 
@@ -75,7 +76,7 @@ $maxChart = max(1.0, (float)($chart7d['max'] ?? 1));
 	<div class="card" style="text-align:center;padding:32px 22px;color:var(--text-muted);">
 		<?= h(__('Nenhuma conta bancária cadastrada.')) ?>
 		<div style="margin-top:14px;">
-			<button type="button" class="btn btn-primary btn-sm" data-pgm-open-conta-modal>+ <?= h(__('Nova conta bancária')) ?></button>
+			<button type="button" class="btn btn-primary btn-sm" data-pgm-open-conta-modal onclick="return abrirCadastroConta();">+ <?= h(__('Nova conta bancária')) ?></button>
 		</div>
 	</div>
 <?php else : ?>
@@ -188,5 +189,7 @@ $maxChart = max(1.0, (float)($chart7d['max'] ?? 1));
 	<?php endif; ?>
 <?php endif; ?>
 
-<?= $this->element('BancosPrototype/modal_conta', ['bancosCatalogo' => $bancosCatalogo]) ?>
-<?= $this->element('BancosPrototype/modal_scripts', ['abrirModalConta' => !empty($abrirModalConta)]) ?>
+<?= $this->element('BancosPrototype/modal_conta', [
+	'bancosCatalogo' => $bancosCatalogo,
+	'abrirModalConta' => !empty($abrirModalConta),
+]) ?>
