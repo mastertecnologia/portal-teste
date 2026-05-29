@@ -59,6 +59,6 @@ $saldo = (float)($finKpis['saldo_mes'] ?? 0);
 		<?= $this->Html->link(__('🧾 DRE Gerencial'), ['controller' => 'FinanceiroPrototype', 'action' => 'view', 'dre'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link(__('🧾 NF-e / NFS-e'), ['controller' => 'FinanceiroPrototype', 'action' => 'view', 'nfe'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link(__('📦 Faturamento'), ['controller' => 'Faturamento', 'action' => 'index'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link(__('📊 Relatórios financeiros'), ['controller' => 'FinanceiroRelatorios', 'action' => 'index'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link(__('📊 Relatórios financeiros'), ['controller' => 'FinanceiroPrototype', 'action' => 'relatoriosFin'], ['class' => 'btn btn-ghost btn-sm']) ?>
 	</div>
 </div>

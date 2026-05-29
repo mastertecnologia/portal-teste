@@ -4,16 +4,20 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Controller\Traits\ErpPrototypeRbacTrait;
+use App\Utility\FinanceiroContasPagarPrototypeBuilder;
+use App\Utility\FinanceiroDrePrototypeBuilder;
+use App\Utility\FinanceiroNfePrototypeBuilder;
+use App\Utility\FinanceiroOrcFlowPrototypeBuilder;
+use App\Utility\FinanceiroRelatoriosPrototypeBuilder;
+use App\Utility\FinanceiroTitulosPrototypeBuilder;
+use App\Utility\PortalUi;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 use Cake\I18n\Time;
 
 /**
- * Financeiro — protótipo (mockup pg-financeiro, pg-titulos, pg-contas-pagar,
+ * Financeiro — protótipo premium (pg-financeiro, pg-titulos, pg-contas-pagar,
  * pg-nfe, pg-dre, pg-relatorios-fin, pg-orc-faturamento, pg-orc-cobranca).
- *
- * Lado-a-lado com FinanceiroController + FaturamentoController + FaturasController.
- * Somente leitura.
  */
 class FinanceiroPrototypeController extends AppController {
 
@@ -21,8 +25,8 @@ class FinanceiroPrototypeController extends AppController {
 
 	public function initialize() {
 		parent::initialize();
-		$this->loadModel('Faturas');
 		$this->loadModel('FinanceiroLancamentos');
+		$this->loadModel('Faturas');
 	}
 
 	public function beforeFilter(Event $event) {
@@ -47,61 +51,13 @@ class FinanceiroPrototypeController extends AppController {
 		$monthStart = $now->copy()->startOfMonth();
 		$monthEnd = $now->copy()->endOfMonth();
 
-		// Faturas (CR): valor a receber, recebido no mês, atrasadas
-		$crReceber = 0.0;
-		$crRecebidoMes = 0.0;
-		$crAtrasadas = 0;
-		$crVencendo30d = 0.0;
-		try {
-			foreach ($this->Faturas->find()
-				->where(['Faturas.idempresa' => $empresa])
-				->all() as $f) {
-				$v = (float)($f->get('valor') ?? 0);
-				$status = strtolower((string)($f->get('status') ?? ''));
-				$venc = $f->get('vencimento');
-				if (strpos($status, 'pag') !== false && $f->get('dtretorno') instanceof \DateTimeInterface) {
-					$rt = $f->get('dtretorno');
-					if ($rt >= $monthStart && $rt <= $monthEnd) {
-						$crRecebidoMes += $v;
-					}
-				} else {
-					$crReceber += $v;
-					if ($venc instanceof \DateTimeInterface) {
-						if ($venc < $now) {
-							$crAtrasadas++;
-						} elseif ($venc <= $now->copy()->addDays(30)) {
-							$crVencendo30d += $v;
-						}
-					}
-				}
-			}
-		} catch (\Throwable $e) {
-		}
+		$titulosBuilder = new FinanceiroTitulosPrototypeBuilder();
+		$titulosPayload = $titulosBuilder->build($empresa);
+		$cpBuilder = new FinanceiroContasPagarPrototypeBuilder();
+		$cpPayload = $cpBuilder->build($empresa);
 
-		// Lançamentos: despesas a pagar / pagas
-		$cpPagar = 0.0;
-		$cpPagoMes = 0.0;
-		try {
-			foreach ($this->FinanceiroLancamentos->find()
-				->where(['FinanceiroLancamentos.idempresa' => $empresa])
-				->all() as $l) {
-				$tipo = strtolower((string)($l->get('tipo') ?? ''));
-				if (strpos($tipo, 'desp') === false && strpos($tipo, 'pag') === false && $tipo !== 'p') {
-					continue;
-				}
-				$v = (float)($l->get('valor') ?? 0);
-				$status = strtolower((string)($l->get('status') ?? ''));
-				$baixa = $l->get('data_baixa');
-				if (strpos($status, 'pag') !== false && $baixa instanceof \DateTimeInterface) {
-					if ($baixa >= $monthStart && $baixa <= $monthEnd) {
-						$cpPagoMes += $v;
-					}
-				} else {
-					$cpPagar += $v;
-				}
-			}
-		} catch (\Throwable $e) {
-		}
+		$crKpi = $titulosPayload['crKpi'];
+		$cpKpi = $cpPayload['cpKpi'];
 
 		$this->set([
 			'title' => __('Financeiro'),
@@ -112,61 +68,32 @@ class FinanceiroPrototypeController extends AppController {
 			],
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
 			'finKpis' => [
-				'cr_receber' => $crReceber,
-				'cr_recebido_mes' => $crRecebidoMes,
-				'cr_atrasadas' => $crAtrasadas,
-				'cr_vencendo_30d' => $crVencendo30d,
-				'cp_pagar' => $cpPagar,
-				'cp_pago_mes' => $cpPagoMes,
-				'saldo_mes' => $crRecebidoMes - $cpPagoMes,
+				'cr_receber' => (float)$crKpi['total_receber'],
+				'cr_recebido_mes' => (float)$crKpi['pago_mes'],
+				'cr_atrasadas' => (int)($titulosPayload['crPaginacao']['total'] ?? 0),
+				'cr_vencendo_30d' => (float)$crKpi['vence_30d'],
+				'cp_pagar' => (float)$cpKpi['total_pagar'],
+				'cp_pago_mes' => (float)$cpKpi['pago_mes'],
+				'saldo_mes' => (float)$crKpi['pago_mes'] - (float)$cpKpi['pago_mes'],
 			],
 		]);
 	}
 
 	/**
-	 * pg-titulos — contas a receber (faturas).
+	 * pg-titulos — contas a receber.
 	 */
 	public function titulos() {
 		$empresa = (int)$this->Auth->user('idempresa');
-		$now = Time::now();
-		$rows = [];
-		try {
-			$rows = $this->Faturas->find()
-				->contain(['Clientes'])
-				->where(['Faturas.idempresa' => $empresa])
-				->order(['Faturas.vencimento' => 'DESC'])
-				->limit(150)
-				->all()
-				->toArray();
-		} catch (\Throwable $e) {
-			$rows = [];
-		}
+		$req = $this->request->getQueryParams();
+		$payload = (new FinanceiroTitulosPrototypeBuilder())->build($empresa, [
+			'tab' => (string)($req['tab'] ?? 'todos'),
+			'cliente' => (int)($req['cliente'] ?? 0),
+			'banco' => (int)($req['banco'] ?? 0),
+			'busca' => (string)($req['q'] ?? $req['busca'] ?? ''),
+			'page' => (int)($req['page'] ?? 1),
+		]);
 
-		$kpi = ['pend' => 0, 'paga' => 0, 'vencida' => 0, 'total_valor' => 0.0];
-		$items = [];
-		foreach ($rows as $f) {
-			$cliente = $f->cliente ?? null;
-			$cn = $cliente ? (string)($cliente->get('razaosocial') ?? $cliente->get('nome') ?? '') : '—';
-			$v = (float)($f->get('valor') ?? 0);
-			$venc = $f->get('vencimento');
-			$status = strtolower((string)($f->get('status') ?? ''));
-			$pago = strpos($status, 'pag') !== false || $f->get('dtretorno') instanceof \DateTimeInterface;
-			$vencida = !$pago && $venc instanceof \DateTimeInterface && $venc < $now;
-			$state = $pago ? 'paga' : ($vencida ? 'vencida' : 'pend');
-			$kpi[$state]++;
-			$kpi['total_valor'] += $v;
-			$items[] = [
-				'id' => (int)$f->get('id'),
-				'numero' => (string)($f->get('nro') ?? sprintf('FAT-%05d', (int)$f->get('id'))),
-				'cliente' => $cn,
-				'referente' => (string)($f->get('referente') ?? ''),
-				'valor' => $v,
-				'vencimento' => $venc,
-				'status' => $state,
-			];
-		}
-
-		$this->set([
+		$this->set(array_merge($payload, [
 			'title' => __('Contas a Receber'),
 			'erpNavActive' => 'titulos',
 			'erpBreadcrumb' => [
@@ -175,59 +102,26 @@ class FinanceiroPrototypeController extends AppController {
 				['label' => __('Contas a Receber'), 'cur' => true],
 			],
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
-			'crKpi' => $kpi,
-			'crItems' => $items,
-		]);
+		]));
 
 		return $this->render('titulos');
 	}
 
 	/**
-	 * pg-contas-pagar — financeiro_lancamentos do tipo despesa.
+	 * pg-contas-pagar.
 	 */
 	public function contasPagar() {
 		$empresa = (int)$this->Auth->user('idempresa');
-		$now = Time::now();
-		$rows = [];
-		try {
-			$rows = $this->FinanceiroLancamentos->find()
-				->where(['FinanceiroLancamentos.idempresa' => $empresa])
-				->order(['FinanceiroLancamentos.data_vencimento' => 'DESC'])
-				->limit(150)
-				->all()
-				->toArray();
-		} catch (\Throwable $e) {
-			$rows = [];
-		}
+		$req = $this->request->getQueryParams();
+		$payload = (new FinanceiroContasPagarPrototypeBuilder())->build($empresa, [
+			'status' => (string)($req['status'] ?? ''),
+			'fornecedor' => (int)($req['fornecedor'] ?? 0),
+			'centro' => (int)($req['centro'] ?? 0),
+			'busca' => (string)($req['q'] ?? $req['busca'] ?? ''),
+			'page' => (int)($req['page'] ?? 1),
+		]);
 
-		$kpi = ['pend' => 0, 'paga' => 0, 'vencida' => 0, 'total_valor' => 0.0];
-		$items = [];
-		foreach ($rows as $l) {
-			$tipo = strtolower((string)($l->get('tipo') ?? ''));
-			$isDesp = strpos($tipo, 'desp') !== false || strpos($tipo, 'pag') !== false || $tipo === 'p';
-			$v = (float)($l->get('valor') ?? 0);
-			$venc = $l->get('data_vencimento');
-			$status = strtolower((string)($l->get('status') ?? ''));
-			$baixa = $l->get('data_baixa');
-			$pago = strpos($status, 'pag') !== false || $baixa instanceof \DateTimeInterface;
-			$vencida = !$pago && $venc instanceof \DateTimeInterface && $venc < $now;
-			$state = $pago ? 'paga' : ($vencida ? 'vencida' : 'pend');
-			$kpi[$state]++;
-			if ($isDesp) {
-				$kpi['total_valor'] += $v;
-			}
-			$items[] = [
-				'id' => (int)$l->get('id'),
-				'descricao' => (string)($l->get('descricao') ?? ''),
-				'valor' => $v,
-				'tipo' => $tipo,
-				'is_despesa' => $isDesp,
-				'vencimento' => $venc,
-				'status' => $state,
-			];
-		}
-
-		$this->set([
+		$this->set(array_merge($payload, [
 			'title' => __('Contas a Pagar'),
 			'erpNavActive' => 'contas-pagar',
 			'erpBreadcrumb' => [
@@ -236,11 +130,82 @@ class FinanceiroPrototypeController extends AppController {
 				['label' => __('Contas a Pagar'), 'cur' => true],
 			],
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
-			'cpKpi' => $kpi,
-			'cpItems' => $items,
-		]);
+		]));
 
 		return $this->render('contas_pagar');
+	}
+
+	/**
+	 * pg-relatorios-fin.
+	 */
+	public function relatoriosFin() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$payload = (new FinanceiroRelatoriosPrototypeBuilder())->build($empresa);
+
+		$this->set(array_merge($payload, [
+			'title' => __('Relatórios Financeiros'),
+			'erpNavActive' => 'relatorios-fin',
+			'erpBreadcrumb' => [
+				['label' => 'PGM ERP'],
+				['label' => __('Financeiro'), 'url' => ['controller' => 'FinanceiroPrototype', 'action' => 'lista']],
+				['label' => __('Relatórios'), 'cur' => true],
+			],
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+		]));
+
+		return $this->render('relatorios_fin');
+	}
+
+	/**
+	 * pg-orc-faturamento.
+	 */
+	public function orcFaturamento() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$idFat = (int)$this->request->getQuery('idfaturamento', 0);
+		$idOrc = (int)$this->request->getQuery('id', 0);
+		$payload = (new FinanceiroOrcFlowPrototypeBuilder())->buildFaturamento($empresa, $idFat, $idOrc);
+		if ($payload === null) {
+			throw new NotFoundException(__('Faturamento não encontrado.'));
+		}
+
+		$this->set(array_merge($payload, [
+			'title' => __('Faturamento do Orçamento #{0}', $payload['orcId'] > 0 ? $payload['orcId'] : $payload['fatNumero']),
+			'erpNavActive' => 'orc-faturamento',
+			'erpBreadcrumb' => [
+				['label' => 'PGM ERP'],
+				['label' => __('Orçamentos'), 'url' => ['controller' => 'OrcamentosPrototype', 'action' => 'lista']],
+				['label' => __('Faturamento'), 'cur' => true],
+			],
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+		]));
+
+		return $this->render('orc_faturamento');
+	}
+
+	/**
+	 * pg-orc-cobranca.
+	 */
+	public function orcCobranca() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$idFat = (int)$this->request->getQuery('idfaturamento', 0);
+		$idOrc = (int)$this->request->getQuery('id', 0);
+		$payload = (new FinanceiroOrcFlowPrototypeBuilder())->buildCobranca($empresa, $idFat, $idOrc);
+		if ($payload === null) {
+			throw new NotFoundException(__('Cobrança não encontrada.'));
+		}
+
+		$this->set(array_merge($payload, [
+			'title' => __('Cobrança & Baixa · Orç. #{0}', $payload['orcId'] > 0 ? $payload['orcId'] : $payload['fatNumero']),
+			'erpNavActive' => 'orc-cobranca',
+			'erpBreadcrumb' => [
+				['label' => 'PGM ERP'],
+				['label' => __('Orçamentos'), 'url' => ['controller' => 'OrcamentosPrototype', 'action' => 'lista']],
+				['label' => __('Cobrança'), 'cur' => true],
+			],
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+		]));
+
+		return $this->render('orc_cobranca');
 	}
 
 	/**
@@ -254,18 +219,23 @@ class FinanceiroPrototypeController extends AppController {
 				return $this->titulos();
 			case 'contas-pagar':
 				return $this->contasPagar();
-			case 'cobranca':
-			case 'orc-cobranca':
-			case 'orc-faturamento':
-				return $this->redirect(['controller' => 'Faturamento', 'action' => 'index']);
 			case 'relatorios-fin':
-				return $this->redirect(['controller' => 'FinanceiroRelatorios', 'action' => 'index']);
+				return $this->relatoriosFin();
+			case 'orc-faturamento':
+			case 'faturamento':
+				return $this->orcFaturamento();
+			case 'orc-cobranca':
+			case 'cobranca':
+				return $this->orcCobranca();
 		}
-		$allowed = ['nfe', 'dre', 'relatorios-fin', 'orc-faturamento', 'orc-cobranca', 'cobranca'];
+
+		$allowed = ['nfe', 'dre'];
 		if (!in_array($page, $allowed, true)) {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));
 		}
 
+		$empresa = (int)$this->Auth->user('idempresa');
+		$req = $this->request->getQueryParams();
 		$set = [
 			'title' => __('Financeiro · {0}', ucfirst((string)$page)),
 			'erpNavActive' => $page,
@@ -279,16 +249,22 @@ class FinanceiroPrototypeController extends AppController {
 		];
 
 		if ($page === 'dre') {
-			$set['useChartJs'] = true;
-			$set['dreData'] = $this->buildDrePayload();
-			$this->set($set);
+			$payload = (new FinanceiroDrePrototypeBuilder())->build(
+				$empresa,
+				(string)($req['periodo'] ?? '')
+			);
+			$this->set($set + $payload);
 
 			return $this->render('dre');
 		}
 
 		if ($page === 'nfe') {
-			$set += $this->buildNfePayload();
-			$this->set($set);
+			$payload = (new FinanceiroNfePrototypeBuilder())->build($empresa, [
+				'tab' => (string)($req['tab'] ?? 'todas'),
+				'busca' => (string)($req['q'] ?? $req['busca'] ?? ''),
+				'modelo' => (string)($req['modelo'] ?? ''),
+			]);
+			$this->set($set + $payload);
 
 			return $this->render('nfe');
 		}
@@ -296,109 +272,6 @@ class FinanceiroPrototypeController extends AppController {
 		$this->set($set);
 
 		return $this->render('placeholder');
-	}
-
-	/**
-	 * NF-e/NFS-e — KPIs por status + tabela das últimas notas (fiscal_notas).
-	 *
-	 * @return array<string,mixed>
-	 */
-	protected function buildNfePayload(): array {
-		$empresa = (int)$this->Auth->user('idempresa');
-		$kpi = ['emitidas' => 0, 'autorizadas' => 0, 'rejeitadas' => 0, 'canceladas' => 0, 'valor_total' => 0.0];
-		$items = [];
-		try {
-			$tbl = \Cake\ORM\TableRegistry::getTableLocator()->get('FiscalNotas');
-			$rows = $tbl->find()
-				->where(['FiscalNotas.idempresa' => $empresa])
-				->order(['FiscalNotas.data_emissao' => 'DESC'])
-				->limit(80)
-				->all();
-			foreach ($rows as $n) {
-				$kpi['emitidas']++;
-				$st = strtolower((string)$n->get('status'));
-				if (strpos($st, 'autoriz') !== false) {
-					$kpi['autorizadas']++;
-				} elseif (strpos($st, 'rejeit') !== false) {
-					$kpi['rejeitadas']++;
-				} elseif (strpos($st, 'cancel') !== false) {
-					$kpi['canceladas']++;
-				}
-				$v = (float)$n->get('valor_total');
-				$kpi['valor_total'] += $v;
-				$items[] = [
-					'id' => (int)$n->get('id'),
-					'numero' => (string)$n->get('numero'),
-					'serie' => (string)$n->get('serie'),
-					'modelo' => (string)$n->get('modelo'),
-					'emissao' => $n->get('data_emissao'),
-					'destinatario_id' => (int)$n->get('idcliente'),
-					'valor' => $v,
-					'status' => (string)$n->get('status'),
-					'chave' => (string)$n->get('chave_acesso'),
-					'motivo_rejeicao' => (string)$n->get('motivo_rejeicao'),
-				];
-			}
-		} catch (\Throwable $e) {
-		}
-
-		return [
-			'nfeKpi' => $kpi,
-			'nfeItems' => $items,
-		];
-	}
-
-	/**
-	 * Receita/despesa/resultado por mês nos últimos 6 meses.
-	 *
-	 * @return array<string,array<int,float|string>>
-	 */
-	protected function buildDrePayload(): array {
-		$empresa = (int)$this->Auth->user('idempresa');
-		$now = \Cake\I18n\Time::now();
-		$labels = [];
-		$receita = [];
-		$despesa = [];
-		$resultado = [];
-		for ($i = 5; $i >= 0; $i--) {
-			$ref = $now->copy()->subMonths($i);
-			$start = $ref->startOfMonth();
-			$end = $ref->endOfMonth();
-			$labels[] = $start->i18nFormat('MMM/yy');
-
-			$rec = 0.0;
-			try {
-				foreach ($this->Faturas->find()
-					->where(['Faturas.idempresa' => $empresa, 'Faturas.dtretorno >=' => $start, 'Faturas.dtretorno <=' => $end])
-					->all() as $f) {
-					$rec += (float)($f->get('valor') ?? 0);
-				}
-			} catch (\Throwable $e) {
-			}
-			$receita[] = round($rec, 2);
-
-			$desp = 0.0;
-			try {
-				foreach ($this->FinanceiroLancamentos->find()
-					->where(['FinanceiroLancamentos.idempresa' => $empresa, 'FinanceiroLancamentos.data_baixa >=' => $start, 'FinanceiroLancamentos.data_baixa <=' => $end])
-					->all() as $l) {
-					$tipo = strtolower((string)($l->get('tipo') ?? ''));
-					if (strpos($tipo, 'desp') !== false || strpos($tipo, 'pag') !== false || $tipo === 'p') {
-						$desp += (float)($l->get('valor') ?? 0);
-					}
-				}
-			} catch (\Throwable $e) {
-			}
-			$despesa[] = round($desp, 2);
-			$resultado[] = round($rec - $desp, 2);
-		}
-
-		return [
-			'labels' => $labels,
-			'receita' => $receita,
-			'despesa' => $despesa,
-			'resultado' => $resultado,
-		];
 	}
 
 	/**

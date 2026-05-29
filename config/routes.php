@@ -834,6 +834,18 @@ Router::scope("/", function ($routes) {
         "controller" => "FinanceiroPrototype",
         "action" => "contasPagar",
     ]);
+    $routes->connect("/financeiro-prototype/relatorios-fin", [
+        "controller" => "FinanceiroPrototype",
+        "action" => "relatoriosFin",
+    ]);
+    $routes->connect("/financeiro-prototype/orc-faturamento", [
+        "controller" => "FinanceiroPrototype",
+        "action" => "orcFaturamento",
+    ]);
+    $routes->connect("/financeiro-prototype/orc-cobranca", [
+        "controller" => "FinanceiroPrototype",
+        "action" => "orcCobranca",
+    ]);
     $routes->connect("/financeiro-prototype/:page", [
         "controller" => "FinanceiroPrototype",
         "action" => "view",
@@ -863,14 +875,6 @@ Router::scope("/", function ($routes) {
     $routes->connect("/bancos-prototype/salvar-conta", [
         "controller" => "BancosPrototype",
         "action" => "salvarConta",
-    ]);
-    $routes->connect("/bancos-prototype/enviar-pix", [
-        "controller" => "BancosPrototype",
-        "action" => "enviarPix",
-    ]);
-    $routes->connect("/bancos-prototype/salvar-chave-pix", [
-        "controller" => "BancosPrototype",
-        "action" => "salvarChavePix",
     ]);
     $routes->connect("/bancos-prototype/:page", [
         "controller" => "BancosPrototype",

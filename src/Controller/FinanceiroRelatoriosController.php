@@ -33,6 +33,10 @@ class FinanceiroRelatoriosController extends AppController {
 	 * Painel de relatórios — links para cada relatório.
 	 */
 	public function index() {
+		$prototype = PortalUi::redirectToPrototypeIfEnabled('financeiro', 'FinanceiroPrototype', 'relatoriosFin');
+		if ($prototype !== null) {
+			return $this->redirect($prototype);
+		}
 		$this->set('hideLayoutPageTitle', true);
 	}
 

@@ -916,6 +916,11 @@ class FinanceiroController extends AppController
     /* ── Contas a receber ──────────────────────────────────────────────── */
     public function contasReceber()
     {
+        $prototype = PortalUi::redirectToPrototypeIfEnabled('financeiro', 'FinanceiroPrototype', 'titulos');
+        if ($prototype !== null) {
+            return $this->redirect($prototype);
+        }
+
         $idempresa = $this->Auth->user("idempresa");
         $cliente = $this->request->getQuery("cliente") ?? "";
         $status = $this->request->getQuery("status") ?? "aberto";

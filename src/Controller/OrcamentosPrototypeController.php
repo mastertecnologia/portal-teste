@@ -184,7 +184,13 @@ class OrcamentosPrototypeController extends AppController {
 			return $this->redirect(PortalUi::orcamentosNovoRoute());
 		}
 		if (in_array($page, ['faturamento', 'cobranca'], true)) {
-			return $this->redirect(['controller' => 'Faturamento', 'action' => 'index']);
+			$q = ['controller' => 'FinanceiroPrototype', 'action' => $page === 'faturamento' ? 'orcFaturamento' : 'orcCobranca'];
+			$orcId = (int)$this->request->getQuery('id', 0);
+			if ($orcId > 0) {
+				$q['?'] = ['id' => $orcId];
+			}
+
+			return $this->redirect($q);
 		}
 		$orcId = (int)$this->request->getQuery('id', 0);
 		if ($orcId > 0) {
