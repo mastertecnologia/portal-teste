@@ -1269,3 +1269,13 @@ body.pgm-erp-prototype-page .pgm-erp-topbar-avatar {
 .pgm-erp-shell .b-pendente-conc { background: #FAEEDA; color: #633806; }
 .pgm-erp-shell .b-divergente { background: #F8D8DA; color: #7A1822; }
 .pgm-erp-shell .tabs .tab { text-decoration: none; color: inherit; }
+
+.pgm-erp-shell .match-row{display:grid;grid-template-columns:1fr 60px 1fr;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border-light);background:#fff;}
+.pgm-erp-shell .match-row.matched{background:#F0F9F5;}
+.pgm-erp-shell .match-row.divergent{background:#FFF5F5;}
+.pgm-erp-shell .match-side{padding:10px 12px;background:var(--bg-surface);border-radius:var(--radius);}
+.pgm-erp-shell .match-arrow{text-align:center;font-size:18px;color:var(--text-muted);}
+.pgm-erp-shell .match-row.matched .match-arrow{color:var(--teal);}
+.pgm-erp-shell .match-row.divergent .match-arrow{color:var(--red);}
+.pgm-erp-shell .conc-col-header{display:grid;grid-template-columns:1fr 60px 1fr;gap:12px;padding:10px 14px;background:var(--bg-surface);border-radius:var(--radius) var(--radius) 0 0;font-size:11px;text-transform:uppercase;font-weight:600;color:var(--text-muted);letter-spacing:.4px;border:1px solid var(--border);border-bottom:none;}
+.pgm-erp-shell .conc-list-wrap{border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);overflow:hidden;background:#fff;}

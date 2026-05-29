@@ -860,6 +860,14 @@ Router::scope("/", function ($routes) {
         "controller" => "BancosPrototype",
         "action" => "rejeitarMatch",
     ]);
+    $routes->connect("/bancos-prototype/conciliar-automatico", [
+        "controller" => "BancosPrototype",
+        "action" => "conciliarAutomatico",
+    ]);
+    $routes->connect("/bancos-prototype/ignorar-extrato", [
+        "controller" => "BancosPrototype",
+        "action" => "ignorarExtrato",
+    ]);
     $routes->connect("/bancos-prototype/salvar-conta", [
         "controller" => "BancosPrototype",
         "action" => "salvarConta",
