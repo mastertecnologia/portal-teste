@@ -344,8 +344,8 @@
 					</div>
 					<div class="nav-section-items">
 						<?= $pgmSbLink('landmark', ' Cadastro', ['controller' => 'FinanceiroBancos', 'action' => 'index'], ['data-turbo' => 'false'], $finBancosAct, '', 'Cadastro de bancos') ?>
-						<?= $pgmSbLink('send', ' Remessa', ['controller' => 'FinanceiroBancos', 'action' => 'remessa'], ['data-turbo' => 'false'], $finRemessaAct, '', 'Remessa') ?>
-						<?= $pgmSbLink('inbox', ' Retorno', ['controller' => 'FinanceiroBancos', 'action' => 'retorno'], ['data-turbo' => 'false'], $finRetornoAct, '', 'Retorno') ?>
+						<?= $pgmSbLink('send', ' Remessa', ['controller' => 'BancosPrototype', 'action' => 'view', 'remessa'], ['data-turbo' => 'false'], $finRemessaAct, '', 'Remessa') ?>
+						<?= $pgmSbLink('inbox', ' Retorno', ['controller' => 'BancosPrototype', 'action' => 'view', 'retorno'], ['data-turbo' => 'false'], $finRetornoAct, '', 'Retorno') ?>
 						<?= $pgmSbLink('table-2', ' Relatórios bancos', ['controller' => 'FinanceiroBancos', 'action' => 'relatorios'], ['data-turbo' => 'false'], $finRelBancosAct, '', 'Relatórios bancos') ?>
 					</div>
 				</li>

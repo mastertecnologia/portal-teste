@@ -149,6 +149,11 @@ class FinanceiroBancosController extends AppController
      */
     public function cadastrar()
     {
+        $proto = PortalUi::redirectToPrototypeIfEnabled('bancos', 'BancosPrototype', 'view');
+        if ($proto !== null) {
+            return $this->redirect(array_merge($proto, ['contas']));
+        }
+
         $idempresa = (int) $this->Auth->user("idempresa");
 
         $codigo = trim((string) $this->request->getQuery("codigo"));
@@ -817,6 +822,11 @@ class FinanceiroBancosController extends AppController
      */
     public function remessa()
     {
+        $proto = PortalUi::redirectToPrototypeIfEnabled('bancos', 'BancosPrototype', 'view');
+        if ($proto !== null) {
+            return $this->redirect(array_merge($proto, ['remessa']));
+        }
+
         $idempresa = (int) $this->Auth->user("idempresa");
         $bancoId = (int) $this->request->getQuery("banco_id");
 
@@ -940,6 +950,11 @@ class FinanceiroBancosController extends AppController
      */
     public function retorno()
     {
+        $proto = PortalUi::redirectToPrototypeIfEnabled('bancos', 'BancosPrototype', 'view');
+        if ($proto !== null) {
+            return $this->redirect(array_merge($proto, ['retorno']));
+        }
+
         $idempresa = (int) $this->Auth->user("idempresa");
 
         $bancos = $this->FinanceiroBancos

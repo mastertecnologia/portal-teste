@@ -52,6 +52,9 @@ class RemessasController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
+        if ($this->components()->has('Security')) {
+            $this->Security->setConfig('unlockedActions', ['gerarRemessa', 'listarTitulos']);
+        }
         $this->set('title', 'Remessas CNAB');
     }
 

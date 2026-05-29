@@ -68,6 +68,9 @@ class RetornosController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
+        if ($this->components()->has('Security')) {
+            $this->Security->setConfig('unlockedActions', ['processar']);
+        }
         $this->set("title", "Retornos Bancários");
     }
 

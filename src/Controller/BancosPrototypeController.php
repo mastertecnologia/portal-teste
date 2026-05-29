@@ -8,6 +8,8 @@ use App\Utility\FinanceiroBancosCatalogo;
 use App\Utility\FinanceiroBancosPrototypeUi;
 use App\Utility\FinanceiroConciliacaoPrototypeBuilder;
 use App\Utility\FinanceiroExtratoPrototypeBuilder;
+use App\Utility\FinanceiroRemessaPrototypeBuilder;
+use App\Utility\FinanceiroRetornoPrototypeBuilder;
 use App\Utility\FinanceiroTransferenciasPrototypeBuilder;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
@@ -140,7 +142,7 @@ class BancosPrototypeController extends AppController {
 		if ($page === 'contas') {
 			return $this->contas();
 		}
-		$allowed = ['contas', 'extrato', 'conciliacao', 'transferencias', 'fluxo-caixa'];
+		$allowed = ['contas', 'extrato', 'conciliacao', 'transferencias', 'fluxo-caixa', 'remessa', 'retorno'];
 		if (!in_array($page, $allowed, true)) {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));
 		}
@@ -204,6 +206,34 @@ class BancosPrototypeController extends AppController {
 			$this->set($set);
 
 			return $this->render('transferencias');
+		}
+
+		if ($page === 'remessa') {
+			$set['title'] = __('Remessa CNAB 240');
+			$set['erpNavActive'] = 'remessa';
+			$set['erpBreadcrumb'] = [
+				['label' => 'PGM ERP'],
+				['label' => __('Bancos'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'lista']],
+				['label' => __('Remessa'), 'cur' => true],
+			];
+			$set += $this->buildRemessaPayload();
+			$this->set($set);
+
+			return $this->render('remessa');
+		}
+
+		if ($page === 'retorno') {
+			$set['title'] = __('Retornos bancários');
+			$set['erpNavActive'] = 'retorno';
+			$set['erpBreadcrumb'] = [
+				['label' => 'PGM ERP'],
+				['label' => __('Bancos'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'lista']],
+				['label' => __('Retorno'), 'cur' => true],
+			];
+			$set += $this->buildRetornoPayload();
+			$this->set($set);
+
+			return $this->render('retorno');
 		}
 
 		$this->set($set);
@@ -277,6 +307,31 @@ class BancosPrototypeController extends AppController {
 		$builder = new FinanceiroExtratoPrototypeBuilder($this->financeiroExtratoDisponivel);
 
 		return $builder->build($empresa, $this->request);
+	}
+
+	/**
+	 * Remessa CNAB 240 — títulos em aberto por banco.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function buildRemessaPayload(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$q = $this->request->getQueryParams();
+		$bancoId = (int)($q['banco_id'] ?? 0);
+		$busca = trim((string)($q['busca'] ?? ''));
+
+		return (new FinanceiroRemessaPrototypeBuilder())->build($empresa, $bancoId, $busca);
+	}
+
+	/**
+	 * Retornos bancários — painel operacional por banco.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function buildRetornoPayload(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+
+		return (new FinanceiroRetornoPrototypeBuilder())->build($empresa);
 	}
 
 	/**
