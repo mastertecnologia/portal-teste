@@ -807,6 +807,22 @@ class BancosPrototypeController extends AppController {
 		if ($tipo !== '') {
 			$obs[] = 'tipo_conta:' . $tipo;
 		}
+		$saldoIni = $this->_parseBrlCampoModal((string)Hash::get($data, 'saldo_inicial', ''));
+		if ($saldoIni !== null) {
+			$obs[] = 'saldo_inicial:' . $saldoIni;
+		}
+		$limite = $this->_parseBrlCampoModal((string)Hash::get($data, 'limite_cheque_especial', ''));
+		if ($limite !== null) {
+			$obs[] = 'limite_cheque:' . $limite;
+		}
+		$contaContabil = trim((string)Hash::get($data, 'conta_contabil', ''));
+		if ($contaContabil !== '') {
+			$obs[] = 'conta_contabil:' . $contaContabil;
+		}
+		$especie = trim((string)Hash::get($data, 'especie_titulo', ''));
+		if ($especie !== '') {
+			$obs[] = 'especie_titulo:' . $especie;
+		}
 		if (!empty($data['integracao_cnab'])) {
 			$obs[] = 'integracao:cnab240';
 		}
@@ -815,6 +831,15 @@ class BancosPrototypeController extends AppController {
 		}
 		if (!empty($data['integracao_pix'])) {
 			$obs[] = 'integracao:pix';
+		}
+
+		$proxTitulo = preg_replace('/\D/', '', (string)Hash::get($data, 'proximo_titulo', ''));
+		$proxRemessa = (int)Hash::get($data, 'proxima_remessa', 0);
+		if ($proxTitulo !== '') {
+			$proxRemessa = (int)$proxTitulo;
+		}
+		if ($proxRemessa <= 0) {
+			$proxRemessa = 1;
 		}
 
 		$out = [
@@ -828,7 +853,7 @@ class BancosPrototypeController extends AppController {
 			'digito_conta' => $dgCc,
 			'carteira' => trim((string)Hash::get($data, 'carteira', '')),
 			'convenio' => trim((string)Hash::get($data, 'convenio', '')),
-			'proxima_remessa' => (int)Hash::get($data, 'proxima_remessa', 1),
+			'proxima_remessa' => $proxRemessa,
 			'cnab_tipo' => '240',
 			'observacoes' => implode(' | ', $obs),
 			'ativo' => true,
@@ -839,11 +864,26 @@ class BancosPrototypeController extends AppController {
 				$out['cnab'] = (string)$cat['cnab'];
 			}
 		}
-		if ($out['proxima_remessa'] <= 0) {
-			$out['proxima_remessa'] = 1;
+		return $out;
+	}
+
+	/**
+	 * Converte "R$ 1.234,56" ou "1234.56" para decimal com ponto.
+	 */
+	protected function _parseBrlCampoModal(string $raw): ?string {
+		$raw = trim(str_replace(['R$', ' '], '', $raw));
+		if ($raw === '') {
+			return null;
+		}
+		if (strpos($raw, ',') !== false) {
+			$raw = str_replace('.', '', $raw);
+			$raw = str_replace(',', '.', $raw);
+		}
+		if (!is_numeric($raw)) {
+			return null;
 		}
 
-		return $out;
+		return number_format((float)$raw, 2, '.', '');
 	}
 
 	/**
