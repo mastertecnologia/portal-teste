@@ -279,16 +279,68 @@ class BancosPrototypeController extends AppController {
 	}
 
 	/**
-	/**
 	 * Transferências & PIX — contas, chaves, formulários e histórico (pg-transferencias).
 	 *
 	 * @return array<string,mixed>
 	 */
 	protected function buildTransferenciasPayload(): array {
 		$empresa = (int)$this->Auth->user('idempresa');
-		$ctx = $this->buildBancosContext();
+		try {
+			return (new FinanceiroTransferenciasPrototypeBuilder())->build(
+				$empresa,
+				$this->_bancoItemsComSaldo($empresa)
+			);
+		} catch (\Throwable $e) {
+			return FinanceiroTransferenciasPrototypeBuilder::payloadVazio();
+		}
+	}
 
-		return (new FinanceiroTransferenciasPrototypeBuilder())->build($empresa, $ctx['items']);
+	/**
+	 * Contas bancárias com saldo — versão leve (sem conciliação/KPIs do dashboard).
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function _bancoItemsComSaldo(int $empresa): array {
+		$rows = [];
+		try {
+			$rows = $this->FinanceiroBancos->find()
+				->where(['FinanceiroBancos.idempresa' => $empresa])
+				->order(['FinanceiroBancos.nome' => 'ASC'])
+				->limit(80)
+				->all()
+				->toArray();
+		} catch (\Throwable $e) {
+			return [];
+		}
+
+		$movPorBanco = $this->_resumoMovimentosPorBanco($empresa, $rows);
+		$items = [];
+		foreach ($rows as $b) {
+			$id = (int)$b->get('id');
+			$codigo = (string)($b->get('codigo_banco') ?? $b->get('numero_banco') ?? '');
+			$nome = (string)($b->get('nome') ?? '');
+			$brand = FinanceiroBancosPrototypeUi::branding($codigo, $nome);
+			[$agFmt, $ccFmt] = FinanceiroBancosPrototypeUi::formatAgenciaConta($b);
+			$mov = $movPorBanco[$id] ?? ['receber' => 0.0, 'recebido' => 0.0, 'pagar' => 0.0, 'pago' => 0.0];
+			$saldo = (float)$mov['receber'] + (float)$mov['recebido'] - (float)$mov['pagar'] - (float)$mov['pago'];
+			$items[] = [
+				'id' => $id,
+				'nome' => $nome,
+				'codigo' => $codigo,
+				'agencia' => $agFmt,
+				'conta' => $ccFmt,
+				'ativo' => (bool)$b->get('ativo'),
+				'saldo' => $saldo,
+				'brand' => $brand,
+				'observacoes' => (string)$b->get('observacoes'),
+			];
+		}
+
+		usort($items, static function ($a, $b) {
+			return ((float)($b['saldo'] ?? 0)) <=> ((float)($a['saldo'] ?? 0));
+		});
+
+		return $items;
 	}
 
 	/**

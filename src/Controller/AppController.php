@@ -603,6 +603,9 @@ class AppController extends Controller
      */
     protected function applyUnifiedPortalLayoutForPrototypeScreens(): void
     {
+        if ($this instanceof ErrorController) {
+            return;
+        }
         $controller = (string)$this->request->getParam('controller');
         $path = (string)$this->request->getPath();
         $isPrototype = (substr($controller, -9) === 'Prototype')

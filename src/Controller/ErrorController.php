@@ -51,12 +51,8 @@ class ErrorController extends AppController
      */
     public function beforeRender(Event $event)
     {
-        parent::beforeRender($event);
-
-        // return $this->redirect(['controller' => 'Users', 'action' => 'dashboard', 'erro']);
-
         $this->autoRender = false;
-        $this->viewBuilder()->setTemplatePath('error');
+        $this->viewBuilder()->setTemplatePath('Error');
     }
 
     /**
