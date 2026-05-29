@@ -415,6 +415,10 @@ class BancosPrototypeController extends AppController {
 		return $this->redirect(['action' => 'view', 'transferencias']);
 	}
 
+	/**
+	 * POST /bancos-prototype/rejeitar-match — registra rejeição (não vincula).
+	 * Mantém o movimento como pendente e adiciona log no campo descricao
+	 * (sufixo "[NO-MATCH:lid=X]") para próximos ciclos pularem aquela sugestão.
 	 */
 	public function rejeitarMatch() {
 		$this->request->allowMethod(['post']);
