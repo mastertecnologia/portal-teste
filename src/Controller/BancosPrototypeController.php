@@ -6,6 +6,8 @@ namespace App\Controller;
 use App\Controller\Traits\ErpPrototypeRbacTrait;
 use App\Utility\FinanceiroBancosCatalogo;
 use App\Utility\FinanceiroBancosPrototypeUi;
+use App\Utility\FinanceiroConciliacaoPrototypeBuilder;
+use App\Utility\FinanceiroExtratoPrototypeBuilder;
 use App\Utility\FinanceiroTransferenciasPrototypeBuilder;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
@@ -164,6 +166,12 @@ class BancosPrototypeController extends AppController {
 		}
 
 		if ($page === 'conciliacao') {
+			$set['title'] = __('Conciliação Bancária');
+			$set['erpBreadcrumb'] = [
+				['label' => 'PGM ERP'],
+				['label' => __('Bancos'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'lista']],
+				['label' => __('Conciliação'), 'cur' => true],
+			];
 			$set += $this->buildConciliacaoPayload();
 			$this->set($set);
 
@@ -171,6 +179,12 @@ class BancosPrototypeController extends AppController {
 		}
 
 		if ($page === 'extrato') {
+			$set['title'] = __('Extrato bancário');
+			$set['erpBreadcrumb'] = [
+				['label' => 'PGM ERP'],
+				['label' => __('Bancos'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'lista']],
+				['label' => __('Extrato'), 'cur' => true],
+			];
 			$set += $this->buildExtratoPayload();
 			$this->set($set);
 
@@ -178,6 +192,13 @@ class BancosPrototypeController extends AppController {
 		}
 
 		if ($page === 'transferencias') {
+			$set['title'] = __('Transferências & PIX');
+			$set['erpNavActive'] = 'transferencias';
+			$set['erpBreadcrumb'] = [
+				['label' => 'PGM ERP'],
+				['label' => __('Bancos'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'lista']],
+				['label' => __('Transferências'), 'cur' => true],
+			];
 			$set += $this->buildTransferenciasPayload();
 			$this->set($set);
 
@@ -195,13 +216,25 @@ class BancosPrototypeController extends AppController {
 	public function exportExtratoCsv() {
 		$empresa = (int)$this->Auth->user('idempresa');
 		$q = $this->request->getQueryParams();
-		$dias = (int)($q['dias'] ?? 30);
-		if ($dias <= 0 || $dias > 365) { $dias = 30; }
-		$desde = \Cake\I18n\Time::now()->subDays($dias);
-		$where = ['FinanceiroExtratoBancario.idempresa' => $empresa, 'FinanceiroExtratoBancario.data >=' => $desde];
-		if (!empty($q['conta'])) { $where['FinanceiroExtratoBancario.conta_bancaria'] = (string)$q['conta']; }
-		if (!empty($q['tipo']) && in_array($q['tipo'], ['c', 'd'], true)) {
-			$where['FinanceiroExtratoBancario.tipo'] = strtoupper((string)$q['tipo']);
+		$builder = new FinanceiroExtratoPrototypeBuilder($this->financeiroExtratoDisponivel);
+		$periodo = $builder->parsePeriodo($q);
+		$where = [
+			'FinanceiroExtratoBancario.idempresa' => $empresa,
+			'FinanceiroExtratoBancario.data >=' => $periodo['de'],
+			'FinanceiroExtratoBancario.data <=' => $periodo['ate'],
+		];
+		$refs = $builder->refsFiltroConta($empresa, (int)($q['banco'] ?? 0), trim((string)($q['conta'] ?? '')));
+		if ($refs !== []) {
+			$where['FinanceiroExtratoBancario.conta_bancaria IN'] = $refs;
+		}
+		$aba = (string)($q['aba'] ?? '');
+		if ($aba === '' && !empty($q['tipo']) && in_array($q['tipo'], ['c', 'd'], true)) {
+			$aba = $q['tipo'] === 'c' ? 'in' : 'out';
+		}
+		if ($aba === 'in') {
+			$where['FinanceiroExtratoBancario.tipo IN'] = ['C', 'c', 'credito', 'cr'];
+		} elseif ($aba === 'out') {
+			$where['FinanceiroExtratoBancario.tipo IN'] = ['D', 'd', 'debito', 'db'];
 		}
 		try {
 			$ext = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroExtratoBancario');
@@ -234,163 +267,102 @@ class BancosPrototypeController extends AppController {
 	}
 
 	/**
-	 * Extrato bancário com filtros (período, conta, tipo).
+	 * Extrato bancário com filtros avançados (período, conta, tipo, busca, paginação).
 	 *
 	 * @return array<string,mixed>
 	 */
 	protected function buildExtratoPayload(): array {
 		$empresa = (int)$this->Auth->user('idempresa');
-		$query = $this->request->getQueryParams();
-		$filtroTipo = (string)($query['tipo'] ?? '');
-		$filtroConta = trim((string)($query['conta'] ?? ''));
-		$diasFiltro = (int)($query['dias'] ?? 30);
-		if ($diasFiltro <= 0 || $diasFiltro > 365) {
-			$diasFiltro = 30;
-		}
+		$builder = new FinanceiroExtratoPrototypeBuilder($this->financeiroExtratoDisponivel);
 
-		$items = [];
-		$kpi = ['entradas' => 0.0, 'saidas' => 0.0, 'pendentes' => 0, 'total_mov' => 0];
-		$contas = [];
-
-		$schema = null;
-		try {
-			$schema = \Cake\ORM\TableRegistry::getTableLocator()->get('Empresas')->getConnection()->getSchemaCollection()->listTables();
-		} catch (\Throwable $e) {
-		}
-
-		if ($schema !== null && in_array('financeiro_extrato_bancario', $schema, true)) {
-			try {
-				$ext = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroExtratoBancario');
-				$desde = \Cake\I18n\Time::now()->subDays($diasFiltro);
-				$where = [
-					'FinanceiroExtratoBancario.idempresa' => $empresa,
-					'FinanceiroExtratoBancario.data >=' => $desde,
-				];
-				if ($filtroConta !== '') {
-					$where['FinanceiroExtratoBancario.conta_bancaria'] = $filtroConta;
-				}
-				if (in_array($filtroTipo, ['c', 'd'], true)) {
-					$where['FinanceiroExtratoBancario.tipo'] = $filtroTipo === 'c' ? 'C' : 'D';
-				}
-				$rows = $ext->find()
-					->where($where)
-					->order(['FinanceiroExtratoBancario.data' => 'DESC'])
-					->limit(150)
-					->all();
-				foreach ($rows as $r) {
-					$valor = (float)$r->get('valor');
-					$tipo = strtolower((string)$r->get('tipo'));
-					$isEntrada = $tipo === 'c' || $tipo === 'credito' || $tipo === 'cr';
-					if ($isEntrada) {
-						$kpi['entradas'] += abs($valor);
-					} else {
-						$kpi['saidas'] += abs($valor);
-					}
-					if ((int)$r->get('conciliado') === 0 && (int)$r->get('financeiro_lancamento_id') === 0) {
-						$kpi['pendentes']++;
-					}
-					$kpi['total_mov']++;
-					$items[] = [
-						'id' => (int)$r->get('id'),
-						'data' => $r->get('data'),
-						'descricao' => (string)$r->get('descricao'),
-						'tipo' => $tipo,
-						'is_entrada' => $isEntrada,
-						'valor' => abs($valor),
-						'conta' => (string)$r->get('conta_bancaria'),
-						'origem' => (string)$r->get('origem'),
-						'fitid' => (string)$r->get('fitid'),
-						'conciliado' => (int)$r->get('conciliado') === 1 || (int)$r->get('financeiro_lancamento_id') > 0,
-					];
-				}
-
-				$rowsContas = $ext->find()
-					->select(['conta_bancaria'])
-					->where(['FinanceiroExtratoBancario.idempresa' => $empresa])
-					->group(['conta_bancaria'])
-					->extract('conta_bancaria')
-					->toList();
-				foreach ($rowsContas as $c) {
-					$c = (string)$c;
-					if ($c !== '') {
-						$contas[] = $c;
-					}
-				}
-			} catch (\Throwable $e) {
-			}
-		}
-
-		return [
-			'extKpi' => $kpi,
-			'extItems' => $items,
-			'extContas' => $contas,
-			'extFiltros' => [
-				'tipo' => $filtroTipo,
-				'conta' => $filtroConta,
-				'dias' => $diasFiltro,
-			],
-		];
+		return $builder->build($empresa, $this->request);
 	}
 
 	/**
-	 * Remessas bancárias (CNAB) — usado como base para PIX/transferências.
+	/**
+	 * Transferências & PIX — contas, chaves, formulários e histórico (pg-transferencias).
 	 *
 	 * @return array<string,mixed>
 	 */
 	protected function buildTransferenciasPayload(): array {
 		$empresa = (int)$this->Auth->user('idempresa');
-		$items = [];
-		$kpi = ['geradas' => 0, 'enviadas' => 0, 'processadas' => 0, 'valor_total' => 0.0];
+		$ctx = $this->buildBancosContext();
 
-		$schema = null;
-		try {
-			$schema = \Cake\ORM\TableRegistry::getTableLocator()->get('Empresas')->getConnection()->getSchemaCollection()->listTables();
-		} catch (\Throwable $e) {
-		}
-
-		if ($schema !== null && in_array('financeiro_remessas', $schema, true)) {
-			try {
-				$rem = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroRemessas');
-				foreach ($rem->find()
-					->where(['FinanceiroRemessas.idempresa' => $empresa])
-					->order(['FinanceiroRemessas.data_geracao' => 'DESC'])
-					->limit(40)
-					->all() as $r) {
-					$v = (float)$r->get('valor_total');
-					$kpi['valor_total'] += $v;
-					$st = strtolower((string)$r->get('status'));
-					if (strpos($st, 'process') !== false || strpos($st, 'retorn') !== false) {
-						$kpi['processadas']++;
-					} elseif (strpos($st, 'enviad') !== false) {
-						$kpi['enviadas']++;
-					} else {
-						$kpi['geradas']++;
-					}
-					$items[] = [
-						'id' => (int)$r->get('id'),
-						'numero' => (int)$r->get('numero_remessa'),
-						'cnab' => (string)$r->get('cnab_layout'),
-						'arquivo' => (string)$r->get('nome_arquivo'),
-						'data' => $r->get('data_geracao'),
-						'titulos' => (int)$r->get('quantidade_titulos'),
-						'valor' => $v,
-						'status' => (string)$r->get('status'),
-					];
-				}
-			} catch (\Throwable $e) {
-			}
-		}
-
-		return [
-			'tfKpi' => $kpi,
-			'tfItems' => $items,
-		];
+		return (new FinanceiroTransferenciasPrototypeBuilder())->build($empresa, $ctx['items']);
 	}
 
 	/**
-	 * POST /bancos-prototype/rejeitar-match — registra rejeição (não vincula).
-	 * Mantém o movimento como pendente e adiciona log no campo descricao
-	 * (sufixo "[NO-MATCH:lid=X]") para próximos ciclos pularem aquela sugestão.
+	 * POST — registra ordem PIX como lançamento pago (protótipo operacional).
+	 */
+	public function enviarPix() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$data = $this->request->getData();
+		$bancoId = (int)($data['financeiro_banco_id'] ?? 0);
+		$valorRaw = trim((string)($data['valor'] ?? ''));
+		$valor = $this->_parseBrlCampoModal($valorRaw);
+		$chave = trim((string)($data['chave_pix'] ?? ''));
+		if ($bancoId <= 0 || $valor === null || (float)$valor <= 0 || $chave === '') {
+			$this->Flash->error(__('Preencha conta de origem, chave PIX e valor.'));
+
+			return $this->redirect(['action' => 'view', 'transferencias']);
+		}
+		$desc = trim((string)($data['descricao'] ?? ''));
+		if ($desc === '') {
+			$desc = __('PIX para {0}', $chave);
+		}
+		$lancId = (int)($data['lancamento_id'] ?? 0);
+		try {
+			if ($lancId > 0) {
+				$l = $this->FinanceiroLancamentos->get($lancId);
+				if ((int)$l->get('idempresa') !== $empresa) {
+					throw new \RuntimeException('forbidden');
+				}
+				$l = $this->FinanceiroLancamentos->patchEntity($l, [
+					'status' => 'pago',
+					'financeiro_banco_id' => $bancoId,
+					'data_lancamento' => $data['data'] ?? date('Y-m-d'),
+					'observacoes' => trim((string)$l->get('observacoes') . ' | PIX:' . $chave),
+				]);
+				$this->FinanceiroLancamentos->saveOrFail($l);
+			} else {
+				$idcliente = 0;
+				try {
+					$cli = $this->loadModel('Clientes')->find()
+						->where(['Clientes.idempresa' => $empresa])
+						->order(['Clientes.id' => 'ASC'])
+						->first();
+					if ($cli !== null) {
+						$idcliente = (int)$cli->get('id');
+					}
+				} catch (\Throwable $ex) {
+				}
+				if ($idcliente <= 0) {
+					$idcliente = 1;
+				}
+				$l = $this->FinanceiroLancamentos->newEntity([
+					'idempresa' => $empresa,
+					'idcliente' => $idcliente,
+					'tipo' => 'despesa',
+					'descricao' => $desc,
+					'valor' => (float)$valor,
+					'data_lancamento' => $data['data'] ?? date('Y-m-d'),
+					'status' => 'pago',
+					'financeiro_banco_id' => $bancoId,
+					'centro_custo_id' => (int)($data['centro_custo_id'] ?? 0) ?: null,
+					'observacoes' => 'PIX:' . $chave,
+					'idautor' => (int)$this->Auth->user('id'),
+				]);
+				$this->FinanceiroLancamentos->saveOrFail($l);
+			}
+			$this->Flash->success(__('PIX registrado com sucesso. Comprovante disponível no histórico.'));
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Não foi possível registrar o PIX. Verifique os dados.'));
+		}
+
+		return $this->redirect(['action' => 'view', 'transferencias']);
+	}
+
 	 */
 	public function rejeitarMatch() {
 		$this->request->allowMethod(['post']);
@@ -480,118 +452,89 @@ class BancosPrototypeController extends AppController {
 	 */
 	protected function buildConciliacaoPayload(): array {
 		$empresa = (int)$this->Auth->user('idempresa');
-		$kpi = ['conciliados' => 0, 'pendentes' => 0, 'divergentes' => 0, 'total_extrato' => 0, 'total_lancamentos' => 0];
-		$items = [];
+		$builder = new FinanceiroConciliacaoPrototypeBuilder($this->financeiroExtratoDisponivel);
 
-		$schema = null;
+		return $builder->build($empresa);
+	}
+
+	/**
+	 * POST — concilia automaticamente matches com score ≥ 90%.
+	 */
+	public function conciliarAutomatico() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$conciliados = 0;
 		try {
-			$schema = \Cake\ORM\TableRegistry::getTableLocator()->get('Empresas')->getConnection()->getSchemaCollection()->listTables();
-		} catch (\Throwable $e) {
-		}
-
-		if ($schema !== null && in_array('financeiro_extrato_bancario', $schema, true)) {
-			try {
-				$ext = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroExtratoBancario');
-				$lan = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroLancamentos');
-
-				$rows = $ext->find()
-					->where(['FinanceiroExtratoBancario.idempresa' => $empresa])
-					->order(['FinanceiroExtratoBancario.data' => 'DESC'])
-					->limit(80)
-					->all();
-
-				$kpi['total_extrato'] = (int)$ext->find()->where(['FinanceiroExtratoBancario.idempresa' => $empresa])->count();
-				$kpi['total_lancamentos'] = (int)$lan->find()->where(['FinanceiroLancamentos.idempresa' => $empresa])->count();
-
-				foreach ($rows as $e) {
-					$valor = (float)$e->get('valor');
-					$valorAbs = abs($valor);
-					$data = $e->get('data');
-					$descExt = (string)$e->get('descricao');
-					$conciliado = (int)$e->get('conciliado') === 1 || (int)$e->get('financeiro_lancamento_id') > 0;
-					$matchSuggest = null;
-					if (!$conciliado && $data instanceof \DateTimeInterface) {
-						$ini = $data->copy()->subDays(5);
-						$fim = $data->copy()->addDays(5);
-						$tol = max(1.0, $valorAbs * 0.01);
-						// IDs já rejeitados manualmente (marker no descritivo: [NO-MATCH:lid=X])
-						$rejeitados = [];
-						if (preg_match_all('/\[NO-MATCH:lid=(\d+)\]/', $descExt, $mm)) {
-							$rejeitados = array_map('intval', $mm[1]);
-						}
-						$candidatos = $lan->find()
-							->where([
-								'FinanceiroLancamentos.idempresa' => $empresa,
-								'FinanceiroLancamentos.data_lancamento >=' => $ini,
-								'FinanceiroLancamentos.data_lancamento <=' => $fim,
-							])
-							->all();
-						$bestScore = 0.0;
-						foreach ($candidatos as $c) {
-							$cid = (int)$c->get('id');
-							if (in_array($cid, $rejeitados, true)) {
-								continue;
-							}
-							$vc = abs((float)$c->get('valor'));
-							$diff = abs($vc - $valorAbs);
-							if ($diff > $tol) {
-								continue;
-							}
-							// Score: 60 (valor) + 0..30 (data proximity) + 0..10 (texto)
-							$score = 60.0;
-							$dt = $c->get('data_lancamento');
-							if ($dt instanceof \DateTimeInterface) {
-								$days = abs((int)$data->diffInDays($dt));
-								$score += max(0, 30 - $days * 5);
-							}
-							$descLan = (string)$c->get('descricao');
-							if ($descExt !== '' && $descLan !== '') {
-								$pct = 0.0;
-								similar_text(strtoupper($descExt), strtoupper($descLan), $pct);
-								$score += min(10, $pct / 10);
-							}
-							if ($score > $bestScore) {
-								$bestScore = $score;
-								$matchSuggest = [
-									'id' => (int)$c->get('id'),
-									'descricao' => $descLan,
-									'data' => $dt,
-									'valor' => (float)$c->get('valor'),
-									'score' => round($score),
-									'diff_valor' => round($diff, 2),
-								];
-							}
-						}
-					}
-					if ($conciliado) {
-						$kpi['conciliados']++;
-						$status = 'conciliado';
-					} elseif ($matchSuggest !== null && (int)$matchSuggest['score'] >= 70) {
-						$kpi['divergentes']++;
-						$status = 'sugerido';
-					} else {
-						$kpi['pendentes']++;
-						$status = 'pendente';
-					}
-					$items[] = [
-						'id' => (int)$e->get('id'),
-						'data' => $data,
-						'descricao' => $descExt,
-						'tipo' => strtolower((string)$e->get('tipo')),
-						'valor' => $valor,
-						'conta' => (string)$e->get('conta_bancaria'),
-						'status' => $status,
-						'match' => $matchSuggest,
-					];
+			$payload = (new FinanceiroConciliacaoPrototypeBuilder($this->financeiroExtratoDisponivel))->build($empresa);
+			$ext = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroExtratoBancario');
+			foreach ($payload['concItems'] ?? [] as $item) {
+				if (($item['status'] ?? '') !== 'pendente') {
+					continue;
 				}
-			} catch (\Throwable $e) {
+				$match = (array)($item['match'] ?? []);
+				if ((int)($match['score'] ?? 0) < 90) {
+					continue;
+				}
+				$eid = (int)($item['id'] ?? 0);
+				$lid = (int)($match['id'] ?? 0);
+				if ($eid <= 0 || $lid <= 0) {
+					continue;
+				}
+				$row = $ext->find()->where(['id' => $eid, 'idempresa' => $empresa])->first();
+				if ($row === null || (int)$row->get('conciliado') === 1) {
+					continue;
+				}
+				$row->set('financeiro_lancamento_id', $lid);
+				$row->set('conciliado', 1);
+				if ($ext->save($row)) {
+					$conciliados++;
+				}
 			}
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro no match automático: {0}', $e->getMessage()));
+
+			return $this->redirect(['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']);
+		}
+		if ($conciliados > 0) {
+			$this->Flash->success(__('{0} movimento(s) conciliado(s) automaticamente.', $conciliados));
+		} else {
+			$this->Flash->info(__('Nenhum match automático elegível (score ≥ 90%).'));
 		}
 
-		return [
-			'concKpi' => $kpi,
-			'concItems' => $items,
-		];
+		return $this->redirect(['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']);
+	}
+
+	/**
+	 * POST — ignora movimento de extrato sem lançamento correspondente.
+	 */
+	public function ignorarExtrato() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$eid = (int)$this->request->getData('extrato_id');
+		if ($eid <= 0) {
+			$this->Flash->error(__('Dados inválidos.'));
+
+			return $this->redirect(['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']);
+		}
+		try {
+			$ext = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroExtratoBancario');
+			$row = $ext->find()->where(['id' => $eid, 'idempresa' => $empresa])->first();
+			if ($row === null) {
+				$this->Flash->error(__('Movimento fora do escopo.'));
+
+				return $this->redirect(['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']);
+			}
+			$desc = (string)$row->get('descricao');
+			if (strpos($desc, '[IGNORED]') === false) {
+				$row->set('descricao', trim($desc . ' [IGNORED]'));
+				$ext->save($row);
+			}
+			$this->Flash->info(__('Movimento marcado como ignorado.'));
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro: {0}', $e->getMessage()));
+		}
+
+		return $this->redirect(['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']);
 	}
 
 	/**

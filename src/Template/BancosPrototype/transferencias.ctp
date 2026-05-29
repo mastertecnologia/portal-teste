@@ -19,6 +19,18 @@
 $H = $this->ErpPrototype;
 $urlPix = $this->Url->build(['controller' => 'BancosPrototype', 'action' => 'enviarPix']);
 $urlLista = ['controller' => 'BancosPrototype', 'action' => 'lista'];
+$tfMeta = $tfMeta ?? ['empresa_nome' => '', 'empresa_cnpj' => '', 'data_hoje' => date('Y-m-d')];
+$tfContas = $tfContas ?? [];
+$tfCentrosCusto = $tfCentrosCusto ?? [];
+$tfCategorias = $tfCategorias ?? [];
+$tfDocumentos = $tfDocumentos ?? [];
+$tfPixChaves = $tfPixChaves ?? [];
+$tfQrCode = $tfQrCode ?? ['banco' => '—', 'chave' => ''];
+$tfDestinatario = $tfDestinatario ?? null;
+$tfLotePagamentos = $tfLotePagamentos ?? [];
+$tfHistorico = $tfHistorico ?? [];
+$tfRemessas = $tfRemessas ?? [];
+$tfBancosCatalogo = $tfBancosCatalogo ?? [];
 $loteTotal = 0.0;
 foreach ($tfLotePagamentos as $lp) {
 	$loteTotal += (float)$lp['valor'];
