@@ -30,8 +30,8 @@ class FinanceiroBancosCatalogo
         ],
         [
             'codigo' => '756',
-            'nome' => 'BANCOOB',
-            'nome_completo' => 'Banco Cooperativo do Brasil S.A. - BANCOOB',
+            'nome' => 'SICOOB',
+            'nome_completo' => 'Banco Cooperativo do Brasil S.A. - SICOOB',
             'cnab' => '756',
         ],
         [
