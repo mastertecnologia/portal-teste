@@ -34,8 +34,8 @@ $pend = (int)($crKpi['pendentes'] ?? 0);
 		</div>
 	</div>
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
-		<?= $this->Html->link('📤 ' . __('Remessa CNAB'), ['controller' => 'BancosPrototype', 'action' => 'remessa'], ['class' => 'btn btn-ghost btn-sm', 'escape' => false]) ?>
-		<?= $this->Html->link('📥 ' . __('Importar retorno'), ['controller' => 'BancosPrototype', 'action' => 'retorno'], ['class' => 'btn btn-blue btn-sm', 'escape' => false]) ?>
+		<?= $this->Html->link('📤 ' . __('Remessa CNAB'), ['controller' => 'FinanceiroBancos', 'action' => 'remessa'], ['class' => 'btn btn-ghost btn-sm', 'escape' => false]) ?>
+		<?= $this->Html->link('📥 ' . __('Importar retorno'), ['controller' => 'FinanceiroBancos', 'action' => 'retorno'], ['class' => 'btn btn-blue btn-sm', 'escape' => false]) ?>
 		<?= $this->Html->link('📊 Excel', ['controller' => 'Financeiro', 'action' => 'contasReceber', '?' => ['export' => 'excel']], ['class' => 'btn btn-ghost btn-sm', 'escape' => false]) ?>
 	</div>
 </div>

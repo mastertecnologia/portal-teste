@@ -152,8 +152,8 @@ class FinanceiroOrcFlowPrototypeBuilder {
 			'banco_label' => $bancoLabel,
 			'notas' => $notas,
 			'steps' => $this->_orcSteps(8),
-			'remessa_url' => ['controller' => 'BancosPrototype', 'action' => 'remessa'],
-			'retorno_url' => ['controller' => 'BancosPrototype', 'action' => 'retorno'],
+			'remessa_url' => ['controller' => 'FinanceiroBancos', 'action' => 'remessa'],
+			'retorno_url' => ['controller' => 'FinanceiroBancos', 'action' => 'retorno'],
 		];
 	}
 
