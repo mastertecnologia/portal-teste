@@ -201,20 +201,52 @@ class FinanceiroTransferenciasPrototypeBuilder {
 				} catch (\Throwable $e) {
 				}
 			}
+			$principalTipo = '';
+			$principalValor = '';
+			if (preg_match('/pix_principal:([^:|]+):([^|]+)/i', $obs, $pm)) {
+				$principalTipo = strtolower(trim($pm[1]));
+				$principalValor = trim($pm[2]);
+			}
 			if (preg_match_all('/pix_chave:([^:|]+):([^|]+)/i', $obs, $m, PREG_SET_ORDER)) {
 				foreach ($m as $match) {
+					$tipo = strtolower(trim($match[1]));
+					$valor = trim($match[2]);
+					$isPrincipal = ($principalTipo !== '' && $principalValor !== '')
+						? ($tipo === $principalTipo && $valor === $principalValor)
+						: false;
 					$parsed[] = [
-						'tipo' => strtolower(trim($match[1])),
-						'valor' => trim($match[2]),
+						'tipo' => $tipo,
+						'tipo_label' => $this->_tipoLabelPix($tipo),
+						'valor' => $valor,
 						'conta_label' => $this->_contaCurtaFromItem($it),
 						'banco_id' => (int)($it['id'] ?? 0),
-						'principal' => false,
+						'principal' => $isPrincipal,
+						'badge' => $isPrincipal ? 'Principal' : 'Ativa',
+						'badge_kind' => $isPrincipal ? 'paga' : 'aprov',
+						'font_small' => $tipo === 'aleatoria',
 					];
 				}
 			}
 		}
 		if ($parsed !== []) {
-			$parsed[0]['principal'] = true;
+			$hasPrincipal = false;
+			foreach ($parsed as $idx => $row) {
+				if (!empty($row['principal'])) {
+					$hasPrincipal = true;
+					if ($idx > 0) {
+						$principalRow = $parsed[$idx];
+						unset($parsed[$idx]);
+						array_unshift($parsed, $principalRow);
+						$parsed = array_values($parsed);
+					}
+					break;
+				}
+			}
+			if (!$hasPrincipal) {
+				$parsed[0]['principal'] = true;
+				$parsed[0]['badge'] = 'Principal';
+				$parsed[0]['badge_kind'] = 'paga';
+			}
 
 			return $parsed;
 		}

@@ -860,21 +860,17 @@ Router::scope("/", function ($routes) {
         "controller" => "BancosPrototype",
         "action" => "rejeitarMatch",
     ]);
-    $routes->connect("/bancos-prototype/conciliar-automatico", [
+    $routes->connect("/bancos-prototype/salvar-conta", [
         "controller" => "BancosPrototype",
-        "action" => "conciliarAutomatico",
-    ]);
-    $routes->connect("/bancos-prototype/ignorar-extrato", [
-        "controller" => "BancosPrototype",
-        "action" => "ignorarExtrato",
+        "action" => "salvarConta",
     ]);
     $routes->connect("/bancos-prototype/enviar-pix", [
         "controller" => "BancosPrototype",
         "action" => "enviarPix",
     ]);
-    $routes->connect("/bancos-prototype/salvar-conta", [
+    $routes->connect("/bancos-prototype/salvar-chave-pix", [
         "controller" => "BancosPrototype",
-        "action" => "salvarConta",
+        "action" => "salvarChavePix",
     ]);
     $routes->connect("/bancos-prototype/:page", [
         "controller" => "BancosPrototype",
