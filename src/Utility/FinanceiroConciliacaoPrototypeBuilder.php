@@ -51,7 +51,7 @@ class FinanceiroConciliacaoPrototypeBuilder {
 		$items = [];
 		$meta = [
 			'conta_label' => __('Todas as contas'),
-			'periodo_label' => Time::now()->i18nFormat('MMMM/yyyy'),
+			'periodo_label' => Time::now()->format('m/Y'),
 			'coluna_extrato' => __('Extrato bancário'),
 		];
 
@@ -398,7 +398,7 @@ class FinanceiroConciliacaoPrototypeBuilder {
 
 		return [
 			'conta_label' => $contaLabel,
-			'periodo_label' => Time::now()->i18nFormat('MMMM/yyyy'),
+			'periodo_label' => Time::now()->format('m/Y'),
 			'coluna_extrato' => $coluna,
 		];
 	}

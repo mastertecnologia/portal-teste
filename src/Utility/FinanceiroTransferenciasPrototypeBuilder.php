@@ -413,7 +413,7 @@ class FinanceiroTransferenciasPrototypeBuilder {
 						'tipo' => 'lote',
 						'tipo_label' => 'Lote',
 						'tipo_badge' => 'instalacao',
-						'destinatario' => sprintf(__('Remessa %s · %d títulos'), (string)$r->get('cnab_layout'), (int)$r->get('quantidade_titulos')),
+						'destinatario' => sprintf('Remessa %s · %d títulos', (string)$r->get('cnab_layout'), (int)$r->get('quantidade_titulos')),
 						'destinatario_sub' => (string)$r->get('nome_arquivo'),
 						'conta_origem' => 'CNAB',
 						'valor' => (float)$r->get('valor_total'),
@@ -549,4 +549,27 @@ class FinanceiroTransferenciasPrototypeBuilder {
 
 		return $fone;
 	}
+	/**
+	 * Payload mínimo quando build() falha (evita 500 na view).
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function payloadVazio(): array {
+		return [
+			'tfMeta' => ['empresa_nome' => '', 'empresa_cnpj' => '', 'data_hoje' => date('Y-m-d')],
+			'tfContas' => [],
+			'tfCentrosCusto' => [],
+			'tfCategorias' => self::CATEGORIAS,
+			'tfDocumentos' => [],
+			'tfPixChaves' => [],
+			'tfQrCode' => ['banco' => '—', 'chave' => ''],
+			'tfDestinatario' => null,
+			'tfLotePagamentos' => [],
+			'tfHistorico' => [],
+			'tfRemessas' => [],
+			'tfBancosCatalogo' => FinanceiroBancosCatalogo::todos(),
+		];
+	}
+
+
 }
