@@ -8,6 +8,9 @@ class FinanceiroBancosRenameBancoobSicoob extends AbstractMigration
 {
     public function up()
     {
+        if ($this->getAdapter()->getAdapterType() !== 'pgsql') {
+            return;
+        }
         if (!$this->hasTable('financeiro_bancos')) {
             return;
         }
@@ -18,7 +21,7 @@ SET nome = 'SICOOB',
     modified = NOW()
 WHERE UPPER(TRIM(nome)) = 'BANCOOB'
    OR (
-        REGEXP_REPLACE(COALESCE(codigo_banco, ''), '\D', '', 'g') = '756'
+        TRIM(codigo_banco) IN ('756', '0756')
         AND UPPER(TRIM(nome)) LIKE '%BANCOOB%'
    );
 SQL
@@ -27,6 +30,9 @@ SQL
 
     public function down()
     {
+        if ($this->getAdapter()->getAdapterType() !== 'pgsql') {
+            return;
+        }
         if (!$this->hasTable('financeiro_bancos')) {
             return;
         }
@@ -35,7 +41,7 @@ SQL
 UPDATE financeiro_bancos
 SET nome = 'BANCOOB',
     modified = NOW()
-WHERE REGEXP_REPLACE(COALESCE(codigo_banco, ''), '\D', '', 'g') = '756'
+WHERE TRIM(codigo_banco) IN ('756', '0756')
   AND UPPER(TRIM(nome)) = 'SICOOB';
 SQL
         );
