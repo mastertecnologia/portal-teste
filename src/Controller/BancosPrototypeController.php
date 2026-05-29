@@ -200,6 +200,7 @@ class BancosPrototypeController extends AppController {
 				['label' => __('Transferências'), 'cur' => true],
 			];
 			$set += $this->buildTransferenciasPayload();
+			$set['abrirModalPix'] = $this->request->getQuery('nova_pix') === '1';
 			$this->set($set);
 
 			return $this->render('transferencias');
@@ -413,6 +414,106 @@ class BancosPrototypeController extends AppController {
 		}
 
 		return $this->redirect(['action' => 'view', 'transferencias']);
+	}
+
+	/**
+	 * POST — cadastra chave PIX vinculada à conta (observacoes: pix_chave:tipo:valor).
+	 */
+	public function salvarChavePix() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$data = $this->request->getData();
+		$bancoId = (int)($data['financeiro_banco_id'] ?? 0);
+		$tipo = strtolower(trim((string)($data['tipo'] ?? '')));
+		$valor = trim((string)($data['valor'] ?? ''));
+		$apelido = trim((string)($data['apelido'] ?? ''));
+		$principal = !empty($data['principal']);
+
+		if ($tipo === 'fone') {
+			$tipo = 'telefone';
+		}
+		if ($tipo === 'aleat') {
+			$tipo = 'aleatoria';
+		}
+
+		$tiposValidos = ['cnpj', 'cpf', 'email', 'telefone', 'aleatoria'];
+		if (!in_array($tipo, $tiposValidos, true)) {
+			$this->Flash->error(__('Tipo de chave PIX inválido.'));
+
+			return $this->redirect(['action' => 'view', 'transferencias', '?' => ['nova_pix' => '1']]);
+		}
+
+		if ($tipo === 'aleatoria' && $valor === '') {
+			$valor = $this->_gerarChavePixAleatoria();
+		}
+
+		if ($bancoId <= 0 || $valor === '') {
+			$this->Flash->error(__('Selecione a conta e informe a chave PIX.'));
+
+			return $this->redirect(['action' => 'view', 'transferencias', '?' => ['nova_pix' => '1']]);
+		}
+
+		try {
+			$banco = $this->FinanceiroBancos->find()
+				->where(['FinanceiroBancos.id' => $bancoId, 'FinanceiroBancos.idempresa' => $empresa])
+				->first();
+			if ($banco === null) {
+				$this->Flash->error(__('Conta bancária fora do escopo.'));
+
+				return $this->redirect(['action' => 'view', 'transferencias']);
+			}
+
+			$marker = 'pix_chave:' . $tipo . ':' . $valor;
+			$obs = trim((string)$banco->get('observacoes'));
+			if ($obs !== '' && stripos($obs, $marker) !== false) {
+				$this->Flash->warning(__('Esta chave PIX já está cadastrada nesta conta.'));
+
+				return $this->redirect(['action' => 'view', 'transferencias']);
+			}
+
+			$parts = array_values(array_filter(array_map('trim', explode('|', $obs))));
+			$parts = array_values(array_filter($parts, static function ($p) {
+				return stripos($p, 'pix_principal:') !== 0;
+			}));
+
+			if (!in_array('integracao:pix', $parts, true)) {
+				$parts[] = 'integracao:pix';
+			}
+			if ($apelido !== '') {
+				$parts[] = 'pix_apelido:' . $tipo . ':' . $valor . ':' . str_replace('|', '', $apelido);
+			}
+
+			if ($principal) {
+				array_unshift($parts, $marker);
+				array_unshift($parts, 'pix_principal:' . $tipo . ':' . $valor);
+			} else {
+				$parts[] = $marker;
+			}
+
+			$banco = $this->FinanceiroBancos->patchEntity($banco, [
+				'observacoes' => implode(' | ', $parts),
+			]);
+			if ($this->FinanceiroBancos->save($banco)) {
+				$this->Flash->success(__('Chave PIX cadastrada com sucesso.'));
+			} else {
+				$this->Flash->error(__('Não foi possível salvar a chave PIX.'));
+			}
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro ao cadastrar chave PIX.'));
+		}
+
+		return $this->redirect(['action' => 'view', 'transferencias']);
+	}
+
+	/**
+	 * Gera UUID v4 para chave PIX aleatória.
+	 */
+	protected function _gerarChavePixAleatoria(): string {
+		$bytes = random_bytes(16);
+		$bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
+		$bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
+
+		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
 	}
 
 	/**

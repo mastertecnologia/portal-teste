@@ -354,7 +354,7 @@ $empresaTitulo = $tfMeta['empresa_nome'] !== '' ? $tfMeta['empresa_nome'] : __('
 				</div>
 				<?php endforeach; endif; ?>
 			</div>
-			<button type="button" class="btn btn-ghost btn-xs" style="margin-top:10px;" onclick="alert(<?= json_encode(__('Cadastro de chaves PIX vinculado às contas bancárias (integração PIX).')) ?>)">+ <?= h(__('Cadastrar nova chave PIX')) ?></button>
+			<button type="button" class="btn btn-ghost btn-xs" style="margin-top:10px;" data-pgm-open-pix-modal onclick="return abrirCadastroPIX();">+ <?= h(__('Cadastrar nova chave PIX')) ?></button>
 		</div>
 
 		<div class="card" style="text-align:center;">
@@ -458,3 +458,13 @@ function pgmTrocarTipoTransf(btn, tipo) {
 	});
 })();
 </script>
+
+<?= $this->element('BancosPrototype/modal_conta', [
+	'bancosCatalogo' => $tfBancosCatalogo,
+	'abrirModalConta' => false,
+]) ?>
+
+<?= $this->element('BancosPrototype/modal_pix', [
+	'tfContas' => $tfContas,
+	'abrirModalPix' => !empty($abrirModalPix),
+]) ?>
