@@ -464,6 +464,20 @@ body.pgm-erp-prototype-page.pgm-bancos-modal-open {
 }
 
 /* Modal Nova conta — estilos do mock (fora de .pgm-erp-shell quando anexado ao body) */
+#modal-conta {
+	--teal: #1D9E75;
+	--teal-dark: #0F6E56;
+	--teal-light: #E1F5EE;
+	--border: #e5e4e0;
+	--border-light: #f8f8f7;
+	--text: #1a1a18;
+	--text-muted: #6b6a65;
+	--bg: #ffffff;
+	--bg-surface: #f9f9f8;
+	--radius: 8px;
+	--radius-lg: 12px;
+	--shadow-lg: 0 6px 24px rgba(0, 0, 0, .12);
+}
 #modal-conta .pgm-modal-conta-panel {
 	background: #fff;
 	border-radius: var(--radius-lg);
@@ -484,9 +498,61 @@ body.pgm-erp-prototype-page.pgm-bancos-modal-open {
 	border-top: 1px solid var(--border-light);
 	display: flex;
 	justify-content: flex-end;
+	align-items: center;
 	gap: 8px;
 	background: var(--bg-surface);
 	flex-shrink: 0;
+}
+/* Botões rodapé — mock pgm_erp_completo.html (Cancelar ghost + Cadastrar primary) */
+#modal-conta .btn {
+	padding: 7px 14px;
+	border-radius: var(--radius);
+	font-size: 12px;
+	font-weight: 500;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	transition: background .15s, border-color .15s, color .15s;
+	font-family: inherit;
+	white-space: nowrap;
+	line-height: 1.25;
+	box-shadow: none;
+	text-decoration: none;
+}
+#modal-conta .btn-sm {
+	padding: 7px 14px;
+	font-size: 12px;
+}
+#modal-conta .pgm-modal-conta-footer .btn-ghost,
+#modal-conta .pgm-modal-conta-footer button.btn-ghost {
+	background: #fff;
+	border: 1px solid var(--border);
+	color: var(--text);
+}
+#modal-conta .pgm-modal-conta-footer .btn-ghost:hover,
+#modal-conta .pgm-modal-conta-footer button.btn-ghost:hover {
+	background: var(--bg-surface);
+	border-color: var(--border);
+	color: var(--text);
+}
+#modal-conta .pgm-modal-conta-footer .btn-primary,
+#modal-conta .pgm-modal-conta-footer button.btn-primary {
+	background: var(--teal);
+	border: none;
+	color: #fff;
+}
+#modal-conta .pgm-modal-conta-footer .btn-primary:hover,
+#modal-conta .pgm-modal-conta-footer button.btn-primary:hover {
+	background: var(--teal-dark);
+	border: none;
+	color: #fff;
+}
+#modal-conta .pgm-modal-conta-footer .btn-primary:focus,
+#modal-conta .pgm-modal-conta-footer .btn-ghost:focus {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(29, 158, 117, .2);
 }
 #modal-conta .field {
 	display: flex;

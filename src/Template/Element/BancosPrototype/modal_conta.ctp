@@ -226,8 +226,8 @@ $bancoOptions = array_reduce($bancosCatalogo, static function ($acc, $b) {
 		</div>
 
 		<div class="pgm-modal-conta-footer">
-			<button type="button" class="btn btn-ghost btn-sm" data-pgm-close-modal="modal-conta" onclick="return closeModalOrc('modal-conta');"><?= h(__('Cancelar')) ?></button>
-			<button type="submit" class="btn btn-primary btn-sm">✓ <?= h(__('Cadastrar conta')) ?></button>
+			<button type="button" class="btn btn-ghost btn-sm pgm-modal-conta-btn-cancel" data-pgm-close-modal="modal-conta" onclick="return closeModalOrc('modal-conta');"><?= h(__('Cancelar')) ?></button>
+			<button type="submit" class="btn btn-primary btn-sm pgm-modal-conta-btn-submit"><span aria-hidden="true">✓</span> <?= h(__('Cadastrar conta')) ?></button>
 		</div>
 		<?= $this->Form->end() ?>
 	</div>
