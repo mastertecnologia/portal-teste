@@ -1214,11 +1214,26 @@ body.pgm-erp-prototype-page .pgm-erp-topbar-avatar {
 }
 .pgm-erp-shell .mov-row {
 	display: grid;
-	grid-template-columns: 72px 32px 1fr auto auto;
+	grid-template-columns: 80px 60px 1fr 130px 130px;
 	gap: 12px;
 	align-items: center;
-	padding: 12px 18px;
+	padding: 10px 14px;
 	border-bottom: 1px solid var(--border-light);
+	transition: background .12s;
+	cursor: pointer;
+}
+.pgm-erp-shell .mov-row:hover { background: var(--bg-surface); }
+.pgm-erp-shell .mov-row:last-child { border-bottom: none; }
+.pgm-erp-shell .mov-row.mov-row-head,
+.pgm-erp-shell .mov-row[style*="cursor:default"] { cursor: default; }
+.pgm-erp-shell .mov-row.mov-row-head:hover { background: transparent; }
+.pgm-erp-shell .mov-row.mov-row-head {
+	background: var(--bg-surface);
+	font-size: 10px;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	font-weight: 600;
+	letter-spacing: .4px;
 }
 .pgm-erp-shell .mov-icon {
 	width: 32px;
@@ -1228,10 +1243,29 @@ body.pgm-erp-prototype-page .pgm-erp-topbar-avatar {
 	align-items: center;
 	justify-content: center;
 	font-size: 14px;
-	font-weight: 600;
+	flex-shrink: 0;
 }
 .pgm-erp-shell .mov-icon.in { background: var(--teal-light); color: var(--teal-dark); }
 .pgm-erp-shell .mov-icon.out { background: #F8D8DA; color: #7A1822; }
-.pgm-erp-shell .mov-valor { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pgm-erp-shell .mov-icon.tra { background: var(--blue-light); color: #0C447C; }
+.pgm-erp-shell .mov-icon.tar { background: #FAEEDA; color: #8A4D02; }
+.pgm-erp-shell .mov-valor { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
 .pgm-erp-shell .mov-valor.in { color: var(--teal-dark); }
 .pgm-erp-shell .mov-valor.out { color: #7A1822; }
+.pgm-erp-shell .bank-tab {
+	padding: 8px 14px;
+	font-size: 12px;
+	cursor: pointer;
+	border-radius: var(--radius);
+	color: var(--text-muted);
+	font-weight: 500;
+	transition: all .15s;
+	text-decoration: none;
+	display: inline-block;
+}
+.pgm-erp-shell .bank-tab:hover { background: var(--bg-surface); color: var(--text); text-decoration: none; }
+.pgm-erp-shell .bank-tab.active { background: var(--teal); color: #fff; }
+.pgm-erp-shell .b-conciliada { background: #D4F0E5; color: #085041; }
+.pgm-erp-shell .b-pendente-conc { background: #FAEEDA; color: #633806; }
+.pgm-erp-shell .b-divergente { background: #F8D8DA; color: #7A1822; }
+.pgm-erp-shell .tabs .tab { text-decoration: none; color: inherit; }
