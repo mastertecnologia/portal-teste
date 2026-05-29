@@ -6,6 +6,7 @@ namespace App\Controller;
 use App\Controller\Traits\ErpPrototypeRbacTrait;
 use App\Utility\FinanceiroBancosCatalogo;
 use App\Utility\FinanceiroBancosPrototypeUi;
+use App\Utility\FinanceiroExtratoPrototypeBuilder;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Utility\Hash;
@@ -170,6 +171,12 @@ class BancosPrototypeController extends AppController {
 		}
 
 		if ($page === 'extrato') {
+			$set['title'] = __('Extrato bancário');
+			$set['erpBreadcrumb'] = [
+				['label' => 'PGM ERP'],
+				['label' => __('Bancos'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'lista']],
+				['label' => __('Extrato'), 'cur' => true],
+			];
 			$set += $this->buildExtratoPayload();
 			$this->set($set);
 
@@ -194,13 +201,25 @@ class BancosPrototypeController extends AppController {
 	public function exportExtratoCsv() {
 		$empresa = (int)$this->Auth->user('idempresa');
 		$q = $this->request->getQueryParams();
-		$dias = (int)($q['dias'] ?? 30);
-		if ($dias <= 0 || $dias > 365) { $dias = 30; }
-		$desde = \Cake\I18n\Time::now()->subDays($dias);
-		$where = ['FinanceiroExtratoBancario.idempresa' => $empresa, 'FinanceiroExtratoBancario.data >=' => $desde];
-		if (!empty($q['conta'])) { $where['FinanceiroExtratoBancario.conta_bancaria'] = (string)$q['conta']; }
-		if (!empty($q['tipo']) && in_array($q['tipo'], ['c', 'd'], true)) {
-			$where['FinanceiroExtratoBancario.tipo'] = strtoupper((string)$q['tipo']);
+		$builder = new FinanceiroExtratoPrototypeBuilder($this->financeiroExtratoDisponivel);
+		$periodo = $builder->parsePeriodo($q);
+		$where = [
+			'FinanceiroExtratoBancario.idempresa' => $empresa,
+			'FinanceiroExtratoBancario.data >=' => $periodo['de'],
+			'FinanceiroExtratoBancario.data <=' => $periodo['ate'],
+		];
+		$refs = $builder->refsFiltroConta($empresa, (int)($q['banco'] ?? 0), trim((string)($q['conta'] ?? '')));
+		if ($refs !== []) {
+			$where['FinanceiroExtratoBancario.conta_bancaria IN'] = $refs;
+		}
+		$aba = (string)($q['aba'] ?? '');
+		if ($aba === '' && !empty($q['tipo']) && in_array($q['tipo'], ['c', 'd'], true)) {
+			$aba = $q['tipo'] === 'c' ? 'in' : 'out';
+		}
+		if ($aba === 'in') {
+			$where['FinanceiroExtratoBancario.tipo IN'] = ['C', 'c', 'credito', 'cr'];
+		} elseif ($aba === 'out') {
+			$where['FinanceiroExtratoBancario.tipo IN'] = ['D', 'd', 'debito', 'db'];
 		}
 		try {
 			$ext = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroExtratoBancario');
@@ -233,102 +252,15 @@ class BancosPrototypeController extends AppController {
 	}
 
 	/**
-	 * Extrato bancário com filtros (período, conta, tipo).
+	 * Extrato bancário com filtros avançados (período, conta, tipo, busca, paginação).
 	 *
 	 * @return array<string,mixed>
 	 */
 	protected function buildExtratoPayload(): array {
 		$empresa = (int)$this->Auth->user('idempresa');
-		$query = $this->request->getQueryParams();
-		$filtroTipo = (string)($query['tipo'] ?? '');
-		$filtroConta = trim((string)($query['conta'] ?? ''));
-		$diasFiltro = (int)($query['dias'] ?? 30);
-		if ($diasFiltro <= 0 || $diasFiltro > 365) {
-			$diasFiltro = 30;
-		}
+		$builder = new FinanceiroExtratoPrototypeBuilder($this->financeiroExtratoDisponivel);
 
-		$items = [];
-		$kpi = ['entradas' => 0.0, 'saidas' => 0.0, 'pendentes' => 0, 'total_mov' => 0];
-		$contas = [];
-
-		$schema = null;
-		try {
-			$schema = \Cake\ORM\TableRegistry::getTableLocator()->get('Empresas')->getConnection()->getSchemaCollection()->listTables();
-		} catch (\Throwable $e) {
-		}
-
-		if ($schema !== null && in_array('financeiro_extrato_bancario', $schema, true)) {
-			try {
-				$ext = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroExtratoBancario');
-				$desde = \Cake\I18n\Time::now()->subDays($diasFiltro);
-				$where = [
-					'FinanceiroExtratoBancario.idempresa' => $empresa,
-					'FinanceiroExtratoBancario.data >=' => $desde,
-				];
-				if ($filtroConta !== '') {
-					$where['FinanceiroExtratoBancario.conta_bancaria'] = $filtroConta;
-				}
-				if (in_array($filtroTipo, ['c', 'd'], true)) {
-					$where['FinanceiroExtratoBancario.tipo'] = $filtroTipo === 'c' ? 'C' : 'D';
-				}
-				$rows = $ext->find()
-					->where($where)
-					->order(['FinanceiroExtratoBancario.data' => 'DESC'])
-					->limit(150)
-					->all();
-				foreach ($rows as $r) {
-					$valor = (float)$r->get('valor');
-					$tipo = strtolower((string)$r->get('tipo'));
-					$isEntrada = $tipo === 'c' || $tipo === 'credito' || $tipo === 'cr';
-					if ($isEntrada) {
-						$kpi['entradas'] += abs($valor);
-					} else {
-						$kpi['saidas'] += abs($valor);
-					}
-					if ((int)$r->get('conciliado') === 0 && (int)$r->get('financeiro_lancamento_id') === 0) {
-						$kpi['pendentes']++;
-					}
-					$kpi['total_mov']++;
-					$items[] = [
-						'id' => (int)$r->get('id'),
-						'data' => $r->get('data'),
-						'descricao' => (string)$r->get('descricao'),
-						'tipo' => $tipo,
-						'is_entrada' => $isEntrada,
-						'valor' => abs($valor),
-						'conta' => (string)$r->get('conta_bancaria'),
-						'origem' => (string)$r->get('origem'),
-						'fitid' => (string)$r->get('fitid'),
-						'conciliado' => (int)$r->get('conciliado') === 1 || (int)$r->get('financeiro_lancamento_id') > 0,
-					];
-				}
-
-				$rowsContas = $ext->find()
-					->select(['conta_bancaria'])
-					->where(['FinanceiroExtratoBancario.idempresa' => $empresa])
-					->group(['conta_bancaria'])
-					->extract('conta_bancaria')
-					->toList();
-				foreach ($rowsContas as $c) {
-					$c = (string)$c;
-					if ($c !== '') {
-						$contas[] = $c;
-					}
-				}
-			} catch (\Throwable $e) {
-			}
-		}
-
-		return [
-			'extKpi' => $kpi,
-			'extItems' => $items,
-			'extContas' => $contas,
-			'extFiltros' => [
-				'tipo' => $filtroTipo,
-				'conta' => $filtroConta,
-				'dias' => $diasFiltro,
-			],
-		];
+		return $builder->build($empresa, $this->request);
 	}
 
 	/**
