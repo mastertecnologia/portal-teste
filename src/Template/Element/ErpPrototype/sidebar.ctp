@@ -121,6 +121,8 @@ $sections = [
 			['key' => 'extrato', 'label' => __('Extrato'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'view', 'extrato']],
 			['key' => 'conciliacao', 'label' => __('Conciliação'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']],
 			['key' => 'transferencias', 'label' => __('Transferências / PIX'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'view', 'transferencias']],
+			['key' => 'remessa', 'label' => __('Remessa CNAB'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'view', 'remessa']],
+			['key' => 'retorno', 'label' => __('Retorno bancário'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'view', 'retorno']],
 			['key' => 'fluxo-caixa', 'label' => __('Fluxo de Caixa'), 'url' => ['controller' => 'BancosPrototype', 'action' => 'view', 'fluxo-caixa']],
 		],
 	],

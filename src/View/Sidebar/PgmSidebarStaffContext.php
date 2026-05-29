@@ -66,8 +66,10 @@ final class PgmSidebarStaffContext
         $finCcAct = ($ctrl === 'FinanceiroConfig' && in_array($act, ['centrosCusto', 'centroCustoAdd', 'centroCustoEdit'], true));
         $finBancosAct = PortalUi::isBancosNavActive($ctrl, $act)
             || ($ctrl === 'FinanceiroBancos' && in_array($act, ['cadastrar', 'add', 'edit', 'delete', 'buscarCatalogo', 'bootstrapBancoPorCodigo'], true));
-        $finRemessaAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['remessa', 'remessaMultiempresas'], true));
-        $finRetornoAct = ($ctrl === 'FinanceiroBancos' && $act === 'retorno');
+        $finRemessaAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['remessa', 'remessaMultiempresas'], true))
+            || ($ctrl === 'BancosPrototype' && $act === 'view' && $erpViewPage === 'remessa');
+        $finRetornoAct = ($ctrl === 'FinanceiroBancos' && $act === 'retorno')
+            || ($ctrl === 'BancosPrototype' && $act === 'view' && $erpViewPage === 'retorno');
         $finRelBancosAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['relatorios', 'relacaoBancos', 'relacaoRemessas', 'historicoRetorno', 'previsaoRecebimentosPorBanco', 'previsaoPorBancos'], true));
 
         $fiscalDashAct = ($ctrl === 'Fiscal' && $act === 'index');

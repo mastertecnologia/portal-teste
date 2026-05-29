@@ -482,8 +482,8 @@ final class PgmSidebarStaffNavRegistry
             $mkItem('git-compare', ' Conciliação', ['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao'], ['data-turbo' => 'false'], self::ctrlActive($ctx, 'BancosPrototype', ['view'], 'conciliacao'), '', 'Conciliação bancária'),
             $mkItem('arrow-left-right', ' Transferências / PIX', ['controller' => 'BancosPrototype', 'action' => 'view', 'transferencias'], ['data-turbo' => 'false'], self::ctrlActive($ctx, 'BancosPrototype', ['view'], 'transferencias'), '', 'Transferências'),
             $mkItem('trending-up', ' Fluxo de caixa (bancos)', ['controller' => 'BancosPrototype', 'action' => 'view', 'fluxo-caixa'], ['data-turbo' => 'false'], self::ctrlActive($ctx, 'BancosPrototype', ['view'], 'fluxo-caixa'), '', 'Fluxo bancos'),
-            $mkItem('send', ' Remessa', ['controller' => 'FinanceiroBancos', 'action' => 'remessa'], ['data-turbo' => 'false'], (bool)($ctx['finRemessaAct'] ?? false), '', 'Remessa'),
-            $mkItem('inbox', ' Retorno', ['controller' => 'FinanceiroBancos', 'action' => 'retorno'], ['data-turbo' => 'false'], (bool)($ctx['finRetornoAct'] ?? false), '', 'Retorno'),
+            $mkItem('send', ' Remessa', ['controller' => 'BancosPrototype', 'action' => 'view', 'remessa'], ['data-turbo' => 'false'], (bool)($ctx['finRemessaAct'] ?? false), '', 'Remessa'),
+            $mkItem('inbox', ' Retorno', ['controller' => 'BancosPrototype', 'action' => 'view', 'retorno'], ['data-turbo' => 'false'], (bool)($ctx['finRetornoAct'] ?? false), '', 'Retorno'),
             $mkItem('table-2', ' Relatórios bancos', ['controller' => 'FinanceiroBancos', 'action' => 'relatorios'], ['data-turbo' => 'false'], (bool)($ctx['finRelBancosAct'] ?? false), '', 'Relatórios bancos'),
         ];
         $items = array_values(array_filter($items));

@@ -315,8 +315,8 @@ final class PgmSidebarStaffPayloadBuilder
                             '',
                             'Cadastro de bancos'
                         ),
-                        self::item('send', ' Remessa', ['controller' => 'FinanceiroBancos', 'action' => 'remessa'], ['data-turbo' => 'false'], $ctx['finRemessaAct'], '', 'Remessa'),
-                        self::item('inbox', ' Retorno', ['controller' => 'FinanceiroBancos', 'action' => 'retorno'], ['data-turbo' => 'false'], $ctx['finRetornoAct'], '', 'Retorno'),
+                        self::item('send', ' Remessa', ['controller' => 'BancosPrototype', 'action' => 'view', 'remessa'], ['data-turbo' => 'false'], $ctx['finRemessaAct'], '', 'Remessa'),
+                        self::item('inbox', ' Retorno', ['controller' => 'BancosPrototype', 'action' => 'view', 'retorno'], ['data-turbo' => 'false'], $ctx['finRetornoAct'], '', 'Retorno'),
                         self::item('table-2', ' Relatórios bancos', ['controller' => 'FinanceiroBancos', 'action' => 'relatorios'], ['data-turbo' => 'false'], $ctx['finRelBancosAct'], '', 'Relatórios bancos'),
                     ],
                 ];
