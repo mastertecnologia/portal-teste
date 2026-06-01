@@ -17,6 +17,7 @@ return [
 		'pcpprototype' => 'produtos',
 		'empresasprototype' => 'empresas',
 		'sistemaprototype' => 'config',
+		'licencasprototype' => 'licencas',
 	],
 	'controller_modules' => [
 		'ClientesPrototype' => 'clientes',
@@ -30,6 +31,7 @@ return [
 		'PcpPrototype' => 'pcp',
 		'EmpresasPrototype' => 'empresas',
 		'SistemaPrototype' => 'sistema',
+		'LicencasPrototype' => 'licencas',
 		'PrototypeHistory' => 'history',
 	],
 	'modules' => [
@@ -78,6 +80,10 @@ return [
 			'view' => ['config.manage', 'config.index'],
 			'write' => ['config.manage'],
 		],
+		'licencas' => [
+			'view' => ['licencas.view', 'licencas.manage'],
+			'write' => ['licencas.manage'],
+		],
 	],
 	// controller => action (minúsculo) => chave em modules (write|pricing)
 	'write_actions' => [
@@ -109,6 +115,9 @@ return [
 			'rejeitarmatch' => 'write',
 			'conciliar' => 'write',
 			'salvarconta' => 'write',
+		],
+		'LicencasPrototype' => [
+			'salvarwizard' => 'write',
 		],
 	],
 	// Chaves do menu (sidebar.ctp item key) → códigos OR (string ou array)
@@ -172,6 +181,5 @@ return [
 		'lic-licencas' => ['licencas.view', 'licencas.manage'],
 		'lic-catalogo' => ['licencas.view', 'licencas.manage'],
 		'lic-cofre' => ['licencas.cofre.view', 'licencas.manage'],
-		'config-integracoes' => 'config.manage',
 	],
 ];

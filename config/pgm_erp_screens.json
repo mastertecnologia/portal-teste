@@ -125,7 +125,7 @@
     {
       "id": "pg-banco-novo",
       "module": "bancos",
-      "status": "planned",
+      "status": "implemented",
       "route": "/bancos-prototype/banco-novo",
       "tables": [
         "financeiro_bancos"
@@ -137,7 +137,7 @@
     {
       "id": "pg-banco-openbanking",
       "module": "bancos",
-      "status": "planned",
+      "status": "implemented",
       "route": "/bancos-prototype/banco-openbanking",
       "tables": [
         "financeiro_bancos",
@@ -162,7 +162,7 @@
     {
       "id": "pg-bancos-cadastro",
       "module": "bancos",
-      "status": "planned",
+      "status": "implemented",
       "route": "/bancos-prototype/bancos-cadastro",
       "tables": [
         "financeiro_bancos"
@@ -917,7 +917,7 @@
     {
       "id": "pg-lic-dashboard",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/dashboard",
       "tables": [
         "lic_licencas",
@@ -987,7 +987,7 @@
     {
       "id": "pg-lic-empresas",
       "module": "licencas",
-      "status": "planned",
+      "status": "bridge",
       "route": "/licencas-prototype/empresas",
       "tables": [
         "clientes",
@@ -999,7 +999,7 @@
     {
       "id": "pg-lic-fornecedor-novo",
       "module": "licencas",
-      "status": "planned",
+      "status": "bridge",
       "route": "/licencas-prototype/fornecedor-novo",
       "tables": [
         "clientes"
@@ -1010,7 +1010,7 @@
     {
       "id": "pg-lic-fornecedores",
       "module": "licencas",
-      "status": "planned",
+      "status": "bridge",
       "route": "/licencas-prototype/fornecedores",
       "tables": [
         "clientes",
@@ -1033,8 +1033,8 @@
     {
       "id": "pg-lic-licenca-detalhe",
       "module": "licencas",
-      "status": "planned",
-      "route": "/licencas-prototype/licenca-detalhe",
+      "status": "implemented",
+      "route": "/licencas-prototype/licenca-detalhe/:id",
       "tables": [
         "lic_licencas",
         "lic_assentos"
@@ -1056,7 +1056,7 @@
     {
       "id": "pg-lic-licencas",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/licencas",
       "tables": [
         "lic_licencas",
@@ -1069,7 +1069,7 @@
     {
       "id": "pg-lic-nova",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/nova",
       "tables": [
         "lic_licencas"
@@ -1080,7 +1080,7 @@
     {
       "id": "pg-lic-nova-2",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/nova-2",
       "tables": [
         "lic_licencas"
@@ -1091,7 +1091,7 @@
     {
       "id": "pg-lic-nova-3",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/nova-3",
       "tables": [
         "lic_licencas",
@@ -1103,7 +1103,7 @@
     {
       "id": "pg-lic-nova-4",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/nova-4",
       "tables": [
         "lic_licencas",

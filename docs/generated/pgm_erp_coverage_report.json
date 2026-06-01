@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-06-01T17:13:09.444686+00:00",
+  "generated_at": "2026-06-01T17:36:00.918091+00:00",
   "html_path": "/workspace/docs/referencias/pgm_erp_completo.html",
   "html_screen_count": 182,
   "registry_count": 182,
   "missing_in_registry": [],
   "placeholder_screens": [],
   "status_counts": {
-    "bridge": 62,
-    "implemented": 69,
-    "planned": 51
+    "bridge": 65,
+    "implemented": 79,
+    "planned": 38
   }
 }

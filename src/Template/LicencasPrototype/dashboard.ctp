@@ -3,20 +3,27 @@
  * @var \App\View\AppView $this
  * @var array<string,int> $licKpi
  * @var bool $licMigrationHint
- * @var array<string,array<string,string>> $licPages
  */
 $k = (array)($licKpi ?? []);
+$tiles = [
+	['licencas', __('Licenças'), 'licencas'],
+	['catalogo', __('Catálogo'), 'view'],
+	['renovacoes', __('Renovações'), 'view'],
+	['cofre', __('Cofre'), 'view'],
+	['solicitacoes', __('Solicitações'), 'view'],
+];
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
 	<div>
 		<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">PGM ERP › <?= h(__('Licenciamento')) ?></div>
 		<h1 style="font-size:22px;font-weight:600;margin:0;">🔑 <?= h(__('PGM Licenças — Painel')) ?></h1>
 	</div>
+	<?= $this->Html->link('+ ' . __('Nova licença'), ['action' => 'view', 'nova'], ['class' => 'btn btn-primary btn-sm']) ?>
 </div>
 
 <?php if (!empty($licMigrationHint)) : ?>
 <div class="alert alert-warn" style="margin-bottom:14px;">
-	<?= h(__('Execute a migration do módulo: bin/cake migrations migrate (LicModuleFoundation).')) ?>
+	<?= h(__('Execute: bin/cake migrations migrate')) ?>
 </div>
 <?php endif; ?>
 
@@ -27,13 +34,13 @@ $k = (array)($licKpi ?? []);
 </div>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
-	<?php foreach ((array)($licPages ?? []) as $slug => $meta) :
-		if ($slug === 'dashboard') {
-			continue;
-		}
+	<?php foreach ($tiles as [$slug, $label, $action]) :
+		$url = $action === 'licencas'
+			? ['action' => 'licencas']
+			: ['action' => 'view', $slug];
 		?>
-	<div class="card" style="cursor:pointer;" onclick="location.href='<?= h($this->Url->build(['action' => 'view', $slug])) ?>'">
-		<strong><?= h($meta['title'] ?? $slug) ?></strong>
-	</div>
+	<a class="card" href="<?= h($this->Url->build($url)) ?>" style="text-decoration:none;color:inherit;display:block;">
+		<strong><?= h($label) ?></strong>
+	</a>
 	<?php endforeach; ?>
 </div>

@@ -17,6 +17,14 @@ class LicLicencasTable extends Table {
 			'foreignKey' => 'idcliente',
 			'joinType' => 'INNER',
 		]);
+		$this->belongsTo('LicCatalogoProdutos', [
+			'foreignKey' => 'idcatalogo',
+			'joinType' => 'LEFT',
+		]);
+		$this->hasMany('LicAssentos', [
+			'foreignKey' => 'idlicenca',
+			'dependent' => true,
+		]);
 	}
 
 	public function validationDefault(Validator $validator) {

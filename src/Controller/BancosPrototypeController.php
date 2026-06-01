@@ -142,6 +142,15 @@ class BancosPrototypeController extends AppController {
 		if ($page === 'contas') {
 			return $this->contas();
 		}
+		if ($page === 'bancos-cadastro') {
+			return $this->redirect(['action' => 'contas']);
+		}
+		if ($page === 'banco-novo') {
+			return $this->redirect(['action' => 'lista', '?' => ['nova' => '1']]);
+		}
+		if ($page === 'banco-openbanking') {
+			return $this->redirect(['action' => 'extrato']);
+		}
 		$allowed = ['contas', 'extrato', 'conciliacao', 'transferencias', 'fluxo-caixa', 'remessa', 'retorno'];
 		if (!in_array($page, $allowed, true)) {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));

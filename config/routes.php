@@ -890,6 +890,18 @@ Router::scope("/", function ($routes) {
         "controller" => "LicencasPrototype",
         "action" => "dashboard",
     ]);
+    $routes->connect("/licencas-prototype/licencas", [
+        "controller" => "LicencasPrototype",
+        "action" => "licencas",
+    ]);
+    $routes->connect("/licencas-prototype/licenca-detalhe/:id", [
+        "controller" => "LicencasPrototype",
+        "action" => "licencaDetalhe",
+    ], ["pass" => ["id"], "id" => "\d+"]);
+    $routes->connect("/licencas-prototype/salvar-wizard", [
+        "controller" => "LicencasPrototype",
+        "action" => "salvarWizard",
+    ]);
     $routes->connect("/licencas-prototype/:page", [
         "controller" => "LicencasPrototype",
         "action" => "view",
