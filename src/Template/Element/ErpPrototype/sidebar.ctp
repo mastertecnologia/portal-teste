@@ -105,6 +105,7 @@ $sections = [
 		'items' => [
 			['key' => 'lic-dashboard', 'label' => __('Painel · Licenças'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'dashboard']],
 			['key' => 'lic-empresas', 'label' => __('Empresas-cliente'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'empresas'], 'indent' => true],
+			['key' => 'lic-fornecedores', 'label' => __('Fornecedores'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'fornecedores'], 'indent' => true],
 			['key' => 'lic-licencas', 'label' => __('Licenças'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'licencas'], 'indent' => true],
 			['key' => 'lic-catalogo', 'label' => __('Catálogo'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'catalogo'], 'indent' => true],
 			['key' => 'lic-renovacoes', 'label' => __('Renovações'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'renovacoes'], 'indent' => true],
