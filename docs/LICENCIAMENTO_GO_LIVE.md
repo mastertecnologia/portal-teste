@@ -44,3 +44,9 @@ LICENCAS_CANONICAL_ROUTES=0
 - Branch de trabalho: `main`
 - Não commitar `config/app_local.php` nem `.env`
 - Antes de `git pull`, descartar alterações locais em `docs/generated/*` se necessário
+
+## Homologação e seed
+
+- Checklist UAT: `docs/LICENCIAMENTO_HOMOLOGACAO_UAT.md`
+- Estatísticas: `bin/cake licencas stats --idempresa=N`
+- Dados demo (só homologação): `bin/cake licencas seed_demo --idempresa=N`
