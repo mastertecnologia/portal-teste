@@ -1,6 +1,6 @@
 # Cobertura de telas — PGM ERP Completo
 
-Gerado em: 2026-06-01 17:36 UTC
+Gerado em: 2026-06-01 19:44 UTC
 Referência HTML: `docs/referencias/pgm_erp_completo.html`
 Registry: `config/pgm_erp_screens.json`
 
@@ -10,10 +10,10 @@ Registry: `config/pgm_erp_screens.json`
 |---------|------:|
 | Telas `pg-*` no HTML | 182 |
 | Entradas no registry | 182 |
-| Implementadas (premium) | 79 |
+| Implementadas (premium) | 90 |
 | Bridge (legado/API intacta) | 65 |
 | Placeholder / roadmap | 0 |
-| Planejadas | 38 |
+| Planejadas | 27 |
 
 ## Matriz por módulo
 
@@ -46,19 +46,19 @@ Registry: `config/pgm_erp_screens.json`
 | fornecedores | `pg-fornecedores` | OK | `/fornecedores-prototype/lista` | clientes | none |
 | home | `pg-home` | OK | `/erp-home-prototype` | orcamentos, ordensservico, tickets, clientes, faturas | none |
 | licencas | `pg-lic-auditoria` | PLANNED | `/licencas-prototype/auditoria` | lic_auditoria_eventos, audit_logs | none |
-| licencas | `pg-lic-calendario` | PLANNED | `/licencas-prototype/calendario` | lic_licencas | none |
-| licencas | `pg-lic-catalogo` | PLANNED | `/licencas-prototype/catalogo` | lic_catalogo_produtos, lic_categorias | none |
-| licencas | `pg-lic-categoria-editar` | PLANNED | `/licencas-prototype/categoria-editar` | lic_categorias | none |
-| licencas | `pg-lic-categorias` | PLANNED | `/licencas-prototype/categorias` | lic_categorias | none |
+| licencas | `pg-lic-calendario` | OK | `/licencas-prototype/calendario` | lic_licencas | none |
+| licencas | `pg-lic-catalogo` | OK | `/licencas-prototype/catalogo` | lic_catalogo_produtos, lic_categorias | none |
+| licencas | `pg-lic-categoria-editar` | OK | `/licencas-prototype/categoria-editar` | lic_categorias | none |
+| licencas | `pg-lic-categorias` | OK | `/licencas-prototype/categorias` | lic_categorias | none |
 | licencas | `pg-lic-cofre` | PLANNED | `/licencas-prototype/cofre` | lic_cofre_itens | none |
 | licencas | `pg-lic-cofre-editar` | PLANNED | `/licencas-prototype/cofre-editar` | lic_cofre_itens | none |
 | licencas | `pg-lic-cofre-item` | PLANNED | `/licencas-prototype/cofre-item` | lic_cofre_itens | none |
 | licencas | `pg-lic-cofre-novo` | PLANNED | `/licencas-prototype/cofre-novo` | lic_cofre_itens | none |
 | licencas | `pg-lic-config` | PLANNED | `/licencas-prototype/config` | lic_licencas | none |
 | licencas | `pg-lic-dashboard` | OK | `/licencas-prototype/dashboard` | lic_licencas, lic_dispositivos, clientes | none |
-| licencas | `pg-lic-dispositivo-detalhe` | PLANNED | `/licencas-prototype/dispositivo-detalhe` | lic_dispositivos | none |
-| licencas | `pg-lic-dispositivo-novo` | PLANNED | `/licencas-prototype/dispositivo-novo` | lic_dispositivos | none |
-| licencas | `pg-lic-dispositivos` | PLANNED | `/licencas-prototype/dispositivos` | lic_dispositivos, clientes | none |
+| licencas | `pg-lic-dispositivo-detalhe` | OK | `/licencas-prototype/dispositivo-detalhe` | lic_dispositivos | none |
+| licencas | `pg-lic-dispositivo-novo` | OK | `/licencas-prototype/dispositivo-novo` | lic_dispositivos | none |
+| licencas | `pg-lic-dispositivos` | OK | `/licencas-prototype/dispositivos` | lic_dispositivos, clientes | none |
 | licencas | `pg-lic-empresa-detalhe` | PLANNED | `/licencas-prototype/empresa-detalhe` | clientes, lic_licencas | none |
 | licencas | `pg-lic-empresa-nova` | PLANNED | `/licencas-prototype/empresa-nova` | clientes | none |
 | licencas | `pg-lic-empresas` | BRIDGE | `/licencas-prototype/empresas` | clientes, lic_licencas | none |
@@ -78,11 +78,11 @@ Registry: `config/pgm_erp_screens.json`
 | licencas | `pg-lic-portal-licencas` | PLANNED | `/licencas-prototype/portal-licencas` | lic_licencas | none |
 | licencas | `pg-lic-portal-solicitacao-acompanhar` | PLANNED | `/licencas-prototype/portal-solicitacao-acompanhar` | lic_solicitacoes | none |
 | licencas | `pg-lic-portal-solicitar` | PLANNED | `/licencas-prototype/portal-solicitar` | lic_solicitacoes | none |
-| licencas | `pg-lic-produto-detalhe` | PLANNED | `/licencas-prototype/produto-detalhe` | lic_catalogo_produtos | none |
-| licencas | `pg-lic-produto-editar` | PLANNED | `/licencas-prototype/produto-editar` | lic_catalogo_produtos | none |
-| licencas | `pg-lic-produto-novo` | PLANNED | `/licencas-prototype/produto-novo` | lic_catalogo_produtos | none |
+| licencas | `pg-lic-produto-detalhe` | OK | `/licencas-prototype/produto-detalhe` | lic_catalogo_produtos | none |
+| licencas | `pg-lic-produto-editar` | OK | `/licencas-prototype/produto-editar` | lic_catalogo_produtos | none |
+| licencas | `pg-lic-produto-novo` | OK | `/licencas-prototype/produto-novo` | lic_catalogo_produtos | none |
 | licencas | `pg-lic-relatorios` | PLANNED | `/licencas-prototype/relatorios` | lic_licencas | none |
-| licencas | `pg-lic-renovacoes` | PLANNED | `/licencas-prototype/renovacoes` | lic_licencas | none |
+| licencas | `pg-lic-renovacoes` | OK | `/licencas-prototype/renovacoes` | lic_licencas | none |
 | licencas | `pg-lic-solicitacoes` | PLANNED | `/licencas-prototype/solicitacoes` | lic_solicitacoes | none |
 | orcamentos | `pg-esign` | BRIDGE | `/orcamentos-prototype/esign` | orcamentos, orcamentositens, clientes | none |
 | orcamentos | `pg-lista` | OK | `/orcamentos-prototype/lista` | orcamentos, orcamentositens, clientes | none |

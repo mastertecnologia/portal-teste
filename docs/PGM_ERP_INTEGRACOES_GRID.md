@@ -1,6 +1,6 @@
 # Integrações Grid ERP — mapa por tela e endpoint
 
-Gerado em: 2026-06-01 17:36 UTC
+Gerado em: 2026-06-01 19:44 UTC
 
 > **Regra:** contratos de API existentes (`listAPI`, `addAPI`, `refreshAPI`, SOAP `.wso`) **não são alterados**.
 > Telas premium consomem os mesmos dados via ORM ou delegam ao controller legado (bridge).

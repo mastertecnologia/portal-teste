@@ -9,6 +9,8 @@ $tiles = [
 	['licencas', __('Licenças'), 'licencas'],
 	['catalogo', __('Catálogo'), 'view'],
 	['renovacoes', __('Renovações'), 'view'],
+	['calendario', __('Calendário'), 'view'],
+	['dispositivos', __('Dispositivos'), 'view'],
 	['cofre', __('Cofre'), 'view'],
 	['solicitacoes', __('Solicitações'), 'view'],
 ];
