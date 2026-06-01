@@ -1010,7 +1010,7 @@
     {
       "id": "pg-lic-fornecedores",
       "module": "licencas",
-      "status": "bridge",
+      "status": "implemented",
       "route": "/licencas-prototype/fornecedores",
       "tables": [
         "clientes",

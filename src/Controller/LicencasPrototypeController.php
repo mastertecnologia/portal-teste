@@ -140,7 +140,10 @@ class LicencasPrototypeController extends AppController {
 			return $this->licencaDetalhe((int)$this->request->getQuery('id', 0));
 		}
 		if ($page === 'fornecedores') {
-			return $this->redirect(['controller' => 'FornecedoresPrototype', 'action' => 'lista']);
+			return $this->fornecedores();
+		}
+		if ($page === 'fornecedor-detalhe') {
+			return $this->fornecedorDetalhe((int)$this->request->getQuery('id', 0));
 		}
 		if ($page === 'fornecedor-novo') {
 			return $this->redirect(['controller' => 'FornecedoresPrototype', 'action' => 'view', 'novo']);
@@ -742,6 +745,32 @@ class LicencasPrototypeController extends AppController {
 		return $this->render('licenca_versoes');
 	}
 
+
+
+	protected function fornecedores() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$this->setLicPage(__('Fornecedores'), 'lic-fornecedores', [
+			'licFornecedores' => $svc->listFornecedoresResumo(),
+		]);
+		return $this->render('fornecedores');
+	}
+
+	protected function fornecedorDetalhe(int $id) {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		if ($id <= 0) {
+			$this->Flash->error(__('Fornecedor inválido.'));
+			return $this->redirect(['action' => 'view', 'fornecedores']);
+		}
+		$row = $svc->getFornecedorResumo($id);
+		if ($row === null) {
+			$this->Flash->error(__('Fornecedor não encontrado.'));
+			return $this->redirect(['action' => 'view', 'fornecedores']);
+		}
+		$this->setLicPage($row['nome'], 'lic-fornecedores', ['licFornecedor' => $row]);
+		return $this->render('fornecedor_detalhe');
+	}
 
 	protected function empresas() {
 		$empresa = (int)$this->Auth->user('idempresa');

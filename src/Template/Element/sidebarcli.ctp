@@ -124,6 +124,10 @@
 							<?php endif; ?>
 						</ul>
 					</li>
+					<?php
+						$licCliActive = ($controllerCli === 'portallicencas') ? 'active' : '';
+					?>
+					<li class="<?= h($licCliActive) ?>"><?= $this->Html->link('<i class="fa fa-key"></i><span class="hide-menu">Licenças</span>', '/cliente/licencas', ['class' => 'waves-effect waves-dark', 'escape' => false]); ?></li>
 					<li class="<?= h($relatoriosCliActive) ?>"><?= $this->Html->link('<i class="fa fa-chart-bar"></i><span class="hide-menu">Relatórios</span>', '/cliente/relatorios', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 					<?php
 						$advCtrls = ['portalcontratos', 'portaladvancedcontracts', 'portaladvancedinvoices'];

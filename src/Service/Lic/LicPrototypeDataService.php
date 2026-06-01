@@ -1600,6 +1600,123 @@ class LicPrototypeDataService {
 		];
 	}
 
+
+	/**
+	 * Fornecedores (clientes PJ) com vínculo ao catálogo/licenças.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listFornecedoresResumo(int $limit = 80): array {
+		if (!$this->tablesAvailable() || $this->idempresa <= 0) {
+			return [];
+		}
+		$loc = TableRegistry::getTableLocator();
+		$pjTipo = defined('C_ClientesTipoJuridica') ? (int)C_ClientesTipoJuridica : 2;
+		$fornecedores = [];
+		try {
+			foreach ($loc->get('Clientes')->find()
+				->where(['Clientes.idempresa' => $this->idempresa, 'Clientes.tipo' => $pjTipo, 'Clientes.inativo' => 0])
+				->order(['Clientes.razaosocial' => 'ASC'])
+				->limit($limit)
+				->all() as $c) {
+				$fornecedores[(int)$c->get('id')] = $c;
+			}
+		} catch (\Throwable $e) {
+			return [];
+		}
+		if ($fornecedores === []) {
+			return [];
+		}
+		$ids = array_keys($fornecedores);
+		$prodCounts = [];
+		$licCounts = [];
+		if ($loc->exists('LicCatalogoProdutos')) {
+			try {
+				foreach ($loc->get('LicCatalogoProdutos')->find()
+					->select(['id', 'idfornecedor_cliente'])
+					->where(['idempresa' => $this->idempresa, 'idfornecedor_cliente IN' => $ids])
+					->all() as $prod) {
+					$fid = (int)$prod->get('idfornecedor_cliente');
+					$prodCounts[$fid] = ($prodCounts[$fid] ?? 0) + 1;
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		$lic = $this->licTable();
+		if ($lic !== null && $loc->exists('LicCatalogoProdutos')) {
+			try {
+				foreach ($lic->find()
+					->select(['LicLicencas.id', 'LicCatalogoProdutos.idfornecedor_cliente'])
+					->contain(['LicCatalogoProdutos'])
+					->where(['LicLicencas.idempresa' => $this->idempresa])
+					->all() as $row) {
+					$prod = $row->get('lic_catalogo_produto');
+					if ($prod === null) {
+						continue;
+					}
+					$fid = (int)$prod->get('idfornecedor_cliente');
+					if ($fid <= 0) {
+						continue;
+					}
+					$licCounts[$fid] = ($licCounts[$fid] ?? 0) + 1;
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		$out = [];
+		foreach ($fornecedores as $fid => $c) {
+			$out[] = [
+				'id' => $fid,
+				'nome' => $this->clienteNomeFromEntity($c),
+				'cnpj' => (string)($c->get('cnpj') ?? ''),
+				'email' => (string)($c->get('email') ?? ''),
+				'produtos_catalogo' => (int)($prodCounts[$fid] ?? 0),
+				'licencas' => (int)($licCounts[$fid] ?? 0),
+			];
+		}
+		usort($out, static function ($a, $b) {
+			return ($b['produtos_catalogo'] <=> $a['produtos_catalogo']) ?: strcmp((string)$a['nome'], (string)$b['nome']);
+		});
+
+		return $out;
+	}
+
+	/**
+	 * @return array<string,mixed>|null
+	 */
+	public function getFornecedorResumo(int $idfornecedor): ?array {
+		foreach ($this->listFornecedoresResumo(500) as $row) {
+			if ((int)$row['id'] === $idfornecedor) {
+				$loc = TableRegistry::getTableLocator();
+				$produtos = [];
+				if ($loc->exists('LicCatalogoProdutos')) {
+					try {
+						foreach ($loc->get('LicCatalogoProdutos')->find()
+							->where([
+								'idempresa' => $this->idempresa,
+								'idfornecedor_cliente' => $idfornecedor,
+							])
+							->order(['nome' => 'ASC'])
+							->limit(50)
+							->all() as $p) {
+							$produtos[] = [
+								'id' => (int)$p->get('id'),
+								'nome' => (string)$p->get('nome'),
+								'sku' => (string)($p->get('sku') ?? ''),
+							];
+						}
+					} catch (\Throwable $e) {
+					}
+				}
+				$row['produtos'] = $produtos;
+
+				return $row;
+			}
+		}
+
+		return null;
+	}
+
 	/**
 	 * @return \App\Model\Table\LicLicencasTable|null
 	 */
