@@ -121,6 +121,9 @@ return [
 			'salvarcatalogoproduto' => 'write',
 			'salvarcategoria' => 'write',
 			'salvardispositivo' => 'write',
+			'salvarcofre' => 'write',
+			'atualizarsolicitacao' => 'write',
+			'salvarconfig' => 'write',
 		],
 	],
 	// Chaves do menu (sidebar.ctp item key) → códigos OR (string ou array)
@@ -184,5 +187,9 @@ return [
 		'lic-licencas' => ['licencas.view', 'licencas.manage'],
 		'lic-catalogo' => ['licencas.view', 'licencas.manage'],
 		'lic-cofre' => ['licencas.cofre.view', 'licencas.manage'],
+		'lic-renovacoes' => ['licencas.view', 'licencas.manage'],
+		'lic-solicitacoes' => ['licencas.view', 'licencas.manage'],
+		'lic-auditoria' => ['licencas.manage'],
+		'lic-config' => ['licencas.manage'],
 	],
 ];

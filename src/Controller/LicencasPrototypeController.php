@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Controller\Traits\ErpPrototypeRbacTrait;
 use App\Service\Lic\LicPrototypeDataService;
+use App\Utility\RbacChecker;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 
@@ -187,6 +188,29 @@ class LicencasPrototypeController extends AppController {
 		}
 		if ($page === 'dispositivo-detalhe') {
 			return $this->dispositivoDetalhe((int)$this->request->getQuery('id', 0));
+		}
+
+
+		if ($page === 'cofre') {
+			return $this->cofre();
+		}
+		if ($page === 'cofre-novo') {
+			return $this->cofreForm(null);
+		}
+		if ($page === 'cofre-editar') {
+			return $this->cofreForm((int)$this->request->getQuery('id', 0));
+		}
+		if ($page === 'cofre-item') {
+			return $this->cofreItem((int)$this->request->getQuery('id', 0));
+		}
+		if ($page === 'solicitacoes') {
+			return $this->solicitacoes();
+		}
+		if ($page === 'auditoria') {
+			return $this->auditoria();
+		}
+		if ($page === 'config') {
+			return $this->configModulo();
 		}
 
 		$wizard = ['nova' => 1, 'nova-2' => 2, 'nova-3' => 3, 'nova-4' => 4];
@@ -489,6 +513,161 @@ class LicencasPrototypeController extends AppController {
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
 			'licMigrationHint' => !$svc->tablesAvailable(),
 		], $extra));
+	}
+
+
+	public function salvarCofre() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		if (!$svc->tablesAvailable()) {
+			$this->Flash->error(__('Migration lic_* pendente.'));
+			return $this->redirect(['action' => 'dashboard']);
+		}
+		$data = $this->request->getData();
+		$data['iduser'] = (int)$this->Auth->user('id');
+		$id = (int)$this->request->getData('id', 0);
+		$result = $svc->saveCofreItem($data, $id > 0 ? $id : null);
+		if (empty($result['ok'])) {
+			$this->Flash->error(__('Não foi possível salvar o item do cofre.'));
+			return $this->redirect(['action' => 'view', $id > 0 ? 'cofre-editar' : 'cofre-novo', '?' => $id > 0 ? ['id' => $id] : []]);
+		}
+		$newId = (int)($result['id'] ?? $id);
+		$this->Flash->success(__('Item do cofre salvo.'));
+		return $this->redirect(['action' => 'view', 'cofre-item', '?' => ['id' => $newId]]);
+	}
+
+	public function revelarCofreSegredo() {
+		$this->request->allowMethod(['post']);
+		$userId = (int)$this->Auth->user('id');
+		$admin = !empty($this->Auth->user('admin'));
+		if (!$admin && !RbacChecker::userHasPermissionCode($userId, 'licencas.cofre.secret')) {
+			$this->Flash->error(__('Sem permissão para revelar credenciais.'));
+			return $this->redirect(['action' => 'view', 'cofre']);
+		}
+		$id = (int)$this->request->getData('id', 0);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$secret = $svc->revealCofreSecret($id, $userId, (string)$this->request->clientIp());
+		if ($secret === null || $secret === '') {
+			$this->Flash->error(__('Segredo indisponível ou item não encontrado.'));
+			return $this->redirect(['action' => 'view', 'cofre-item', '?' => ['id' => $id]]);
+		}
+		$this->getRequest()->getSession()->write('LicCofreReveal.' . $id, $secret);
+		$this->Flash->warning(__('Credencial revelada — exibida uma vez nesta tela.'));
+		return $this->redirect(['action' => 'view', 'cofre-item', '?' => ['id' => $id]]);
+	}
+
+	public function atualizarSolicitacao() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$id = (int)$this->request->getData('id', 0);
+		$status = (string)$this->request->getData('status', '');
+		$result = $svc->updateSolicitacaoStatus($id, $status, (int)$this->Auth->user('id'));
+		if (empty($result['ok'])) {
+			$this->Flash->error(__('Não foi possível atualizar a solicitação.'));
+		} else {
+			$this->Flash->success(__('Status atualizado.'));
+		}
+		return $this->redirect(['action' => 'view', 'solicitacoes']);
+	}
+
+	public function salvarConfig() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$result = $svc->saveModuloConfig($this->request->getData(), (int)$this->Auth->user('id'));
+		if (empty($result['ok'])) {
+			$this->Flash->error(__('Não foi possível salvar as configurações.'));
+		} else {
+			$this->Flash->success(__('Configurações salvas.'));
+		}
+		return $this->redirect(['action' => 'view', 'config']);
+	}
+
+	protected function cofre() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$filters = ['cliente' => $this->request->getQuery('cliente')];
+		$this->setLicPage(__('Cofre'), 'lic-cofre', [
+			'licCofreItens' => $svc->listCofreItens($filters),
+			'licClientes' => $svc->listClientesOptions(),
+			'licFilters' => $filters,
+			'licPodeRevelarSegredo' => $this->licPodeRevelarCofreSegredo(),
+		]);
+		return $this->render('cofre');
+	}
+
+	protected function cofreForm(?int $id) {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$item = $id !== null && $id > 0 ? $svc->getCofreItem($id) : null;
+		if ($id !== null && $id > 0 && $item === null) {
+			$this->Flash->error(__('Item não encontrado.'));
+			return $this->redirect(['action' => 'view', 'cofre']);
+		}
+		$this->setLicPage($item ? __('Editar item') : __('Novo item'), 'lic-cofre', [
+			'licCofreItem' => $item,
+			'licClientes' => $svc->listClientesOptions(),
+			'licLicencas' => $svc->listLicencas([], 80),
+		]);
+		return $this->render('cofre_form');
+	}
+
+	protected function cofreItem(int $id) {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$item = $svc->getCofreItem($id);
+		if ($item === null) {
+			$this->Flash->error(__('Item não encontrado.'));
+			return $this->redirect(['action' => 'view', 'cofre']);
+		}
+		$revealed = $this->getRequest()->getSession()->consume('LicCofreReveal.' . $id);
+		$this->setLicPage($item['titulo'], 'lic-cofre', [
+			'licCofreItem' => $item,
+			'licCofreSegredoRevelado' => is_string($revealed) ? $revealed : null,
+			'licPodeRevelarSegredo' => $this->licPodeRevelarCofreSegredo(),
+		]);
+		return $this->render('cofre_item');
+	}
+
+	protected function solicitacoes() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$filters = ['status' => $this->request->getQuery('status')];
+		$this->setLicPage(__('Solicitações'), 'lic-solicitacoes', [
+			'licSolicitacoes' => $svc->listSolicitacoes($filters),
+			'licFilters' => $filters,
+			'licStatusOpcoes' => ['aberta', 'em_analise', 'aprovada', 'recusada', 'cancelada'],
+		]);
+		return $this->render('solicitacoes');
+	}
+
+	protected function auditoria() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$this->setLicPage(__('Auditoria'), 'lic-auditoria', [
+			'licAuditoria' => $svc->listAuditoria(),
+		]);
+		return $this->render('auditoria');
+	}
+
+	protected function configModulo() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$this->setLicPage(__('Configurações'), 'lic-config', [
+			'licConfig' => $svc->getModuloConfig(),
+		]);
+		return $this->render('config_modulo');
+	}
+
+	protected function licPodeRevelarCofreSegredo(): bool {
+		if (!empty($this->Auth->user('admin'))) {
+			return true;
+		}
+
+		return RbacChecker::userHasPermissionCode((int)$this->Auth->user('id'), 'licencas.cofre.secret');
 	}
 
 	/**

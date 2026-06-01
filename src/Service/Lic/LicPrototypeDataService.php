@@ -14,8 +14,12 @@ class LicPrototypeDataService {
 	/** @var int */
 	private $idempresa;
 
-	public function __construct(int $idempresa) {
+	/** @var int|null */
+	private $idclienteScope;
+
+	public function __construct(int $idempresa, ?int $idclienteScope = null) {
 		$this->idempresa = $idempresa;
+		$this->idclienteScope = $idclienteScope !== null && $idclienteScope > 0 ? $idclienteScope : null;
 	}
 
 	public function tablesAvailable(): bool {
@@ -106,6 +110,9 @@ class LicPrototypeDataService {
 		if ($st !== '') {
 			$q->where(['LicLicencas.status' => $st]);
 		}
+		if ($this->idclienteScope !== null) {
+			$q->where(['LicLicencas.idcliente' => $this->idclienteScope]);
+		}
 		$cliente = trim((string)($filters['cliente'] ?? ''));
 		if ($cliente !== '' && ctype_digit($cliente)) {
 			$q->where(['LicLicencas.idcliente' => (int)$cliente]);
@@ -150,10 +157,14 @@ class LicPrototypeDataService {
 		if ($lic === null || $id <= 0) {
 			return null;
 		}
+		$whereLic = ['LicLicencas.id' => $id, 'LicLicencas.idempresa' => $this->idempresa];
+		if ($this->idclienteScope !== null) {
+			$whereLic['LicLicencas.idcliente'] = $this->idclienteScope;
+		}
 		try {
 			$row = $lic->find()
 				->contain(['Clientes', 'LicCatalogoProdutos', 'LicAssentos'])
-				->where(['LicLicencas.id' => $id, 'LicLicencas.idempresa' => $this->idempresa])
+				->where($whereLic)
 				->first();
 		} catch (\Throwable $e) {
 			return null;
@@ -403,7 +414,7 @@ class LicPrototypeDataService {
 		return number_format((float)$s, 2, '.', '');
 	}
 
-	protected function audit(string $acao, string $entidade, int $entidadeId, int $userId = 0): void {
+	protected function audit(string $acao, string $entidade, int $entidadeId, int $userId = 0, ?string $detalhe = null, ?string $ip = null): void {
 		$loc = TableRegistry::getTableLocator();
 		if (!$loc->exists('LicAuditoriaEventos')) {
 			return;
@@ -416,6 +427,8 @@ class LicPrototypeDataService {
 				'acao' => $acao,
 				'entidade' => $entidade,
 				'entidade_id' => $entidadeId,
+				'detalhe' => $detalhe,
+				'ip' => $ip,
 				'created' => date('Y-m-d H:i:s'),
 			], ['validate' => false]);
 			$tbl->save($entity);
@@ -810,6 +823,470 @@ class LicPrototypeDataService {
 		$this->audit('dispositivo.salvar', 'lic_dispositivos', $did, (int)($data['iduser'] ?? 0));
 
 		return ['ok' => true, 'id' => $did];
+	}
+
+
+	protected function clienteNomeFromEntity($cli): string {
+		if ($cli === null) {
+			return '';
+		}
+		return (int)$cli->get('tipo') === 2
+			? (string)($cli->get('razaosocial') ?? $cli->get('nome'))
+			: (string)$cli->get('nome');
+	}
+
+	protected function encodeSecret(?string $plain): ?string {
+		$s = trim((string)$plain);
+		if ($s === '') {
+			return null;
+		}
+
+		return base64_encode($s);
+	}
+
+	protected function decodeSecret(?string $blob): ?string {
+		if ($blob === null || $blob === '') {
+			return null;
+		}
+		$decoded = base64_decode((string)$blob, true);
+		if ($decoded === false || $decoded === '') {
+			return null;
+		}
+
+		return $decoded;
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listCofreItens(array $filters = [], int $limit = 150): array {
+		$loc = TableRegistry::getTableLocator();
+		if (!$loc->exists('LicCofreItens')) {
+			return [];
+		}
+		$q = $loc->get('LicCofreItens')->find()
+			->contain(['Clientes', 'LicLicencas'])
+			->where(['LicCofreItens.idempresa' => $this->idempresa])
+			->order(['LicCofreItens.modified' => 'DESC'])
+			->limit($limit);
+		if ($this->idclienteScope !== null) {
+			$q->where(['LicCofreItens.idcliente' => $this->idclienteScope]);
+		}
+		$cliente = (int)($filters['cliente'] ?? 0);
+		if ($cliente > 0) {
+			$q->where(['LicCofreItens.idcliente' => $cliente]);
+		}
+		$out = [];
+		foreach ($q->all() as $row) {
+			$cli = $row->get('cliente');
+			$lic = $row->get('lic_licenca');
+			$blob = $row->get('secret_blob');
+			$out[] = [
+				'id' => (int)$row->get('id'),
+				'titulo' => (string)$row->get('titulo'),
+				'nivel' => (string)$row->get('nivel'),
+				'cliente' => $this->clienteNomeFromEntity($cli),
+				'idcliente' => (int)($row->get('idcliente') ?? 0),
+				'idlicenca' => (int)($row->get('idlicenca') ?? 0),
+				'licenca_codigo' => $lic ? (string)$lic->get('codigo') : '',
+				'tem_segredo' => $blob !== null && $blob !== '',
+			];
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @return array<string,mixed>|null
+	 */
+	public function getCofreItem(int $id, bool $includeSecret = false): ?array {
+		$loc = TableRegistry::getTableLocator();
+		if (!$loc->exists('LicCofreItens') || $id <= 0) {
+			return null;
+		}
+		$where = ['LicCofreItens.id' => $id, 'LicCofreItens.idempresa' => $this->idempresa];
+		if ($this->idclienteScope !== null) {
+			$where['LicCofreItens.idcliente'] = $this->idclienteScope;
+		}
+		try {
+			$row = $loc->get('LicCofreItens')->find()
+				->contain(['Clientes', 'LicLicencas'])
+				->where($where)
+				->first();
+		} catch (\Throwable $e) {
+			return null;
+		}
+		if ($row === null) {
+			return null;
+		}
+		$cli = $row->get('cliente');
+		$lic = $row->get('lic_licenca');
+		$item = [
+			'id' => (int)$row->get('id'),
+			'titulo' => (string)$row->get('titulo'),
+			'nivel' => (string)$row->get('nivel'),
+			'idcliente' => (int)($row->get('idcliente') ?? 0),
+			'idlicenca' => (int)($row->get('idlicenca') ?? 0),
+			'cliente' => $this->clienteNomeFromEntity($cli),
+			'licenca_codigo' => $lic ? (string)$lic->get('codigo') : '',
+			'tem_segredo' => $row->get('secret_blob') !== null && $row->get('secret_blob') !== '',
+		];
+		if ($includeSecret) {
+			$item['segredo'] = $this->decodeSecret($row->get('secret_blob'));
+		}
+
+		return $item;
+	}
+
+	/**
+	 * @param array<string,mixed> $data
+	 * @return array{ok:bool,id?:int,errors?:array}
+	 */
+	public function saveCofreItem(array $data, ?int $id = null): array {
+		$loc = TableRegistry::getTableLocator();
+		if (!$loc->exists('LicCofreItens')) {
+			return ['ok' => false, 'errors' => ['_base' => __('Tabelas indisponíveis.')]];
+		}
+		$tbl = $loc->get('LicCofreItens');
+		$titulo = trim((string)($data['titulo'] ?? ''));
+		if ($titulo === '') {
+			return ['ok' => false, 'errors' => ['titulo' => __('Título obrigatório.')]];
+		}
+		$idcliente = (int)($data['idcliente'] ?? 0) ?: null;
+		if ($this->idclienteScope !== null) {
+			$idcliente = $this->idclienteScope;
+		}
+		$payload = [
+			'idempresa' => $this->idempresa,
+			'idcliente' => $idcliente,
+			'idlicenca' => (int)($data['idlicenca'] ?? 0) ?: null,
+			'titulo' => $titulo,
+			'nivel' => trim((string)($data['nivel'] ?? 'medio')) ?: 'medio',
+			'modified' => date('Y-m-d H:i:s'),
+		];
+		$segredo = trim((string)($data['segredo'] ?? ''));
+		if ($segredo !== '') {
+			$payload['secret_blob'] = $this->encodeSecret($segredo);
+		}
+		if ($id !== null && $id > 0) {
+			$entity = $tbl->find()->where(['id' => $id, 'idempresa' => $this->idempresa])->first();
+			if ($entity === null) {
+				return ['ok' => false, 'errors' => ['_base' => __('Item não encontrado.')]];
+			}
+			if ($this->idclienteScope !== null && (int)$entity->get('idcliente') !== $this->idclienteScope) {
+				return ['ok' => false, 'errors' => ['_base' => __('Acesso negado.')]];
+			}
+			$entity = $tbl->patchEntity($entity, $payload, ['validate' => false]);
+		} else {
+			$payload['created'] = date('Y-m-d H:i:s');
+			$entity = $tbl->newEntity($payload, ['validate' => false]);
+		}
+		if (!$tbl->save($entity)) {
+			return ['ok' => false, 'errors' => $entity->getErrors()];
+		}
+		$iid = (int)$entity->get('id');
+		$this->audit('cofre.salvar', 'lic_cofre_itens', $iid, (int)($data['iduser'] ?? 0));
+
+		return ['ok' => true, 'id' => $iid];
+	}
+
+	public function revealCofreSecret(int $id, int $userId, ?string $ip = null): ?string {
+		$item = $this->getCofreItem($id, true);
+		if ($item === null || empty($item['segredo'])) {
+			return null;
+		}
+		$this->audit(
+			'cofre.revelar_segredo',
+			'lic_cofre_itens',
+			$id,
+			$userId,
+			(string)($item['titulo'] ?? ''),
+			$ip
+		);
+
+		return (string)$item['segredo'];
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listSolicitacoes(array $filters = [], int $limit = 100): array {
+		$loc = TableRegistry::getTableLocator();
+		if (!$loc->exists('LicSolicitacoes')) {
+			return [];
+		}
+		$q = $loc->get('LicSolicitacoes')->find()
+			->contain(['Clientes'])
+			->where(['LicSolicitacoes.idempresa' => $this->idempresa])
+			->order(['LicSolicitacoes.created' => 'DESC'])
+			->limit($limit);
+		if ($this->idclienteScope !== null) {
+			$q->where(['LicSolicitacoes.idcliente' => $this->idclienteScope]);
+		}
+		$st = trim((string)($filters['status'] ?? ''));
+		if ($st !== '') {
+			$q->where(['LicSolicitacoes.status' => $st]);
+		}
+		$out = [];
+		foreach ($q->all() as $row) {
+			$cli = $row->get('cliente');
+			$created = $row->get('created');
+			$out[] = [
+				'id' => (int)$row->get('id'),
+				'tipo' => (string)$row->get('tipo'),
+				'status' => (string)$row->get('status'),
+				'cliente' => $this->clienteNomeFromEntity($cli),
+				'idcliente' => (int)$row->get('idcliente'),
+				'created' => $created && is_object($created) && method_exists($created, 'format')
+					? $created->format('Y-m-d H:i')
+					: (string)$created,
+				'payload' => $this->decodeSolicitacaoPayload((string)($row->get('payload_json') ?? '')),
+			];
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @return array<string,mixed>|null
+	 */
+	public function getSolicitacao(int $id): ?array {
+		$loc = TableRegistry::getTableLocator();
+		if (!$loc->exists('LicSolicitacoes') || $id <= 0) {
+			return null;
+		}
+		$where = ['LicSolicitacoes.id' => $id, 'LicSolicitacoes.idempresa' => $this->idempresa];
+		if ($this->idclienteScope !== null) {
+			$where['LicSolicitacoes.idcliente'] = $this->idclienteScope;
+		}
+		try {
+			$row = $loc->get('LicSolicitacoes')->find()
+				->contain(['Clientes'])
+				->where($where)
+				->first();
+		} catch (\Throwable $e) {
+			return null;
+		}
+		if ($row === null) {
+			return null;
+		}
+		$cli = $row->get('cliente');
+		$created = $row->get('created');
+
+		return [
+			'id' => (int)$row->get('id'),
+			'tipo' => (string)$row->get('tipo'),
+			'status' => (string)$row->get('status'),
+			'cliente' => $this->clienteNomeFromEntity($cli),
+			'idcliente' => (int)$row->get('idcliente'),
+			'created' => $created && is_object($created) && method_exists($created, 'format')
+				? $created->format('Y-m-d H:i')
+				: (string)$created,
+			'payload' => $this->decodeSolicitacaoPayload((string)($row->get('payload_json') ?? '')),
+		];
+	}
+
+	/**
+	 * @param array<string,mixed> $data
+	 * @return array{ok:bool,id?:int,errors?:array}
+	 */
+	public function createSolicitacao(array $data): array {
+		$loc = TableRegistry::getTableLocator();
+		if (!$loc->exists('LicSolicitacoes')) {
+			return ['ok' => false, 'errors' => ['_base' => __('Tabelas indisponíveis.')]];
+		}
+		$idcliente = (int)($data['idcliente'] ?? 0);
+		if ($this->idclienteScope !== null) {
+			$idcliente = $this->idclienteScope;
+		}
+		if ($idcliente <= 0) {
+			return ['ok' => false, 'errors' => ['idcliente' => __('Cliente obrigatório.')]];
+		}
+		$tipo = trim((string)($data['tipo'] ?? 'nova_licenca'));
+		if ($tipo === '') {
+			$tipo = 'nova_licenca';
+		}
+		$payload = [
+			'produto' => trim((string)($data['produto'] ?? '')),
+			'assentos' => max(1, (int)($data['assentos'] ?? 1)),
+			'observacao' => trim((string)($data['observacao'] ?? '')),
+		];
+		$tbl = $loc->get('LicSolicitacoes');
+		$entity = $tbl->newEntity([
+			'idempresa' => $this->idempresa,
+			'idcliente' => $idcliente,
+			'tipo' => $tipo,
+			'status' => 'aberta',
+			'payload_json' => json_encode($payload, JSON_UNESCAPED_UNICODE),
+			'created' => date('Y-m-d H:i:s'),
+		], ['validate' => false]);
+		if (!$tbl->save($entity)) {
+			return ['ok' => false, 'errors' => $entity->getErrors()];
+		}
+		$sid = (int)$entity->get('id');
+		$this->audit('solicitacao.criar', 'lic_solicitacoes', $sid, (int)($data['iduser'] ?? 0));
+
+		return ['ok' => true, 'id' => $sid];
+	}
+
+	/**
+	 * @return array{ok:bool,errors?:array}
+	 */
+	public function updateSolicitacaoStatus(int $id, string $status, int $userId = 0): array {
+		$loc = TableRegistry::getTableLocator();
+		if (!$loc->exists('LicSolicitacoes') || $id <= 0) {
+			return ['ok' => false, 'errors' => ['_base' => __('Indisponível.')]];
+		}
+		$allowed = ['aberta', 'em_analise', 'aprovada', 'recusada', 'cancelada'];
+		$status = trim($status);
+		if (!in_array($status, $allowed, true)) {
+			return ['ok' => false, 'errors' => ['status' => __('Status inválido.')]];
+		}
+		$tbl = $loc->get('LicSolicitacoes');
+		$row = $tbl->find()->where(['id' => $id, 'idempresa' => $this->idempresa])->first();
+		if ($row === null) {
+			return ['ok' => false, 'errors' => ['_base' => __('Solicitação não encontrada.')]];
+		}
+		$row = $tbl->patchEntity($row, [
+			'status' => $status,
+			'modified' => date('Y-m-d H:i:s'),
+		], ['validate' => false]);
+		if (!$tbl->save($row)) {
+			return ['ok' => false, 'errors' => $row->getErrors()];
+		}
+		$this->audit('solicitacao.status', 'lic_solicitacoes', $id, $userId, $status);
+
+		return ['ok' => true];
+	}
+
+	/**
+	 * @return array<string,string>
+	 */
+	protected function decodeSolicitacaoPayload(string $json): array {
+		if ($json === '') {
+			return [];
+		}
+		$decoded = json_decode($json, true);
+
+		return is_array($decoded) ? $decoded : [];
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listAuditoria(int $limit = 120): array {
+		if ($this->idclienteScope !== null) {
+			return [];
+		}
+		$loc = TableRegistry::getTableLocator();
+		if (!$loc->exists('LicAuditoriaEventos')) {
+			return [];
+		}
+		$out = [];
+		try {
+			foreach ($loc->get('LicAuditoriaEventos')->find()
+				->where(['idempresa' => $this->idempresa])
+				->order(['created' => 'DESC'])
+				->limit($limit)
+				->all() as $row) {
+				$created = $row->get('created');
+				$out[] = [
+					'id' => (int)$row->get('id'),
+					'acao' => (string)$row->get('acao'),
+					'entidade' => (string)($row->get('entidade') ?? ''),
+					'entidade_id' => (int)($row->get('entidade_id') ?? 0),
+					'detalhe' => (string)($row->get('detalhe') ?? ''),
+					'iduser' => (int)($row->get('iduser') ?? 0),
+					'ip' => (string)($row->get('ip') ?? ''),
+					'created' => $created && is_object($created) && method_exists($created, 'format')
+						? $created->format('Y-m-d H:i')
+						: (string)$created,
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	public function getModuloConfig(): array {
+		$defaults = [
+			'alerta_vencimento_dias' => 30,
+			'notificar_email' => '',
+			'cofre_exige_aprovacao' => false,
+		];
+		$loc = TableRegistry::getTableLocator();
+		if (!$loc->exists('LicModuloConfig')) {
+			return $defaults;
+		}
+		try {
+			$row = $loc->get('LicModuloConfig')->find()
+				->where(['idempresa' => $this->idempresa])
+				->first();
+		} catch (\Throwable $e) {
+			return $defaults;
+		}
+		if ($row === null) {
+			return $defaults;
+		}
+
+		return [
+			'alerta_vencimento_dias' => (int)$row->get('alerta_vencimento_dias'),
+			'notificar_email' => (string)($row->get('notificar_email') ?? ''),
+			'cofre_exige_aprovacao' => (bool)$row->get('cofre_exige_aprovacao'),
+		];
+	}
+
+	/**
+	 * @param array<string,mixed> $data
+	 * @return array{ok:bool,errors?:array}
+	 */
+	public function saveModuloConfig(array $data, int $userId = 0): array {
+		$loc = TableRegistry::getTableLocator();
+		if (!$loc->exists('LicModuloConfig')) {
+			return ['ok' => false, 'errors' => ['_base' => __('Execute a migration lic_modulo_config.')]];
+		}
+		$tbl = $loc->get('LicModuloConfig');
+		$payload = [
+			'idempresa' => $this->idempresa,
+			'alerta_vencimento_dias' => max(1, min(365, (int)($data['alerta_vencimento_dias'] ?? 30))),
+			'notificar_email' => trim((string)($data['notificar_email'] ?? '')) ?: null,
+			'cofre_exige_aprovacao' => !empty($data['cofre_exige_aprovacao']),
+			'modified' => date('Y-m-d H:i:s'),
+		];
+		$row = $tbl->find()->where(['idempresa' => $this->idempresa])->first();
+		if ($row === null) {
+			$payload['created'] = date('Y-m-d H:i:s');
+			$row = $tbl->newEntity($payload, ['validate' => false]);
+		} else {
+			$row = $tbl->patchEntity($row, $payload, ['validate' => false]);
+		}
+		if (!$tbl->save($row)) {
+			return ['ok' => false, 'errors' => $row->getErrors()];
+		}
+		$this->audit('config.salvar', 'lic_modulo_config', (int)$this->idempresa, $userId);
+
+		return ['ok' => true];
+	}
+
+	/**
+	 * KPIs resumidos para portal cliente.
+	 *
+	 * @return array<string,int>
+	 */
+	public function portalDashboardKpis(): array {
+		$licencas = $this->listLicencas(['status' => 'ativa'], 500);
+		$solicitacoes = $this->listSolicitacoes(['status' => 'aberta'], 50);
+		$cofre = $this->listCofreItens([], 500);
+
+		return [
+			'licencas_ativas' => count($licencas),
+			'solicitacoes_abertas' => count($solicitacoes),
+			'itens_cofre' => count($cofre),
+		];
 	}
 
 	/**

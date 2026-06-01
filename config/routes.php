@@ -910,6 +910,22 @@ Router::scope("/", function ($routes) {
         "controller" => "LicencasPrototype",
         "action" => "salvarDispositivo",
     ]);
+    $routes->connect("/licencas-prototype/salvar-cofre", [
+        "controller" => "LicencasPrototype",
+        "action" => "salvarCofre",
+    ]);
+    $routes->connect("/licencas-prototype/revelar-cofre-segredo", [
+        "controller" => "LicencasPrototype",
+        "action" => "revelarCofreSegredo",
+    ]);
+    $routes->connect("/licencas-prototype/atualizar-solicitacao", [
+        "controller" => "LicencasPrototype",
+        "action" => "atualizarSolicitacao",
+    ]);
+    $routes->connect("/licencas-prototype/salvar-config", [
+        "controller" => "LicencasPrototype",
+        "action" => "salvarConfig",
+    ]);
     $routes->connect("/licencas-prototype/salvar-wizard", [
         "controller" => "LicencasPrototype",
         "action" => "salvarWizard",
@@ -2324,6 +2340,35 @@ Router::scope("/", function ($routes) {
             "action" => "webhookAutentique",
         ])
         ->setMethods(["POST", "GET", "HEAD"]);
+    // Portal cliente — licenciamento (/cliente/licencas)
+    $routes->connect("/cliente/licencas", [
+        "controller" => "PortalLicencas",
+        "action" => "index",
+    ]);
+    $routes->connect("/cliente/licencas/minhas", [
+        "controller" => "PortalLicencas",
+        "action" => "licencas",
+    ]);
+    $routes->connect("/cliente/licencas/cofre", [
+        "controller" => "PortalLicencas",
+        "action" => "cofre",
+    ]);
+    $routes->connect("/cliente/licencas/solicitar", [
+        "controller" => "PortalLicencas",
+        "action" => "solicitar",
+    ]);
+    $routes
+        ->connect(
+            "/cliente/licencas/salvar-solicitacao",
+            ["controller" => "PortalLicencas", "action" => "salvarSolicitacao"],
+        )
+        ->setMethods(["POST"]);
+    $routes->connect(
+        "/cliente/licencas/solicitacao/*",
+        ["controller" => "PortalLicencas", "action" => "acompanhar"],
+        ["pass" => ["id"]],
+    );
+
     // Portal cliente — contratos (canónico /cliente/contratos)
     $routes->connect("/cliente/contratos", [
         "controller" => "PortalContratos",

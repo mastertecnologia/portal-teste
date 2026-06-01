@@ -805,7 +805,7 @@
     {
       "id": "pg-lic-auditoria",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/auditoria",
       "tables": [
         "lic_auditoria_eventos",
@@ -862,7 +862,7 @@
     {
       "id": "pg-lic-cofre",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/cofre",
       "tables": [
         "lic_cofre_itens"
@@ -873,7 +873,7 @@
     {
       "id": "pg-lic-cofre-editar",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/cofre-editar",
       "tables": [
         "lic_cofre_itens"
@@ -884,7 +884,7 @@
     {
       "id": "pg-lic-cofre-item",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/cofre-item",
       "tables": [
         "lic_cofre_itens"
@@ -895,7 +895,7 @@
     {
       "id": "pg-lic-cofre-novo",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/cofre-novo",
       "tables": [
         "lic_cofre_itens"
@@ -906,7 +906,7 @@
     {
       "id": "pg-lic-config",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/config",
       "tables": [
         "lic_licencas"
@@ -1115,8 +1115,8 @@
     {
       "id": "pg-lic-portal-cofre",
       "module": "licencas",
-      "status": "planned",
-      "route": "/licencas-prototype/portal-cofre",
+      "status": "implemented",
+      "route": "/cliente/licencas/cofre",
       "tables": [
         "lic_cofre_itens"
       ],
@@ -1126,8 +1126,8 @@
     {
       "id": "pg-lic-portal-dash",
       "module": "licencas",
-      "status": "planned",
-      "route": "/licencas-prototype/portal-dash",
+      "status": "implemented",
+      "route": "/cliente/licencas",
       "tables": [
         "lic_licencas",
         "lic_solicitacoes"
@@ -1150,8 +1150,8 @@
     {
       "id": "pg-lic-portal-licencas",
       "module": "licencas",
-      "status": "planned",
-      "route": "/licencas-prototype/portal-licencas",
+      "status": "implemented",
+      "route": "/cliente/licencas/minhas",
       "tables": [
         "lic_licencas"
       ],
@@ -1161,8 +1161,8 @@
     {
       "id": "pg-lic-portal-solicitacao-acompanhar",
       "module": "licencas",
-      "status": "planned",
-      "route": "/licencas-prototype/portal-solicitacao-acompanhar",
+      "status": "implemented",
+      "route": "/cliente/licencas/solicitacao",
       "tables": [
         "lic_solicitacoes"
       ],
@@ -1172,8 +1172,8 @@
     {
       "id": "pg-lic-portal-solicitar",
       "module": "licencas",
-      "status": "planned",
-      "route": "/licencas-prototype/portal-solicitar",
+      "status": "implemented",
+      "route": "/cliente/licencas/solicitar",
       "tables": [
         "lic_solicitacoes"
       ],
@@ -1238,7 +1238,7 @@
     {
       "id": "pg-lic-solicitacoes",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/solicitacoes",
       "tables": [
         "lic_solicitacoes"
