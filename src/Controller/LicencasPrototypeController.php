@@ -146,7 +146,10 @@ class LicencasPrototypeController extends AppController {
 			return $this->redirect(['controller' => 'FornecedoresPrototype', 'action' => 'view', 'novo']);
 		}
 		if ($page === 'empresas') {
-			return $this->redirect(['controller' => 'ClientesPrototype', 'action' => 'lista']);
+			return $this->empresas();
+		}
+		if ($page === 'empresa-detalhe') {
+			return $this->empresaDetalhe((int)$this->request->getQuery('id', 0));
 		}
 		if ($page === 'empresa-nova') {
 			return $this->redirect(['controller' => 'ClientesPrototype', 'action' => 'view', 'novo']);
@@ -737,6 +740,32 @@ class LicencasPrototypeController extends AppController {
 			'licHistorico' => $svc->listLicencaHistorico($licId),
 		]);
 		return $this->render('licenca_versoes');
+	}
+
+
+	protected function empresas() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$this->setLicPage(__('Empresas-cliente'), 'lic-empresas', [
+			'licEmpresas' => $svc->listEmpresasClienteResumo(),
+		]);
+		return $this->render('empresas');
+	}
+
+	protected function empresaDetalhe(int $id) {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		if ($id <= 0) {
+			$this->Flash->error(__('Cliente inválido.'));
+			return $this->redirect(['action' => 'view', 'empresas']);
+		}
+		$row = $svc->getEmpresaClienteResumo($id);
+		if ($row === null) {
+			$this->Flash->error(__('Cliente não encontrado.'));
+			return $this->redirect(['action' => 'view', 'empresas']);
+		}
+		$this->setLicPage($row['nome'], 'lic-empresas', ['licEmpresa' => $row]);
+		return $this->render('empresa_detalhe');
 	}
 
 	protected function licPodeRevelarCofreSegredo(): bool {

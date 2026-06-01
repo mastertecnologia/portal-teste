@@ -1474,6 +1474,132 @@ class LicPrototypeDataService {
 		return $rows;
 	}
 
+
+	/**
+	 * Empresas-cliente: resumo por cliente (ORM, sem SQL raw).
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listEmpresasClienteResumo(int $limit = 80): array {
+		if (!$this->tablesAvailable() || $this->idempresa <= 0) {
+			return [];
+		}
+		$loc = TableRegistry::getTableLocator();
+		$clientes = [];
+		try {
+			foreach ($loc->get('Clientes')->find()
+				->where(['Clientes.idempresa' => $this->idempresa, 'Clientes.inativo' => 0])
+				->order(['Clientes.nome' => 'ASC'])
+				->limit($limit)
+				->all() as $c) {
+				$clientes[(int)$c->get('id')] = $c;
+			}
+		} catch (\Throwable $e) {
+			return [];
+		}
+		if ($clientes === []) {
+			return [];
+		}
+		$ids = array_keys($clientes);
+		$licCounts = [];
+		$devCounts = [];
+		$valorAnual = [];
+		$vencidas = [];
+		$hoje = (new \DateTimeImmutable('today'))->format('Y-m-d');
+		$lic = $this->licTable();
+		if ($lic !== null) {
+			try {
+				foreach ($lic->find()
+					->select(['idcliente', 'status', 'valor_anual', 'fim'])
+					->where(['idempresa' => $this->idempresa, 'idcliente IN' => $ids])
+					->all() as $row) {
+					$cid = (int)$row->get('idcliente');
+					$licCounts[$cid] = ($licCounts[$cid] ?? 0) + 1;
+					$va = $row->get('valor_anual');
+					if ($va !== null && $va !== '') {
+						$valorAnual[$cid] = ($valorAnual[$cid] ?? 0) + (float)$va;
+					}
+					$st = (string)$row->get('status');
+					$fim = $row->get('fim');
+					$fimS = is_object($fim) && method_exists($fim, 'format') ? $fim->format('Y-m-d') : (string)$fim;
+					if ($st === 'ativa' && $fimS !== '' && $fimS < $hoje) {
+						$vencidas[$cid] = ($vencidas[$cid] ?? 0) + 1;
+					}
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		if ($loc->exists('LicDispositivos')) {
+			try {
+				foreach ($loc->get('LicDispositivos')->find()
+					->select(['idcliente'])
+					->where(['idempresa' => $this->idempresa, 'idcliente IN' => $ids])
+					->all() as $d) {
+					$cid = (int)$d->get('idcliente');
+					$devCounts[$cid] = ($devCounts[$cid] ?? 0) + 1;
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		$out = [];
+		foreach ($clientes as $cid => $c) {
+			$nome = $this->clienteNomeFromEntity($c);
+			$out[] = [
+				'id' => $cid,
+				'nome' => $nome,
+				'cnpj' => (string)($c->get('cnpj') ?? $c->get('cpf') ?? ''),
+				'email' => (string)($c->get('email') ?? ''),
+				'licencas' => (int)($licCounts[$cid] ?? 0),
+				'dispositivos' => (int)($devCounts[$cid] ?? 0),
+				'valor_anual' => (float)($valorAnual[$cid] ?? 0),
+				'vencidas' => (int)($vencidas[$cid] ?? 0),
+			];
+		}
+		usort($out, static function ($a, $b) {
+			return ($b['valor_anual'] <=> $a['valor_anual']) ?: strcmp((string)$a['nome'], (string)$b['nome']);
+		});
+
+		return $out;
+	}
+
+	/**
+	 * @return array<string,mixed>|null
+	 */
+	public function getEmpresaClienteResumo(int $idcliente): ?array {
+		if ($idcliente <= 0) {
+			return null;
+		}
+		$loc = TableRegistry::getTableLocator();
+		try {
+			$c = $loc->get('Clientes')->find()
+				->where(['Clientes.id' => $idcliente, 'Clientes.idempresa' => $this->idempresa])
+				->first();
+		} catch (\Throwable $e) {
+			return null;
+		}
+		if ($c === null) {
+			return null;
+		}
+		foreach ($this->listEmpresasClienteResumo(500) as $row) {
+			if ((int)$row['id'] === $idcliente) {
+				$row['licencas_rows'] = $this->listLicencas(['cliente' => (string)$idcliente], 30);
+
+				return $row;
+			}
+		}
+		return [
+			'id' => $idcliente,
+			'nome' => $this->clienteNomeFromEntity($c),
+			'cnpj' => (string)($c->get('cnpj') ?? $c->get('cpf') ?? ''),
+			'email' => (string)($c->get('email') ?? ''),
+			'licencas' => 0,
+			'dispositivos' => 0,
+			'valor_anual' => 0.0,
+			'vencidas' => 0,
+			'licencas_rows' => [],
+		];
+	}
+
 	/**
 	 * @return \App\Model\Table\LicLicencasTable|null
 	 */

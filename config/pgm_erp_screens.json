@@ -964,7 +964,7 @@
     {
       "id": "pg-lic-empresa-detalhe",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/empresa-detalhe",
       "tables": [
         "clientes",
@@ -976,7 +976,7 @@
     {
       "id": "pg-lic-empresa-nova",
       "module": "licencas",
-      "status": "planned",
+      "status": "bridge",
       "route": "/licencas-prototype/empresa-nova",
       "tables": [
         "clientes"
@@ -987,7 +987,7 @@
     {
       "id": "pg-lic-empresas",
       "module": "licencas",
-      "status": "bridge",
+      "status": "implemented",
       "route": "/licencas-prototype/empresas",
       "tables": [
         "clientes",
