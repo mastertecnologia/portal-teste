@@ -109,6 +109,9 @@ $sections = [
 			['key' => 'lic-catalogo', 'label' => __('Catálogo'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'catalogo'], 'indent' => true],
 			['key' => 'lic-renovacoes', 'label' => __('Renovações'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'renovacoes'], 'indent' => true],
 			['key' => 'lic-cofre', 'label' => __('Cofre'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'cofre'], 'indent' => true],
+			['key' => 'lic-solicitacoes', 'label' => __('Solicitações'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'solicitacoes'], 'indent' => true],
+			['key' => 'lic-auditoria', 'label' => __('Auditoria'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'auditoria'], 'indent' => true],
+			['key' => 'lic-config', 'label' => __('Configurações'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'config'], 'indent' => true],
 		],
 	],
 	[
