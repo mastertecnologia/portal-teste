@@ -12,4 +12,5 @@
 	<?= $this->Html->link(__('Ver licenças'), ['action' => 'licencas'], ['class' => 'btn btn-primary btn-sm']) ?>
 	<?= $this->Html->link(__('Cofre'), ['action' => 'cofre'], ['class' => 'btn btn-ghost btn-sm']) ?>
 	<?= $this->Html->link(__('Solicitar licença'), ['action' => 'solicitar'], ['class' => 'btn btn-ghost btn-sm']) ?>
+	<?= $this->Html->link(__('Financeiro'), ['action' => 'financeiro'], ['class' => 'btn btn-ghost btn-sm']) ?>
 </div>

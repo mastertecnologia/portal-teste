@@ -213,6 +213,16 @@ class LicencasPrototypeController extends AppController {
 			return $this->configModulo();
 		}
 
+		if ($page === 'inteligencia') {
+			return $this->inteligencia();
+		}
+		if ($page === 'relatorios') {
+			return $this->relatorios();
+		}
+		if ($page === 'licenca-versoes') {
+			return $this->licencaVersoes((int)$this->request->getQuery('id', 0));
+		}
+
 		$wizard = ['nova' => 1, 'nova-2' => 2, 'nova-3' => 3, 'nova-4' => 4];
 		if (isset($wizard[$page])) {
 			return $this->renderWizard($page, (int)$wizard[$page]);
@@ -660,6 +670,73 @@ class LicencasPrototypeController extends AppController {
 			'licConfig' => $svc->getModuloConfig(),
 		]);
 		return $this->render('config_modulo');
+	}
+
+
+	public function exportarRelatorio($tipo = 'licencas') {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$rows = $svc->buildRelatorioCsvRows((string)$tipo);
+		$filename = 'lic-' . preg_replace('/[^a-z0-9_-]/', '', strtolower((string)$tipo)) . '-' . date('Ymd') . '.csv';
+		$lines = [];
+		foreach ($rows as $row) {
+			$escaped = [];
+			foreach ($row as $cell) {
+				$cell = str_replace('"', '""', (string)$cell);
+				$escaped[] = '"' . $cell . '"';
+			}
+			$lines[] = implode(';', $escaped);
+		}
+		$body = "\xEF\xBB\xBF" . implode("\n", $lines);
+		$this->response = $this->response
+			->withType('text/csv')
+			->withDownload($filename)
+			->withStringBody($body);
+		$svc->logRelatorioExport((string)$tipo, (int)$this->Auth->user('id'));
+		$this->autoRender = false;
+		return $this->response;
+	}
+
+	protected function inteligencia() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$this->setLicPage(__('Inteligência'), 'lic-inteligencia', [
+			'licInteligencia' => $svc->buildInteligencia(),
+		]);
+		return $this->render('inteligencia');
+	}
+
+	protected function relatorios() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$this->setLicPage(__('Relatórios'), 'lic-relatorios', [
+			'licRelatorioTipos' => [
+				'licencas' => __('Licenças'),
+				'renovacoes' => __('Renovações'),
+				'dispositivos' => __('Dispositivos'),
+			],
+			'licKpi' => $svc->dashboardKpis(),
+		]);
+		return $this->render('relatorios');
+	}
+
+	protected function licencaVersoes(int $licId) {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		if ($licId <= 0) {
+			$this->Flash->error(__('Informe a licença.'));
+			return $this->redirect(['action' => 'licencas']);
+		}
+		$lic = $svc->getLicenca($licId);
+		if ($lic === null) {
+			$this->Flash->error(__('Licença não encontrada.'));
+			return $this->redirect(['action' => 'licencas']);
+		}
+		$this->setLicPage(__('Histórico') . ' · ' . $lic['codigo'], 'lic-licencas', [
+			'lic' => $lic,
+			'licHistorico' => $svc->listLicencaHistorico($licId),
+		]);
+		return $this->render('licenca_versoes');
 	}
 
 	protected function licPodeRevelarCofreSegredo(): bool {

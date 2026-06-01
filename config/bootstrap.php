@@ -140,6 +140,7 @@ if (file_exists(__DIR__ . DS . 'rbac.php')) {
     if (is_file($erpPrototypeRbacFile)) {
         Configure::write('ErpPrototypeRbac', include $erpPrototypeRbacFile);
     }
+    Configure::load('licencas', 'default', false);
 }
 
 if (file_exists(__DIR__ . DS . 'abac.php')) {

@@ -15,6 +15,8 @@ $tiles = [
 	['solicitacoes', __('Solicitações'), 'view'],
 	['auditoria', __('Auditoria'), 'view'],
 	['config', __('Configurações'), 'view'],
+	['inteligencia', __('Inteligência'), 'view'],
+	['relatorios', __('Relatórios'), 'view'],
 ];
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">

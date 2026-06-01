@@ -16,7 +16,9 @@ $valorFmt = $valor !== null && $valor !== '' ? 'R$ ' . number_format((float)$val
 		<h1 style="font-size:22px;font-weight:600;margin:0;">📄 <?= h($row['codigo'] ?? '') ?></h1>
 		<p style="font-size:12px;color:var(--text-muted);margin-top:4px;"><?= h($row['produto'] ?? '') ?> · <?= h($row['cliente'] ?? '') ?></p>
 	</div>
-	<div style="display:flex;gap:8px;">
+	<div style="display:flex;gap:8px;flex-wrap:wrap;">
+		<?= $this->Html->link('🕐 ' . __('Histórico'), ['action' => 'view', 'licenca-versoes', '?' => ['id' => (int)($lic['id'] ?? 0)]], ['class' => 'btn btn-ghost btn-sm']) ?>
+
 		<?php if (($row['status'] ?? '') === 'rascunho') : ?>
 			<?= $this->Html->link(__('Continuar wizard'), ['action' => 'view', 'nova-2', '?' => ['id' => (int)$row['id']]], ['class' => 'btn btn-primary btn-sm']) ?>
 		<?php endif; ?>

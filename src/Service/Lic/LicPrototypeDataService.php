@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Service\Lic;
 
 use Cake\I18n\FrozenDate;
+use App\Utility\LicCofreCipher;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -841,19 +842,11 @@ class LicPrototypeDataService {
 			return null;
 		}
 
-		return base64_encode($s);
+		return LicCofreCipher::encrypt($s);
 	}
 
 	protected function decodeSecret(?string $blob): ?string {
-		if ($blob === null || $blob === '') {
-			return null;
-		}
-		$decoded = base64_decode((string)$blob, true);
-		if ($decoded === false || $decoded === '') {
-			return null;
-		}
-
-		return $decoded;
+		return LicCofreCipher::decrypt($blob);
 	}
 
 	/**
@@ -1287,6 +1280,198 @@ class LicPrototypeDataService {
 			'solicitacoes_abertas' => count($solicitacoes),
 			'itens_cofre' => count($cofre),
 		];
+	}
+
+
+	/**
+	 * KPIs e insights derivados de lic_* (sem ML externo).
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function buildInteligencia(): array {
+		$kpis = $this->dashboardKpis();
+		$renov = $this->listRenovacoes();
+		$vencido = count($renov['vencido'] ?? []);
+		$d30 = count($renov['d30'] ?? []);
+		$custoAnual = 0.0;
+		$ociosos = 0;
+		$lic = $this->licTable();
+		if ($lic !== null) {
+			try {
+				foreach ($lic->find()
+					->where(['idempresa' => $this->idempresa, 'status' => 'ativa'])
+					->contain(['LicAssentos'])
+					->all() as $row) {
+					$va = $row->get('valor_anual');
+					if ($va !== null && $va !== '') {
+						$custoAnual += (float)$va;
+					}
+					$cap = (int)$row->get('assentos');
+					$used = 0;
+					foreach ($row->get('lic_assentos') ?? [] as $a) {
+						$em = trim((string)$a->get('email'));
+						if ($em !== '') {
+							$used++;
+						}
+					}
+					if ($cap > $used && $cap > 0) {
+						$ociosos += ($cap - $used);
+					}
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		$insights = [];
+		if ($vencido > 0) {
+			$insights[] = [
+				'severity' => 'danger',
+				'title' => __('{0} licença(s) vencida(s)', $vencido),
+				'detail' => __('Revise renovações e status no pipeline.'),
+				'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'renovacoes'],
+			];
+		}
+		if ($d30 > 0) {
+			$insights[] = [
+				'severity' => 'warn',
+				'title' => __('{0} licença(s) vencem em 30 dias', $d30),
+				'detail' => __('Antecipe contato com clientes e fornecedores.'),
+				'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'calendario'],
+			];
+		}
+		if ($ociosos > 0) {
+			$insights[] = [
+				'severity' => 'ok',
+				'title' => __('{0} assento(s) sem e-mail atribuído', $ociosos),
+				'detail' => __('Possível subutilização — compare assentos contratados vs. LicAssentos.'),
+				'url' => ['controller' => 'LicencasPrototype', 'action' => 'licencas'],
+			];
+		}
+		if ((int)($kpis['solicitacoes_abertas'] ?? 0) > 0) {
+			$insights[] = [
+				'severity' => 'info',
+				'title' => __('{0} solicitação(ões) aberta(s)', (int)$kpis['solicitacoes_abertas']),
+				'detail' => __('Portal cliente aguardando triagem.'),
+				'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'solicitacoes'],
+			];
+		}
+		if ($insights === []) {
+			$insights[] = [
+				'severity' => 'info',
+				'title' => __('Sem alertas automáticos no momento'),
+				'detail' => __('Cadastre licenças e assentos para enriquecer os insights.'),
+				'url' => ['controller' => 'LicencasPrototype', 'action' => 'dashboard'],
+			];
+		}
+
+		return [
+			'kpis' => [
+				'custo_anual_estimado' => $custoAnual,
+				'vencidas' => $vencido,
+				'venc_30' => $d30,
+				'assentos_ociosos' => $ociosos,
+				'solicitacoes_abertas' => (int)($kpis['solicitacoes_abertas'] ?? 0),
+			],
+			'insights' => $insights,
+		];
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listLicencaHistorico(int $licId, int $limit = 50): array {
+		if ($licId <= 0) {
+			return [];
+		}
+		$loc = TableRegistry::getTableLocator();
+		if (!$loc->exists('LicAuditoriaEventos')) {
+			return [];
+		}
+		$out = [];
+		try {
+			foreach ($loc->get('LicAuditoriaEventos')->find()
+				->where([
+					'idempresa' => $this->idempresa,
+					'entidade' => 'lic_licencas',
+					'entidade_id' => $licId,
+				])
+				->order(['created' => 'DESC'])
+				->limit($limit)
+				->all() as $row) {
+				$created = $row->get('created');
+				$out[] = [
+					'acao' => (string)$row->get('acao'),
+					'detalhe' => (string)($row->get('detalhe') ?? ''),
+					'iduser' => (int)($row->get('iduser') ?? 0),
+					'created' => $created && is_object($created) && method_exists($created, 'format')
+						? $created->format('Y-m-d H:i')
+						: (string)$created,
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @return array<int,array<int,string>>
+	 */
+	public function logRelatorioExport(string $tipo, int $userId): void {
+		$this->audit('relatorio.exportar', 'lic_relatorios', 0, $userId, $tipo);
+	}
+
+	public function buildRelatorioCsvRows(string $tipo): array {
+		$tipo = strtolower(trim($tipo));
+		if ($tipo === 'renovacoes') {
+			$rows = [['codigo', 'cliente', 'fim', 'dias', 'valor_anual']];
+			$renov = $this->listRenovacoes(120);
+			foreach (['vencido', 'd30', 'd60', 'd90'] as $bucket) {
+				foreach ($renov[$bucket] ?? [] as $item) {
+					$rows[] = [
+						(string)$item['codigo'],
+						(string)$item['cliente'],
+						(string)$item['fim'],
+						(string)($item['dias'] ?? ''),
+						(string)($item['valor_anual'] ?? ''),
+					];
+				}
+			}
+
+			return $rows;
+		}
+		if ($tipo === 'dispositivos') {
+			$rows = [['cliente', 'hostname', 'serial', 'so', 'ultimo_visto']];
+			foreach ($this->listDispositivos() as $d) {
+				$rows[] = [
+					(string)$d['cliente'],
+					(string)$d['hostname'],
+					(string)$d['serial'],
+					(string)$d['so'],
+					(string)($d['ultimo_visto'] ?? ''),
+				];
+			}
+
+			return $rows;
+		}
+		$rows = [['codigo', 'cliente', 'produto', 'status', 'assentos', 'inicio', 'fim', 'valor_anual']];
+		foreach ($this->listLicencas([], 500) as $lic) {
+			$ini = $lic['inicio'];
+			$fim = $lic['fim'];
+			$iniS = is_object($ini) && method_exists($ini, 'format') ? $ini->format('Y-m-d') : (string)$ini;
+			$fimS = is_object($fim) && method_exists($fim, 'format') ? $fim->format('Y-m-d') : (string)$fim;
+			$rows[] = [
+				(string)$lic['codigo'],
+				(string)$lic['cliente'],
+				(string)$lic['produto'],
+				(string)$lic['status'],
+				(string)$lic['assentos'],
+				$iniS,
+				$fimS,
+				(string)($lic['valor_anual'] ?? ''),
+			];
+		}
+
+		return $rows;
 	}
 
 	/**

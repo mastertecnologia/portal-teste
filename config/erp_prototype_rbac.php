@@ -191,5 +191,7 @@ return [
 		'lic-solicitacoes' => ['licencas.view', 'licencas.manage'],
 		'lic-auditoria' => ['licencas.manage'],
 		'lic-config' => ['licencas.manage'],
+		'lic-inteligencia' => ['licencas.view', 'licencas.manage'],
+		'lic-relatorios' => ['licencas.view', 'licencas.manage'],
 	],
 ];

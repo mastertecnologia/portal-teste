@@ -1022,7 +1022,7 @@
     {
       "id": "pg-lic-inteligencia",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/inteligencia",
       "tables": [
         "lic_licencas"
@@ -1045,7 +1045,7 @@
     {
       "id": "pg-lic-licenca-versoes",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/licenca-versoes",
       "tables": [
         "lic_licencas"
@@ -1138,8 +1138,8 @@
     {
       "id": "pg-lic-portal-financeiro",
       "module": "licencas",
-      "status": "planned",
-      "route": "/licencas-prototype/portal-financeiro",
+      "status": "bridge",
+      "route": "/cliente/licencas/financeiro",
       "tables": [
         "lic_licencas",
         "faturas"
@@ -1216,7 +1216,7 @@
     {
       "id": "pg-lic-relatorios",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/relatorios",
       "tables": [
         "lic_licencas"
