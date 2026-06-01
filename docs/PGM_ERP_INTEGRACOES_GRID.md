@@ -1,6 +1,6 @@
 # Integrações Grid ERP — mapa por tela e endpoint
 
-Gerado em: 2026-05-28 15:55 UTC
+Gerado em: 2026-06-01 17:13 UTC
 
 > **Regra:** contratos de API existentes (`listAPI`, `addAPI`, `refreshAPI`, SOAP `.wso`) **não são alterados**.
 > Telas premium consomem os mesmos dados via ORM ou delegam ao controller legado (bridge).
@@ -30,6 +30,7 @@ Gerado em: 2026-05-28 15:55 UTC
 | `pg-cliente-360` | clientes | both | addAPI/listAPI Grid → clientes |
 | `pg-cliente-novo` | clientes | send |  |
 | `pg-clientes` | clientes | both | addAPI/listAPI Grid → clientes |
+| `pg-config-integracoes` | sistema | both | urlerp + listAPI/addAPI documentados em PGM_ERP_INTEGRACOES_GRID.md |
 | `pg-estoque` | produtos | both | addAPI/listAPI + SOAP GetEstoqueProdutos |
 | `pg-estoque-log` | produtos | both | addAPI/listAPI + SOAP GetEstoqueProdutos |
 | `pg-export-clientes` | clientes | both | addAPI/listAPI Grid → clientes |
@@ -50,6 +51,7 @@ Gerado em: 2026-05-28 15:55 UTC
 | `pg-pc-lista` | produtos | both | addAPI/listAPI + SOAP GetEstoqueProdutos |
 | `pg-pc-novo` | produtos | both | addAPI/listAPI + SOAP GetEstoqueProdutos |
 | `pg-precificacao` | produtos | both | addAPI/listAPI + SOAP GetEstoqueProdutos |
+| `pg-preco-tabela-nova` | produtos | both | addAPI/listAPI + SOAP GetEstoqueProdutos |
 | `pg-precos` | produtos | both | addAPI/listAPI + SOAP GetEstoqueProdutos |
 | `pg-produto-detalhe` | produtos | both | addAPI/listAPI + SOAP GetEstoqueProdutos |
 | `pg-produto-novo` | produtos | both | addAPI/listAPI + SOAP GetEstoqueProdutos |

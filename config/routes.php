@@ -881,6 +881,20 @@ Router::scope("/", function ($routes) {
         "action" => "view",
     ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
 
+    // ===== Protótipo Licenciamento (mockup pg-lic-*) =====
+    $routes->connect("/licencas-prototype", [
+        "controller" => "LicencasPrototype",
+        "action" => "dashboard",
+    ]);
+    $routes->connect("/licencas-prototype/", [
+        "controller" => "LicencasPrototype",
+        "action" => "dashboard",
+    ]);
+    $routes->connect("/licencas-prototype/:page", [
+        "controller" => "LicencasPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
     // ===== Protótipo Empresas (mockup pg-empresas, pg-empresa-nova) =====
     $routes->connect("/empresas-prototype", [
         "controller" => "EmpresasPrototype",

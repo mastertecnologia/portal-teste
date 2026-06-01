@@ -167,5 +167,11 @@ return [
 		'conciliacao' => 'financeiro.view',
 		'transferencias' => 'financeiro.view',
 		'fluxo-caixa' => 'financeiro.view',
+		'lic-dashboard' => ['licencas.view', 'licencas.manage'],
+		'lic-empresas' => ['licencas.view', 'licencas.manage'],
+		'lic-licencas' => ['licencas.view', 'licencas.manage'],
+		'lic-catalogo' => ['licencas.view', 'licencas.manage'],
+		'lic-cofre' => ['licencas.cofre.view', 'licencas.manage'],
+		'config-integracoes' => 'config.manage',
 	],
 ];
