@@ -112,6 +112,8 @@ $sections = [
 			['key' => 'lic-solicitacoes', 'label' => __('Solicitações'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'solicitacoes'], 'indent' => true],
 			['key' => 'lic-auditoria', 'label' => __('Auditoria'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'auditoria'], 'indent' => true],
 			['key' => 'lic-config', 'label' => __('Configurações'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'config'], 'indent' => true],
+			['key' => 'lic-inteligencia', 'label' => __('Inteligência'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'inteligencia'], 'indent' => true],
+			['key' => 'lic-relatorios', 'label' => __('Relatórios'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'relatorios'], 'indent' => true],
 		],
 	],
 	[

@@ -75,6 +75,10 @@ class PortalLicencasController extends AppController {
 		]);
 	}
 
+	public function financeiro() {
+		return $this->redirect(['controller' => 'PortalContratos', 'action' => 'faturas']);
+	}
+
 	public function solicitar() {
 		$this->set('title', __('Solicitar licença'));
 		$svc = $this->licService();

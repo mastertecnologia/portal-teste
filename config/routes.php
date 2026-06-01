@@ -922,6 +922,10 @@ Router::scope("/", function ($routes) {
         "controller" => "LicencasPrototype",
         "action" => "atualizarSolicitacao",
     ]);
+    $routes->connect("/licencas-prototype/exportar-relatorio/:tipo", [
+        "controller" => "LicencasPrototype",
+        "action" => "exportarRelatorio",
+    ], ["pass" => ["tipo"], "tipo" => "[a-z]+"]);
     $routes->connect("/licencas-prototype/salvar-config", [
         "controller" => "LicencasPrototype",
         "action" => "salvarConfig",
@@ -934,6 +938,16 @@ Router::scope("/", function ($routes) {
         "controller" => "LicencasPrototype",
         "action" => "view",
     ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+
+    // Switchover opcional: /licencas → protótipo (LICENCAS_CANONICAL_ROUTES=1)
+    if (!empty(\Cake\Core\Configure::read('Licencas.canonical_routes'))) {
+        $routes->redirect("/licencas", "/licencas-prototype", ["status" => 302]);
+        $routes->redirect("/licencas/", "/licencas-prototype/", ["status" => 302]);
+        $routes->connect("/licencas/:page", [
+            "controller" => "LicencasPrototype",
+            "action" => "view",
+        ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
+    }
 
     // ===== Protótipo Empresas (mockup pg-empresas, pg-empresa-nova) =====
     $routes->connect("/empresas-prototype", [
@@ -2348,6 +2362,10 @@ Router::scope("/", function ($routes) {
     $routes->connect("/cliente/licencas/minhas", [
         "controller" => "PortalLicencas",
         "action" => "licencas",
+    ]);
+    $routes->connect("/cliente/licencas/financeiro", [
+        "controller" => "PortalLicencas",
+        "action" => "financeiro",
     ]);
     $routes->connect("/cliente/licencas/cofre", [
         "controller" => "PortalLicencas",

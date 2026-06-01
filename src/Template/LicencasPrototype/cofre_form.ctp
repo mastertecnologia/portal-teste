@@ -35,7 +35,7 @@ $niveis = ['baixo' => __('Baixo'), 'medio' => __('Médio'), 'alto' => __('Alto')
 		</div>
 		<div class="field" style="grid-column:1/-1;"><label><?= h(__('Segredo / credencial')) ?></label>
 			<?= $this->Form->textarea('segredo', ['rows' => 3, 'placeholder' => $id > 0 ? __('Deixe em branco para manter o atual') : '']) ?>
-			<p style="font-size:11px;color:var(--text-muted);margin:4px 0 0;"><?= h(__('Protótipo: armazenamento base64 (sem criptografia em repouso).')) ?></p>
+			<p style="font-size:11px;color:var(--text-muted);margin:4px 0 0;"><?= h(__('Com LIC_COFRE_CIPHER_KEY: AES-256-GCM; senão prefixo b64:.')) ?></p>
 		</div>
 	</div>
 	<div style="margin-top:14px;display:flex;gap:8px;">
