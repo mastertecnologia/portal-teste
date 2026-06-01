@@ -2,7 +2,8 @@
 
 > Plano de reestruturação do portal para adotar o **layout, telas e fluxos** do mockup (~100 telas SPA em JavaScript).
 > Referência preferida: **`docs/reference/pgm_erp_completo_2.html`** (copiar do `Downloads` do posto de trabalho).
-> Status: **CONCLUÍDO (plano `migracao-erp-completo`)** — Registry `config/pgm_erp_screens.json` (131 telas, 0 placeholders). Matriz: [PGM_ERP_COBERTURA_TELAS.md](PGM_ERP_COBERTURA_TELAS.md) · Integrações: [PGM_ERP_INTEGRACOES_GRID.md](PGM_ERP_INTEGRACOES_GRID.md) · Go-live: [PGM_ERP_HOMOLOGACAO_GO_LIVE.md](PGM_ERP_HOMOLOGACAO_GO_LIVE.md).
+> Status: **Fases 0–5 entregues** · **Atualização jun/2026:** HTML canônico com **182** telas (`docs/referencias/pgm_erp_completo.html`); **51 novas** em `planned` — ver [PLANO_DESENVOLVIMENTO_MIGRACAO_PGM_ERP_2026.md](PLANO_DESENVOLVIMENTO_MIGRACAO_PGM_ERP_2026.md).
+> Registry: `config/pgm_erp_screens.json` · Matriz: [PGM_ERP_COBERTURA_TELAS.md](PGM_ERP_COBERTURA_TELAS.md) · Integrações: [PGM_ERP_INTEGRACOES_GRID.md](PGM_ERP_INTEGRACOES_GRID.md) · Go-live: [PGM_ERP_HOMOLOGACAO_GO_LIVE.md](PGM_ERP_HOMOLOGACAO_GO_LIVE.md).
 
 ### Auditoria automática (após colocar o HTML no repo)
 

@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "reference_html": "docs/reference/pgm_erp_completo.html",
+  "version": 2,
+  "reference_html": "docs/referencias/pgm_erp_completo.html",
   "screens": [
     {
       "id": "pg-acesso-auditoria",
@@ -123,6 +123,30 @@
       "grid_note": ""
     },
     {
+      "id": "pg-banco-novo",
+      "module": "bancos",
+      "status": "planned",
+      "route": "/bancos-prototype/banco-novo",
+      "tables": [
+        "financeiro_bancos"
+      ],
+      "grid_erp": "none",
+      "grid_note": "",
+      "legacy_bridge": "FinanceiroBancos/add"
+    },
+    {
+      "id": "pg-banco-openbanking",
+      "module": "bancos",
+      "status": "planned",
+      "route": "/bancos-prototype/banco-openbanking",
+      "tables": [
+        "financeiro_bancos",
+        "financeiro_extrato_bancario"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
       "id": "pg-bancos",
       "module": "bancos",
       "status": "implemented",
@@ -131,6 +155,17 @@
         "financeiro_bancos",
         "financeiro_extrato_bancario",
         "financeiro_lancamentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-bancos-cadastro",
+      "module": "bancos",
+      "status": "planned",
+      "route": "/bancos-prototype/bancos-cadastro",
+      "tables": [
+        "financeiro_bancos"
       ],
       "grid_erp": "none",
       "grid_note": ""
@@ -231,6 +266,88 @@
       "grid_note": ""
     },
     {
+      "id": "pg-config-backup",
+      "module": "sistema",
+      "status": "planned",
+      "route": "/sistema-prototype/config-backup",
+      "tables": [
+        "config"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-config-email",
+      "module": "sistema",
+      "status": "planned",
+      "route": "/sistema-prototype/config-email",
+      "tables": [
+        "config"
+      ],
+      "grid_erp": "none",
+      "grid_note": "",
+      "legacy_bridge": "Config/emailsuporte"
+    },
+    {
+      "id": "pg-config-integracoes",
+      "module": "sistema",
+      "status": "planned",
+      "route": "/sistema-prototype/config-integracoes",
+      "tables": [
+        "empresas",
+        "config"
+      ],
+      "grid_erp": "both",
+      "grid_note": "urlerp + listAPI/addAPI documentados em PGM_ERP_INTEGRACOES_GRID.md"
+    },
+    {
+      "id": "pg-config-localizacao",
+      "module": "sistema",
+      "status": "planned",
+      "route": "/sistema-prototype/config-localizacao",
+      "tables": [
+        "config",
+        "empresas"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-config-notificacoes",
+      "module": "sistema",
+      "status": "planned",
+      "route": "/sistema-prototype/config-notificacoes",
+      "tables": [
+        "config"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-config-numeracao",
+      "module": "sistema",
+      "status": "planned",
+      "route": "/sistema-prototype/config-numeracao",
+      "tables": [
+        "config"
+      ],
+      "grid_erp": "none",
+      "grid_note": ""
+    },
+    {
+      "id": "pg-config-seguranca",
+      "module": "sistema",
+      "status": "planned",
+      "route": "/sistema-prototype/config-seguranca",
+      "tables": [
+        "users",
+        "rbac_roles"
+      ],
+      "grid_erp": "none",
+      "grid_note": "",
+      "legacy_bridge": "Permissoes/adminIndex"
+    },
+    {
       "id": "pg-configurador",
       "module": "pcp",
       "status": "implemented",
@@ -304,6 +421,18 @@
       ],
       "grid_erp": "none",
       "grid_note": ""
+    },
+    {
+      "id": "pg-email-template-editar",
+      "module": "sistema",
+      "status": "planned",
+      "route": "/sistema-prototype/email-template-editar",
+      "tables": [
+        "config"
+      ],
+      "grid_erp": "none",
+      "grid_note": "",
+      "legacy_bridge": "Config/emailsuporte"
     },
     {
       "id": "pg-empresa",
@@ -672,6 +801,450 @@
       ],
       "grid_erp": "both",
       "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-lic-auditoria",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/auditoria",
+      "tables": [
+        "lic_auditoria_eventos",
+        "audit_logs"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-calendario",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/calendario",
+      "tables": [
+        "lic_licencas"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-catalogo",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/catalogo",
+      "tables": [
+        "lic_catalogo_produtos",
+        "lic_categorias"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-categoria-editar",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/categoria-editar",
+      "tables": [
+        "lic_categorias"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-categorias",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/categorias",
+      "tables": [
+        "lic_categorias"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-cofre",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/cofre",
+      "tables": [
+        "lic_cofre_itens"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-cofre-editar",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/cofre-editar",
+      "tables": [
+        "lic_cofre_itens"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-cofre-item",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/cofre-item",
+      "tables": [
+        "lic_cofre_itens"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-cofre-novo",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/cofre-novo",
+      "tables": [
+        "lic_cofre_itens"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-config",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/config",
+      "tables": [
+        "lic_licencas"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-dashboard",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/dashboard",
+      "tables": [
+        "lic_licencas",
+        "lic_dispositivos",
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-dispositivo-detalhe",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/dispositivo-detalhe",
+      "tables": [
+        "lic_dispositivos"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-dispositivo-novo",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/dispositivo-novo",
+      "tables": [
+        "lic_dispositivos"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-dispositivos",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/dispositivos",
+      "tables": [
+        "lic_dispositivos",
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-empresa-detalhe",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/empresa-detalhe",
+      "tables": [
+        "clientes",
+        "lic_licencas"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-empresa-nova",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/empresa-nova",
+      "tables": [
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-empresas",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/empresas",
+      "tables": [
+        "clientes",
+        "lic_licencas"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-fornecedor-novo",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/fornecedor-novo",
+      "tables": [
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-fornecedores",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/fornecedores",
+      "tables": [
+        "clientes",
+        "lic_catalogo_produtos"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-inteligencia",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/inteligencia",
+      "tables": [
+        "lic_licencas"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-licenca-detalhe",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/licenca-detalhe",
+      "tables": [
+        "lic_licencas",
+        "lic_assentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-licenca-versoes",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/licenca-versoes",
+      "tables": [
+        "lic_licencas"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-licencas",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/licencas",
+      "tables": [
+        "lic_licencas",
+        "lic_catalogo_produtos",
+        "clientes"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-nova",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/nova",
+      "tables": [
+        "lic_licencas"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-nova-2",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/nova-2",
+      "tables": [
+        "lic_licencas"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-nova-3",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/nova-3",
+      "tables": [
+        "lic_licencas",
+        "lic_assentos"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-nova-4",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/nova-4",
+      "tables": [
+        "lic_licencas",
+        "lic_cofre_itens"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-portal-cofre",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/portal-cofre",
+      "tables": [
+        "lic_cofre_itens"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-portal-dash",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/portal-dash",
+      "tables": [
+        "lic_licencas",
+        "lic_solicitacoes"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-portal-financeiro",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/portal-financeiro",
+      "tables": [
+        "lic_licencas",
+        "faturas"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-portal-licencas",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/portal-licencas",
+      "tables": [
+        "lic_licencas"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-portal-solicitacao-acompanhar",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/portal-solicitacao-acompanhar",
+      "tables": [
+        "lic_solicitacoes"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-portal-solicitar",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/portal-solicitar",
+      "tables": [
+        "lic_solicitacoes"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-produto-detalhe",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/produto-detalhe",
+      "tables": [
+        "lic_catalogo_produtos"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-produto-editar",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/produto-editar",
+      "tables": [
+        "lic_catalogo_produtos"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-produto-novo",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/produto-novo",
+      "tables": [
+        "lic_catalogo_produtos"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-relatorios",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/relatorios",
+      "tables": [
+        "lic_licencas"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-renovacoes",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/renovacoes",
+      "tables": [
+        "lic_licencas"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
+    },
+    {
+      "id": "pg-lic-solicitacoes",
+      "module": "licencas",
+      "status": "planned",
+      "route": "/licencas-prototype/solicitacoes",
+      "tables": [
+        "lic_solicitacoes"
+      ],
+      "grid_erp": "none",
+      "grid_note": "Fornecedores vinculados a clientes PJ (cadastro ERP); sem API Grid dedicada no mock."
     },
     {
       "id": "pg-lista",
@@ -1084,6 +1657,17 @@
       "module": "produtos",
       "status": "implemented",
       "route": "/produtos-prototype/precificacao",
+      "tables": [
+        "produtos"
+      ],
+      "grid_erp": "both",
+      "grid_note": "addAPI/listAPI + SOAP GetEstoqueProdutos"
+    },
+    {
+      "id": "pg-preco-tabela-nova",
+      "module": "produtos",
+      "status": "planned",
+      "route": "/produtos-prototype/preco-tabela-nova",
       "tables": [
         "produtos"
       ],

@@ -38,10 +38,26 @@ class SistemaPrototypeController extends AppController {
 	}
 
 	/**
-	 * pg-config — atalhos.
+	 * pg-config — hub administrativo premium (admin).
 	 */
 	public function config() {
-		return $this->redirect(['controller' => 'Config', 'action' => 'index']);
+		if ((int)$this->Auth->user('admin') !== 1) {
+			$this->Flash->error(__('Acesso negado.'));
+
+			return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+		}
+		$this->set([
+			'title' => __('Configurações do sistema'),
+			'erpNavActive' => 'config',
+			'erpBreadcrumb' => [
+				['label' => 'PGM ERP'],
+				['label' => __('Sistema')],
+				['label' => __('Configurações'), 'cur' => true],
+			],
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+		]);
+
+		return $this->render('config_hub');
 	}
 
 	/**

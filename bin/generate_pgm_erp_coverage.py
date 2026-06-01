@@ -18,22 +18,38 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / "config" / "pgm_erp_screens.json"
 HTML_CANDIDATES = [
+    ROOT / "docs/referencias/pgm_erp_completo.html",
+    ROOT / "docs/reference/pgm_erp_completo.html",
     ROOT / "docs/referencias/pgm_erp_completo_2.html",
     ROOT / "docs/reference/pgm_erp_completo_2.html",
-    ROOT / "docs/reference/pgm_erp_completo.html",
-    ROOT / "docs/referencias/pgm_erp_completo.html",
 ]
 OUT_COBERTURA = ROOT / "docs" / "PGM_ERP_COBERTURA_TELAS.md"
 OUT_INTEGRACOES = ROOT / "docs" / "PGM_ERP_INTEGRACOES_GRID.md"
 OUT_JSON_REPORT = ROOT / "docs" / "generated" / "pgm_erp_coverage_report.json"
 
 
-def load_html_ids() -> list[str]:
-    path = next((p for p in HTML_CANDIDATES if p.is_file()), None)
-    if path is None:
+def _pick_html_path() -> Path:
+    """Escolhe o HTML com mais telas pg-* (referência atualizada)."""
+    best: Path | None = None
+    best_count = -1
+    for path in HTML_CANDIDATES:
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        count = len(set(re.findall(r'\bid=["\']?(pg-[a-z0-9-]+)["\']?', text, re.I)))
+        if count > best_count:
+            best_count = count
+            best = path
+    if best is None:
         raise SystemExit("HTML de referência não encontrado em docs/reference ou docs/referencias")
+    return best
+
+
+def load_html_ids() -> tuple[list[str], Path]:
+    path = _pick_html_path()
     text = path.read_text(encoding="utf-8", errors="replace")
     ids = sorted(set(re.findall(r'\bid=["\']?(pg-[a-z0-9-]+)["\']?', text, re.I)))
+
     return ids, path
 
 

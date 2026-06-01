@@ -1,35 +1,28 @@
 # Cobertura de telas — PGM ERP Completo
 
-Gerado em: 2026-05-28 15:55 UTC
-Referência HTML: `docs/referencias/pgm_erp_completo_2.html`
+Gerado em: 2026-06-01 17:13 UTC
+Referência HTML: `docs/referencias/pgm_erp_completo.html`
 Registry: `config/pgm_erp_screens.json`
 
 ## Resumo
 
 | Métrica | Valor |
 |---------|------:|
-| Telas `pg-*` no HTML | 124 |
-| Entradas no registry | 131 |
+| Telas `pg-*` no HTML | 182 |
+| Entradas no registry | 182 |
 | Implementadas (premium) | 69 |
 | Bridge (legado/API intacta) | 62 |
 | Placeholder / roadmap | 0 |
-| Planejadas | 0 |
-
-## Registry sem `pg-*` no HTML (revisar)
-
-- `pg-orc-alcadas`
-- `pg-orc-config-aprovacao`
-- `pg-orc-negociacao`
-- `pg-orc-portal-cliente`
-- `pg-orc-regra-editar`
-- `pg-orc-solicitar`
-- `pg-orc-versoes`
+| Planejadas | 51 |
 
 ## Matriz por módulo
 
 | Módulo | Tela | Status | Rota protótipo | Tabelas | Grid ERP |
 |--------|------|--------|----------------|---------|----------|
+| bancos | `pg-banco-novo` | PLANNED | `/bancos-prototype/banco-novo` | financeiro_bancos | none |
+| bancos | `pg-banco-openbanking` | PLANNED | `/bancos-prototype/banco-openbanking` | financeiro_bancos, financeiro_extrato_bancario | none |
 | bancos | `pg-bancos` | OK | `/bancos-prototype/bancos` | financeiro_bancos, financeiro_extrato_bancario, financeiro_lancamentos | none |
+| bancos | `pg-bancos-cadastro` | PLANNED | `/bancos-prototype/bancos-cadastro` | financeiro_bancos | none |
 | bancos | `pg-conciliacao` | OK | `/bancos-prototype/conciliacao` | financeiro_bancos, financeiro_extrato_bancario, financeiro_lancamentos | none |
 | bancos | `pg-contas` | BRIDGE | `/bancos-prototype/contas` | financeiro_bancos, financeiro_extrato_bancario, financeiro_lancamentos | none |
 | bancos | `pg-extrato` | OK | `/bancos-prototype/extrato` | financeiro_bancos, financeiro_extrato_bancario, financeiro_lancamentos | none |
@@ -52,6 +45,45 @@ Registry: `config/pgm_erp_screens.json`
 | fornecedores | `pg-fornecedor-novo` | BRIDGE | `/fornecedores-prototype/novo` | clientes | none |
 | fornecedores | `pg-fornecedores` | OK | `/fornecedores-prototype/lista` | clientes | none |
 | home | `pg-home` | OK | `/erp-home-prototype` | orcamentos, ordensservico, tickets, clientes, faturas | none |
+| licencas | `pg-lic-auditoria` | PLANNED | `/licencas-prototype/auditoria` | lic_auditoria_eventos, audit_logs | none |
+| licencas | `pg-lic-calendario` | PLANNED | `/licencas-prototype/calendario` | lic_licencas | none |
+| licencas | `pg-lic-catalogo` | PLANNED | `/licencas-prototype/catalogo` | lic_catalogo_produtos, lic_categorias | none |
+| licencas | `pg-lic-categoria-editar` | PLANNED | `/licencas-prototype/categoria-editar` | lic_categorias | none |
+| licencas | `pg-lic-categorias` | PLANNED | `/licencas-prototype/categorias` | lic_categorias | none |
+| licencas | `pg-lic-cofre` | PLANNED | `/licencas-prototype/cofre` | lic_cofre_itens | none |
+| licencas | `pg-lic-cofre-editar` | PLANNED | `/licencas-prototype/cofre-editar` | lic_cofre_itens | none |
+| licencas | `pg-lic-cofre-item` | PLANNED | `/licencas-prototype/cofre-item` | lic_cofre_itens | none |
+| licencas | `pg-lic-cofre-novo` | PLANNED | `/licencas-prototype/cofre-novo` | lic_cofre_itens | none |
+| licencas | `pg-lic-config` | PLANNED | `/licencas-prototype/config` | lic_licencas | none |
+| licencas | `pg-lic-dashboard` | PLANNED | `/licencas-prototype/dashboard` | lic_licencas, lic_dispositivos, clientes | none |
+| licencas | `pg-lic-dispositivo-detalhe` | PLANNED | `/licencas-prototype/dispositivo-detalhe` | lic_dispositivos | none |
+| licencas | `pg-lic-dispositivo-novo` | PLANNED | `/licencas-prototype/dispositivo-novo` | lic_dispositivos | none |
+| licencas | `pg-lic-dispositivos` | PLANNED | `/licencas-prototype/dispositivos` | lic_dispositivos, clientes | none |
+| licencas | `pg-lic-empresa-detalhe` | PLANNED | `/licencas-prototype/empresa-detalhe` | clientes, lic_licencas | none |
+| licencas | `pg-lic-empresa-nova` | PLANNED | `/licencas-prototype/empresa-nova` | clientes | none |
+| licencas | `pg-lic-empresas` | PLANNED | `/licencas-prototype/empresas` | clientes, lic_licencas | none |
+| licencas | `pg-lic-fornecedor-novo` | PLANNED | `/licencas-prototype/fornecedor-novo` | clientes | none |
+| licencas | `pg-lic-fornecedores` | PLANNED | `/licencas-prototype/fornecedores` | clientes, lic_catalogo_produtos | none |
+| licencas | `pg-lic-inteligencia` | PLANNED | `/licencas-prototype/inteligencia` | lic_licencas | none |
+| licencas | `pg-lic-licenca-detalhe` | PLANNED | `/licencas-prototype/licenca-detalhe` | lic_licencas, lic_assentos | none |
+| licencas | `pg-lic-licenca-versoes` | PLANNED | `/licencas-prototype/licenca-versoes` | lic_licencas | none |
+| licencas | `pg-lic-licencas` | PLANNED | `/licencas-prototype/licencas` | lic_licencas, lic_catalogo_produtos, clientes | none |
+| licencas | `pg-lic-nova` | PLANNED | `/licencas-prototype/nova` | lic_licencas | none |
+| licencas | `pg-lic-nova-2` | PLANNED | `/licencas-prototype/nova-2` | lic_licencas | none |
+| licencas | `pg-lic-nova-3` | PLANNED | `/licencas-prototype/nova-3` | lic_licencas, lic_assentos | none |
+| licencas | `pg-lic-nova-4` | PLANNED | `/licencas-prototype/nova-4` | lic_licencas, lic_cofre_itens | none |
+| licencas | `pg-lic-portal-cofre` | PLANNED | `/licencas-prototype/portal-cofre` | lic_cofre_itens | none |
+| licencas | `pg-lic-portal-dash` | PLANNED | `/licencas-prototype/portal-dash` | lic_licencas, lic_solicitacoes | none |
+| licencas | `pg-lic-portal-financeiro` | PLANNED | `/licencas-prototype/portal-financeiro` | lic_licencas, faturas | none |
+| licencas | `pg-lic-portal-licencas` | PLANNED | `/licencas-prototype/portal-licencas` | lic_licencas | none |
+| licencas | `pg-lic-portal-solicitacao-acompanhar` | PLANNED | `/licencas-prototype/portal-solicitacao-acompanhar` | lic_solicitacoes | none |
+| licencas | `pg-lic-portal-solicitar` | PLANNED | `/licencas-prototype/portal-solicitar` | lic_solicitacoes | none |
+| licencas | `pg-lic-produto-detalhe` | PLANNED | `/licencas-prototype/produto-detalhe` | lic_catalogo_produtos | none |
+| licencas | `pg-lic-produto-editar` | PLANNED | `/licencas-prototype/produto-editar` | lic_catalogo_produtos | none |
+| licencas | `pg-lic-produto-novo` | PLANNED | `/licencas-prototype/produto-novo` | lic_catalogo_produtos | none |
+| licencas | `pg-lic-relatorios` | PLANNED | `/licencas-prototype/relatorios` | lic_licencas | none |
+| licencas | `pg-lic-renovacoes` | PLANNED | `/licencas-prototype/renovacoes` | lic_licencas | none |
+| licencas | `pg-lic-solicitacoes` | PLANNED | `/licencas-prototype/solicitacoes` | lic_solicitacoes | none |
 | orcamentos | `pg-esign` | BRIDGE | `/orcamentos-prototype/esign` | orcamentos, orcamentositens, clientes | none |
 | orcamentos | `pg-lista` | OK | `/orcamentos-prototype/lista` | orcamentos, orcamentositens, clientes | none |
 | orcamentos | `pg-novo` | BRIDGE | `/orcamentos-prototype/novo` | orcamentos, orcamentositens, clientes | none |
@@ -103,6 +135,7 @@ Registry: `config/pgm_erp_screens.json`
 | produtos | `pg-pc-lista` | BRIDGE | `/produtos-prototype/pc-lista` | produtos | both |
 | produtos | `pg-pc-novo` | BRIDGE | `/produtos-prototype/pc-novo` | produtos | both |
 | produtos | `pg-precificacao` | OK | `/produtos-prototype/precificacao` | produtos | both |
+| produtos | `pg-preco-tabela-nova` | PLANNED | `/produtos-prototype/preco-tabela-nova` | produtos | both |
 | produtos | `pg-precos` | OK | `/produtos-prototype/precos` | produtos | both |
 | produtos | `pg-produto-detalhe` | BRIDGE | `/produtos-prototype/detalhe` | produtos | both |
 | produtos | `pg-produto-novo` | BRIDGE | `/produtos-prototype/novo` | produtos | both |
@@ -143,6 +176,14 @@ Registry: `config/pgm_erp_screens.json`
 | sistema | `pg-acesso-usuario` | BRIDGE | `/sistema-prototype/acesso-usuario` | users, empresas, rbac_roles, rbac_users_roles, audit_logs | none |
 | sistema | `pg-auditoria` | OK | `/sistema-prototype/auditoria` | users, empresas, rbac_roles, rbac_users_roles, audit_logs | none |
 | sistema | `pg-config` | OK | `/sistema-prototype/config` | users, empresas, rbac_roles, rbac_users_roles, audit_logs | none |
+| sistema | `pg-config-backup` | PLANNED | `/sistema-prototype/config-backup` | config | none |
+| sistema | `pg-config-email` | PLANNED | `/sistema-prototype/config-email` | config | none |
+| sistema | `pg-config-integracoes` | PLANNED | `/sistema-prototype/config-integracoes` | empresas, config | both |
+| sistema | `pg-config-localizacao` | PLANNED | `/sistema-prototype/config-localizacao` | config, empresas | none |
+| sistema | `pg-config-notificacoes` | PLANNED | `/sistema-prototype/config-notificacoes` | config | none |
+| sistema | `pg-config-numeracao` | PLANNED | `/sistema-prototype/config-numeracao` | config | none |
+| sistema | `pg-config-seguranca` | PLANNED | `/sistema-prototype/config-seguranca` | users, rbac_roles | none |
+| sistema | `pg-email-template-editar` | PLANNED | `/sistema-prototype/email-template-editar` | config | none |
 | sistema | `pg-empresa` | BRIDGE | `/sistema-prototype/empresa` | users, empresas, rbac_roles, rbac_users_roles, audit_logs | none |
 | sistema | `pg-empresa-branding` | BRIDGE | `/sistema-prototype/empresa-branding` | users, empresas, rbac_roles, rbac_users_roles, audit_logs | none |
 | sistema | `pg-empresa-contatos` | BRIDGE | `/sistema-prototype/empresa-contatos` | users, empresas, rbac_roles, rbac_users_roles, audit_logs | none |
