@@ -118,6 +118,9 @@ return [
 		],
 		'LicencasPrototype' => [
 			'salvarwizard' => 'write',
+			'salvarcatalogoproduto' => 'write',
+			'salvarcategoria' => 'write',
+			'salvardispositivo' => 'write',
 		],
 	],
 	// Chaves do menu (sidebar.ctp item key) → códigos OR (string ou array)

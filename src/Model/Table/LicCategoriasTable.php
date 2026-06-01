@@ -6,17 +6,14 @@ namespace App\Model\Table;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
-class LicCatalogoProdutosTable extends Table {
+class LicCategoriasTable extends Table {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->setTable('lic_catalogo_produtos');
+		$this->setTable('lic_categorias');
 		$this->setDisplayField('nome');
 		$this->setPrimaryKey('id');
-		$this->belongsTo('LicCategorias', [
-			'foreignKey' => 'idcategoria',
-			'joinType' => 'LEFT',
-		]);
+		$this->hasMany('LicCatalogoProdutos', ['foreignKey' => 'idcategoria']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -25,8 +22,13 @@ class LicCatalogoProdutosTable extends Table {
 			->requirePresence('idempresa', 'create')
 			->notEmpty('idempresa');
 		$validator
+			->scalar('codigo')
+			->maxLength('codigo', 30)
+			->requirePresence('codigo', 'create')
+			->notEmpty('codigo');
+		$validator
 			->scalar('nome')
-			->maxLength('nome', 200)
+			->maxLength('nome', 120)
 			->requirePresence('nome', 'create')
 			->notEmpty('nome');
 

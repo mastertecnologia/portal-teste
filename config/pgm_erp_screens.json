@@ -817,7 +817,7 @@
     {
       "id": "pg-lic-calendario",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/calendario",
       "tables": [
         "lic_licencas"
@@ -828,7 +828,7 @@
     {
       "id": "pg-lic-catalogo",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/catalogo",
       "tables": [
         "lic_catalogo_produtos",
@@ -840,7 +840,7 @@
     {
       "id": "pg-lic-categoria-editar",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/categoria-editar",
       "tables": [
         "lic_categorias"
@@ -851,7 +851,7 @@
     {
       "id": "pg-lic-categorias",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/categorias",
       "tables": [
         "lic_categorias"
@@ -930,7 +930,7 @@
     {
       "id": "pg-lic-dispositivo-detalhe",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/dispositivo-detalhe",
       "tables": [
         "lic_dispositivos"
@@ -941,7 +941,7 @@
     {
       "id": "pg-lic-dispositivo-novo",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/dispositivo-novo",
       "tables": [
         "lic_dispositivos"
@@ -952,7 +952,7 @@
     {
       "id": "pg-lic-dispositivos",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/dispositivos",
       "tables": [
         "lic_dispositivos",
@@ -1183,7 +1183,7 @@
     {
       "id": "pg-lic-produto-detalhe",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/produto-detalhe",
       "tables": [
         "lic_catalogo_produtos"
@@ -1194,7 +1194,7 @@
     {
       "id": "pg-lic-produto-editar",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/produto-editar",
       "tables": [
         "lic_catalogo_produtos"
@@ -1205,7 +1205,7 @@
     {
       "id": "pg-lic-produto-novo",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/produto-novo",
       "tables": [
         "lic_catalogo_produtos"
@@ -1227,7 +1227,7 @@
     {
       "id": "pg-lic-renovacoes",
       "module": "licencas",
-      "status": "planned",
+      "status": "implemented",
       "route": "/licencas-prototype/renovacoes",
       "tables": [
         "lic_licencas"

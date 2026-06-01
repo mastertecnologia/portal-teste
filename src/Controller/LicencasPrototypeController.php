@@ -151,6 +151,44 @@ class LicencasPrototypeController extends AppController {
 			return $this->redirect(['controller' => 'ClientesPrototype', 'action' => 'view', 'novo']);
 		}
 
+		$l2 = [
+			'catalogo', 'categorias', 'categoria-editar', 'produto-novo', 'produto-editar', 'produto-detalhe',
+			'renovacoes', 'calendario', 'dispositivos', 'dispositivo-novo', 'dispositivo-detalhe',
+		];
+		if ($page === 'catalogo') {
+			return $this->catalogo();
+		}
+		if ($page === 'categorias') {
+			return $this->categorias();
+		}
+		if ($page === 'categoria-editar') {
+			return $this->categoriaEditar((int)$this->request->getQuery('id', 0));
+		}
+		if ($page === 'produto-novo') {
+			return $this->produtoForm(null);
+		}
+		if ($page === 'produto-editar') {
+			return $this->produtoForm((int)$this->request->getQuery('id', 0));
+		}
+		if ($page === 'produto-detalhe') {
+			return $this->produtoDetalhe((int)$this->request->getQuery('id', 0));
+		}
+		if ($page === 'renovacoes') {
+			return $this->renovacoes();
+		}
+		if ($page === 'calendario') {
+			return $this->calendario();
+		}
+		if ($page === 'dispositivos') {
+			return $this->dispositivos();
+		}
+		if ($page === 'dispositivo-novo') {
+			return $this->dispositivoForm(null);
+		}
+		if ($page === 'dispositivo-detalhe') {
+			return $this->dispositivoDetalhe((int)$this->request->getQuery('id', 0));
+		}
+
 		$wizard = ['nova' => 1, 'nova-2' => 2, 'nova-3' => 3, 'nova-4' => 4];
 		if (isset($wizard[$page])) {
 			return $this->renderWizard($page, (int)$wizard[$page]);
@@ -276,6 +314,181 @@ class LicencasPrototypeController extends AppController {
 		$page = $map[$step] ?? 'nova';
 
 		return ['action' => 'view', $page, '?' => ['id' => $licId]];
+	}
+
+
+	public function salvarCatalogoProduto() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$data = $this->request->getData();
+		$data['iduser'] = (int)$this->Auth->user('id');
+		$id = (int)$this->request->getData('id', 0);
+		$result = $svc->saveCatalogoProduto($data, $id > 0 ? $id : null);
+		if (empty($result['ok'])) {
+			$this->Flash->error(__('Não foi possível salvar o produto.'));
+			return $this->redirect(['action' => 'view', $id > 0 ? 'produto-editar' : 'produto-novo', '?' => $id > 0 ? ['id' => $id] : []]);
+		}
+		$this->Flash->success(__('Produto salvo.'));
+		return $this->redirect(['action' => 'view', 'catalogo']);
+	}
+
+	public function salvarCategoria() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$data = $this->request->getData();
+		$data['iduser'] = (int)$this->Auth->user('id');
+		$id = (int)$this->request->getData('id', 0);
+		$result = $svc->saveCategoria($data, $id > 0 ? $id : null);
+		if (empty($result['ok'])) {
+			$this->Flash->error(__('Não foi possível salvar a categoria.'));
+			return $this->redirect(['action' => 'view', 'categoria-editar', '?' => $id > 0 ? ['id' => $id] : []]);
+		}
+		$this->Flash->success(__('Categoria salva.'));
+		return $this->redirect(['action' => 'view', 'categorias']);
+	}
+
+	public function salvarDispositivo() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$data = $this->request->getData();
+		$data['iduser'] = (int)$this->Auth->user('id');
+		$id = (int)$this->request->getData('id', 0);
+		$result = $svc->saveDispositivo($data, $id > 0 ? $id : null);
+		if (empty($result['ok'])) {
+			$this->Flash->error(__('Não foi possível salvar o dispositivo.'));
+			return $this->redirect(['action' => 'view', 'dispositivo-novo']);
+		}
+		$this->Flash->success(__('Dispositivo salvo.'));
+		return $this->redirect(['action' => 'view', 'dispositivos']);
+	}
+
+	protected function catalogo() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$this->setLicPage(__('Catálogo'), 'lic-catalogo', ['licProdutos' => $svc->listCatalogoProdutos(), 'licCategorias' => $svc->listCategorias()]);
+		return $this->render('catalogo');
+	}
+
+	protected function categorias() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$this->setLicPage(__('Categorias'), 'lic-catalogo', ['licCategorias' => $svc->listCategorias()]);
+		return $this->render('categorias');
+	}
+
+	protected function categoriaEditar(int $id) {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$cat = null;
+		if ($id > 0) {
+			foreach ($svc->listCategorias() as $c) {
+				if ((int)$c['id'] === $id) {
+					$cat = $c;
+					break;
+				}
+			}
+		}
+		$this->setLicPage(__('Categoria'), 'lic-catalogo', ['licCategoria' => $cat, 'licCategoriaId' => $id]);
+		return $this->render('categoria_editar');
+	}
+
+	protected function produtoForm(?int $id) {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$prod = $id !== null && $id > 0 ? $svc->getCatalogoProduto($id) : null;
+		if ($id !== null && $id > 0 && $prod === null) {
+			$this->Flash->error(__('Produto não encontrado.'));
+			return $this->redirect(['action' => 'view', 'catalogo']);
+		}
+		$this->setLicPage($prod ? __('Editar produto') : __('Novo produto'), 'lic-catalogo', [
+			'licProduto' => $prod,
+			'licCategorias' => $svc->listCategorias(),
+			'licClientes' => $svc->listClientesOptions(),
+		]);
+		return $this->render('produto_form');
+	}
+
+	protected function produtoDetalhe(int $id) {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$prod = $svc->getCatalogoProduto($id);
+		if ($prod === null) {
+			$this->Flash->error(__('Produto não encontrado.'));
+			return $this->redirect(['action' => 'view', 'catalogo']);
+		}
+		$this->setLicPage($prod['nome'], 'lic-catalogo', ['licProduto' => $prod]);
+		return $this->render('produto_detalhe');
+	}
+
+	protected function renovacoes() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$this->setLicPage(__('Renovações'), 'lic-renovacoes', ['licRenovacoes' => $svc->listRenovacoes()]);
+		return $this->render('renovacoes');
+	}
+
+	protected function calendario() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$this->setLicPage(__('Calendário'), 'lic-calendario', ['licCalendario' => $svc->listCalendarioPorMes()]);
+		return $this->render('calendario');
+	}
+
+	protected function dispositivos() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$filters = ['cliente' => $this->request->getQuery('cliente')];
+		$this->setLicPage(__('Dispositivos'), 'lic-dispositivos', [
+			'licDispositivos' => $svc->listDispositivos($filters),
+			'licClientes' => $svc->listClientesOptions(),
+			'licFilters' => $filters,
+		]);
+		return $this->render('dispositivos');
+	}
+
+	protected function dispositivoForm(?int $id) {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$dev = $id !== null && $id > 0 ? $svc->getDispositivo($id) : null;
+		$this->setLicPage(__('Novo dispositivo'), 'lic-dispositivos', [
+			'licDispositivo' => $dev,
+			'licClientes' => $svc->listClientesOptions(),
+		]);
+		return $this->render('dispositivo_form');
+	}
+
+	protected function dispositivoDetalhe(int $id) {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$dev = $svc->getDispositivo($id);
+		if ($dev === null) {
+			$this->Flash->error(__('Dispositivo não encontrado.'));
+			return $this->redirect(['action' => 'view', 'dispositivos']);
+		}
+		$this->setLicPage($dev['hostname'] ?: __('Dispositivo'), 'lic-dispositivos', ['licDispositivo' => $dev]);
+		return $this->render('dispositivo_detalhe');
+	}
+
+	/**
+	 * @param array<string,mixed> $extra
+	 */
+	protected function setLicPage(string $title, string $nav, array $extra = []): void {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new LicPrototypeDataService($empresa);
+		$this->set(array_merge([
+			'title' => __('Licenciamento') . ' · ' . $title,
+			'erpNavActive' => $nav,
+			'erpBreadcrumb' => [
+				['label' => 'PGM ERP'],
+				['label' => __('Licenciamento'), 'url' => ['action' => 'dashboard']],
+				['label' => $title, 'cur' => true],
+			],
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+			'licMigrationHint' => !$svc->tablesAvailable(),
+		], $extra));
 	}
 
 	/**
