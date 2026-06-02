@@ -56,6 +56,10 @@ function cli360Mask($mask, $str) {
 }
 
 $c = $cli360;
+$cli360ContextoFornecedor = !empty($cli360ContextoFornecedor);
+$fornEditUrl = ['controller' => 'Clientes', 'action' => 'edit', $cliente->id, '?' => ['fornecedor' => '1']];
+$fornPdfUrl = ['controller' => 'Clientes', 'action' => 'edit', $cliente->id, '?' => ['fornecedor' => '1', 'imprimir' => '1']];
+$fornListaUrl = ['controller' => 'FornecedoresPrototype', 'action' => 'lista'];
 $kpis = (array)($c['kpis'] ?? []);
 $counts = (array)($c['counts'] ?? []);
 $tab = $cli360Tab;
@@ -84,8 +88,8 @@ $tabs = [
 	<header class="cli-360-toolbar">
 		<div class="cli-360-toolbar-back">
 			<?= $this->Html->link(
-				'<i class="fas fa-arrow-left" aria-hidden="true"></i> ' . __('Clientes'),
-				$cli360ListRoute,
+				'<i class="fas fa-arrow-left" aria-hidden="true"></i> ' . ($cli360ContextoFornecedor ? __('Fornecedores') : __('Clientes')),
+				$cli360ContextoFornecedor ? $fornListaUrl : $cli360ListRoute,
 				['class' => 'cli-360-back-link', 'escape' => false, 'data-turbo' => 'false']
 			) ?>
 			<span class="cli-360-back-sep">›</span>
@@ -93,11 +97,19 @@ $tabs = [
 			<span class="cli-360-back-name"><?= h((string)$c['nome']) ?></span>
 		</div>
 		<div class="cli-360-toolbar-actions">
-			<?= $this->Html->link('<i class="fas fa-file-pdf" aria-hidden="true"></i> ' . __('Ficha PDF'), ['controller' => 'Clientes', 'action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false', 'title' => __('Abrir ficha do cliente')]) ?>
+			<?= $this->Html->link(
+				'<i class="fas fa-file-pdf" aria-hidden="true"></i> ' . __('Ficha PDF'),
+				$cli360ContextoFornecedor ? $fornPdfUrl : ['controller' => 'Clientes', 'action' => 'edit', $cliente->id],
+				['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false', 'title' => $cli360ContextoFornecedor ? __('Imprimir ficha do fornecedor') : __('Abrir ficha do cliente')]
+			) ?>
 			<button type="button" class="btn-cli-secondary btn-cli-sm" data-cli360-anexo-open="1" data-turbo="false">
 				<i class="fas fa-paperclip" aria-hidden="true"></i> <?= h(__('Anexar')) ?>
 			</button>
-			<?= $this->Html->link('<i class="fas fa-pen" aria-hidden="true"></i> ' . __('Editar'), ['controller' => 'Clientes', 'action' => 'edit', $cliente->id], ['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']) ?>
+			<?= $this->Html->link(
+				'<i class="fas fa-pen" aria-hidden="true"></i> ' . __('Editar'),
+				$cli360ContextoFornecedor ? $fornEditUrl : ['controller' => 'Clientes', 'action' => 'edit', $cliente->id],
+				['class' => 'btn-cli-secondary btn-cli-sm', 'escape' => false, 'data-turbo' => 'false']
+			) ?>
 			<?= $this->Html->link(
 				'<i class="fas fa-plus" aria-hidden="true"></i> ' . __('Novo orçamento'),
 				['controller' => 'Orcamentos', 'action' => 'add'],

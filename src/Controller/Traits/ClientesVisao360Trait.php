@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller\Traits;
 
 use App\Service\ClienteDomain\InfrastructureGuard;
+use App\Utility\ClientesPapelCadastro;
 use Cake\I18n\FrozenDate;
 use Cake\ORM\TableRegistry;
 
@@ -132,14 +133,12 @@ trait ClientesVisao360Trait {
 
 		return $out;
 	}
-	protected function _clientesVisao360Payload($cliente) {
+	protected function _clientesVisao360Payload($cliente, bool $contextoFornecedor = false) {
 		$cid = (int)$cliente->id;
 		$idempresa = (int)$this->Auth->user('idempresa');
 		$isPj = (int)$cliente->tipo === (int)C_ClientesTipoJuridica;
-		$codigo = trim((string)($cliente->public_code ?? ''));
-		if ($codigo === '') {
-			$codigo = '—';
-		}
+		$papelCols = ClientesPapelCadastro::columnsAvailable($this->Clientes);
+		$codigo = ClientesPapelCadastro::codigoExibicao($cliente, $papelCols, $contextoFornecedor);
 		$seg = $this->_clientesClassificarSegmento($cliente);
 		$cidadeDisplay = '';
 		if (!empty($cliente->cidade) && !empty($cliente->cidade->nome)) {

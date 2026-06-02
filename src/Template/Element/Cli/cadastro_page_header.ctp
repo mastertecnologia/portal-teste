@@ -11,13 +11,15 @@
 $pageTitle = (string)($pageTitle ?? __('Novo cadastro de cliente'));
 $pageSubtitle = (string)($pageSubtitle ?? __('Preencha as informações principais · Você pode complementar depois'));
 $crumbCurrent = (string)($crumbCurrent ?? __('Novo cliente'));
+$crumbParentLabel = (string)($crumbParentLabel ?? __('Clientes'));
+$saveLabel = (string)($saveLabel ?? __('Salvar cliente'));
 $cancelUrl = $cancelUrl ?? ['action' => 'index'];
 $clientesListaUrl = $clientesListaUrl ?? ['controller' => 'ClientesPrototype', 'action' => 'lista'];
 ?>
 <div class="cli-cadastro-page-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
 	<div>
 		<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">
-			<?= $this->Html->link('← ' . __('Clientes'), $clientesListaUrl, ['style' => 'color:var(--teal);', 'data-turbo' => 'false', 'escape' => false]) ?>
+			<?= $this->Html->link('← ' . h($crumbParentLabel), $clientesListaUrl, ['style' => 'color:var(--teal);', 'data-turbo' => 'false', 'escape' => false]) ?>
 			› <span style="color:var(--teal);"><?= h($crumbCurrent) ?></span>
 		</div>
 		<h1 style="font-size:22px;font-weight:600;margin:0 0 4px;"><?= h($pageTitle) ?></h1>
@@ -29,7 +31,7 @@ $clientesListaUrl = $clientesListaUrl ?? ['controller' => 'ClientesPrototype', '
 		<button type="button" class="btn btn-ghost btn-sm" disabled title="<?= h(__('Em breve')) ?>">💾 <?= h(__('Rascunho')) ?></button>
 		<?php endif; ?>
 		<?php if (!empty($showHeaderSave)) : ?>
-		<button type="submit" form="cli-add-form" class="btn btn-primary btn-sm">✓ <?= h(__('Salvar cliente')) ?></button>
+		<button type="submit" form="cli-add-form" class="btn btn-primary btn-sm">✓ <?= h($saveLabel) ?></button>
 		<?php endif; ?>
 	</div>
 </div>

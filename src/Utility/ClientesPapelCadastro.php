@@ -174,4 +174,18 @@ class ClientesPapelCadastro {
 
 		return 'FOR-' . str_pad((string)$id, 4, '0', STR_PAD_LEFT);
 	}
+
+	/**
+	 * Código exibido conforme contexto (portal P… vs fornecedor FOR-…).
+	 *
+	 * @param \Cake\Datasource\EntityInterface $entity
+	 */
+	public static function codigoExibicao($entity, bool $columnsAvailable, bool $contextoFornecedor): string {
+		if ($contextoFornecedor && $columnsAvailable && self::isFornecedor($entity, true)) {
+			return self::codigoFornecedorDisplay((int)$entity->get('id'), $entity->get('public_code'));
+		}
+		$pc = trim((string)$entity->get('public_code'));
+
+		return $pc !== '' ? $pc : '—';
+	}
 }

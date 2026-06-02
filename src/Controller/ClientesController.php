@@ -480,6 +480,10 @@ class ClientesController extends AppController {
 						'entity_id' => $cliente->id,
 					]);
 					$this->Flash->success(__('O cliente foi salvo.'));
+					if ($prefFornecedor) {
+						return $this->redirect(['action' => 'edit', $cliente->id, '?' => ['fornecedor' => '1']]);
+					}
+
 					return $this->redirect(['action' => 'index']);
 				}
 				$this->Flash->error(__('Não foi possível adicionar o cliente.'));
@@ -498,6 +502,10 @@ class ClientesController extends AppController {
 		$this->set('regimeTributarioOpts', ClientesCadastroFiscal::regimeOptions());
 		$this->set('tipoEnderecoOpts', ClientesCadastroFiscal::tipoEnderecoOptions());
 		$this->set('cliPrefFornecedor', $prefFornecedor);
+		if ($prefFornecedor) {
+			$this->set('cliCadastroListaUrl', ['controller' => 'FornecedoresPrototype', 'action' => 'lista']);
+			$this->set('cliCadastroCancelUrl', ['controller' => 'FornecedoresPrototype', 'action' => 'lista']);
+		}
 	}
 
 	public function edit($id = null) {
@@ -512,6 +520,19 @@ class ClientesController extends AppController {
 			$this->Flash->error(__('Cliente não encontrado ou sem permissão.'));
 			return $this->redirect(['action' => 'index']);
 		}
+
+		if ($this->_clientesModoCadastroFornecedor()) {
+			if ($this->request->is(['post', 'put'])) {
+				$redir = $this->_clientesSalvarCadastroMestreFromRequest($cliente, (int)$id, true);
+				if ($redir !== null) {
+					return $redir;
+				}
+			}
+			$this->_setViewVarsCadastroMestre($cliente, true);
+
+			return $this->render('add');
+		}
+
 		$titlenome = $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : $cliente->razaosocial;
 		$this->set('title', 'Cliente: ' . $titlenome);
 		$this->set('hideLayoutPageTitle', true);
@@ -700,6 +721,135 @@ class ClientesController extends AppController {
 		$this->set('tipoEnderecoOpts', ClientesCadastroFiscal::tipoEnderecoOptions());
 	}
 
+	protected function _clientesModoCadastroFornecedor(): bool {
+		return (string)$this->request->getQuery('fornecedor', '') === '1';
+	}
+
+	/**
+	 * @param \App\Model\Entity\Cliente $cliente
+	 */
+	protected function _setViewVarsCadastroMestre($cliente, bool $isEdit): void {
+		$cliPapelCols = ClientesPapelCadastro::columnsAvailable($this->Clientes);
+		$cliFiscalCols = ClientesCadastroFiscal::columnsAvailable($this->Clientes);
+		$this->set('title', $isEdit ? __('Editar fornecedor') : __('Novo fornecedor'));
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('pgmLoadErpPrototypeAssets', true);
+		$this->set('topbarParentLabel', __('Cadastros'));
+		$this->set('topbarCurrentLabel', $isEdit ? __('Editar fornecedor') : __('Cadastrar fornecedor'));
+		$cidades = $this->Cidades->find('list', ['keyField' => 'id', 'valueField' => 'nome'])->order(['nome'])->toArray();
+		$this->set('cidades', $cidades);
+		$this->set('cliente', $cliente);
+		$this->set('cliPapelColumns', $cliPapelCols);
+		$this->set('cliFiscalColumns', $cliFiscalCols);
+		$this->set('regimeTributarioOpts', ClientesCadastroFiscal::regimeOptions());
+		$this->set('tipoEnderecoOpts', ClientesCadastroFiscal::tipoEnderecoOptions());
+		$this->set('cliPrefFornecedor', true);
+		$this->set('cliCadastroEdit', $isEdit);
+		$this->set('cliCodigoExibicao', ClientesPapelCadastro::codigoFornecedorDisplay(
+			(int)$cliente->id,
+			(string)($cliente->public_code ?? '')
+		));
+		$this->set('cliCadastroListaUrl', ['controller' => 'FornecedoresPrototype', 'action' => 'lista']);
+		$this->set('cliCadastroCancelUrl', ['controller' => 'FornecedoresPrototype', 'action' => 'lista']);
+		$this->set('cliCadastroImprimir', (string)$this->request->getQuery('imprimir', '') === '1');
+	}
+
+	/**
+	 * Salva cadastro mestre (layout add) — usado na edição de fornecedor.
+	 *
+	 * @param \App\Model\Entity\Cliente $cliente
+	 * @return \Cake\Http\Response|null redirect em sucesso
+	 */
+	protected function _clientesSalvarCadastroMestreFromRequest($cliente, int $id, bool $modoFornecedor) {
+		$data = $this->request->getData();
+		$papelErr = $this->_clientesNormalizePapelPost($data);
+		if ($papelErr !== null) {
+			$this->Flash->error($papelErr);
+
+			return null;
+		}
+		$fiscalNorm = ClientesCadastroFiscal::normalizeFromRequest(
+			$data,
+			ClientesCadastroFiscal::columnsAvailable($this->Clientes)
+		);
+		if (!$fiscalNorm['ok']) {
+			$this->Flash->error(implode(' ', $fiscalNorm['errors'] ?? [__('Dados fiscais inválidos.')]));
+
+			return null;
+		}
+		$data = $fiscalNorm['data'];
+		unset($data['public_code']);
+		if (!$this->_clientesCrmFinanceReady()) {
+			unset($data['limite_credito'], $data['score_interno'], $data['observacoes_financeiras']);
+		} else {
+			if (array_key_exists('limite_credito', $data)) {
+				$data['limite_credito'] = $this->_clientesParseDecimalBr($data['limite_credito']);
+			}
+			if (array_key_exists('score_interno', $data)) {
+				$data['score_interno'] = $this->_clientesParseDecimalBr($data['score_interno']);
+			}
+		}
+		if ((int)$this->Auth->user('role') === C_RoleFuncionario) {
+			$inativoGate = RbacChecker::resourceFieldAccess((int)$this->Auth->user('id'), 'Clientes.field.inativo');
+			if ($inativoGate !== null && (empty($inativoGate['visible']) || empty($inativoGate['editable']))) {
+				unset($data['inativo']);
+			}
+		}
+
+		$cliente = $this->Clientes->patchEntity($cliente, $data);
+		if (!empty($data['cnpj'])) {
+			$cliente->cnpj = \removeCaracteres($data['cnpj']);
+		}
+		if (!empty($data['cpf'])) {
+			$cliente->cpf = \removeCaracteres($data['cpf']);
+		}
+		if (!empty($data['inscricaoestadual'])) {
+			$cliente->inscricaoestadual = \removeCaracteres($data['inscricaoestadual']);
+		}
+		if (!empty($data['inscricaomunicipal'])) {
+			$cliente->inscricaomunicipal = \removeCaracteres($data['inscricaomunicipal']);
+		}
+		if (!empty($data['cep'])) {
+			$cliente->cep = \removeCaracteres($data['cep']);
+		}
+
+		if ($this->Clientes->save($cliente)) {
+			$this->sincronizacliente($id);
+			$this->Atividades->registrar(
+				$this->Auth->user('id'),
+				$this->request->getParam('controller'),
+				$this->request->getParam('action'),
+				$cliente->id
+			);
+			$nomeCli = $cliente->tipo == C_ClientesTipoFisica ? ($cliente->nome ?? '') : ($cliente->razaosocial ?? '');
+			ClienteDomainBridge::emit(ClienteDomainEventType::CLIENTE_ATUALIZADO, [
+				'idcliente' => (int)$cliente->id,
+				'idempresa' => (int)$this->Auth->user('idempresa'),
+				'actor_user_id' => (int)$this->Auth->user('id'),
+				'title' => __('Fornecedor atualizado'),
+				'message' => __('Cadastro alterado: {0}', $nomeCli),
+				'action_url' => Router::url([
+					'controller' => 'Clientes',
+					'action' => 'edit',
+					$cliente->id,
+					'?' => ['fornecedor' => '1'],
+				]),
+				'entity_type' => 'Cliente',
+				'entity_id' => $cliente->id,
+			]);
+			$this->Flash->success(__('O fornecedor foi salvo.'));
+			$q = $modoFornecedor ? ['fornecedor' => '1'] : [];
+			if ((string)$this->request->getQuery('imprimir', '') === '1') {
+				$q['imprimir'] = '1';
+			}
+
+			return $this->redirect(['action' => 'edit', $cliente->id, '?' => $q]);
+		}
+		$this->Flash->error(__('Não foi possível salvar o fornecedor.'));
+
+		return null;
+	}
+
 	/**
 	 * Normaliza flags eh_cliente / eh_fornecedor do POST.
 	 *
@@ -732,6 +882,9 @@ class ClientesController extends AppController {
 			$this->Flash->error('Você não possui permissões para acessar esta página.');
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
+		if ($this->_clientesModoCadastroFornecedor()) {
+			return $this->redirect(['action' => 'edit', (int)$id, '?' => ['fornecedor' => '1']]);
+		}
 		$cid = (int)$id;
 		if ($cid > 0 && PortalUi::isPremiumModule('clientes')) {
 			$tab = trim((string)$this->request->getQuery('tab', ''));
@@ -762,7 +915,9 @@ class ClientesController extends AppController {
 		$this->set('cli360Tab', $tab);
 		$this->set('cliente', $cliente);
 		$this->set('cliContatosReady', $this->_clientesContatosReady());
-		$this->set('cli360', $this->_clientesVisao360Payload($cliente));
+		$contextoForn = (string)$this->request->getQuery('fornecedor', '') === '1';
+		$this->set('cli360ContextoFornecedor', $contextoForn);
+		$this->set('cli360', $this->_clientesVisao360Payload($cliente, $contextoForn));
 	}
 
 	/**

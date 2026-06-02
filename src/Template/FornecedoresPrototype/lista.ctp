@@ -118,7 +118,9 @@ $listaUrl = ['controller' => 'FornecedoresPrototype', 'action' => 'lista'];
 				<?php if ($items === []) : ?>
 				<tr><td colspan="10" style="padding:24px;text-align:center;color:var(--text-muted);"><?= h(__('Nenhum fornecedor cadastrado. Marque "Fornecedor" no cadastro de clientes ou crie um novo.')) ?></td></tr>
 				<?php else : foreach ($items as $it) :
-					$rowHref = $this->Url->build(['controller' => 'Clientes', 'action' => 'visao360', (int)$it['id']]);
+					$editFornUrl = ['controller' => 'Clientes', 'action' => 'edit', (int)$it['id'], '?' => ['fornecedor' => '1']];
+					$rowHref = $this->Url->build($editFornUrl);
+					$pdfFornUrl = ['controller' => 'Clientes', 'action' => 'edit', (int)$it['id'], '?' => ['fornecedor' => '1', 'imprimir' => '1']];
 					$docFmt = function_exists('formatCnpjCpf') ? formatCnpjCpf((string)$it['doc']) : (string)$it['doc'];
 				?>
 				<tr style="border-bottom:1px solid var(--border-light);cursor:pointer;" data-pgm-row-href="<?= h($rowHref) ?>" tabindex="0">
@@ -140,8 +142,8 @@ $listaUrl = ['controller' => 'FornecedoresPrototype', 'action' => 'lista'];
 						<?php if (!empty($it['eh_fornecedor'])) : ?><span class="badge b-paga"><?= h(__('Fornecedor')) ?></span><?php endif; ?>
 					</td>
 					<td style="padding:10px;text-align:center;" onclick="event.stopPropagation()">
-						<?= $this->Html->link(__('360°'), ['controller' => 'Clientes', 'action' => 'visao360', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs', 'data-turbo' => 'false']) ?>
-						<?= $this->Html->link(__('Editar'), ['controller' => 'Clientes', 'action' => 'edit', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs', 'data-turbo' => 'false']) ?>
+						<?= $this->Html->link(__('Ficha'), $pdfFornUrl, ['class' => 'btn btn-ghost btn-xs', 'data-turbo' => 'false', 'title' => __('Imprimir ficha do fornecedor')]) ?>
+						<?= $this->Html->link(__('Editar'), $editFornUrl, ['class' => 'btn btn-ghost btn-xs', 'data-turbo' => 'false']) ?>
 					</td>
 				</tr>
 				<?php endforeach; endif; ?>

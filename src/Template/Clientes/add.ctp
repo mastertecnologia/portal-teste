@@ -20,18 +20,47 @@ $tipoOpts = [
 	(int)C_ClientesTipoJuridica => __('Pessoa Jurídica (CNPJ)'),
 	(int)C_ClientesTipoFisica => __('Pessoa Física (CPF)'),
 ];
+$cliCadastroEdit = !empty($cliCadastroEdit);
+$cliPrefFornecedor = !empty($cliPrefFornecedor);
+$fornQuery = $cliPrefFornecedor || $cliCadastroEdit ? ['fornecedor' => '1'] : [];
+$formOpts = ['class' => 'cli-add-form', 'id' => 'cli-add-form', 'data-turbo' => 'false'];
+if ($cliCadastroEdit) {
+	$formOpts['url'] = ['action' => 'edit', $cliente->id, '?' => $fornQuery];
+}
+$listaUrl = $cliCadastroListaUrl ?? ($cliPrefFornecedor
+	? ['controller' => 'FornecedoresPrototype', 'action' => 'lista']
+	: ['controller' => 'ClientesPrototype', 'action' => 'lista']);
+$cancelUrl = $cliCadastroCancelUrl ?? ($cliPrefFornecedor
+	? ['controller' => 'FornecedoresPrototype', 'action' => 'lista']
+	: ['action' => 'index']);
+$pageTitle = $cliCadastroEdit
+	? ($cliPrefFornecedor ? __('Editar cadastro de fornecedor') : __('Editar cadastro'))
+	: ($cliPrefFornecedor ? __('Novo cadastro de fornecedor') : __('Novo cadastro de cliente'));
+$pageSubtitle = $cliCadastroEdit
+	? __('Altere os dados e salve · Código interno do portal permanece em P… no sistema')
+	: __('Preencha as informações principais · Você pode complementar depois');
+$crumbCurrent = $cliPrefFornecedor
+	? ($cliCadastroEdit ? __('Editar fornecedor') : __('Novo fornecedor'))
+	: ($cliCadastroEdit ? __('Editar cliente') : __('Novo cliente'));
+$saveLabel = $cliPrefFornecedor ? __('Salvar fornecedor') : __('Salvar cliente');
+$codigoExib = $cliCadastroEdit ? (string)($cliCodigoExibicao ?? '') : '';
 ?>
 <?= $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']) ?>
 
 <div class="pg cli-form-root" id="pg-cliente-novo">
 
-<?= $this->Form->create($cliente, ['class' => 'cli-add-form', 'id' => 'cli-add-form', 'data-turbo' => 'false']) ?>
+<?= $this->Form->create($cliente, $formOpts) ?>
 
 	<?= $this->element('Cli/cadastro_page_header', [
-		'pageTitle' => __('Novo cadastro de cliente'),
+		'pageTitle' => $pageTitle,
+		'pageSubtitle' => $pageSubtitle,
+		'crumbCurrent' => $crumbCurrent,
+		'clientesListaUrl' => $listaUrl,
 		'showHeaderSave' => true,
-		'showHeaderDraft' => true,
-		'cancelUrl' => ['action' => 'index'],
+		'showHeaderDraft' => !$cliCadastroEdit,
+		'cancelUrl' => $cancelUrl,
+		'saveLabel' => $saveLabel,
+		'crumbParentLabel' => $cliPrefFornecedor ? __('Fornecedores') : __('Clientes'),
 	]) ?>
 
 	<?= $this->element('Cli/cadastro_stepper_decorativo') ?>
@@ -57,8 +86,13 @@ $tipoOpts = [
 						]) ?>
 					</div>
 					<div class="field">
-						<label><?= h(__('Código do cliente')) ?></label>
-						<input type="text" readonly value="" placeholder="<?= h(__('Gerado ao salvar')) ?>" style="background:var(--gray-100,#f1f5f9);font-family:monospace;color:var(--text-muted);"/>
+						<label><?= h($cliPrefFornecedor ? __('Código do fornecedor') : __('Código do cliente')) ?></label>
+						<?php if ($cliCadastroEdit && $codigoExib !== '') : ?>
+							<input type="text" readonly value="<?= h($codigoExib) ?>" style="background:var(--gray-100,#f1f5f9);font-family:monospace;color:var(--teal-dark);font-weight:600;"/>
+							<div style="font-size:10px;color:var(--text-muted);margin-top:4px;"><?= h(__('Código portal (integração):')) ?> <?= h((string)($cliente->public_code ?? '—')) ?></div>
+						<?php else : ?>
+							<input type="text" readonly value="" placeholder="<?= h(__('Gerado ao salvar')) ?>" style="background:var(--gray-100,#f1f5f9);font-family:monospace;color:var(--text-muted);"/>
+						<?php endif; ?>
 					</div>
 				</div>
 
@@ -316,7 +350,7 @@ $tipoOpts = [
 	<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px;flex-wrap:wrap;">
 		<?= $this->Html->link(__('Cancelar'), ['action' => 'index'], ['class' => 'btn btn-ghost', 'data-turbo' => 'false']) ?>
 		<button type="button" class="btn btn-ghost" disabled title="<?= h(__('Em breve')) ?>">💾 <?= h(__('Salvar como rascunho')) ?></button>
-		<?= $this->Form->button('✓ ' . __('Salvar cliente'), ['class' => 'btn btn-primary', 'escape' => false]) ?>
+		<?= $this->Form->button('✓ ' . $saveLabel, ['class' => 'btn btn-primary', 'escape' => false]) ?>
 	</div>
 
 <?= $this->Form->end() ?>
@@ -716,5 +750,13 @@ jQuery(function($) {
 			else alert(data && data.message ? data.message : '<?= h(__('IE não encontrada.')) ?>');
 		}).fail(function() { $btn.prop('disabled', false).text('🔍'); alert('<?= h(__('Erro ao consultar IE.')) ?>'); });
 	});
+<?php if (!empty($cliCadastroImprimir)) : ?>
+	window.addEventListener('load', function () {
+		setTimeout(function () { window.print(); }, 400);
+	});
+<?php endif; ?>
 });
 </script>
+<?php if (!empty($cliCadastroImprimir)) : ?>
+<style>@media print { .pgm-app-topbar, .sidebar, .cli-cadastro-page-actions, #cli-add-form button[type=submit], .cli-mock-hint { display: none !important; } }</style>
+<?php endif; ?>

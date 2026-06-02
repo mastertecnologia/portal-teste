@@ -19,4 +19,14 @@ class ClientesPapelCadastroTest extends TestCase {
 		$this->assertSame(0, $where['Clientes.id']);
 		$this->assertArrayNotHasKey('Clientes.tipo', $where);
 	}
+
+	public function testCodigoExibicaoFornecedor(): void {
+		$entity = new \Cake\ORM\Entity([
+			'id' => 572,
+			'public_code' => 'P00000365',
+			'eh_fornecedor' => true,
+		]);
+		$this->assertSame('FOR-0572', ClientesPapelCadastro::codigoExibicao($entity, true, true));
+		$this->assertSame('P00000365', ClientesPapelCadastro::codigoExibicao($entity, true, false));
+	}
 }

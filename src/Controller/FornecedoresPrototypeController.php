@@ -90,7 +90,12 @@ class FornecedoresPrototypeController extends AppController {
 		}
 		$fornId = (int)$this->request->getQuery('id', 0);
 		if ($page === '360' && $fornId > 0) {
-			return $this->redirect(['controller' => 'Clientes', 'action' => 'visao360', $fornId]);
+			return $this->redirect([
+				'controller' => 'Clientes',
+				'action' => 'edit',
+				$fornId,
+				'?' => ['fornecedor' => '1'],
+			]);
 		}
 
 		throw new NotFoundException(__('Tela do protótipo não encontrada.'));
