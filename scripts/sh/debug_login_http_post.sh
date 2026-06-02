@@ -41,6 +41,7 @@ if [[ "$CODE_POST" == "302" || "$CODE_POST" == "303" ]] && echo "$LOC_POST" | gr
 	echo "RESULTADO: login OK (redirect para dashboard)."
 elif grep -qi 'usuário e/ou senha incorretos\|usuario e/ou senha incorretos' "$BODY" 2>/dev/null; then
 	echo "RESULTADO: credenciais rejeitadas (igual ao browser)."
+	echo "Diagnóstico completo: bash scripts/sh/debug_login_acesso_empresa_trace.sh \"${EMAIL}\""
 elif [[ "$CODE_POST" == "301" || "$CODE_POST" == "302" ]] && echo "$LOC_POST" | grep -qi 'https://'; then
 	echo "RESULTADO: só redirect (verifique URL/HTTPS) — não é resposta de login."
 else
