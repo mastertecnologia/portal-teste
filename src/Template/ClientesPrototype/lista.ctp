@@ -12,7 +12,12 @@ use App\Utility\PortalUi;
 $H = $this->ErpPrototype;
 $crm = isset($cliCrm) && is_array($cliCrm) ? $cliCrm : [];
 $top5 = $crm['top5'] ?? [];
-$segmentos = $crm['segmentos'] ?? [];
+$segmentos = (array)($crm['segmentos'] ?? []);
+if ($segmentos === []) {
+	$segmentos = [
+		['slug' => 'outros', 'label' => __('Outros'), 'count' => 0, 'pct' => 0],
+	];
+}
 $f = (array)($cliFiltros ?? ['q' => '', 'tipo' => '', 'status' => '']);
 $barColors = ['var(--teal)', 'var(--blue)', '#6B5B95', 'var(--amber)', 'var(--red)'];
 
