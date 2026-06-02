@@ -2198,6 +2198,128 @@ class LicPrototypeDataService {
 
 
 	/**
+	 * Critério ORM: clientes cadastrados como fornecedores (mesmo módulo Fornecedores do ERP).
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function fornecedoresCadastroWhere(): array {
+		$pjTipo = defined('C_ClientesTipoJuridica') ? (int)C_ClientesTipoJuridica : 2;
+		$where = [
+			'Clientes.idempresa' => $this->idempresa,
+			'Clientes.tipo' => $pjTipo,
+			'Clientes.inativo' => 0,
+		];
+		$tbl = $this->table('Clientes');
+		if ($tbl !== null) {
+			if ($tbl->hasField('fornecedor')) {
+				$where['Clientes.fornecedor'] = 1;
+			} elseif ($tbl->hasField('is_fornecedor')) {
+				$where['Clientes.is_fornecedor'] = 1;
+			} elseif ($tbl->hasField('eh_fornecedor')) {
+				$where['Clientes.eh_fornecedor'] = 1;
+			}
+		}
+
+
+		return $where;
+	}
+
+	/**
+	 * @return array<int,\Cake\Datasource\EntityInterface>
+	 */
+	protected function fetchFornecedoresCadastroEntities(int $limit = 200): array {
+		if ($this->idempresa <= 0 || $this->table('Clientes') === null) {
+			return [];
+		}
+		$out = [];
+		try {
+			foreach ($this->table('Clientes')->find()
+				->where($this->fornecedoresCadastroWhere())
+				->order(['Clientes.razaosocial' => 'ASC', 'Clientes.nome' => 'ASC'])
+				->limit($limit)
+				->all() as $c) {
+				$out[(int)$c->get('id')] = $c;
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Opções para selects (wizard, catálogo) — somente fornecedores cadastrados.
+	 *
+	 * @return array<int,array{id:int,nome:string,cnpj:string}>
+	 */
+	public function listFornecedoresOptions(int $limit = 200, ?int $idcategoria = null): array {
+		$idsFiltro = null;
+		if ($idcategoria !== null && $idcategoria > 0) {
+			$idsCat = $this->fornecedorIdsFromCatalogoCategoria($idcategoria);
+			if ($idsCat !== []) {
+				$idsFiltro = $idsCat;
+			}
+		}
+		$out = [];
+		foreach ($this->fetchFornecedoresCadastroEntities($limit) as $id => $c) {
+			if ($idsFiltro !== null && !in_array($id, $idsFiltro, true)) {
+				continue;
+			}
+			$out[] = [
+				'id' => $id,
+				'nome' => $this->clienteNomeFromEntity($c),
+				'cnpj' => (string)($c->get('cnpj') ?? ''),
+			];
+		}
+
+		return $out;
+	}
+
+	/**
+	 * IDs de clientes-fornecedor vinculados a produtos do catálogo na categoria.
+	 *
+	 * @return array<int,int>
+	 */
+	protected function fornecedorIdsFromCatalogoCategoria(int $idcategoria): array {
+		if ($idcategoria <= 0 || $this->table('LicCatalogoProdutos') === null) {
+			return [];
+		}
+		$ids = [];
+		try {
+			foreach ($this->table('LicCatalogoProdutos')->find()
+				->select(['idfornecedor_cliente'])
+				->where([
+					'idempresa' => $this->idempresa,
+					'idcategoria' => $idcategoria,
+					'ativo' => true,
+					'idfornecedor_cliente >' => 0,
+				])
+				->all() as $p) {
+				$fid = (int)$p->get('idfornecedor_cliente');
+				if ($fid > 0) {
+					$ids[$fid] = $fid;
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return array_values($ids);
+	}
+
+	/**
+	 * Mapa categoria → fornecedores (passo 1 do wizard).
+	 *
+	 * @return array<int,array<int,array{id:int,nome:string,cnpj:string}>>
+	 */
+	public function listFornecedoresPorCategoriaMap(): array {
+		$map = [];
+		foreach ($this->listCategoriasComContagem() as $cat) {
+			$map[(int)$cat['id']] = $this->listFornecedoresOptions(200, (int)$cat['id']);
+		}
+
+		return $map;
+	}
+
+	/**
 	 * Fornecedores (clientes PJ) com vínculo ao catálogo/licenças.
 	 *
 	 * @return array<int,array<string,mixed>>
@@ -2206,20 +2328,7 @@ class LicPrototypeDataService {
 		if (!$this->tablesAvailable() || $this->idempresa <= 0) {
 			return [];
 		}
-		$loc = TableRegistry::getTableLocator();
-		$pjTipo = defined('C_ClientesTipoJuridica') ? (int)C_ClientesTipoJuridica : 2;
-		$fornecedores = [];
-		try {
-			foreach ($this->table('Clientes')->find()
-				->where(['Clientes.idempresa' => $this->idempresa, 'Clientes.tipo' => $pjTipo, 'Clientes.inativo' => 0])
-				->order(['Clientes.razaosocial' => 'ASC'])
-				->limit($limit)
-				->all() as $c) {
-				$fornecedores[(int)$c->get('id')] = $c;
-			}
-		} catch (\Throwable $e) {
-			return [];
-		}
+		$fornecedores = $this->fetchFornecedoresCadastroEntities($limit);
 		if ($fornecedores === []) {
 			return [];
 		}
