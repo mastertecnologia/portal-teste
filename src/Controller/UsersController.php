@@ -2762,37 +2762,54 @@ class UsersController extends AppController {
 	}
 
 	public function verificacodigo($username, $code) {
-		$this->_loadGoogleAuthenticatorLibs();
 		$this->autoRender = false;
-		$username = rawurldecode((string)$username);
-		$code = str_replace(' ', '', rawurldecode((string)$code));
-		$user = $this->_findActiveUserForLogin($username);
-		if (empty($user)) {
-			echo 'erro';
-			return;
-		}
-		$g = new \Google\Authenticator\GoogleAuthenticator();
-		$secret = $user->secret;
+		$this->response = $this->response->withType('text/plain; charset=UTF-8');
+		try {
+			$this->_loadGoogleAuthenticatorLibs();
+			$username = rawurldecode((string)$username);
+			$code = str_replace(' ', '', rawurldecode((string)$code));
+			$user = $this->_findActiveUserForLogin($username);
+			if (empty($user)) {
+				echo 'erro';
 
-		if ($g->checkCode($secret, $code)) echo 'sucesso';
-		else echo 'erro';
+				return;
+			}
+			$g = new \Google\Authenticator\GoogleAuthenticator();
+			$secret = $user->secret;
+
+			if ($g->checkCode($secret, $code)) {
+				echo 'sucesso';
+			} else {
+				echo 'erro';
+			}
+		} catch (\Throwable $e) {
+			Log::error('verificacodigo: ' . $e->getMessage(), ['exception' => $e]);
+			echo 'erro';
+		}
 	}
 
 	public function verificaloginduasetapas($username = null) {
 		$this->autoRender = false;
-		if ($username === null || $username === '') {
-			$username = $this->request->getQuery('username');
-		}
-		$username = rawurldecode(trim((string)$username));
-		if ($username === '') {
+		$this->response = $this->response->withType('text/plain; charset=UTF-8');
+		try {
+			if ($username === null || $username === '') {
+				$username = $this->request->getQuery('username');
+			}
+			$username = rawurldecode(trim((string)$username));
+			if ($username === '') {
+				echo 'naotemcodigo';
+
+				return;
+			}
+			$user = $this->_findActiveUserForLogin($username);
+			if (empty($user) || empty($user->secret)) {
+				echo 'naotemcodigo';
+			} else {
+				echo 'temcodigo';
+			}
+		} catch (\Throwable $e) {
+			Log::error('verificaloginduasetapas: ' . $e->getMessage(), ['exception' => $e]);
 			echo 'naotemcodigo';
-			return;
-		}
-		$user = $this->_findActiveUserForLogin($username);
-		if (empty($user) || empty($user->secret)) {
-			echo 'naotemcodigo';
-		} else {
-			echo 'temcodigo';
 		}
 	}
 
