@@ -68,31 +68,50 @@ class ClientesPrototypeController extends AppController {
 		$busca = trim((string)$this->request->getQuery('q', ''));
 		$filtroTipo = (string)$this->request->getQuery('tipo', '');
 		$filtroStatus = (string)$this->request->getQuery('status', '');
-
+		$papelCols = false;
 		$todos = [];
+		$crm = [];
+		$cliRows = [];
+		$cliVendedores = [];
+
 		try {
+			$papelCols = ClientesPapelCadastro::columnsAvailable($this->Clientes);
 			$qAll = $this->Clientes->find('all')
 				->contain(['Cidades.Estados'])
 				->order(['Clientes.id' => 'DESC']);
 			$this->Abac->applyToQuery($qAll, 'Clientes');
 			$todos = $qAll->toArray();
-		} catch (\Throwable $e) {
-			$this->log('ClientesPrototype::lista: ' . $e->getMessage(), 'warning');
-		}
 
-		$papelCols = ClientesPapelCadastro::columnsAvailable($this->Clientes);
-		if ($papelCols) {
-			$todos = array_values(array_filter($todos, function ($c) use ($papelCols) {
-				return ClientesPapelCadastro::isCliente($c, $papelCols);
+			if ($papelCols) {
+				$todos = array_values(array_filter($todos, function ($c) use ($papelCols) {
+					return ClientesPapelCadastro::isCliente($c, $papelCols);
+				}));
+			}
+
+			$clientesAtivos = array_values(array_filter($todos, function ($c) {
+				return (int)$c->inativo === 0;
 			}));
+			$crm = $this->_clientesIndexCrmMetrics($todos, count($clientesAtivos));
+			$cliRows = $this->_clientesIndexRows($todos, $crm);
+			$cliVendedores = $this->_clientesIndexVendedoresLista();
+		} catch (\Throwable $e) {
+			$this->log('ClientesPrototype::lista: ' . $e->getMessage(), 'error');
+			$this->Flash->error(__('Não foi possível carregar a lista de clientes. Verifique a migration de papéis (eh_cliente / eh_fornecedor) ou contate o suporte.'));
+			$crm = [
+				'ativos' => 0,
+				'novos_mes' => 0,
+				'receita12_fmt' => '—',
+				'ticket_fmt' => '—',
+				'inadimplentes' => 0,
+				'inadimplentes_valor_fmt' => '—',
+				'bloqueados' => 0,
+				'aniversariantes' => 0,
+				'top5' => [],
+				'segmentos' => [],
+				'pj_bar' => ['count' => 0, 'pct' => 0],
+				'pf_bar' => ['count' => 0, 'pct' => 0],
+			];
 		}
-
-		$clientesAtivos = array_values(array_filter($todos, function ($c) {
-			return (int)$c->inativo === 0;
-		}));
-		$crm = $this->_clientesIndexCrmMetrics($todos, count($clientesAtivos));
-		$cliRows = $this->_clientesIndexRows($todos, $crm);
-		$cliVendedores = $this->_clientesIndexVendedoresLista();
 
 		$this->set([
 			'title' => __('Clientes'),
@@ -109,6 +128,8 @@ class ClientesPrototypeController extends AppController {
 			'cliFiltros' => ['q' => $busca, 'tipo' => $filtroTipo, 'status' => $filtroStatus],
 			'cliPapelColumns' => $papelCols,
 		]);
+
+		return $this->render('lista');
 	}
 
 	/**

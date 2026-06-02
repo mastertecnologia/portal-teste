@@ -15,14 +15,24 @@ class ClientesPapelCadastro {
 	public const STATUS_CADASTRADO = 'cadastrado';
 
 	/**
+	 * Confere colunas no banco (evita 500 quando cache do schema Cake diverge da migration).
+	 *
 	 * @param Table|null $clientesTable
 	 */
 	public static function columnsAvailable($clientesTable): bool {
 		if ($clientesTable === null) {
 			return false;
 		}
+		try {
+			if (!$clientesTable->hasField('eh_cliente') || !$clientesTable->hasField('eh_fornecedor')) {
+				return false;
+			}
+			$schema = $clientesTable->getConnection()->getSchemaCollection()->describe('clientes');
 
-		return $clientesTable->hasField('eh_cliente') && $clientesTable->hasField('eh_fornecedor');
+			return $schema->hasColumn('eh_cliente') && $schema->hasColumn('eh_fornecedor');
+		} catch (\Throwable $e) {
+			return false;
+		}
 	}
 
 	/**
