@@ -103,9 +103,7 @@ class ClientesPapelCadastro {
 	 */
 	public static function isFornecedor($entity, bool $columnsAvailable): bool {
 		if (!$columnsAvailable) {
-			$pj = defined('C_ClientesTipoJuridica') ? (int)C_ClientesTipoJuridica : 2;
-
-			return (int)$entity->get('tipo') === $pj;
+			return false;
 		}
 
 		return (bool)$entity->get('eh_fornecedor');
@@ -133,7 +131,6 @@ class ClientesPapelCadastro {
 	 * @return array<string,mixed>
 	 */
 	public static function whereFornecedor(int $idempresa, bool $columnsAvailable): array {
-		$pjTipo = defined('C_ClientesTipoJuridica') ? (int)C_ClientesTipoJuridica : 2;
 		$where = [
 			'Clientes.idempresa' => $idempresa,
 			'Clientes.inativo' => 0,
@@ -141,7 +138,7 @@ class ClientesPapelCadastro {
 		if ($columnsAvailable) {
 			$where['Clientes.eh_fornecedor'] = true;
 		} else {
-			$where['Clientes.tipo'] = $pjTipo;
+			$where['Clientes.id'] = 0;
 		}
 
 		return $where;

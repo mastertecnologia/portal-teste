@@ -32,13 +32,10 @@ class ClientesPapelClienteFornecedor extends AbstractMigration {
 			$this->execute('ALTER TABLE clientes ADD COLUMN fornecedor_lead_time_dias SMALLINT NULL');
 		}
 
-		// Legado: quem já era PJ no módulo Fornecedores continua marcado como fornecedor.
 		$this->execute(
 			'UPDATE clientes SET eh_cliente = TRUE WHERE eh_cliente IS DISTINCT FROM TRUE'
 		);
-		$this->execute(
-			'UPDATE clientes SET eh_fornecedor = TRUE WHERE tipo = 2 AND eh_fornecedor IS DISTINCT FROM TRUE'
-		);
+		// eh_fornecedor só via formulário (checkbox) ou migration 20260604120000 (sinais explícitos).
 	}
 
 	public function down() {

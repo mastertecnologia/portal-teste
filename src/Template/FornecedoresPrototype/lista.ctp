@@ -137,7 +137,7 @@ $listaUrl = ['controller' => 'FornecedoresPrototype', 'action' => 'lista'];
 					<td style="padding:10px;text-align:center;"><?= $H->badge((string)$it['status_label'], (string)$it['status_badge']) ?></td>
 					<td style="padding:10px;text-align:center;font-size:10px;">
 						<?php if (!empty($it['eh_cliente'])) : ?><span class="badge b-env"><?= h(__('Cliente')) ?></span><?php endif; ?>
-						<span class="badge b-paga"><?= h(__('Fornecedor')) ?></span>
+						<?php if (!empty($it['eh_fornecedor'])) : ?><span class="badge b-paga"><?= h(__('Fornecedor')) ?></span><?php endif; ?>
 					</td>
 					<td style="padding:10px;text-align:center;" onclick="event.stopPropagation()">
 						<?= $this->Html->link(__('360°'), ['controller' => 'Clientes', 'action' => 'visao360', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs', 'data-turbo' => 'false']) ?>

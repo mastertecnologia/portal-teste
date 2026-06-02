@@ -77,6 +77,9 @@ trait FornecedoresListaTrait {
 		$comprasTotal = 0.0;
 
 		foreach ($rows as $r) {
+			if ($papelCols && !ClientesPapelCadastro::isFornecedor($r, true)) {
+				continue;
+			}
 			$counts['total']++;
 			$inativo = (int)$r->get('inativo') === 1;
 			if ($inativo) {
@@ -129,6 +132,7 @@ trait FornecedoresListaTrait {
 				'status_badge' => ClientesPapelCadastro::statusHomologacaoBadge($stHom),
 				'inativo' => $inativo,
 				'eh_cliente' => ClientesPapelCadastro::isCliente($r, $papelCols),
+				'eh_fornecedor' => ClientesPapelCadastro::isFornecedor($r, $papelCols),
 			];
 		}
 
