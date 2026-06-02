@@ -7,6 +7,7 @@ use App\Controller\Traits\ClientesCrmListaTrait;
 use App\Controller\Traits\ClientesVisao360SupportTrait;
 use App\Controller\Traits\ClientesVisao360Trait;
 use App\Controller\Traits\ErpPrototypeRbacTrait;
+use App\Utility\ClientesPapelCadastro;
 use App\Utility\PortalUi;
 use App\Controller\Traits\PrototypeApiSecurityTrait;
 use Cake\Event\Event;
@@ -79,6 +80,13 @@ class ClientesPrototypeController extends AppController {
 			$this->log('ClientesPrototype::lista: ' . $e->getMessage(), 'warning');
 		}
 
+		$papelCols = ClientesPapelCadastro::columnsAvailable($this->Clientes);
+		if ($papelCols) {
+			$todos = array_values(array_filter($todos, function ($c) use ($papelCols) {
+				return ClientesPapelCadastro::isCliente($c, $papelCols);
+			}));
+		}
+
 		$clientesAtivos = array_values(array_filter($todos, function ($c) {
 			return (int)$c->inativo === 0;
 		}));
@@ -99,6 +107,7 @@ class ClientesPrototypeController extends AppController {
 			'cliRows' => $cliRows,
 			'cliVendedores' => $cliVendedores,
 			'cliFiltros' => ['q' => $busca, 'tipo' => $filtroTipo, 'status' => $filtroStatus],
+			'cliPapelColumns' => $papelCols,
 		]);
 	}
 

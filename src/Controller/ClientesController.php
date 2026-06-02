@@ -11,6 +11,7 @@ use App\Service\ClienteDomain\ClienteDomainBridge;
 use App\Service\ClienteDomain\InfrastructureGuard;
 use App\Service\ClienteIntegration\ClienteErpSyncService;
 use App\Model\Table\ClientesTable;
+use App\Utility\ClientesPapelCadastro;
 use App\Utility\ClienteDomainEventType;
 use App\Utility\PortalUi;
 use App\Utility\RbacChecker;
@@ -404,10 +405,18 @@ class ClientesController extends AppController {
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('topbarParentLabel', __('Cadastros'));
 		$this->set('topbarCurrentLabel', __('Cadastrar clientes'));
-		$cliente = $this->Clientes->newEntity();
+		$cliPapelCols = ClientesPapelCadastro::columnsAvailable($this->Clientes);
+		$prefFornecedor = (string)$this->request->getQuery('fornecedor', '') === '1';
+		$cliente = $this->Clientes->newEntity(
+			$cliPapelCols ? ClientesPapelCadastro::defaultsForNewEntity($prefFornecedor) : []
+		);
 
 		if ($this->request->is('post')) {
 			$data = $this->request->getData();
+			$papelErr = $this->_clientesNormalizePapelPost($data);
+			if ($papelErr !== null) {
+				$this->Flash->error($papelErr);
+			} else {
 			if ($data['tipo'] == C_ClientesTipoFisica) {
 				$qDup = $this->Clientes->findByCpf($data['cpf'])->where(['tipo' => C_ClientesTipoFisica]);
 				$this->Abac->applyToQuery($qDup, 'Clientes');
@@ -463,12 +472,16 @@ class ClientesController extends AppController {
 					return $this->redirect(['action' => 'index']);
 				}
 				$this->Flash->error(__('Não foi possível adicionar o cliente.'));
-			} else $this->Flash->error(__('Já existe um cliente cadastrado com este CPF/CNPJ.'));
+			} else {
+				$this->Flash->error(__('Já existe um cliente cadastrado com este CPF/CNPJ.'));
+			}
 		}
 
 		$cidades = $this->Cidades->find('list', ['keyField' => 'id', 'valueField' => 'nome'])->order(['nome'])->toArray();
 		$this->set('cidades', $cidades);
 		$this->set('cliente', $cliente);
+		$this->set('cliPapelColumns', $cliPapelCols);
+		$this->set('cliPrefFornecedor', $prefFornecedor);
 	}
 
 	public function edit($id = null) {
@@ -533,6 +546,10 @@ class ClientesController extends AppController {
 
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
+			$papelErr = $this->_clientesNormalizePapelPost($data);
+			if ($papelErr !== null) {
+				$this->Flash->error($papelErr);
+			} else {
 			unset($data['public_code']);
 			if (!$this->_clientesCrmFinanceReady()) {
 				unset($data['limite_credito'], $data['score_interno'], $data['observacoes_financeiras']);
@@ -575,6 +592,7 @@ class ClientesController extends AppController {
 			}
 
 			$this->Flash->error(__('Não foi possível salvar o cliente.'));
+			}
 		}
 
 		$hoje = date('d/m/Y');
@@ -652,6 +670,29 @@ class ClientesController extends AppController {
 		$this->set('cliCrmFinanceReady', $this->_clientesCrmFinanceReady());
 		$this->set('cliContatosReady', $this->_clientesContatosReady());
 		$this->set('cliContatos', $this->_clientesContatosList((int)$id));
+		$this->set('cliPapelColumns', ClientesPapelCadastro::columnsAvailable($this->Clientes));
+	}
+
+	/**
+	 * Normaliza flags eh_cliente / eh_fornecedor do POST.
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	protected function _clientesNormalizePapelPost(array &$data): ?string {
+		$result = ClientesPapelCadastro::normalizeFromRequest(
+			$data,
+			ClientesPapelCadastro::columnsAvailable($this->Clientes)
+		);
+		if (!$result['ok']) {
+			$errs = (array)($result['errors'] ?? []);
+
+			return (string)($errs['papel'] ?? __('Papel do cadastro inválido.'));
+		}
+		foreach ((array)($result['data'] ?? []) as $key => $val) {
+			$data[$key] = $val;
+		}
+
+		return null;
 	}
 
 	/**

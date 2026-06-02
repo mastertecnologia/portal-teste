@@ -111,6 +111,11 @@
 								</div>
 							</div>
 						</div>
+						<?= $this->element('Cli/papel_cadastro_checkboxes', [
+							'cliente' => $cliente,
+							'cliPapelColumns' => !empty($cliPapelColumns),
+							'showFornecedorExtras' => !empty($cliente->eh_fornecedor),
+						]) ?>
 						<div class="cli-section pessoaJuridica <?= $pessoaJuridica ?>">
 							<div class="cli-section-head">
 								<div class="cli-section-icon"><i class="fas fa-building"></i></div>

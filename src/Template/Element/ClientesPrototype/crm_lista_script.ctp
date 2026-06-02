@@ -17,6 +17,10 @@
 	var segmentoFilter = '';
 	var vendedorFilter = '';
 	var activeChip = '';
+	var filterPj = true;
+	var filterPf = true;
+	var filterPapelCliente = true;
+	var filterPapelFornecedor = true;
 	var searchInput = root.querySelector('#cli-search');
 	var searchMode = root.querySelector('#cli-search-mode');
 
@@ -49,9 +53,16 @@
 		if (statusFilter !== '' && row.getAttribute('data-cli-status') !== statusFilter) {
 			return false;
 		}
-		if (!typeAll && row.getAttribute('data-cli-tipo') !== type) {
-			return false;
-		}
+		var rowTipo = row.getAttribute('data-cli-tipo') || '';
+		if (rowTipo === 'pj' && !filterPj) return false;
+		if (rowTipo === 'pf' && !filterPf) return false;
+		if (!filterPj && !filterPf) return false;
+		var ehCli = row.getAttribute('data-cli-papel-cliente') === '1';
+		var ehForn = row.getAttribute('data-cli-papel-fornecedor') === '1';
+		if (!filterPapelCliente && !filterPapelFornecedor) return false;
+		if (filterPapelCliente && !filterPapelFornecedor && !ehCli) return false;
+		if (!filterPapelCliente && filterPapelFornecedor && !ehForn) return false;
+		if (filterPapelCliente && filterPapelFornecedor && !ehCli && !ehForn) return false;
 		if (segmentoFilter !== '' && row.getAttribute('data-cli-segmento') !== segmentoFilter) {
 			return false;
 		}
@@ -184,15 +195,24 @@
 			redrawTable();
 		});
 	}
-	var tipoSel = root.querySelector('#cli-filter-tipo');
-	if (tipoSel) {
-		tipoSel.addEventListener('change', function () {
-			var v = tipoSel.value;
-			typeAll = v === '';
-			type = v === 'pf' ? 'pf' : 'pj';
-			redrawTable();
-		});
+	var tipoPj = root.querySelector('#cli-filter-tipo-pj');
+	var tipoPf = root.querySelector('#cli-filter-tipo-pf');
+	function syncTipoFromChecks() {
+		filterPj = !tipoPj || tipoPj.checked;
+		filterPf = !tipoPf || tipoPf.checked;
+		redrawTable();
 	}
+	if (tipoPj) tipoPj.addEventListener('change', syncTipoFromChecks);
+	if (tipoPf) tipoPf.addEventListener('change', syncTipoFromChecks);
+	var papelCli = root.querySelector('#cli-filter-papel-cliente');
+	var papelForn = root.querySelector('#cli-filter-papel-fornecedor');
+	function syncPapelFromChecks() {
+		filterPapelCliente = !papelCli || papelCli.checked;
+		filterPapelFornecedor = !papelForn || papelForn.checked;
+		redrawTable();
+	}
+	if (papelCli) papelCli.addEventListener('change', syncPapelFromChecks);
+	if (papelForn) papelForn.addEventListener('change', syncPapelFromChecks);
 	var vendSel = root.querySelector('#cli-filter-vendedor');
 	if (vendSel) {
 		vendSel.addEventListener('change', function () {
