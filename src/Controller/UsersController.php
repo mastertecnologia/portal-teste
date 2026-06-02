@@ -1479,13 +1479,7 @@ class UsersController extends AppController {
 			$loginMatch = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $login);
 
 			return $this->Users->find()
-				->where([
-					'OR' => [
-						'Users.inativo IS' => null,
-						// PG: inativo boolean — `= 0` gera SQLSTATE 42883; IS NOT TRUE cobre bool e smallint.
-						'Users.inativo IS NOT' => true,
-					],
-				])
+				->where($this->Users->loginActiveInativoCondition())
 				->where([
 					'OR' => array_merge(
 						FiscalSqlConditions::caseInsensitiveLike($conn, 'Users.email', $loginMatch),
