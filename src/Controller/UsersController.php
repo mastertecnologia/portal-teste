@@ -1594,7 +1594,11 @@ class UsersController extends AppController {
 					return $this->redirect(['action' => 'acessoEmpresa']);
 				}
 				if (!$this->_isUserInactiveForLogin($user['inativo'] ?? null) && !$this->_isUserBlockedForLogin($user['bloqueado'] ?? null)) {
-					$user['idempresa'] = $this->getEmpresaPreferencial($user['id']);
+					try {
+						$user['idempresa'] = $this->getEmpresaPreferencial($user['id']);
+					} catch (\Throwable $e) {
+						$user['idempresa'] = null;
+					}
 					$this->Auth->setUser($user);
 					return $this->redirect($this->Auth->redirectUrl());
 				} elseif ($this->_isUserInactiveForLogin($user['inativo'] ?? null)) {
@@ -1642,7 +1646,11 @@ class UsersController extends AppController {
 					return $this->redirect(['action' => 'login']);
 				}
 				if (!$this->_isUserInactiveForLogin($user['inativo'] ?? null) && !$this->_isUserBlockedForLogin($user['bloqueado'] ?? null)) {
-					$user['idempresa'] = $this->getEmpresaPreferencial($user['id']);
+					try {
+						$user['idempresa'] = $this->getEmpresaPreferencial($user['id']);
+					} catch (\Throwable $e) {
+						$user['idempresa'] = null;
+					}
 					$this->Auth->setUser($user);
 					return $this->redirect($this->Auth->redirectUrl());
 				} elseif ($this->_isUserInactiveForLogin($user['inativo'] ?? null)) {
