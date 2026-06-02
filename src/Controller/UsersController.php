@@ -1770,10 +1770,12 @@ class UsersController extends AppController {
 				}
 
 				if (empty($user)) {
+					$reason = $this->_diagnoseLoginRejectReason($creds['username'], $creds['password']);
 					Log::warning(sprintf(
-						'acessoEmpresa: credenciais rejeitadas login=%s password_len=%d',
+						'acessoEmpresa: credenciais rejeitadas login=%s password_len=%d reason=%s',
 						$creds['username'],
-						$creds['password'] !== null ? strlen($creds['password']) : 0
+						$creds['password'] !== null ? strlen($creds['password']) : 0,
+						$reason
 					));
 					$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
 				}
