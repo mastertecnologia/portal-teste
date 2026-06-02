@@ -8,7 +8,19 @@ Checklist para validar o módulo após deploy (`main` com L1–L7).
 - [ ] Papéis com `licencas.*` (migration `RbacEquipeRolesLicencasModule` ou matriz manual)
 - [ ] `RBAC_MODE=enforce` (ou `warn`) conforme política
 
-## Dados de teste (opcional)
+Verificação automatizada (CLI):
+
+```bash
+bin/cake licencas uat_check --idempresa=N --strict
+```
+
+Esperado: `[OK]` em tabelas `lic_*`, permissões RBAC e vínculos `operacao` / `admin_equipe`. Aviso aceitável: `LIC_COFRE_CIPHER_KEY` vazio em homologação.
+
+## Dados de teste
+
+**Produção/homolog (idempresa=1):** seed já aplicado — `stats` deve mostrar licenças/KPIs > 0.
+
+### Seed adicional (opcional)
 
 ```bash
 # Substitua N pelo idempresa real (ex. 1 ou 2)

@@ -69,6 +69,7 @@
             <file>tests/TestCase/Integration/RbacContratosHorasHttpTest.php</file>
             <file>tests/TestCase/Integration/RbacNormasempresaHttpTest.php</file>
             <file>tests/TestCase/Integration/RbacFinanceiroHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacLicencasHttpTest.php</file>
             <file>tests/TestCase/Integration/RbacFiscalHttpTest.php</file>
             <file>tests/TestCase/Integration/RbacFiscalNotasHttpTest.php</file>
             <file>tests/TestCase/Integration/RbacFiscalMoreHttpTest.php</file>

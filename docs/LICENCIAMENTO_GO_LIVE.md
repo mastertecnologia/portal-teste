@@ -47,6 +47,9 @@ LICENCAS_CANONICAL_ROUTES=0
 
 ## Homologação e seed
 
+CI local (sem PostgreSQL): `composer lic-verify` (registry + HTTP RBAC SQLite).
+
 - Checklist UAT: `docs/LICENCIAMENTO_HOMOLOGACAO_UAT.md`
+- Pré-vôo UAT: `bin/cake licencas uat_check --idempresa=N --strict`
 - Estatísticas: `bin/cake licencas stats --idempresa=N`
 - Dados demo (só homologação): `bin/cake licencas seed_demo --idempresa=N`
