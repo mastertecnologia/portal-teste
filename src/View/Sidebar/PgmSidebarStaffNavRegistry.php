@@ -51,6 +51,10 @@ final class PgmSidebarStaffNavRegistry
         if ($bancos !== null) {
             $sections[] = $bancos;
         }
+        $licenciamento = self::sectionLicenciamento($ctx, $admin, $userId, $ctrl, $mkItem);
+        if ($licenciamento !== null) {
+            $sections[] = $licenciamento;
+        }
         $sistema = self::sectionSistema($ctx, $sg, $admin, $userId, $ctrl, $mkItem);
         if ($sistema !== null) {
             $sections[] = $sistema;
@@ -497,6 +501,85 @@ final class PgmSidebarStaffNavRegistry
             'defaultOpen' => (bool)($ctx['pgmSbOpenBancos'] ?? false),
             'items' => $items,
         ];
+    }
+
+    /**
+     * Licenciamento (pg-lic-* do mock pgm_erp_completo.html).
+     *
+     * @return array<string,mixed>|null
+     */
+    private static function sectionLicenciamento(array $ctx, bool $admin, int $userId, string $ctrl, callable $mkItem): ?array
+    {
+        $adminFlag = $admin ? 1 : 0;
+        $gate = static function (string $key) use ($adminFlag, $userId): bool {
+            return ErpPrototypeAccess::sidebarKeyVisible($adminFlag, 0, $userId, $key);
+        };
+
+        $items = [];
+        $defs = [
+            ['lic-dashboard', 'key-round', ' Painel · Licenças', ['controller' => 'LicencasPrototype', 'action' => 'dashboard']],
+            ['lic-empresas', 'building-2', ' Empresas-cliente', ['controller' => 'LicencasPrototype', 'action' => 'view', 'empresas']],
+            ['lic-licencas', 'package', ' Licenças', ['controller' => 'LicencasPrototype', 'action' => 'licencas']],
+            ['lic-renovacoes', 'refresh-cw', ' Renovações', ['controller' => 'LicencasPrototype', 'action' => 'view', 'renovacoes']],
+            ['lic-calendario', 'calendar', ' Calendário', ['controller' => 'LicencasPrototype', 'action' => 'view', 'calendario']],
+            ['lic-cofre', 'lock', ' Cofre Credenciais', ['controller' => 'LicencasPrototype', 'action' => 'view', 'cofre']],
+            ['lic-dispositivos', 'monitor', ' Dispositivos', ['controller' => 'LicencasPrototype', 'action' => 'view', 'dispositivos']],
+            ['lic-catalogo', 'book-open', ' Catálogo & Fornecedores', ['controller' => 'LicencasPrototype', 'action' => 'view', 'catalogo']],
+            ['lic-inteligencia', 'brain', ' Inteligência', ['controller' => 'LicencasPrototype', 'action' => 'view', 'inteligencia']],
+            ['lic-auditoria', 'file-search', ' Auditoria', ['controller' => 'LicencasPrototype', 'action' => 'view', 'auditoria']],
+        ];
+        foreach ($defs as $def) {
+            if (!$gate($def[0])) {
+                continue;
+            }
+            $route = $def[3];
+            $badge = '';
+            if ($def[0] === 'lic-renovacoes' && !empty($ctx['licRenovacoesBadge'])) {
+                $badge = '<span class="badge badge-warning hide-menu">' . (int)$ctx['licRenovacoesBadge'] . '</span>';
+            }
+            $items[] = $mkItem(
+                $def[1],
+                $def[2],
+                $route,
+                ['data-turbo' => 'false'],
+                self::licItemActive($ctx, $ctrl, $def[0], $route),
+                $badge,
+                trim($def[2])
+            );
+        }
+        $items = array_values(array_filter($items));
+        if ($items === []) {
+            return null;
+        }
+
+        return [
+            'id' => 'licenciamento',
+            'title' => 'Licenciamento',
+            'titleBadgeHtml' => '<span class="badge badge-success hide-menu" style="font-size:9px;font-weight:600;margin-left:6px;">NOVO</span>',
+            'defaultOpen' => (bool)($ctx['pgmSbOpenLicenciamento'] ?? false),
+            'items' => $items,
+        ];
+    }
+
+    /**
+     * @param array<string,mixed> $route
+     */
+    private static function licItemActive(array $ctx, string $ctrl, string $key, array $route): bool
+    {
+        $erpNav = (string)($ctx['erpNavActive'] ?? '');
+        if ($erpNav !== '' && $erpNav === $key) {
+            return true;
+        }
+        if ($ctrl !== 'LicencasPrototype') {
+            return false;
+        }
+        $act = (string)($ctx['act'] ?? '');
+        $targetAct = (string)($route['action'] ?? '');
+        if ($targetAct === 'view' && isset($route[0])) {
+            return $act === 'view' && (string)($ctx['erpViewPage'] ?? '') === (string)$route[0];
+        }
+
+        return $act === $targetAct;
     }
 
     /**

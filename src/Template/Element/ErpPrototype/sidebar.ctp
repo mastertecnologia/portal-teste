@@ -102,18 +102,20 @@ $sections = [
 	],
 	[
 		'title' => __('Licenciamento'),
+		'title_badge' => 'NOVO',
 		'items' => [
 			['key' => 'lic-dashboard', 'label' => __('Painel · Licenças'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'dashboard']],
 			['key' => 'lic-empresas', 'label' => __('Empresas-cliente'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'empresas'], 'indent' => true],
-			['key' => 'lic-fornecedores', 'label' => __('Fornecedores'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'fornecedores'], 'indent' => true],
 			['key' => 'lic-licencas', 'label' => __('Licenças'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'licencas'], 'indent' => true],
-			['key' => 'lic-catalogo', 'label' => __('Catálogo'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'catalogo'], 'indent' => true],
 			['key' => 'lic-renovacoes', 'label' => __('Renovações'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'renovacoes'], 'indent' => true],
-			['key' => 'lic-cofre', 'label' => __('Cofre'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'cofre'], 'indent' => true],
-			['key' => 'lic-solicitacoes', 'label' => __('Solicitações'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'solicitacoes'], 'indent' => true],
-			['key' => 'lic-auditoria', 'label' => __('Auditoria'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'auditoria'], 'indent' => true],
-			['key' => 'lic-config', 'label' => __('Configurações'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'config'], 'indent' => true],
+			['key' => 'lic-calendario', 'label' => __('Calendário'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'calendario'], 'indent' => true],
+			['key' => 'lic-cofre', 'label' => __('Cofre Credenciais'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'cofre'], 'indent' => true],
+			['key' => 'lic-dispositivos', 'label' => __('Dispositivos'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'dispositivos'], 'indent' => true],
+			['key' => 'lic-catalogo', 'label' => __('Catálogo & Fornecedores'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'catalogo'], 'indent' => true],
 			['key' => 'lic-inteligencia', 'label' => __('Inteligência'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'inteligencia'], 'indent' => true],
+			['key' => 'lic-auditoria', 'label' => __('Auditoria'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'auditoria'], 'indent' => true],
+			['key' => 'lic-solicitacoes', 'label' => __('Solicitações'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'solicitacoes'], 'indent' => true],
+			['key' => 'lic-config', 'label' => __('Configurações'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'config'], 'indent' => true],
 			['key' => 'lic-relatorios', 'label' => __('Relatórios'), 'url' => ['controller' => 'LicencasPrototype', 'action' => 'view', 'relatorios'], 'indent' => true],
 		],
 	],
@@ -210,7 +212,12 @@ $sections = array_values(array_filter($sections, static function (array $sec) {
 	</div>
 	<nav class="sidebar-nav" aria-label="<?= h(__('Menu principal')) ?>">
 		<?php foreach ($sections as $section) : ?>
-			<div class="nav-section"><?= h($section['title']) ?></div>
+			<div class="nav-section">
+				<?= h($section['title']) ?>
+				<?php if (!empty($section['title_badge'])) : ?>
+					<span style="background:var(--teal);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:4px;font-weight:normal;"><?= h($section['title_badge']) ?></span>
+				<?php endif; ?>
+			</div>
 			<?php foreach ($section['items'] as $item) :
 				$itemKey = (string)$item['key'];
 				$indentCls = '';

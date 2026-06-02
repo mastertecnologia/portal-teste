@@ -16,7 +16,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="${1:-$REPO_ROOT/.env}"
 
-DEFAULT_MODULES="clientes,orcamentos,produtos,servicedesk,ordens,financeiro,bancos,fornecedores,home"
+DEFAULT_MODULES="clientes,orcamentos,produtos,servicedesk,ordens,financeiro,bancos,fornecedores,licencas,home"
 MODULES="${PORTAL_PREMIUM_MODULES:-$DEFAULT_MODULES}"
 MODE="${PORTAL_UI_MODE:-mixed}"
 
