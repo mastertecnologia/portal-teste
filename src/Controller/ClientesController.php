@@ -475,6 +475,7 @@ class ClientesController extends AppController {
 			} else {
 				$this->Flash->error(__('Já existe um cliente cadastrado com este CPF/CNPJ.'));
 			}
+			}
 		}
 
 		$cidades = $this->Cidades->find('list', ['keyField' => 'id', 'valueField' => 'nome'])->order(['nome'])->toArray();
