@@ -29,8 +29,10 @@ Alternativa manual: **Permissões → Sincronizar catálogo** e atribuir na matr
 
 | Público | URL |
 |---------|-----|
-| Equipe | `/licencas-prototype` |
-| Portal | `/cliente/licencas` |
+| Equipe | `https://portal.pgm.inf.br/portal/licencas-prototype` (`APP_BASE=/portal`) |
+| Portal | `https://portal.pgm.inf.br/portal/cliente/licencas` |
+
+DNS/proxy (404 Win64): `docs/LICENCIAMENTO_DNS_PUBLICO.md`, `bin/cake licencas url_check`.
 
 ## `.env` (opcional)
 

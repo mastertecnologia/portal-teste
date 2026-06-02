@@ -51,6 +51,8 @@ Se antes tudo rodava no mesmo servidor (10.0.2.7), é provável que `urlerp` est
   `https://portal.pgm.inf.br/portal/`  
   (ou o IP 10.0.2.25 se não usar nome de domínio). O Portal está em 10.0.2.25; o Integrador faz HTTP **para** o Portal, não para o próprio 10.0.2.7.
 
+  **Importante:** se `portal.pgm.inf.br` resolver para o ERP Windows (Apache **Win64**), rotas `/portal/licencas-*` devolvem **404**. O tráfego HTTPS público deve terminar no **10.0.2.25**. Ver `docs/LICENCIAMENTO_DNS_PUBLICO.md` e `bin/cake licencas url_check` no servidor Linux.
+
 ### 4. PostgreSQL (10.0.2.23)
 
 - **pg_hba.conf:** liberar conexões do IP do Portal (**10.0.2.25**) para o banco `pgm` (usuário postgres ou o que o Portal usar).

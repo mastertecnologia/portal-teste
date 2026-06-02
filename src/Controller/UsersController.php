@@ -1371,6 +1371,10 @@ class UsersController extends AppController {
 			return $s;
 		}
 		if ($s[0] === '/' && preg_match('#^[a-zA-Z0-9/_?&=\-.]+$#', $s)) {
+			if ($wTrim !== '' && $wTrim !== '/' && strpos($s, $wTrim) !== 0) {
+				$s = $wTrim . $s;
+			}
+
 			return $s;
 		}
 
