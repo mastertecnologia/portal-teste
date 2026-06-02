@@ -59,6 +59,12 @@
             "@test-fiscal",
             "@test-fiscal-http"
         ],
+        "test-licencas": "phpunit --colors=always tests/TestCase/Config/PermissionsRegistryLicencasTest.php",
+        "test-licencas-http": "phpunit --colors=always --bootstrap tests/bootstrap_http.php tests/TestCase/Integration/RbacLicencasHttpTest.php",
+        "lic-verify": [
+            "@test-licencas",
+            "@test-licencas-http"
+        ],
         "rbac-verify-noninteractive": "@test-rbac",
         "rbac-verify-with-pre-deploy": "php bin/cake rbac_rollout pre_deploy"
     },

@@ -5,6 +5,7 @@ namespace App\Shell;
 
 use App\Service\Lic\LicPrototypeDataService;
 use Cake\Console\Shell;
+use Cake\Core\Configure;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -18,6 +19,7 @@ use Cake\Utility\Inflector;
  *   bin/cake licencas seed_demo --idempresa=1
  *   bin/cake licencas seed_demo --idempresa=1 --dry-run
  *   bin/cake licencas seed_demo --idempresa=1 --force
+ *   bin/cake licencas uat_check --idempresa=1 --strict
  */
 class LicencasShell extends Shell {
 
@@ -30,6 +32,9 @@ class LicencasShell extends Shell {
 		$parser->addSubcommand('seed_demo', [
 			'help' => 'Seed de homologação (categoria, produtos, licenças, cofre, solicitação).',
 		]);
+		$parser->addSubcommand('uat_check', [
+			'help' => 'Pré-vôo homologação: schema lic_*, RBAC e opcional KPIs por empresa.',
+		]);
 		$parser->addOption('idempresa', [
 			'default' => '',
 			'help' => 'Filtrar por idempresa (obrigatório em seed_demo).',
@@ -38,6 +43,11 @@ class LicencasShell extends Shell {
 			'boolean' => true,
 			'default' => false,
 			'help' => 'seed_demo: apenas simula.',
+		]);
+		$parser->addOption('strict', [
+			'boolean' => true,
+			'default' => false,
+			'help' => 'uat_check: sai com código 1 se houver falhas.',
 		]);
 		$parser->addOption('force', [
 			'boolean' => true,
@@ -65,6 +75,7 @@ class LicencasShell extends Shell {
 		$this->out('Subcomandos:');
 		$this->out('  stats [--idempresa=N]');
 		$this->out('  seed_demo --idempresa=N [--dry-run] [--force]');
+		$this->out('  uat_check [--idempresa=N] [--strict]');
 	}
 
 	/**
@@ -73,6 +84,11 @@ class LicencasShell extends Shell {
 	public function seedDemo() {
 		return $this->seed_demo();
 	}
+
+	public function uatCheck() {
+		return $this->uat_check();
+	}
+
 
 	public function stats() {
 		$idempresa = $this->parseIdempresa(false);
@@ -254,6 +270,162 @@ class LicencasShell extends Shell {
 			'cofre_exige_aprovacao' => false,
 		], 0);
 		$this->out('<success>Seed demo concluído.</success>');
+	}
+
+
+	/**
+	 * Pré-vôo pós-deploy (schema, RBAC, cofre). Não altera dados.
+	 *
+	 * @return int
+	 */
+	public function uat_check() {
+		$strict = !empty($this->params['strict']);
+		$idempresa = $this->parseIdempresa(false);
+		$errors = 0;
+		$warns = 0;
+
+		$this->out('=== Licenciamento — uat_check ===');
+
+		$requiredTables = [
+			'lic_categorias',
+			'lic_catalogo_produtos',
+			'lic_licencas',
+			'lic_assentos',
+			'lic_dispositivos',
+			'lic_cofre_itens',
+			'lic_solicitacoes',
+			'lic_auditoria_eventos',
+			'lic_modulo_config',
+		];
+		try {
+			$conn = TableRegistry::getTableLocator()->get('Users')->getConnection();
+			$tables = $conn->getSchemaCollection()->listTables();
+		} catch (\Throwable $e) {
+			$this->err('BD: ' . $e->getMessage());
+			$errors++;
+
+			return $strict ? 1 : 0;
+		}
+		foreach ($requiredTables as $t) {
+			if (in_array($t, $tables, true)) {
+				$this->out("[OK] tabela {$t}");
+			} else {
+				$this->err("[FAIL] tabela {$t} ausente — bin/cake migrations migrate");
+				$errors++;
+			}
+		}
+
+		$permCodes = [
+			'licencas.view',
+			'licencas.manage',
+			'licencas.cofre.view',
+			'licencas.cofre.secret',
+		];
+		$permIds = [];
+		try {
+			$permTbl = $this->loadTable('RbacPermissions');
+			if ($permTbl === null) {
+				$this->err('[FAIL] RbacPermissions indisponível');
+				$errors++;
+			} else {
+				foreach ($permCodes as $code) {
+					$row = $permTbl->find()->where(['code' => $code])->first();
+					if ($row === null) {
+						$this->err("[FAIL] permissão {$code} ausente — migrate RbacLicencas* ou sync_registry");
+						$errors++;
+						continue;
+					}
+					$permIds[$code] = (int)$row->get('id');
+					$this->out("[OK] permissão {$code}");
+				}
+			}
+		} catch (\Throwable $e) {
+			$this->err('RBAC permissions: ' . $e->getMessage());
+			$errors++;
+		}
+
+		$roleExpect = [
+			'operacao' => ['licencas.view', 'licencas.manage', 'licencas.cofre.view'],
+			'admin_equipe' => ['licencas.view', 'licencas.manage', 'licencas.cofre.view', 'licencas.cofre.secret'],
+		];
+		try {
+			$rolesTbl = $this->loadTable('RbacRoles');
+			$rpTbl = $this->loadTable('RbacRolesPermissions');
+			if ($rolesTbl === null || $rpTbl === null) {
+				$this->err('[FAIL] tabelas RBAC de papéis indisponíveis');
+				$errors++;
+			} elseif ($permIds !== []) {
+				foreach ($roleExpect as $slug => $codes) {
+					$role = $rolesTbl->find()->where(['slug' => $slug, 'active' => 1])->first();
+					if ($role === null) {
+						$this->err("[WARN] papel {$slug} não encontrado");
+						$warns++;
+						continue;
+					}
+					$rid = (int)$role->get('id');
+					$linked = $rpTbl->find()
+						->where(['role_id' => $rid])
+						->extract('permission_id')
+						->toList();
+					foreach ($codes as $code) {
+						$pid = $permIds[$code] ?? 0;
+						if ($pid > 0 && in_array($pid, $linked, true)) {
+							$this->out("[OK] {$slug} → {$code}");
+						} else {
+							$this->err("[FAIL] {$slug} sem {$code}");
+							$errors++;
+						}
+					}
+				}
+			}
+		} catch (\Throwable $e) {
+			$this->err('RBAC roles: ' . $e->getMessage());
+			$errors++;
+		}
+
+		$key = trim((string)env('LIC_COFRE_CIPHER_KEY', ''));
+		if ($key === '') {
+			$this->err('[WARN] LIC_COFRE_CIPHER_KEY vazio — cofre usa chave derivada (defina em .env em produção)');
+			$warns++;
+		} else {
+			$this->out('[OK] LIC_COFRE_CIPHER_KEY definido');
+		}
+
+		$mode = (string)Configure::read('Rbac.mode');
+		$this->out('RBAC_MODE=' . ($mode !== '' ? $mode : '(default config)'));
+
+		if ($idempresa > 0) {
+			$svc = new LicPrototypeDataService($idempresa);
+			if (!$svc->tablesAvailable()) {
+				$this->err("[FAIL] schema lic_* inacessível para KPIs (idempresa={$idempresa})");
+				$errors++;
+			} else {
+				$kpi = $svc->dashboardKpis();
+				$this->out('');
+				$this->out("KPIs idempresa={$idempresa}:");
+				foreach ($kpi as $k => $v) {
+					$this->out("  {$k}: {$v}");
+				}
+				if ((int)($kpi['licencas_ativas'] ?? 0) === 0) {
+					$this->err('[WARN] nenhuma licença ativa — seed_demo ou wizard UAT');
+					$warns++;
+				}
+			}
+		}
+
+		$this->out('');
+		if ($errors > 0) {
+			$this->err("Resumo: {$errors} falha(s), {$warns} aviso(s)");
+			if ($strict) {
+				return 1;
+			}
+
+			return 0;
+		}
+		$this->out("<success>Resumo: OK ({$warns} aviso(s))</success>");
+		$this->out('Próximo: UI conforme docs/LICENCIAMENTO_HOMOLOGACAO_UAT.md');
+
+		return 0;
 	}
 
 	/**
