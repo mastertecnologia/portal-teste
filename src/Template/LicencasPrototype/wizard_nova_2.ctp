@@ -17,14 +17,8 @@ if (is_object($fim) && method_exists($fim, 'format')) {
 }
 $valor = $row['valor_anual'] ?? '';
 ?>
-<div class="pg-page-head" style="margin-bottom:14px;">
-	<div>
-		<h1 class="pg-page-title" style="font-size:20px;">+ <?= h(__('Nova licença')) ?></h1>
-		<p style="font-size:12px;color:var(--text-muted);"><?= h(__('Passo 2 de 4')) ?> · <?= h($row['codigo'] ?? '') ?></p>
-	</div>
-</div>
-
-<?= $this->ErpPrototype->stepper($wizardSteps) ?>
+<?= $this->element('LicencasPrototype/wizard_header', ['wizardStepNum' => 2, 'wizardSteps' => $wizardSteps ?? [], 'licId' => (int)$licId]) ?>
+<p style="font-size:12px;color:var(--text-muted);margin:-8px 0 14px;"><?= h($row['codigo'] ?? '') ?></p>
 
 <form method="post" action="<?= h($this->Url->build(['action' => 'salvarWizard'])) ?>">
 <input type="hidden" name="_csrfToken" value="<?= h($csrf) ?>">

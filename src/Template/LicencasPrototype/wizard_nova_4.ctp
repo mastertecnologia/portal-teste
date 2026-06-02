@@ -5,14 +5,7 @@
 $csrf = (string)$this->request->getAttribute('csrfToken');
 $row = (array)($lic ?? []);
 ?>
-<div class="pg-page-head" style="margin-bottom:14px;">
-	<div>
-		<h1 class="pg-page-title" style="font-size:20px;">+ <?= h(__('Nova licença')) ?></h1>
-		<p style="font-size:12px;color:var(--text-muted);"><?= h(__('Passo 4 de 4')) ?></p>
-	</div>
-</div>
-
-<?= $this->ErpPrototype->stepper($wizardSteps) ?>
+<?= $this->element('LicencasPrototype/wizard_header', ['wizardStepNum' => 4, 'wizardSteps' => $wizardSteps ?? [], 'licId' => (int)$licId]) ?>
 
 <form method="post" action="<?= h($this->Url->build(['action' => 'salvarWizard'])) ?>">
 <input type="hidden" name="_csrfToken" value="<?= h($csrf) ?>">
