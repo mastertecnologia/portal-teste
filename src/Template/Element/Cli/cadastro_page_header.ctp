@@ -25,8 +25,11 @@ $clientesListaUrl = $clientesListaUrl ?? ['controller' => 'ClientesPrototype', '
 	</div>
 	<div class="cli-cadastro-page-actions" style="display:flex;gap:8px;flex-wrap:wrap;">
 		<?= $this->Html->link(__('Cancelar'), $cancelUrl, ['class' => 'btn btn-ghost btn-sm', 'data-turbo' => 'false']) ?>
+		<?php if (!empty($showHeaderDraft)) : ?>
+		<button type="button" class="btn btn-ghost btn-sm" disabled title="<?= h(__('Em breve')) ?>">💾 <?= h(__('Rascunho')) ?></button>
+		<?php endif; ?>
 		<?php if (!empty($showHeaderSave)) : ?>
-		<button type="button" class="btn btn-primary btn-sm cli-wizard-save-header">✓ <?= h(__('Salvar cliente')) ?></button>
+		<button type="submit" form="cli-add-form" class="btn btn-primary btn-sm">✓ <?= h(__('Salvar cliente')) ?></button>
 		<?php endif; ?>
 	</div>
 </div>

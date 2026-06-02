@@ -1315,55 +1315,12 @@ body.pgm-erp-prototype-page .pgm-erp-topbar-avatar {
 	}
 }
 
-/* ===== CLIENTES — pg-cliente-novo (cadastro wizard) ===== */
-.pgm-erp-shell #pg-cliente-novo .cli-tipo-group {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 10px;
-}
-.pgm-erp-shell #pg-cliente-novo .cli-tipo-btn {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 8px;
-	padding: 12px 14px;
-	border: 1px solid var(--border);
-	border-radius: var(--radius);
-	background: var(--bg-surface);
-	font-size: 13px;
-	font-weight: 500;
-	color: var(--text);
-	cursor: pointer;
-	transition: border-color .15s, background .15s, color .15s;
-}
-.pgm-erp-shell #pg-cliente-novo .cli-tipo-btn:hover {
-	border-color: var(--teal-mid);
-}
-.pgm-erp-shell #pg-cliente-novo .cli-tipo-btn.active {
-	border-color: var(--teal);
-	background: var(--teal-light);
-	color: var(--teal-dark);
-}
-.pgm-erp-shell #pg-cliente-novo .cli-wizard-stepper .cli-wiz-stp--active .cli-wiz-stp-c,
-.pgm-erp-shell #pg-cliente-novo .cli-wizard-stepper .cli-wiz-stp--done .cli-wiz-stp-c {
-	background: var(--teal) !important;
-	color: #fff !important;
-}
-.pgm-erp-shell #pg-cliente-novo .cli-wizard-stepper .cli-wiz-stp:not(.cli-wiz-stp--active):not(.cli-wiz-stp--done) .cli-wiz-stp-c {
-	background: var(--gray-100, #f1f5f9) !important;
-	color: var(--text-muted) !important;
-}
-.pgm-erp-shell #pg-cliente-novo .cli-wizard-stepper .cli-wiz-stp--active .cli-wiz-stp-l,
-.pgm-erp-shell #pg-cliente-novo .cli-wizard-stepper .cli-wiz-stp--done .cli-wiz-stp-l {
-	color: var(--text) !important;
-	opacity: 1 !important;
-}
+/* ===== CLIENTES — pg-cliente-novo (formulário completo 2 colunas) ===== */
 .pgm-erp-shell #pg-cliente-novo .cli-papel-check:has(input:checked) {
 	border-color: var(--teal) !important;
 	background: var(--teal-light) !important;
 }
-.pgm-erp-shell #pg-cliente-novo .pessoaJuridica,
-.pgm-erp-shell #pg-cliente-novo .pessoaFisica {
+.pgm-erp-shell #pg-cliente-novo .cli-papel-cadastro--embed .sec-title::after {
 	display: none;
 }
 @media (max-width: 720px) {

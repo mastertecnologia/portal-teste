@@ -6,8 +6,11 @@
  * @var \App\Model\Entity\Cliente $cliente
  * @var bool $cliPapelColumns
  * @var bool $showFornecedorExtras
+ * @var bool $embedInIdentificacao Sem card externo (dentro do card Identificação)
  */
 use App\Utility\ClientesPapelCadastro;
+
+$embedInIdentificacao = !empty($embedInIdentificacao);
 
 if (empty($cliPapelColumns)) {
 	return;
@@ -29,8 +32,13 @@ $categorias = [
 	'aluguel' => __('Aluguel / Locação'),
 ];
 ?>
+<?php if ($embedInIdentificacao) : ?>
+<div class="cli-papel-cadastro cli-papel-cadastro--embed" id="cli-papel-cadastro" style="margin-bottom:14px;padding-top:4px;border-top:1px solid var(--border-light);">
+	<div class="sec-title" style="margin-top:10px;"><?= h(__('Papel no cadastro')) ?></div>
+<?php else : ?>
 <div class="card cli-papel-cadastro" id="cli-papel-cadastro" style="margin-bottom:14px;">
 	<div class="sec-title">🏷 <?= h(__('Papel no cadastro')) ?></div>
+<?php endif; ?>
 	<p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;"><?= h(__('Marque uma ou mais opções. O mesmo cadastro pode ser cliente e fornecedor.')) ?></p>
 	<div class="cli-papel-check-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px;">
 		<label class="cli-papel-check" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius,8px);background:var(--bg-surface,#fff);margin:0;">
