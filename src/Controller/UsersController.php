@@ -1382,6 +1382,26 @@ class UsersController extends AppController {
 	}
 
 	/**
+	 * Redirect após Auth sem 500 por `Auth.redirect` inválido na sessão ou URL inexistente.
+	 *
+	 * @return \Cake\Http\Response
+	 */
+	protected function _safeAuthRedirectResponse(): Response {
+		try {
+			$target = $this->Auth->redirectUrl();
+		} catch (\Throwable $e) {
+			Log::warning('Auth::redirectUrl failed: ' . $e->getMessage());
+			$this->request->getSession()->delete('Auth.redirect');
+			$target = null;
+		}
+		if ($target === null || $target === '' || $target === '/') {
+			$target = ['controller' => 'Users', 'action' => 'dashboard', 'prefix' => false];
+		}
+
+		return $this->redirect($target);
+	}
+
+	/**
 	 * Lê usuário e senha do POST. O FormHelper pode emitir `username`/`password` ou `Users[username]`/`Users[password]`.
 	 *
 	 * @return array username (string), password (string|null)
@@ -1576,7 +1596,7 @@ class UsersController extends AppController {
 		$this->_rememberServicedeskRedirectFromQuery();
 
 		if ($this->Auth->user()) {
-			return $this->redirect($this->Auth->redirectUrl());
+			return $this->_safeAuthRedirectResponse();
 		}
 	
 		if ($this->request->is('post')) {
@@ -1600,13 +1620,13 @@ class UsersController extends AppController {
 						$user['idempresa'] = null;
 					}
 					$this->Auth->setUser($user);
-					return $this->redirect($this->Auth->redirectUrl());
+					return $this->_safeAuthRedirectResponse();
 				} elseif ($this->_isUserInactiveForLogin($user['inativo'] ?? null)) {
 					$this->Flash->error(__('Seu usuário está inativo!'));
-					return $this->redirect($this->Auth->redirectUrl());
+					return $this->_safeAuthRedirectResponse();
 				} elseif ($this->_isUserBlockedForLogin($user['bloqueado'] ?? null)) {
 					$this->Flash->error(__('Seu usuário está bloqueado! Aguarde a liberação de um administrador.'));
-					return $this->redirect($this->Auth->redirectUrl());
+					return $this->_safeAuthRedirectResponse();
 				}
 			}
 	
@@ -1623,50 +1643,61 @@ class UsersController extends AppController {
 	 * Espera users.role = C_RoleFuncionario (0). Clientes (role 1) devem usar login().
 	 */
 	public function acessoEmpresa() {
-		$this->viewBuilder()->setLayout("login");
-		$this->viewBuilder()->setTemplate("login_empresa");
-		$this->_rememberServicedeskRedirectFromQuery();
+		try {
+			$this->viewBuilder()->setLayout("login");
+			$this->viewBuilder()->setTemplate("login_empresa");
+			$this->_rememberServicedeskRedirectFromQuery();
 
-		if ($this->Auth->user()) {
-			return $this->redirect($this->Auth->redirectUrl());
-		}
+			if ($this->Auth->user()) {
+				return $this->_safeAuthRedirectResponse();
+			}
 
-		if ($this->request->is('post')) {
-			$creds = $this->_extractLoginCredentials();
-			$user = $this->_identifyUserByCredentials($creds['username'], $creds['password']);
-			
-			if ($user) {
-				// Só equipe PGM/Master (role = C_RoleFuncionario) pode logar aqui. Qualquer outro role é rejeitado.
-				if (!isset($user['role']) || (int)$user['role'] !== (int)C_RoleFuncionario) {
-					$this->Flash->error(__('Este acesso é para a equipe PGM / Master. Use o acesso para clientes.'));
-					$r = $this->_redirectServicedeskLoginIfEmbedded();
-					if ($r !== null) {
-						return $r;
+			if ($this->request->is('post')) {
+				$creds = $this->_extractLoginCredentials();
+				$user = $this->_identifyUserByCredentials($creds['username'], $creds['password']);
+
+				if ($user) {
+					// Só equipe PGM/Master (role = C_RoleFuncionario) pode logar aqui. Qualquer outro role é rejeitado.
+					if (!isset($user['role']) || (int)$user['role'] !== (int)C_RoleFuncionario) {
+						$this->Flash->error(__('Este acesso é para a equipe PGM / Master. Use o acesso para clientes.'));
+						$r = $this->_redirectServicedeskLoginIfEmbedded();
+						if ($r !== null) {
+							return $r;
+						}
+
+						return $this->redirect(['action' => 'login']);
 					}
-					return $this->redirect(['action' => 'login']);
+					if (!$this->_isUserInactiveForLogin($user['inativo'] ?? null) && !$this->_isUserBlockedForLogin($user['bloqueado'] ?? null)) {
+						try {
+							$user['idempresa'] = $this->getEmpresaPreferencial($user['id']);
+						} catch (\Throwable $e) {
+							$user['idempresa'] = null;
+						}
+						$this->Auth->setUser($user);
+
+						return $this->_safeAuthRedirectResponse();
+					}
+					if ($this->_isUserInactiveForLogin($user['inativo'] ?? null)) {
+						$this->Flash->error(__('Seu usuário está inativo!'));
+
+						return $this->redirect(['action' => 'acessoEmpresa']);
+					}
+					if ($this->_isUserBlockedForLogin($user['bloqueado'] ?? null)) {
+						$this->Flash->error(__('Seu usuário está bloqueado! Aguarde a liberação de um administrador.'));
+
+						return $this->redirect(['action' => 'acessoEmpresa']);
+					}
 				}
-				if (!$this->_isUserInactiveForLogin($user['inativo'] ?? null) && !$this->_isUserBlockedForLogin($user['bloqueado'] ?? null)) {
-					try {
-						$user['idempresa'] = $this->getEmpresaPreferencial($user['id']);
-					} catch (\Throwable $e) {
-						$user['idempresa'] = null;
-					}
-					$this->Auth->setUser($user);
-					return $this->redirect($this->Auth->redirectUrl());
-				} elseif ($this->_isUserInactiveForLogin($user['inativo'] ?? null)) {
-					$this->Flash->error(__('Seu usuário está inativo!'));
-					return $this->redirect($this->Auth->redirectUrl());
-				} elseif ($this->_isUserBlockedForLogin($user['bloqueado'] ?? null)) {
-					$this->Flash->error(__('Seu usuário está bloqueado! Aguarde a liberação de um administrador.'));
-					return $this->redirect($this->Auth->redirectUrl());
+
+				$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
+				$r = $this->_redirectServicedeskLoginIfEmbedded();
+				if ($r !== null) {
+					return $r;
 				}
 			}
-	
-			$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
-			$r = $this->_redirectServicedeskLoginIfEmbedded();
-			if ($r !== null) {
-				return $r;
-			}
+		} catch (\Throwable $e) {
+			Log::error('acessoEmpresa: ' . $e->getMessage(), ['exception' => $e]);
+			$this->Flash->error(__('Não foi possível concluir o login. Tente novamente ou contate o suporte.'));
 		}
 	}
 
@@ -3235,7 +3266,7 @@ class UsersController extends AppController {
 		if ($this->request->is(['post', 'put'])) {
 
 			if ($this->Auth->user()) {
-				return $this->redirect($this->Auth->redirectUrl());
+				return $this->_safeAuthRedirectResponse();
 			}
 
 			$creds = $this->_extractLoginCredentials();
