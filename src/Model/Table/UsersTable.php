@@ -1,6 +1,8 @@
 <?php
 namespace App\Model\Table;
 
+use Cake\Database\Driver\Postgres;
+use Cake\Database\Schema\TableSchema;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use Cake\Auth\DefaultPasswordHasher;
@@ -33,6 +35,23 @@ class UsersTable extends Table {
 		$this->hasMany('Ticketsmovs', [ 'dependent'  => true, 'cascadeCallbacks' => true ])->setForeignKey('idusuario');
 		$this->hasMany('Tickets', [ 'dependent'  => true, 'cascadeCallbacks' => true ])->setForeignKey('idautor');
 		$this->hasMany('Empresasusers', [ 'dependent'  => true, 'cascadeCallbacks' => true ])->setForeignKey('iduser');
+	}
+
+	/**
+	 * Em PostgreSQL, users.inativo/bloqueado costumam ser boolean; o schema refletido como integer
+	 * quebra a hidratação (IntegerType: Cannot convert boolean to integer) e o login falha em silêncio.
+	 */
+	protected function _initializeSchema(TableSchema $schema) {
+		$driver = $this->getConnection()->getDriver();
+		if ($driver instanceof Postgres) {
+			foreach (['inativo', 'bloqueado'] as $col) {
+				if ($schema->getColumn($col) !== null) {
+					$schema->setColumnType($col, 'boolean');
+				}
+			}
+		}
+
+		return $schema;
 	}
 
 	public function validationDefault(Validator $validator) {
