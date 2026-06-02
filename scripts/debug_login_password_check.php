@@ -3,31 +3,32 @@
  * Testa se a senha confere com algum usuário ativo (e-mail/username), sem gravar a senha em log.
  *
  * Uso (senha pelo stdin — não passe na linha de comando):
- *   read -rs LOGIN_PW && printf '%s' "$LOGIN_PW" | php scripts/debug_login_password_check.php "email@exemplo.com"
+ *   read -rs LOGIN_PW; echo; printf '%s' "$LOGIN_PW" | php scripts/debug_login_password_check.php "email@exemplo.com"
+ *
+ * O read -rs não mostra caracteres: digite a senha e pressione Enter (ou Ctrl+C para cancelar).
  *
  * Não altera o banco.
  */
 $root = dirname(__DIR__);
 chdir($root);
 
+require $root . DIRECTORY_SEPARATOR . 'scripts' . DIRECTORY_SEPARATOR . 'cli_password_stdin_helper.php';
+
+$login = isset($argv[1]) ? trim((string)$argv[1]) : '';
+if ($login === '') {
+	fwrite(STDERR, "Uso: read -rs P; echo; printf '%s' \"\$P\" | php scripts/debug_login_password_check.php \"email@exemplo.com\"\n");
+	exit(2);
+}
+
+$plain = cli_read_password_from_stdin('debug_login_password_check.php');
+
+fwrite(STDERR, "Conectando ao banco (bootstrap Cake)...\n");
 require $root . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 require $root . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 use App\Utility\Fiscal\FiscalSqlConditions;
 use Cake\Auth\DefaultPasswordHasher;
 use Cake\ORM\TableRegistry;
-
-$login = isset($argv[1]) ? trim((string)$argv[1]) : '';
-if ($login === '') {
-	fwrite(STDERR, "Uso: printf 'senha' | php scripts/debug_login_password_check.php \"email@exemplo.com\"\n");
-	exit(2);
-}
-
-$plain = stream_get_contents(STDIN);
-if ($plain === false || $plain === '') {
-	fwrite(STDERR, "Informe a senha via stdin (ex.: read -rs P && printf '%s' \"\$P\" | php ...).\n");
-	exit(2);
-}
 
 $matches = static function (string $plain, string $stored): bool {
 	$stored = (string)$stored;
