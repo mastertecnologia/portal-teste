@@ -23,6 +23,10 @@ class LicencasPrototypeController extends AppController {
 
 	public function beforeFilter(Event $event) {
 		$redirect = $this->request->getRequestTarget();
+		$webroot = rtrim((string)$this->request->getAttribute('webroot'), '/');
+		if ($webroot !== '' && $webroot !== '/' && $redirect !== '' && strpos($redirect, $webroot) !== 0) {
+			$redirect = $webroot . ($redirect[0] === '/' ? $redirect : '/' . $redirect);
+		}
 		$staffLogin = [
 			'controller' => 'Users',
 			'action' => 'acessoEmpresa',

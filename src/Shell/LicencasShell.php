@@ -324,27 +324,38 @@ class LicencasShell extends Shell {
 			}
 		}
 		$this->out('Teste local (--resolve 127.0.0.1):');
-		$this->probeUrl($url, true);
+		$local = $this->probeUrl($url, true);
 		$this->out('Teste DNS público:');
-		$code = $this->probeUrl($url, false);
+		$public = $this->probeUrl($url, false);
 		$this->out('');
-		if ($code === 404) {
-			$this->err('[FAIL] 404 na URL pública — ver docs/LICENCIAMENTO_DNS_PUBLICO.md');
+		$publicCode = (int)$public['code'];
+		$publicServer = (string)$public['server'];
+		if (stripos($publicServer, 'Win64') !== false || $publicCode === 404) {
+			$this->err('[FAIL] URL pública não chega ao portal Linux (10.0.2.25) — docs/LICENCIAMENTO_DNS_PUBLICO.md');
+			$this->err('      Local: http_code=' . (int)$local['code'] . ' | Público: http_code=' . $publicCode);
+
 			return 1;
 		}
-		if ($code >= 200 && $code < 400) {
-			$this->out('<success>URL pública responde ' . $code . ' (esperado 302 sem sessão)</success>');
+		if ($publicCode >= 200 && $publicCode < 400) {
+			$this->out('<success>URL pública responde ' . $publicCode . ' (esperado 302 sem sessão)</success>');
+
 			return 0;
 		}
-		$this->err('[WARN] http_code=' . $code . ' — ver SSL ou proxy');
+		$this->err('[WARN] http_code=' . $publicCode . ' — ver SSL ou proxy');
+
 		return 0;
 	}
 
-	protected function probeUrl(string $url, bool $resolveLocal): void {
+	/**
+	 * @return array{code:int,server:string}
+	 */
+	protected function probeUrl(string $url, bool $resolveLocal): array {
 		$ch = curl_init($url);
+		$empty = ['code' => 0, 'server' => ''];
 		if ($ch === false) {
 			$this->err('curl_init falhou');
-			return;
+
+			return $empty;
 		}
 		$headers = [];
 		curl_setopt_array($ch, [
@@ -387,6 +398,8 @@ class LicencasShell extends Shell {
 		if (stripos($server, 'Debian') !== false && ($code === 302 || $code === 301)) {
 			$this->out('  [OK] Apache Linux / Cake');
 		}
+
+		return ['code' => $code, 'server' => $server];
 	}
 
 	/**
