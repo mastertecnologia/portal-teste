@@ -313,7 +313,12 @@ class AppController extends Controller
             return false;
         }
         $path = (string) $this->request->getPath();
-        if (strpos($path, '/users/acesso-empresa') !== false || strpos($path, '/users/login') !== false) {
+        if (
+            strpos($path, '/users/acesso-empresa') !== false
+            || strpos($path, '/users/login') !== false
+            || strpos($path, '/users/verificaloginduasetapas') !== false
+            || strpos($path, '/users/verificacodigo') !== false
+        ) {
             return false;
         }
         $controller = (string) $this->request->getParam('controller');
