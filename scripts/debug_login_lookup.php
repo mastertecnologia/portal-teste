@@ -32,7 +32,7 @@ $loginMatch = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $login);
 
 $Users = TableRegistry::getTableLocator()->get('Users');
 $conn = $Users->getConnection();
-$user = $Users->find()
+$candidates = $Users->find()
 	->where($Users->loginActiveInativoCondition())
 	->where([
 		'OR' => array_merge(
@@ -40,16 +40,28 @@ $user = $Users->find()
 			FiscalSqlConditions::caseInsensitiveLike($conn, 'Users.username', $loginMatch)
 		),
 	])
-	->first();
+	->order(['Users.id' => 'ASC'])
+	->all();
 
 echo "\n=== debug_login_lookup ===\n";
-echo "Entrada: {$login}\n\n";
+echo "Entrada: {$login}\n";
+echo "Candidatos ativos: " . $candidates->count() . "\n\n";
 
-if ($user === null) {
-	echo "RESULTADO: nenhum usuário ATIVO (inativo=0) encontrado por LOWER(email) ou LOWER(username).\n";
+if ($candidates->count() === 0) {
+	echo "RESULTADO: nenhum usuário ATIVO encontrado por e-mail/username.\n";
 	echo "Dica: verifique inativo=1 no banco, ou e-mail diferente do digitado.\n\n";
 	exit(1);
 }
+
+if ($candidates->count() > 1) {
+	echo "AVISO: há mais de um usuário ativo com este login — o login testa todos por ordem de id.\n";
+	foreach ($candidates as $c) {
+		echo "  - id=" . $c->get('id') . " username=" . $c->get('username') . "\n";
+	}
+	echo "\n";
+}
+
+$user = $candidates->first();
 
 $pwd = (string)$user->get('password');
 $hashOk = (strlen($pwd) >= 60 && strpos($pwd, '$2') === 0);
@@ -78,6 +90,8 @@ if ($ur === (int)C_RoleFuncionario) {
 	echo "  Role " . $ur . " não é 0 nem 1 — conferir coluna users.role no banco.\n";
 }
 echo "  (Um único banco PostgreSQL; idempresa na sessão após login — não há outro host por empresa.)\n";
+echo "\nPara testar a senha (sem expor na linha de comando):\n";
+echo "  read -rs LOGIN_PW && printf '%s' \"\$LOGIN_PW\" | php scripts/debug_login_password_check.php \"{$login}\"\n";
 echo "\n";
 
 exit(0);

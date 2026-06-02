@@ -298,6 +298,14 @@ $(".btn-fecha-modal, #modal-duasetapas .btn-close-login-erp").on('click', functi
 $('#modal-duasetapas').on('shown.bs.modal', function(){ $('#codigo').focus(); });
 
 function verificaduasetapas(acao) {
+	if (acao === 'login') {
+		var pwd = $('#password').val();
+		if (pwd == null || String(pwd).length === 0) {
+			alert('Informe a senha.');
+			$('#password').focus();
+			return;
+		}
+	}
 	$.ajax({
 		url: "<?= Router::url(['controller'=>'Users','action'=>'verificaloginduasetapas']); ?>/"+encodeURIComponent($('#username').val()),
 		async: false,

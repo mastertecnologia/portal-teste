@@ -1516,14 +1516,53 @@ class UsersController extends AppController {
 	 * @param string|null $password
 	 * @return array<string, mixed>|null Mesmo formato de AuthComponent::identify()
 	 */
+	/**
+	 * Compara senha em texto com hash armazenado (bcrypt via DefaultPasswordHasher + legado sha1/md5).
+	 */
+	protected function _passwordMatchesForLogin(string $plain, string $storedHash): bool {
+		$storedHash = (string)$storedHash;
+		if ($storedHash === '') {
+			return false;
+		}
+		if ((new DefaultPasswordHasher())->check($plain, $storedHash)) {
+			return true;
+		}
+		if (strlen($storedHash) === 40 && ctype_xdigit($storedHash)) {
+			return hash_equals(strtolower($storedHash), sha1($plain));
+		}
+		if (strlen($storedHash) === 32 && ctype_xdigit($storedHash)) {
+			return hash_equals(strtolower($storedHash), md5($plain));
+		}
+
+		return false;
+	}
+
 	protected function _identifyUserByCredentials(string $login, $password): ?array {
 		if ($password === null || $password === '') {
 			return null;
 		}
-		$hasher = new DefaultPasswordHasher();
-		foreach ($this->_findActiveUsersForLogin($login) as $entity) {
-			if ($hasher->check((string)$password, (string)$entity->get('password'))) {
+		$plain = (string)$password;
+		$candidates = $this->_findActiveUsersForLogin($login);
+		foreach ($candidates as $entity) {
+			if ($this->_passwordMatchesForLogin($plain, (string)$entity->get('password'))) {
 				return $entity->toArray();
+			}
+		}
+		// Fallback: Auth\Form (mapeia username → users.email), alinhado ao login legado.
+		foreach ($candidates as $entity) {
+			$authLogin = trim((string)$entity->get('email'));
+			if ($authLogin === '') {
+				$authLogin = trim((string)$entity->get('username'));
+			}
+			if ($authLogin === '') {
+				continue;
+			}
+			$identified = $this->Auth->identify([
+				'username' => $authLogin,
+				'password' => $plain,
+			]);
+			if ($identified) {
+				return $identified;
 			}
 		}
 
@@ -1660,6 +1699,9 @@ class UsersController extends AppController {
 
 			if ($this->request->is('post')) {
 				$creds = $this->_extractLoginCredentials();
+				if ($creds['password'] === null || $creds['password'] === '') {
+					$this->Flash->error(__('Informe a senha.'));
+				} else {
 				$user = $this->_identifyUserByCredentials($creds['username'], $creds['password']);
 
 				if ($user) {
@@ -1695,10 +1737,14 @@ class UsersController extends AppController {
 					}
 				}
 
-				$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
+				if (empty($user)) {
+					Log::warning('acessoEmpresa: credenciais rejeitadas para login=' . $creds['username']);
+					$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
+				}
 				$r = $this->_redirectServicedeskLoginIfEmbedded();
 				if ($r !== null) {
 					return $r;
+				}
 				}
 			}
 		} catch (\Throwable $e) {
