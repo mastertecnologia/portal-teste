@@ -8,7 +8,10 @@
  * Se `app_local.php` antigo tiver `'Datasources' => ['default' => ['password' => '...']]`, apague
  * esse bloco ou substitua por este ficheiro para não duplicar segredos em disco.
  *
- * Permissões: chmod 600 /var/www/portal/.env
+ * Permissões (Apache/php-fpm como www-data precisa ler DB_PASSWORD):
+ *   chown root:www-data /var/www/portal/.env && chmod 640 /var/www/portal/.env
+ *   systemctl restart php*-fpm apache2
+ * Alternativa: env[DB_PASSWORD]=... no pool PHP-FPM (sem world-readable no .env).
  */
 return [
 	'debug' => false,

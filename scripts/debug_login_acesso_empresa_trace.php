@@ -22,9 +22,20 @@ $plain = cli_read_password_from_stdin('debug_login_acesso_empresa_trace.php');
 $pwdLen = strlen($plain);
 $pwdFp = $pwdLen > 0 ? substr(hash('sha256', $plain), 0, 12) : '';
 
+$envFile = $root . DIRECTORY_SEPARATOR . '.env';
+echo ".env existe: " . (is_file($envFile) ? 'sim' : 'nao') . "\n";
+echo ".env legível (utilizador CLI atual): " . (is_readable($envFile) ? 'sim' : 'NAO') . "\n";
+
 fwrite(STDERR, "Conectando ao banco (bootstrap Cake)...\n");
 require $root . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 require $root . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'bootstrap.php';
+
+$dbPassCli = (string)env('DB_PASSWORD', '');
+echo "DB_PASSWORD após bootstrap (CLI): " . ($dbPassCli !== '' ? 'definido' : 'VAZIO') . "\n";
+if ($dbPassCli === '' && is_file($envFile) && !is_readable($envFile)) {
+	echo "  → root lê .env no CLI; www-data no Apache costuma não ler (chmod 600). Use: chown root:www-data .env && chmod 640 .env\n";
+}
+echo "\n";
 
 require_once ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
 if (!defined('C_RoleCliente')) {
@@ -187,6 +198,11 @@ if ($diagJson !== null && $diagJson !== '') {
 	if (is_array($diag) && !empty($diag['ok'])) {
 		echo '  db_host: ' . ($diag['db_host'] ?? '?') . "\n";
 		echo '  db_name: ' . ($diag['db_name'] ?? '?') . "\n";
+		echo '  db_password_configured (web): ' . (!empty($diag['db_password_configured']) ? 'sim' : 'NAO') . "\n";
+		echo '  env_file_readable (web): ' . (!empty($diag['env_file_readable']) ? 'sim' : 'NAO') . "\n";
+		if (!empty($diag['hint'])) {
+			echo '  hint: ' . $diag['hint'] . "\n";
+		}
 		echo '  candidates_active (web): ' . ($diag['candidates_active'] ?? '?') . "\n";
 		echo '  candidate_ids (web): ' . (isset($diag['candidate_ids']) ? implode(',', $diag['candidate_ids']) : '-') . "\n";
 		echo '  candidates_any_inativo: ' . ($diag['candidates_any_inativo'] ?? '?') . "\n";

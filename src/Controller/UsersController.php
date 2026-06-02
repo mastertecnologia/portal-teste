@@ -1773,11 +1773,16 @@ class UsersController extends AppController {
 				static::$lastFindActiveUsersForLoginError = $e->getMessage();
 			}
 		}
+		$envFile = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . '.env';
+		$dbPass = (string)($cfg['password'] ?? '');
 		$payload = [
 			'ok' => true,
 			'db_host' => $cfg['host'] ?? null,
 			'db_name' => $cfg['database'] ?? null,
 			'db_driver' => $conn->getDriver() ? get_class($conn->getDriver()) : null,
+			'db_password_configured' => $dbPass !== '',
+			'env_file_readable' => is_file($envFile) && is_readable($envFile),
+			'php_sapi' => PHP_SAPI,
 			'login' => $login,
 			'candidates_active' => count($active),
 			'candidate_ids' => array_map(static function ($u) {
@@ -1786,6 +1791,9 @@ class UsersController extends AppController {
 			'candidates_any_inativo' => $anyCount,
 			'find_err' => static::$lastFindActiveUsersForLoginError,
 		];
+		if (!$payload['db_password_configured']) {
+			$payload['hint'] = 'PHP web sem DB_PASSWORD — ajuste permissões do .env (ex.: chown root:www-data; chmod 640) ou env no pool PHP-FPM.';
+		}
 		$this->response = $this->response->withType('application/json')
 			->withStringBody(json_encode($payload, JSON_UNESCAPED_UNICODE));
 	}
