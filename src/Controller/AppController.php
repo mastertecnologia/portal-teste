@@ -312,6 +312,10 @@ class AppController extends Controller
         if ($layout === 'login') {
             return false;
         }
+        $path = (string) $this->request->getPath();
+        if (strpos($path, '/users/acesso-empresa') !== false || strpos($path, '/users/login') !== false) {
+            return false;
+        }
         $controller = (string) $this->request->getParam('controller');
         $action = (string) $this->request->getParam('action');
         if ($controller === 'Users' && in_array($action, [
