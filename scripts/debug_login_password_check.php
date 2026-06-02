@@ -88,6 +88,10 @@ foreach ($candidates as $user) {
 	}
 }
 
-echo "\nRESULTADO: " . ($any ? "pelo menos um candidato aceitou a senha (login deveria funcionar)." : "nenhum candidato aceitou a senha — use Recuperar senha ou confira o teclado/caps.") . "\n\n";
+	echo "\nRESULTADO: " . ($any ? "pelo menos um candidato aceitou a senha (login deveria funcionar)." : "nenhum candidato aceitou a senha — redefina com admin_set_user_password.php ou Recuperar senha.") . "\n";
+	if (!$any) {
+		echo "Redefinir (servidor): CONFIRM=yes printf 'nova_senha' | php scripts/admin_set_user_password.php \"{$login}\"\n";
+	}
+	echo "\n";
 
 exit($any ? 0 : 1);

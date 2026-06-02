@@ -1512,11 +1512,6 @@ class UsersController extends AppController {
 	 * Autentica login+senha percorrendo todos os candidatos ativos.
 	 * Evita falha quando há dois users com o mesmo e-mail: Auth->identify() podia validar outra linha que a de ->first().
 	 *
-	 * @param string $login
-	 * @param string|null $password
-	 * @return array<string, mixed>|null Mesmo formato de AuthComponent::identify()
-	 */
-	/**
 	 * Compara senha em texto com hash armazenado (bcrypt via DefaultPasswordHasher + legado sha1/md5).
 	 */
 	protected function _passwordMatchesForLogin(string $plain, string $storedHash): bool {
