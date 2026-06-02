@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Traits;
 
+use App\Utility\ClientesPapelCadastro;
 use Cake\I18n\FrozenDate;
 use Cake\ORM\TableRegistry;
 
@@ -175,6 +176,11 @@ trait ClientesCrmListaTrait {
 		$mesAtual = (int)date('n');
 		$anoAtual = (int)date('Y');
 		$avTones = ['teal', 'blue', 'rose', 'orange', 'purple', 'navy', 'wine'];
+		$papelCols = false;
+		try {
+			$papelCols = ClientesPapelCadastro::columnsAvailable(TableRegistry::getTableLocator()->get('Clientes'));
+		} catch (\Throwable $e) {
+		}
 		$rows = [];
 		foreach ($todos as $reg) {
 			$cid = (int)$reg->id;
@@ -248,6 +254,8 @@ trait ClientesCrmListaTrait {
 					$semContato = 1;
 				}
 			}
+			$ehCli = ClientesPapelCadastro::isCliente($reg, $papelCols);
+			$ehForn = ClientesPapelCadastro::isFornecedor($reg, $papelCols);
 			$rows[] = [
 				'entity' => $reg,
 				'id' => $cid,
@@ -265,6 +273,8 @@ trait ClientesCrmListaTrait {
 				'status_class' => $statusClass,
 				'ultima' => $ultima,
 				'is_pj' => $isPj,
+				'eh_cliente' => $ehCli ? 1 : 0,
+				'eh_fornecedor' => $ehForn ? 1 : 0,
 				'status_key' => (int)$reg->inativo === 1 ? 'inativos' : 'ativos',
 				'tipo_key' => $isPj ? 'pj' : 'pf',
 				'atraso' => $diasAtraso > 0 ? 1 : 0,

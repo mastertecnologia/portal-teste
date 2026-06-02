@@ -68,6 +68,12 @@
             </div>
         </div>
 
+        <?= $this->element('Cli/papel_cadastro_checkboxes', [
+            'cliente' => $cliente,
+            'cliPapelColumns' => !empty($cliPapelColumns),
+            'showFornecedorExtras' => !empty($cliPrefFornecedor),
+        ]) ?>
+
         <!-- ── Seção: Dados Pessoa Jurídica ──────────────── -->
         <div class="cli-section pessoaJuridica">
             <div class="cli-section-head">

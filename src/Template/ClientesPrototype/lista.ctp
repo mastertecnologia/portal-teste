@@ -179,11 +179,18 @@ if (!function_exists('cliProtoRowDataAttrs')) {
 				<option value="<?= h((string)$seg['slug']) ?>"><?= h((string)$seg['label']) ?></option>
 				<?php endforeach; ?>
 			</select>
-			<select id="cli-filter-tipo" style="min-width:130px;">
-				<option value=""><?= h(__('PJ + PF')) ?></option>
-				<option value="pj"<?= (string)$f['tipo'] === 'pj' ? ' selected' : '' ?>>PJ</option>
-				<option value="pf"<?= (string)$f['tipo'] === 'pf' ? ' selected' : '' ?>>PF</option>
-			</select>
+			<div id="cli-filter-tipo-group" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:6px 10px;border:1px solid var(--border-light);border-radius:6px;">
+				<span style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;"><?= h(__('Tipo')) ?></span>
+				<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="cli-filter-tipo-pj" checked style="accent-color:var(--teal);"> PJ</label>
+				<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="cli-filter-tipo-pf" checked style="accent-color:var(--teal);"> PF</label>
+			</div>
+			<?php if (!empty($cliPapelColumns)) : ?>
+			<div id="cli-filter-papel-group" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:6px 10px;border:1px solid var(--border-light);border-radius:6px;">
+				<span style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;"><?= h(__('Papel')) ?></span>
+				<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="cli-filter-papel-cliente" checked style="accent-color:var(--teal);"> <?= h(__('Cliente')) ?></label>
+				<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="cli-filter-papel-fornecedor" checked style="accent-color:var(--teal);"> <?= h(__('Fornecedor')) ?></label>
+			</div>
+			<?php endif; ?>
 			<select id="cli-filter-vendedor" style="min-width:160px;">
 				<option value=""><?= h(__('Todos os vendedores')) ?></option>
 				<?php foreach ($cliVendedores as $vid => $vname) : ?>
@@ -207,6 +214,7 @@ if (!function_exists('cliProtoRowDataAttrs')) {
 					<th><?= h(__('Código')) ?></th>
 					<th><?= h(__('Cliente')) ?></th>
 					<th><?= h(__('CNPJ/CPF')) ?></th>
+					<th><?= h(__('Papel')) ?></th>
 					<th><?= h(__('Segmento')) ?></th>
 					<th><?= h(__('Cidade')) ?></th>
 					<th class="r"><?= h(__('Receita 12M')) ?></th>
@@ -248,6 +256,8 @@ if (!function_exists('cliProtoRowDataAttrs')) {
 				<tr<?= cliProtoRowDataAttrs($reg) ?>
 					data-cli-status="<?= h((string)$row['status_key']) ?>"
 					data-cli-tipo="<?= h((string)$row['tipo_key']) ?>"
+					data-cli-papel-cliente="<?= (int)($row['eh_cliente'] ?? 1) ?>"
+					data-cli-papel-fornecedor="<?= (int)($row['eh_fornecedor'] ?? 0) ?>"
 					data-cli-segmento="<?= h((string)$row['segmento_slug']) ?>"
 					data-cli-vendedor="<?= (int)($row['vendedor_id'] ?? 0) ?>"
 					data-cli-atraso="<?= (int)($row['atraso'] ?? 0) ?>"
@@ -273,6 +283,10 @@ if (!function_exists('cliProtoRowDataAttrs')) {
 						</div>
 					</td>
 					<td style="font-family:monospace;font-size:11px;"><?= h(function_exists('formatCnpjCpf') ? formatCnpjCpf((string)$row['doc']) : (string)$row['doc']) ?></td>
+					<td style="white-space:nowrap;">
+						<?php if (!empty($row['eh_cliente'])) : ?><span class="badge b-env" style="font-size:10px;"><?= h(__('Cliente')) ?></span><?php endif; ?>
+						<?php if (!empty($row['eh_fornecedor'])) : ?><span class="badge b-paga" style="font-size:10px;"><?= h(__('Fornecedor')) ?></span><?php endif; ?>
+					</td>
 					<td><span class="badge b-env" style="font-size:10px;"><?= h((string)$seg['short']) ?></span></td>
 					<td style="font-size:11px;"><?= (string)$row['cidade'] !== '' ? h((string)$row['cidade']) : '—' ?></td>
 					<td class="r" style="font-size:11px;font-weight:600;"><?= h($this->Number->currency($rec12, 'BRL')) ?></td>

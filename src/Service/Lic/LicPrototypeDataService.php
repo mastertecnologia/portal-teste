@@ -2203,23 +2203,16 @@ class LicPrototypeDataService {
 	 * @return array<string,mixed>
 	 */
 	protected function fornecedoresCadastroWhere(): array {
-		$pjTipo = defined('C_ClientesTipoJuridica') ? (int)C_ClientesTipoJuridica : 2;
-		$where = [
-			'Clientes.idempresa' => $this->idempresa,
-			'Clientes.tipo' => $pjTipo,
-			'Clientes.inativo' => 0,
-		];
 		$tbl = $this->table('Clientes');
-		if ($tbl !== null) {
+		$cols = $tbl !== null && \App\Utility\ClientesPapelCadastro::columnsAvailable($tbl);
+		$where = \App\Utility\ClientesPapelCadastro::whereFornecedor($this->idempresa, $cols);
+		if ($tbl !== null && !$cols) {
 			if ($tbl->hasField('fornecedor')) {
 				$where['Clientes.fornecedor'] = 1;
 			} elseif ($tbl->hasField('is_fornecedor')) {
 				$where['Clientes.is_fornecedor'] = 1;
-			} elseif ($tbl->hasField('eh_fornecedor')) {
-				$where['Clientes.eh_fornecedor'] = 1;
 			}
 		}
-
 
 		return $where;
 	}
