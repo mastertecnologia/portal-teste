@@ -103,19 +103,52 @@ $tipoOpts = [
 						</div>
 						<div class="field">
 							<label><?= h(__('CNAE principal')) ?></label>
-							<input type="text" disabled class="form-control" placeholder="0000-0/00" title="<?= h(__('Campo previsto no ERP — em breve')) ?>"/>
+							<?php if (!empty($cliFiscalColumns)): ?>
+								<?= $this->Form->control('cnae_principal', [
+									'id' => 'cnae-principal',
+									'class' => 'form-control',
+									'label' => false,
+									'placeholder' => '0000-0/00',
+									'value' => \App\Utility\ClientesCadastroFiscal::formatCnaeStored($cliente->cnae_principal ?? null) ?? '',
+								]) ?>
+							<?php else: ?>
+								<input type="text" disabled class="form-control" placeholder="0000-0/00" title="<?= h(__('Atualize o banco (migration) para habilitar este campo.')) ?>"/>
+							<?php endif; ?>
 						</div>
 					</div>
 					<div class="g2" style="margin-bottom:10px;">
 						<div class="field">
 							<label><?= h(__('Regime tributário')) ?> *</label>
-							<select disabled class="form-control" title="<?= h(__('Campo previsto no ERP — em breve')) ?>">
-								<option><?= h(__('Simples Nacional')) ?></option>
-							</select>
+							<?php if (!empty($cliFiscalColumns)): ?>
+								<?php
+								$regimeOpts = ['' => __('Selecione…')] + ($regimeTributarioOpts ?? []);
+								echo $this->Form->control('regime_tributario', [
+									'type' => 'select',
+									'options' => $regimeOpts,
+									'id' => 'regime-tributario',
+									'class' => 'form-control',
+									'label' => false,
+									'required' => true,
+								]);
+								?>
+							<?php else: ?>
+								<select disabled class="form-control" title="<?= h(__('Atualize o banco (migration) para habilitar este campo.')) ?>">
+									<option><?= h(__('Simples Nacional')) ?></option>
+								</select>
+							<?php endif; ?>
 						</div>
 						<div class="field">
 							<label><?= h(__('Data de abertura')) ?></label>
-							<input type="date" disabled class="form-control" title="<?= h(__('Campo previsto no ERP — em breve')) ?>"/>
+							<?php if (!empty($cliFiscalColumns)): ?>
+								<?= $this->Form->control('data_abertura', [
+									'type' => 'date',
+									'id' => 'data-abertura',
+									'class' => 'form-control',
+									'label' => false,
+								]) ?>
+							<?php else: ?>
+								<input type="date" disabled class="form-control" title="<?= h(__('Atualize o banco (migration) para habilitar este campo.')) ?>"/>
+							<?php endif; ?>
 						</div>
 					</div>
 					<div class="g3" style="margin-bottom:0;">
@@ -161,9 +194,24 @@ $tipoOpts = [
 					</div>
 					<div class="field">
 						<label><?= h(__('Tipo de endereço')) ?></label>
-						<select disabled class="form-control" title="<?= h(__('Campo previsto no ERP — em breve')) ?>">
-							<option><?= h(__('Comercial · Sede')) ?></option>
-						</select>
+						<?php if (!empty($cliFiscalColumns)): ?>
+							<?php
+							$tipoEndOpts = ($tipoEnderecoOpts ?? []);
+							echo $this->Form->control('tipo_endereco', [
+								'type' => 'select',
+								'options' => ['' => __('Selecione…')] + $tipoEndOpts,
+								'id' => 'tipo-endereco',
+								'class' => 'form-control',
+								'label' => false,
+								'empty' => false,
+								'value' => $cliente->tipo_endereco ?? 'comercial_sede',
+							]);
+							?>
+						<?php else: ?>
+							<select disabled class="form-control" title="<?= h(__('Atualize o banco (migration) para habilitar este campo.')) ?>">
+								<option><?= h(__('Comercial · Sede')) ?></option>
+							</select>
+						<?php endif; ?>
 					</div>
 				</div>
 				<div class="field" style="margin-bottom:10px;">
@@ -211,6 +259,7 @@ $tipoOpts = [
 		<div style="display:flex;flex-direction:column;gap:14px;">
 			<div class="card" style="margin-bottom:0;">
 				<div class="sec-title"><?= h(__('Configuração financeira')) ?></div>
+				<p class="cli-mock-hint" style="font-size:11px;color:var(--text-muted);margin:-4px 0 10px;"><?= h(__('Campos marcados como ilustrativos abaixo não são gravados nesta versão.')) ?></p>
 				<div class="g2" style="margin-bottom:10px;">
 					<div class="field">
 						<label><?= h(__('Limite de crédito')) ?></label>
@@ -218,7 +267,7 @@ $tipoOpts = [
 					</div>
 					<div class="field">
 						<label><?= h(__('Status')) ?></label>
-						<select disabled class="form-control" title="<?= h(__('Campo previsto no ERP — em breve')) ?>"><option><?= h(__('Ativo')) ?></option></select>
+						<select disabled class="form-control cli-mock-field" title="<?= h(__('Ilustrativo — use o status na barra inferior após salvar')) ?>"><option><?= h(__('Ativo')) ?></option></select>
 					</div>
 				</div>
 				<div class="g2" style="margin-bottom:10px;">
@@ -242,7 +291,8 @@ $tipoOpts = [
 			</div>
 
 			<div class="card pessoaJuridica" style="margin-bottom:0;">
-				<div class="sec-title"><?= h(__('Configuração fiscal')) ?></div>
+				<div class="sec-title"><?= h(__('Configuração fiscal (NF-e / NFS-e)')) ?></div>
+				<p class="cli-mock-hint" style="font-size:11px;color:var(--text-muted);margin:-4px 0 10px;"><?= h(__('Regime tributário e CNAE ficam na coluna «Dados da empresa». Itens abaixo são ilustrativos.')) ?></p>
 				<div class="field" style="margin-bottom:10px;">
 					<label><?= h(__('Tipo de operação fiscal')) ?></label>
 					<select disabled class="form-control"><option><?= h(__('Prestação de serviço (NFS-e)')) ?></option></select>
@@ -402,6 +452,28 @@ jQuery(function($) {
 		$('#cadastro-empresa-avisos').removeClass('d-none');
 	}
 
+	function cnaeValorParaInput(cnae) {
+		if (!cnae) return '';
+		if (typeof cnae === 'string') return cnae;
+		if (cnae.codigo) {
+			var d = String(cnae.codigo).replace(/\D/g, '');
+			if (d.length >= 7) return d.substring(0, 4) + '-' + d.substring(4, 1) + '/' + d.substring(5, 2);
+			return d;
+		}
+		return '';
+	}
+
+	function inferirRegimeReceitaJs(data) {
+		if (!data) return '';
+		var porte = String(data.porte || '').toUpperCase();
+		if (porte.indexOf('MEI') !== -1) return 'mei';
+		var simples = data.opcao_pelo_simples != null ? data.opcao_pelo_simples : data.optante_simples;
+		if (simples === true || simples === 1) return 'simples_nacional';
+		var s = String(simples || '').toUpperCase();
+		if (s === 'SIM' || s === 'S' || s === 'TRUE') return 'simples_nacional';
+		return 'lucro_presumido';
+	}
+
 	function aplicarDadosEmpresa(d, contato, end) {
 		d = d || {};
 		end = end || d.endereco || {};
@@ -436,6 +508,20 @@ jQuery(function($) {
 		if (Array.isArray(d.qsa) && d.qsa.length) {
 			var s = d.qsa.find(function (x) { return String(x.qual || '').indexOf('Administrador') !== -1; }) || d.qsa[0];
 			if (s && s.nome) $('#nomeresponsavel').val(String(s.nome).toUpperCase());
+		}
+		if ($('#regime-tributario').length) {
+			var regime = d.regime_tributario || '';
+			if (regime) $('#regime-tributario').val(regime);
+		}
+		if (d.data_abertura && $('#data-abertura').length) {
+			$('#data-abertura').val(String(d.data_abertura).substring(0, 10));
+		}
+		var cnaeTxt = cnaeValorParaInput(d.cnae_principal);
+		if (cnaeTxt && $('#cnae-principal').length) {
+			$('#cnae-principal').val(cnaeTxt);
+		}
+		if ($('#tipo-endereco').length && !$('#tipo-endereco').val()) {
+			$('#tipo-endereco').val('comercial_sede');
 		}
 	}
 
@@ -479,6 +565,24 @@ jQuery(function($) {
 			if (typeof $().selectpicker === 'function') { $('#idcidade').selectpicker('refresh'); }
 		}
 		if (data.telefone) $('#fone').val(data.telefone);
+		if (data.abertura && $('#data-abertura').length) {
+			var ab = String(data.abertura);
+			if (/^\d{2}\/\d{2}\/\d{4}$/.test(ab)) {
+				var p = ab.split('/');
+				$('#data-abertura').val(p[2] + '-' + p[1] + '-' + p[0]);
+			} else {
+				$('#data-abertura').val(ab.substring(0, 10));
+			}
+		}
+		if (data.atividade_principal && data.atividade_principal[0] && $('#cnae-principal').length) {
+			$('#cnae-principal').val(cnaeValorParaInput({ codigo: data.atividade_principal[0].code || data.atividade_principal[0].codigo }));
+		}
+		if ($('#regime-tributario').length) {
+			$('#regime-tributario').val(inferirRegimeReceitaJs(data));
+		}
+		if ($('#tipo-endereco').length && !$('#tipo-endereco').val()) {
+			$('#tipo-endereco').val('comercial_sede');
+		}
 		buscarIeAutomatica();
 		return true;
 	}

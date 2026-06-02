@@ -5,6 +5,7 @@ use App\Service\Cadastro\Provider\ReceitaProvider;
 use App\Service\Cadastro\Provider\SintegraIeProvider;
 use App\Service\Cadastro\Provider\SpeedioProvider;
 use App\Service\Cadastro\Provider\InscricaoMunicipalProvider;
+use App\Utility\ClientesCadastroFiscal;
 use App\Utility\CnpjUtil;
 use Cake\Cache\Cache;
 use Cake\Log\Log;
@@ -248,6 +249,7 @@ class ConsultaEmpresaService
             ],
             'idcidade' => $idcidade,
             'qsa' => $raw['qsa'] ?? [],
+            'regime_tributario' => ClientesCadastroFiscal::inferirRegimeFromReceitaRaw($raw),
         ];
     }
 

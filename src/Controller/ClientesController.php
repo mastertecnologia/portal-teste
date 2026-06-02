@@ -14,6 +14,7 @@ use App\Service\Cadastro\ConsultaEmpresaService;
 use App\Service\Cadastro\Provider\SpeedioProvider;
 use App\Utility\TextoUtil;
 use App\Model\Table\ClientesTable;
+use App\Utility\ClientesCadastroFiscal;
 use App\Utility\ClientesPapelCadastro;
 use App\Utility\ClienteDomainEventType;
 use App\Utility\PortalUi;
@@ -410,6 +411,7 @@ class ClientesController extends AppController {
 		$this->set('topbarParentLabel', __('Cadastros'));
 		$this->set('topbarCurrentLabel', __('Cadastrar clientes'));
 		$cliPapelCols = ClientesPapelCadastro::columnsAvailable($this->Clientes);
+		$cliFiscalCols = ClientesCadastroFiscal::columnsAvailable($this->Clientes);
 		$prefFornecedor = (string)$this->request->getQuery('fornecedor', '') === '1';
 		$cliente = $this->Clientes->newEntity(
 			$cliPapelCols ? ClientesPapelCadastro::defaultsForNewEntity($prefFornecedor) : []
@@ -421,6 +423,11 @@ class ClientesController extends AppController {
 			if ($papelErr !== null) {
 				$this->Flash->error($papelErr);
 			} else {
+			$fiscalNorm = ClientesCadastroFiscal::normalizeFromRequest($data, $cliFiscalCols);
+			if (!$fiscalNorm['ok']) {
+				$this->Flash->error(implode(' ', $fiscalNorm['errors'] ?? [__('Dados fiscais inválidos.')]));
+			} else {
+			$data = $fiscalNorm['data'];
 			if ($data['tipo'] == C_ClientesTipoFisica) {
 				$qDup = $this->Clientes->findByCpf($data['cpf'])->where(['tipo' => C_ClientesTipoFisica]);
 				$this->Abac->applyToQuery($qDup, 'Clientes');
@@ -480,12 +487,16 @@ class ClientesController extends AppController {
 				$this->Flash->error(__('Já existe um cliente cadastrado com este CPF/CNPJ.'));
 			}
 			}
+			}
 		}
 
 		$cidades = $this->Cidades->find('list', ['keyField' => 'id', 'valueField' => 'nome'])->order(['nome'])->toArray();
 		$this->set('cidades', $cidades);
 		$this->set('cliente', $cliente);
 		$this->set('cliPapelColumns', $cliPapelCols);
+		$this->set('cliFiscalColumns', $cliFiscalCols);
+		$this->set('regimeTributarioOpts', ClientesCadastroFiscal::regimeOptions());
+		$this->set('tipoEnderecoOpts', ClientesCadastroFiscal::tipoEnderecoOptions());
 		$this->set('cliPrefFornecedor', $prefFornecedor);
 	}
 
@@ -556,6 +567,11 @@ class ClientesController extends AppController {
 			if ($papelErr !== null) {
 				$this->Flash->error($papelErr);
 			} else {
+			$fiscalNorm = ClientesCadastroFiscal::normalizeFromRequest($data, ClientesCadastroFiscal::columnsAvailable($this->Clientes));
+			if (!$fiscalNorm['ok']) {
+				$this->Flash->error(implode(' ', $fiscalNorm['errors'] ?? [__('Dados fiscais inválidos.')]));
+			} else {
+			$data = $fiscalNorm['data'];
 			unset($data['public_code']);
 			if (!$this->_clientesCrmFinanceReady()) {
 				unset($data['limite_credito'], $data['score_interno'], $data['observacoes_financeiras']);
@@ -598,6 +614,7 @@ class ClientesController extends AppController {
 			}
 
 			$this->Flash->error(__('Não foi possível salvar o cliente.'));
+			}
 			}
 		}
 
@@ -677,6 +694,10 @@ class ClientesController extends AppController {
 		$this->set('cliContatosReady', $this->_clientesContatosReady());
 		$this->set('cliContatos', $this->_clientesContatosList((int)$id));
 		$this->set('cliPapelColumns', ClientesPapelCadastro::columnsAvailable($this->Clientes));
+		$cliFiscalCols = ClientesCadastroFiscal::columnsAvailable($this->Clientes);
+		$this->set('cliFiscalColumns', $cliFiscalCols);
+		$this->set('regimeTributarioOpts', ClientesCadastroFiscal::regimeOptions());
+		$this->set('tipoEnderecoOpts', ClientesCadastroFiscal::tipoEnderecoOptions());
 	}
 
 	/**
