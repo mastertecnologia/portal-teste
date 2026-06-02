@@ -1,6 +1,5 @@
 <?php
     use Cake\Routing\Router;
-    $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
     $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
 
     // Empresa dominante padrão (PGM)
@@ -18,52 +17,44 @@
         }
     }
 ?>
-<?= $this->element('pgm_premium_css', ['name' => 'clientes-premium']) ?>
 <?= $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']) ?>
 
-<div class="col-md-12 p-0">
-<div class="cli-form-root cli-layout-unificado">
+<div class="pg cli-form-root cli-layout-unificado" id="pg-cliente-novo">
 
 <?= $this->Form->create($cliente, ['class' => 'cli-add-form', 'id' => 'cli-add-form', 'data-turbo' => 'false']) ?>
 
-    <header class="cli-crm-page-head cli-crm-page-head--bar">
-        <div class="cli-crm-page-head-text">
-            <h1 class="cli-crm-h1 mb-1"><?= h(__('Novo cadastro de cliente')) ?></h1>
-            <p class="cli-crm-subtitle mb-0"><?= h(__('Preencha as informações principais · Você pode complementar depois')) ?></p>
-        </div>
-        <div class="cli-crm-page-actions">
-            <?= $this->Html->link(__('Cancelar'), ['action' => 'index'], ['class' => 'btn-cli-secondary btn-cli-sm', 'data-turbo' => 'false']) ?>
-            <?= $this->Form->button('<i class="fas fa-check" aria-hidden="true"></i> ' . __('Salvar cliente'), ['class' => 'btn-cli-primary btn-cli-sm cli-wizard-save-header', 'escape' => false]) ?>
-        </div>
-    </header>
+    <?= $this->element('Cli/cadastro_page_header', [
+        'pageTitle' => __('Novo cadastro de cliente'),
+        'showHeaderSave' => true,
+        'cancelUrl' => ['action' => 'index'],
+    ]) ?>
 
     <div class="cli-form-body cli-form-body--cadastro-lead cli-wizard-root" data-cli-wizard-root>
     <?= $this->element('Cli/cadastro_wizard_stepper', ['wizardStep' => 1]) ?>
 
-        <!-- Avisos CNPJ -->
-        <div id="cadastro-empresa-avisos" class="alert d-none" role="alert">
-            <strong><i class="fas fa-info-circle"></i> Origem dos dados:</strong>
+        <div id="cadastro-empresa-avisos" class="alert d-none" role="alert" style="margin-bottom:14px;">
+            <strong><?= h(__('Origem dos dados:')) ?></strong>
             <ul id="cadastro-empresa-avisos-lista" class="mb-0 mt-1"></ul>
         </div>
 
-        <!-- ── Seção: Tipo ────────────────────────────────── -->
         <div class="cli-wizard-pane cli-wizard-pane--active" data-cli-wizard-step="1" data-cli-wizard-title="<?= h(__('Identificação')) ?>">
-        <div class="cli-cadastro-grid">
-        <div class="cli-cadastro-col cli-cadastro-col--main">
-        <div class="cli-section">
-            <div class="cli-section-head">
-                <div class="cli-section-icon"><i class="fas fa-id-card"></i></div>
-                <div class="cli-section-title">Tipo de cliente</div>
-            </div>
-            <div class="cli-section-body">
+        <div class="g2" style="gap:14px;align-items:stretch;margin-bottom:14px;">
+            <div class="card" style="margin-bottom:0;">
+                <div class="sec-title">💳 <?= h(__('Tipo de cliente')) ?></div>
                 <?= $this->Form->control('tipo', ['id' => 'tipo', 'options' => C_ClientesTipo, 'required' => false, 'label' => false, 'class' => 'form-control d-none', 'templates' => ['inputContainer' => '{{content}}']]) ?>
                 <div class="cli-tipo-group">
                     <button type="button" class="cli-tipo-btn active" id="btn-tipo-pj" onclick="cliSetTipo(2)">
-                        <i class="fas fa-building"></i> Pessoa Jurídica
+                        <i class="fas fa-building" aria-hidden="true"></i> <?= h(__('Pessoa Jurídica')) ?>
                     </button>
                     <button type="button" class="cli-tipo-btn" id="btn-tipo-pf" onclick="cliSetTipo(1)">
-                        <i class="fas fa-user"></i> Pessoa Física
+                        <i class="fas fa-user" aria-hidden="true"></i> <?= h(__('Pessoa Física')) ?>
                     </button>
+                </div>
+            </div>
+            <div class="card" style="margin-bottom:0;">
+                <div class="sec-title">📊 <?= h(__('Código do cliente')) ?></div>
+                <div style="border:1px dashed var(--border);border-radius:var(--radius);padding:14px 16px;font-size:12px;color:var(--text-muted);line-height:1.5;background:var(--bg-surface);min-height:72px;display:flex;align-items:center;">
+                    <?= h(__('O código portal (P########) é gerado automaticamente ao salvar.')) ?>
                 </div>
             </div>
         </div>
@@ -74,260 +65,174 @@
             'showFornecedorExtras' => !empty($cliPrefFornecedor),
         ]) ?>
 
-        <!-- ── Seção: Dados Pessoa Jurídica ──────────────── -->
-        <div class="cli-section pessoaJuridica">
-            <div class="cli-section-head">
-                <div class="cli-section-icon"><i class="fas fa-building"></i></div>
-                <div class="cli-section-title">Dados da empresa</div>
-            </div>
-            <div class="cli-section-body">
-                <div class="cli-fg cli-fg-5-4-3">
-                    <div class="cli-fgroup">
-                        <label>Razão Social <span class="cli-req">*</span></label>
-                        <?= $this->Form->control('razaosocial', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome empresarial completo']) ?>
-                    </div>
-                    <div class="cli-fgroup">
-                        <label>Nome Fantasia</label>
-                        <?= $this->Form->control('nomefantasia', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome comercial']) ?>
-                    </div>
-                    <div class="cli-fgroup">
-                        <label class="cli-label-between">
-                            <span>CNPJ <span class="cli-req">*</span></span>
-                            <button type="button" class="btn-cli-outline" id="btn-buscar-cnpj">
-                                <i class="fas fa-search"></i> Buscar
-                            </button>
-                        </label>
-                        <?= $this->Form->control('cnpj', ['class' => 'form-control', 'id' => 'cnpj', 'label' => false, 'placeholder' => '00.000.000/0000-00']) ?>
-                        <input type="hidden" id="uf_contribuinte" value="" />
-                        <p class="cli-field-hint mb-0"><i class="fas fa-search" aria-hidden="true"></i> <?= h(__('Clique em Buscar para preencher automaticamente via Receita Federal')) ?></p>
-                    </div>
+        <div class="card pessoaJuridica" style="margin-bottom:14px;">
+            <div class="sec-title">🏢 <?= h(__('Dados da empresa')) ?></div>
+            <div class="g2" style="margin-bottom:10px;">
+                <div class="field">
+                    <label><?= h(__('Razão social')) ?> *</label>
+                    <?= $this->Form->control('razaosocial', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Nome empresarial completo')]) ?>
                 </div>
-                <div class="cli-fg cli-fg-3">
-                    <div class="cli-fgroup">
-                        <label>Nome do Responsável</label>
-                        <?= $this->Form->control('nomeresponsavel', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Sócio / administrador']) ?>
-                    </div>
-                    <div class="cli-fgroup">
-                        <label>CPF do Responsável</label>
-                        <?= $this->Form->control('cpf', ['id' => 'cpfresponsavel', 'class' => 'form-control', 'label' => false, 'placeholder' => '000.000.000-00']) ?>
-                    </div>
-                    <div class="cli-fgroup">
-                        <label>RG do Responsável</label>
-                        <?= $this->Form->control('rg', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Documento de identidade']) ?>
-                    </div>
+                <div class="field">
+                    <label><?= h(__('Nome fantasia')) ?></label>
+                    <?= $this->Form->control('nomefantasia', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Nome comercial')]) ?>
+                </div>
+            </div>
+            <div class="field" style="margin-bottom:10px;">
+                <label><?= h(__('CNPJ')) ?> *</label>
+                <div style="display:flex;gap:6px;">
+                    <?= $this->Form->control('cnpj', ['class' => 'form-control', 'id' => 'cnpj', 'label' => false, 'placeholder' => '00.000.000/0000-00', 'style' => 'flex:1;']) ?>
+                    <button type="button" class="btn btn-blue btn-sm" id="btn-buscar-cnpj" title="<?= h(__('Consultar Receita Federal')) ?>">🔍</button>
+                </div>
+                <input type="hidden" id="uf_contribuinte" value="" />
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;"><?= h(__('Clique em Buscar para preencher automaticamente via Receita Federal')) ?></div>
+            </div>
+            <div class="g3" style="margin-bottom:0;">
+                <div class="field">
+                    <label><?= h(__('Nome do responsável')) ?></label>
+                    <?= $this->Form->control('nomeresponsavel', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Sócio / administrador')]) ?>
+                </div>
+                <div class="field">
+                    <label><?= h(__('CPF do responsável')) ?></label>
+                    <?= $this->Form->control('cpf', ['id' => 'cpfresponsavel', 'class' => 'form-control', 'label' => false, 'placeholder' => '000.000.000-00']) ?>
+                </div>
+                <div class="field">
+                    <label><?= h(__('RG do responsável')) ?></label>
+                    <?= $this->Form->control('rg', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Documento de identidade')]) ?>
                 </div>
             </div>
         </div>
 
-        <!-- ── Seção: Dados Pessoa Física ────────────────── -->
-        <div class="cli-section pessoaFisica">
-            <div class="cli-section-head">
-                <div class="cli-section-icon"><i class="fas fa-user"></i></div>
-                <div class="cli-section-title">Dados pessoais</div>
-            </div>
-            <div class="cli-section-body">
-                <div class="cli-fg cli-fg-3-1">
-                    <div class="cli-fgroup">
-                        <label>Nome completo <span class="cli-req">*</span></label>
-                        <?= $this->Form->control('nome', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome completo']) ?>
-                    </div>
-                    <div class="cli-fgroup">
-                        <label>CPF</label>
-                        <?= $this->Form->control('cpf', ['id' => 'cpffisica', 'class' => 'form-control', 'label' => false, 'placeholder' => '000.000.000-00']) ?>
-                    </div>
+        <div class="card pessoaFisica" style="margin-bottom:14px;">
+            <div class="sec-title">👤 <?= h(__('Dados pessoais')) ?></div>
+            <div class="g2" style="margin-bottom:0;">
+                <div class="field">
+                    <label><?= h(__('Nome completo')) ?> *</label>
+                    <?= $this->Form->control('nome', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Nome completo')]) ?>
+                </div>
+                <div class="field">
+                    <label><?= h(__('CPF')) ?></label>
+                    <?= $this->Form->control('cpf', ['id' => 'cpffisica', 'class' => 'form-control', 'label' => false, 'placeholder' => '000.000.000-00']) ?>
                 </div>
             </div>
         </div>
         </div>
-        <div class="cli-cadastro-col cli-cadastro-col--side">
-        <div class="cli-section cli-section--hint">
-            <div class="cli-section-head">
-                <div class="cli-section-icon"><i class="fas fa-barcode"></i></div>
-                <div class="cli-section-title"><?= h(__('Código do cliente')) ?></div>
-            </div>
-            <div class="cli-section-body">
-                <p class="mb-0"><?= h(__('O código portal (P########) é gerado automaticamente ao salvar.')) ?></p>
-            </div>
-        </div>
-        </div>
-        </div>
-        </div>
 
-        <!-- ── Seção: Endereço ────────────────────────────── -->
         <div class="cli-wizard-pane" data-cli-wizard-step="2" data-cli-wizard-title="<?= h(__('Endereço & Contato')) ?>" hidden>
-        <div class="cli-cadastro-grid">
-        <div class="cli-cadastro-col cli-cadastro-col--main">
-        <div class="cli-section">
-            <div class="cli-section-head">
-                <div class="cli-section-icon"><i class="fas fa-map-marker-alt"></i></div>
-                <div class="cli-section-title"><?= h(__('Endereço principal')) ?></div>
+        <div class="g2" style="gap:14px;align-items:start;">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="card" style="margin-bottom:0;">
+            <div class="sec-title">📍 <?= h(__('Endereço principal')) ?></div>
+            <div class="g2" style="margin-bottom:10px;">
+                <div class="field">
+                    <label><?= h(__('CEP')) ?> *</label>
+                    <div style="display:flex;gap:6px;">
+                        <?= $this->Form->control('cep', ['class' => 'form-control', 'id' => 'cep', 'label' => false, 'placeholder' => '00000-000', 'required' => true, 'style' => 'flex:1;']) ?>
+                        <button type="button" class="btn btn-blue btn-sm" id="btn-buscar-cep" title="<?= h(__('Buscar CEP')) ?>">🔍</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label><?= h(__('Cidade')) ?> *</label>
+                    <?= $this->Form->control('idcidade', ['data-live-search' => 'true', 'class' => 'selectpicker form-control', 'options' => $cidades, 'label' => false]) ?>
+                </div>
             </div>
-            <div class="cli-section-body">
-                <div class="cli-fg cli-fg-addr cli-fg-endereco-cep-first">
-                    <div class="cli-fgroup">
-                        <label class="cli-label-between">
-                            <span>CEP <span class="cli-req">*</span></span>
-                            <button type="button" class="btn-cli-outline btn-cli-sm" id="btn-buscar-cep" title="<?= h(__('Buscar CEP')) ?>">
-                                <i class="fas fa-search" aria-hidden="true"></i>
-                            </button>
-                        </label>
-                        <?= $this->Form->control('cep', ['class' => 'form-control', 'id' => 'cep', 'label' => false, 'placeholder' => '00000-000', 'required' => true]) ?>
-                    </div>
-                    <div class="cli-fgroup">
-                        <label>Logradouro <span class="cli-req">*</span></label>
-                        <?= $this->Form->control('endereco', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Rua, Av., Trav…', 'required' => true]) ?>
-                    </div>
-                    <div class="cli-fgroup">
-                        <label>Número <span class="cli-req">*</span></label>
-                        <?= $this->Form->control('nroendereco', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nro.', 'required' => true]) ?>
-                    </div>
-                    <div class="cli-fgroup">
-                        <label>Complemento</label>
-                        <?= $this->Form->control('complemento', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Sala, Bloco…']) ?>
-                    </div>
-                    <div class="cli-fgroup">
-                        <label>Bairro <span class="cli-req">*</span></label>
-                        <?= $this->Form->control('bairro', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Bairro', 'required' => true]) ?>
-                    </div>
-                </div>
-                <div class="cli-fg cli-fg-2">
-                    <div class="cli-fgroup">
-                        <label>Cidade <span class="cli-req">*</span></label>
-                        <?= $this->Form->control('idcidade', ['data-live-search' => 'true', 'class' => 'selectpicker form-control', 'options' => $cidades, 'label' => false]) ?>
-                    </div>
-                </div>
+            <div class="field" style="margin-bottom:10px;">
+                <label><?= h(__('Logradouro')) ?> *</label>
+                <?= $this->Form->control('endereco', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Rua, Av., Trav…'), 'required' => true]) ?>
+            </div>
+            <div style="display:grid;grid-template-columns:120px 1fr;gap:10px;margin-bottom:10px;">
+                <div class="field"><label><?= h(__('Número')) ?> *</label><?= $this->Form->control('nroendereco', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Nro.'), 'required' => true]) ?></div>
+                <div class="field"><label><?= h(__('Complemento')) ?></label><?= $this->Form->control('complemento', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Sala, Bloco…')]) ?></div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label><?= h(__('Bairro')) ?> *</label>
+                <?= $this->Form->control('bairro', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Bairro'), 'required' => true]) ?>
             </div>
         </div>
 
-        <!-- ── Seção: Contato ─────────────────────────────── -->
-        <div class="cli-section">
-            <div class="cli-section-head">
-                <div class="cli-section-icon"><i class="fas fa-phone-alt"></i></div>
-                <div class="cli-section-title"><?= h(__('Contatos')) ?></div>
-            </div>
-            <div class="cli-section-body">
-                <div class="cli-fg cli-fg-contatos">
-                    <div class="cli-fgroup">
-                        <label><?= h(__('Telefone principal')) ?> <span class="cli-req">*</span></label>
-                        <?= $this->Form->control('fone', ['class' => 'form-control', 'id' => 'fone', 'label' => false, 'placeholder' => '(00) 0000-0000']) ?>
-                    </div>
-                    <div class="cli-fgroup">
-                        <label><?= h(__('WhatsApp')) ?></label>
-                        <?= $this->Form->control('fone2', ['class' => 'form-control', 'id' => 'fone2', 'label' => false, 'placeholder' => '(00) 00000-0000']) ?>
-                    </div>
-                    <div class="cli-fgroup cli-fgroup--wide">
-                        <label><?= h(__('E-mail principal')) ?></label>
-                        <?= $this->Form->email('email', ['id' => 'email', 'class' => 'form-control', 'label' => false, 'placeholder' => 'financeiro@empresa.com.br']) ?>
-                    </div>
-                    <div class="cli-fgroup cli-fgroup--wide">
-                        <label><?= h(__('Site / domínio')) ?></label>
-                        <?= $this->Form->control('site', ['class' => 'form-control', 'id' => 'site', 'label' => false, 'placeholder' => __('empresa.com.br'), 'autocomplete' => 'url']) ?>
-                    </div>
+        <div class="card" style="margin-bottom:0;">
+            <div class="sec-title">📞 <?= h(__('Contatos')) ?></div>
+            <div class="g2" style="margin-bottom:10px;">
+                <div class="field">
+                    <label><?= h(__('Telefone principal')) ?> *</label>
+                    <?= $this->Form->control('fone', ['class' => 'form-control', 'id' => 'fone', 'label' => false, 'placeholder' => '(00) 0000-0000']) ?>
                 </div>
-                <p class="cli-wizard-info-text mb-0"><small><?= h(__('Pessoas de contato e acessos são cadastrados após salvar, na ficha do cliente.')) ?></small></p>
+                <div class="field">
+                    <label><?= h(__('WhatsApp')) ?></label>
+                    <?= $this->Form->control('fone2', ['class' => 'form-control', 'id' => 'fone2', 'label' => false, 'placeholder' => '(00) 00000-0000']) ?>
+                </div>
             </div>
+            <div class="field" style="margin-bottom:10px;">
+                <label><?= h(__('E-mail principal')) ?></label>
+                <?= $this->Form->email('email', ['id' => 'email', 'class' => 'form-control', 'label' => false, 'placeholder' => 'financeiro@empresa.com.br']) ?>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label><?= h(__('Site / domínio')) ?></label>
+                <?= $this->Form->control('site', ['class' => 'form-control', 'id' => 'site', 'label' => false, 'placeholder' => __('empresa.com.br'), 'autocomplete' => 'url']) ?>
+            </div>
+            <p style="font-size:11px;color:var(--text-muted);margin:12px 0 0;"><?= h(__('Pessoas de contato e acessos são cadastrados após salvar, na ficha do cliente.')) ?></p>
         </div>
         </div>
-        <div class="cli-cadastro-col cli-cadastro-col--side">
-        <div class="cli-section cli-section--hint">
-            <div class="cli-section-head">
-                <div class="cli-section-icon"><i class="fas fa-file-invoice"></i></div>
-                <div class="cli-section-title"><?= h(__('Fiscal & financeiro')) ?></div>
-            </div>
-            <div class="cli-section-body">
-                <p class="mb-0"><?= h(__('Inscrições e limite de crédito no passo 3 do assistente.')) ?></p>
-            </div>
-        </div>
+        <div class="card" style="margin-bottom:0;">
+            <div class="sec-title">📋 <?= h(__('Próximos passos')) ?></div>
+            <p style="font-size:12px;color:var(--text-muted);margin:0;line-height:1.6;"><?= h(__('Inscrições fiscais, limite de crédito e configuração comercial nos passos 3 e 4 do assistente.')) ?></p>
         </div>
         </div>
         </div>
 
-        <!-- ── Seção: Fiscal (somente PJ) ────────────────── -->
         <div class="cli-wizard-pane" data-cli-wizard-step="3" data-cli-wizard-title="<?= h(__('Fiscal & Financeiro')) ?>" hidden>
-        <div class="cli-cadastro-grid">
-        <div class="cli-cadastro-col cli-cadastro-col--main">
-        <div class="cli-section pessoaJuridica">
-            <div class="cli-section-head">
-                <div class="cli-section-icon"><i class="fas fa-file-invoice"></i></div>
-                <div class="cli-section-title">Registros fiscais</div>
-            </div>
-            <div class="cli-section-body">
-                <div class="cli-fg cli-fg-2">
-                    <div class="cli-fgroup">
-                        <label>Inscrição Municipal</label>
-                        <?= $this->Form->control('inscricaomunicipal', ['onkeypress' => 'return SomenteNumero(event)', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Somente números']) ?>
-                    </div>
-                    <div class="cli-fgroup">
-                        <label class="cli-label-between">
-                            <span>Inscrição Estadual</span>
-                            <button type="button" class="btn-cli-outline" id="btn-buscar-ie" title="Consultar IE na SEFAZ/SINTEGRA">
-                                <i class="fas fa-search"></i> Buscar IE
-                            </button>
-                        </label>
-                        <?= $this->Form->control('inscricaoestadual', ['id' => 'inscricaoestadual', 'onkeypress' => 'return SomenteNumero(event)', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Somente números']) ?>
+        <div class="g2" style="gap:14px;align-items:start;">
+        <div class="card pessoaJuridica" style="margin-bottom:0;">
+            <div class="sec-title">📄 <?= h(__('Registros fiscais')) ?></div>
+            <div class="g2" style="margin-bottom:0;">
+                <div class="field">
+                    <label><?= h(__('Inscrição municipal')) ?></label>
+                    <?= $this->Form->control('inscricaomunicipal', ['onkeypress' => 'return SomenteNumero(event)', 'class' => 'form-control', 'label' => false, 'placeholder' => __('Somente números')]) ?>
+                </div>
+                <div class="field">
+                    <label><?= h(__('Inscrição estadual')) ?></label>
+                    <div style="display:flex;gap:6px;">
+                        <?= $this->Form->control('inscricaoestadual', ['id' => 'inscricaoestadual', 'onkeypress' => 'return SomenteNumero(event)', 'class' => 'form-control', 'label' => false, 'placeholder' => __('Somente números'), 'style' => 'flex:1;']) ?>
+                        <button type="button" class="btn btn-blue btn-sm" id="btn-buscar-ie" title="<?= h(__('Consultar IE na SEFAZ/SINTEGRA')) ?>">🔍</button>
                     </div>
                 </div>
             </div>
         </div>
-        </div>
-        <div class="cli-cadastro-col cli-cadastro-col--side">
-        <div class="cli-section">
-            <div class="cli-section-head">
-                <div class="cli-section-icon"><i class="fas fa-coins"></i></div>
-                <div class="cli-section-title"><?= h(__('Configuração financeira')) ?></div>
-            </div>
-            <div class="cli-section-body">
-                <div class="cli-fg cli-fg-2">
-                    <div class="cli-fgroup">
-                        <label><?= h(__('Limite de crédito (R$)')) ?></label>
-                        <?= $this->Form->control('limite_credito', ['class' => 'form-control', 'label' => false, 'placeholder' => '0,00']) ?>
-                    </div>
-                    <div class="cli-fgroup">
-                        <label><?= h(__('Score interno (0–10)')) ?></label>
-                        <?= $this->Form->control('score_interno', ['class' => 'form-control', 'label' => false, 'placeholder' => '9,2']) ?>
-                    </div>
+        <div class="card" style="margin-bottom:0;">
+            <div class="sec-title">💰 <?= h(__('Configuração financeira')) ?></div>
+            <div class="g2" style="margin-bottom:10px;">
+                <div class="field">
+                    <label><?= h(__('Limite de crédito (R$)')) ?></label>
+                    <?= $this->Form->control('limite_credito', ['class' => 'form-control', 'label' => false, 'placeholder' => '0,00']) ?>
                 </div>
-                <div class="cli-fgroup">
-                    <label><?= h(__('Observações financeiras')) ?></label>
-                    <?= $this->Form->control('observacoes_financeiras', ['type' => 'textarea', 'rows' => 2, 'class' => 'form-control', 'label' => false]) ?>
+                <div class="field">
+                    <label><?= h(__('Score interno (0–10)')) ?></label>
+                    <?= $this->Form->control('score_interno', ['class' => 'form-control', 'label' => false, 'placeholder' => '9,2']) ?>
                 </div>
             </div>
-        </div>
+            <div class="field" style="margin-bottom:0;">
+                <label><?= h(__('Observações financeiras')) ?></label>
+                <?= $this->Form->control('observacoes_financeiras', ['type' => 'textarea', 'rows' => 2, 'class' => 'form-control', 'label' => false]) ?>
+            </div>
         </div>
         </div>
         </div>
 
-        <!-- ── Seção: Configurações ───────────────────────── -->
         <div class="cli-wizard-pane" data-cli-wizard-step="4" data-cli-wizard-title="<?= h(__('Comercial & CRM')) ?>" hidden>
-        <div class="cli-cadastro-grid">
-        <div class="cli-cadastro-col cli-cadastro-col--main">
-        <div class="cli-section">
-            <div class="cli-section-head">
-                <div class="cli-section-icon"><i class="fas fa-chart-line"></i></div>
-                <div class="cli-section-title"><?= h(__('Comercial & CRM')) ?></div>
+        <div class="g2" style="gap:14px;align-items:start;">
+        <div class="card" style="margin-bottom:0;">
+            <div class="sec-title">📈 <?= h(__('Comercial & CRM')) ?></div>
+            <div class="field" style="margin-bottom:10px;">
+                <label><?= h(__('Empresa dominante')) ?></label>
+                <?= $this->Form->control('empresadominante', ['class' => 'form-control', 'label' => false, 'options' => $empresasOptSidebar, 'default' => $defaultEmpresaDominanteId]) ?>
             </div>
-            <div class="cli-section-body">
-                <div class="cli-fg cli-fg-1-1-ac">
-                    <div class="cli-fgroup">
-                        <label>Empresa dominante</label>
-                        <?= $this->Form->control('empresadominante', ['class' => 'form-control', 'label' => false, 'options' => $empresasOptSidebar, 'default' => $defaultEmpresaDominanteId]) ?>
-                    </div>
-                    <div class="cli-config-check-slot">
-                        <div class="cli-check-row">
-                            <?= $this->Form->checkbox('contrato', ['class' => 'custom-control-input', 'id' => 'contrato']) ?>
-                            <label for="contrato">Possui contrato de serviço</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;text-transform:none;letter-spacing:0;">
+                <?= $this->Form->checkbox('contrato', ['id' => 'contrato']) ?>
+                <?= h(__('Possui contrato de serviço')) ?>
+            </label>
         </div>
-        </div>
-        <div class="cli-cadastro-col cli-cadastro-col--side">
-        <div class="cli-section cli-section--hint">
-            <div class="cli-section-body">
-                <p class="mb-0"><?= h(__('Segmentação ABC, vendedor e tags avançados podem ser evoluídos em fases futuras; os dados operacionais acima já sincronizam com o ERP.')) ?></p>
-            </div>
-        </div>
+        <div class="card" style="margin-bottom:0;">
+            <div class="sec-title">ℹ️ <?= h(__('Evolução do cadastro')) ?></div>
+            <p style="font-size:12px;color:var(--text-muted);margin:0;line-height:1.6;"><?= h(__('Segmentação ABC, vendedor e tags avançados podem ser evoluídos em fases futuras; os dados operacionais acima já sincronizam com o ERP.')) ?></p>
         </div>
         </div>
         </div>
@@ -335,21 +240,13 @@
     <?= $this->element('Cli/cadastro_wizard_nav', ['wizardShowSave' => true]) ?>
     </div><!-- /cli-form-body -->
 
-    <!-- ── Footer com botão salvar ───────────────────────── -->
-    <div class="cli-form-footer">
-        <div class="cli-form-footer-left">
-            <i class="fas fa-shield-alt cli-icon-teal" style="margin-right:5px;" aria-hidden="true"></i>
-            <?= h(__('Dados salvos com segurança no ERP')) ?>
-        </div>
-        <div class="cli-form-footer-right">
-            <?= $this->Html->link('<i class="fa fa-arrow-left"></i> ' . __('Cancelar'), ['action' => 'index'], ['class' => 'btn-cli-secondary', 'escape' => false, 'data-turbo' => 'false']) ?>
-            <?= $this->Form->button('<i class="fas fa-check"></i> ' . __('Salvar cliente'), ['class' => 'btn-cli-primary cli-wizard-save-footer', 'escape' => false]) ?>
-        </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px;flex-wrap:wrap;">
+        <?= $this->Html->link(__('Cancelar'), ['action' => 'index'], ['class' => 'btn btn-ghost', 'data-turbo' => 'false']) ?>
+        <?= $this->Form->button('✓ ' . __('Salvar cliente'), ['class' => 'btn btn-primary cli-wizard-save-footer', 'escape' => false]) ?>
     </div>
 
 <?= $this->Form->end() ?>
-</div><!-- /cli-form-root -->
-</div>
+</div><!-- /pg-cliente-novo -->
 
 <?= $this->Html->script('/pgm-assets/js/modules/clientes/cliente-cadastro-wizard') ?>
 <script>

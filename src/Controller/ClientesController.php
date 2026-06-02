@@ -403,6 +403,7 @@ class ClientesController extends AppController {
 		
 		$this->set('title', 'Adicionar Cliente');
 		$this->set('hideLayoutPageTitle', true);
+		$this->set('pgmLoadErpPrototypeAssets', true);
 		$this->set('topbarParentLabel', __('Cadastros'));
 		$this->set('topbarCurrentLabel', __('Cadastrar clientes'));
 		$cliPapelCols = ClientesPapelCadastro::columnsAvailable($this->Clientes);
@@ -500,6 +501,7 @@ class ClientesController extends AppController {
 		$titlenome = $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : $cliente->razaosocial;
 		$this->set('title', 'Cliente: ' . $titlenome);
 		$this->set('hideLayoutPageTitle', true);
+		$this->set('pgmLoadErpPrototypeAssets', true);
 		$this->set('topbarParentLabel', __('Cadastros'));
 		$this->set('topbarCurrentLabel', __('Editar cliente'));
 

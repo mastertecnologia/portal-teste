@@ -43,6 +43,10 @@
 					btn.querySelector('.cli-wiz-stp-c').textContent = String(n);
 				}
 			}
+			var lines = stepper.querySelectorAll('.cli-wiz-stp-line');
+			for (var li = 0; li < lines.length; li++) {
+				lines[li].style.background = li + 1 < step ? 'var(--teal)' : 'var(--border)';
+			}
 		}
 
 		function showStep(n) {
