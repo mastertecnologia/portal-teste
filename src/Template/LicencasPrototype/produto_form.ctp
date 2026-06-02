@@ -1,5 +1,5 @@
 <?php
-/** @var array<string,mixed>|null $licProduto @var array<int,array<string,mixed>> $licCategorias @var array<int,string> $licClientes @var string $licWizardReturn @var int $licWizardLicId */
+/** @var array<string,mixed>|null $licProduto @var array<int,array<string,mixed>> $licCategorias @var array<int,array{id:int,nome:string,cnpj:string}> $licFornecedores @var string $licWizardReturn @var int $licWizardLicId */
 $p = (array)($licProduto ?? []);
 $csrf = (string)$this->request->getAttribute('csrfToken');
 $id = (int)($p['id'] ?? 0);
@@ -33,13 +33,14 @@ $voltar = $return === 'nova'
 			<?php endforeach; ?>
 		</select>
 	</div>
-	<div class="field"><label><?= h(__('Fornecedor (cliente PJ)')) ?></label>
+	<div class="field"><label><?= h(__('Fornecedor')) ?></label>
 		<select name="idfornecedor_cliente">
-			<option value=""><?= h(__('—')) ?></option>
-			<?php foreach ((array)($licClientes ?? []) as $cid => $cn) : ?>
-			<option value="<?= (int)$cid ?>"<?= (int)($p['idfornecedor_cliente'] ?? 0) === (int)$cid ? ' selected' : '' ?>><?= h($cn) ?></option>
+			<option value=""><?= h(__('Selecione o fornecedor cadastrado…')) ?></option>
+			<?php foreach ((array)($licFornecedores ?? []) as $f) : ?>
+			<option value="<?= (int)$f['id'] ?>"<?= (int)($p['idfornecedor_cliente'] ?? 0) === (int)$f['id'] ? ' selected' : '' ?>><?= h($f['nome']) ?><?= ($f['cnpj'] ?? '') !== '' ? ' · ' . h($f['cnpj']) : '' ?></option>
 			<?php endforeach; ?>
 		</select>
+		<div style="font-size:10px;color:var(--text-muted);margin-top:4px;"><?= h(__('Somente clientes PJ cadastrados em Fornecedores')) ?> · <?= $this->Html->link('+ ' . __('Novo fornecedor'), ['controller' => 'FornecedoresPrototype', 'action' => 'view', 'novo'], ['style' => 'color:var(--teal);']) ?></div>
 	</div>
 	<label><input type="checkbox" name="ativo" value="1"<?= !isset($p['ativo']) || !empty($p['ativo']) ? ' checked' : '' ?>> <?= h(__('Ativo')) ?></label>
 </div>

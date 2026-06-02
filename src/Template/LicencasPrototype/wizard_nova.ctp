@@ -5,14 +5,16 @@
  * @var array<int,array<string,mixed>> $licClientesBusca
  * @var array<int,array<string,mixed>> $licCategorias
  * @var array<int,array<string,mixed>> $licProdutosWizard
- * @var array<int,array<string,mixed>> $licFornecedores
+ * @var array<int,array{id:int,nome:string,cnpj:string}> $licFornecedores
+ * @var array<int,array<int,array{id:int,nome:string,cnpj:string}>> $licFornecedoresPorCategoria
  * @var int $wizardStepNum
  */
 $csrf = (string)$this->request->getAttribute('csrfToken');
 $clientes = (array)($licClientesBusca ?? []);
 $categorias = (array)($licCategorias ?? []);
 $produtos = (array)($licProdutosWizard ?? []);
-$fornecedores = (array)($licFornecedores ?? []);
+$fornecedoresTodos = (array)($licFornecedores ?? []);
+$fornecedoresPorCat = (array)($licFornecedoresPorCategoria ?? []);
 $catDefault = $categorias[0]['id'] ?? 0;
 foreach ($categorias as $c) {
 	if (mb_stripos((string)($c['codigo'] ?? ''), 'OFFICE') !== false || mb_stripos((string)($c['nome'] ?? ''), 'Office') !== false) {
@@ -86,11 +88,12 @@ foreach ($categorias as $c) {
 			<div class="field">
 				<label><?= h(__('De onde vai comprar / quem revende')) ?> * <span id="lic-forn-hint" style="font-size:10px;color:var(--text-muted);"></span></label>
 				<select id="lic-fornecedor-select" style="font-size:13px;">
-					<option value=""><?= h(__('Selecione o produto primeiro…')) ?></option>
-					<?php foreach ($fornecedores as $f) : ?>
-					<option value="<?= (int)$f['id'] ?>"><?= h($f['nome'] ?? '') ?></option>
-					<?php endforeach; ?>
+					<option value=""><?= h(__('Selecione o produto ou a categoria…')) ?></option>
 				</select>
+				<div style="font-size:10px;color:var(--text-muted);margin-top:6px;">
+					<?= h(__('Somente fornecedores cadastrados no ERP (clientes PJ em Fornecedores)')) ?>
+					· <?= $this->Html->link('+ ' . __('Cadastrar fornecedor'), ['controller' => 'FornecedoresPrototype', 'action' => 'view', 'novo'], ['style' => 'color:var(--teal);']) ?>
+				</div>
 			</div>
 			<div class="g2" style="gap:10px;margin-top:10px;">
 				<div class="field" style="margin:0;">
@@ -145,6 +148,8 @@ foreach ($categorias as $c) {
 	var produtos = <?= json_encode($produtos, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 	var catDefault = <?= (int)$catDefault ?>;
 	var baseProdutoUrl = <?= json_encode($this->Url->build(['action' => 'view', 'produto-novo'])) ?>;
+	var fornecedoresTodos = <?= json_encode($fornecedoresTodos, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+	var fornecedoresPorCat = <?= json_encode($fornecedoresPorCat, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 	var selCliente = null;
 	var selCat = catDefault;
 
@@ -163,11 +168,26 @@ foreach ($categorias as $c) {
 	var $prodCount = document.getElementById('lic-prod-count');
 	var $fornHint = document.getElementById('lic-forn-hint');
 	var $linkNovoProd = document.getElementById('lic-link-novo-produto');
-	var allFornOpts = [];
-	if ($fornSelect) {
-		Array.prototype.forEach.call($fornSelect.options, function (o) {
-			if (o.value) allFornOpts.push({ value: o.value, text: o.textContent });
+
+	function fornecedoresDaCategoria(catId) {
+		var list = fornecedoresPorCat[String(catId)] || fornecedoresPorCat[catId];
+		if (list && list.length) return list;
+		return fornecedoresTodos;
+	}
+
+	function renderFornecedores(list, selectedId) {
+		if (!$fornSelect) return;
+		$fornSelect.innerHTML = '<option value=""><?= h(__('Selecione…')) ?></option>';
+		(list || []).forEach(function (f) {
+			var opt = document.createElement('option');
+			opt.value = String(f.id);
+			opt.textContent = f.nome + (f.cnpj ? ' · ' + f.cnpj : '');
+			if (selectedId && String(selectedId) === String(f.id)) opt.selected = true;
+			$fornSelect.appendChild(opt);
 		});
+		if (!list || !list.length) {
+			$fornSelect.innerHTML = '<option value=""><?= h(__('Nenhum fornecedor cadastrado para esta categoria')) ?></option>';
+		}
 	}
 
 	function renderClientes(q) {
@@ -239,26 +259,13 @@ foreach ($categorias as $c) {
 		if ($linkNovoProd) {
 			$linkNovoProd.href = baseProdutoUrl + '?idcategoria=' + selCat + '&return=nova';
 		}
-		filterFornecedores(list);
+		var fornList = fornecedoresDaCategoria(selCat);
+		var preselect = '';
+		if (list.length && list[0].idfornecedor_cliente) {
+			preselect = list[0].idfornecedor_cliente;
+		}
+		renderFornecedores(fornList, preselect);
 		onProdutoChange();
-	}
-
-	function filterFornecedores(prodList) {
-		if (!$fornSelect || !allFornOpts.length) return;
-		var allowed = {};
-		prodList.forEach(function (p) {
-			if (p.idfornecedor_cliente) allowed[String(p.idfornecedor_cliente)] = true;
-		});
-		var hasFilter = Object.keys(allowed).length > 0;
-		$fornSelect.innerHTML = '<option value=""><?= h(__('Selecione…')) ?></option>';
-		allFornOpts.forEach(function (o) {
-			if (!hasFilter || allowed[o.value]) {
-				var opt = document.createElement('option');
-				opt.value = o.value;
-				opt.textContent = o.text;
-				$fornSelect.appendChild(opt);
-			}
-		});
 	}
 
 	function onProdutoChange() {
@@ -275,9 +282,8 @@ foreach ($categorias as $c) {
 		$prevProd.textContent = opt.textContent;
 		$prevProdSub.textContent = (opt.dataset.categoria || '') + ' · <?= h(__('assinatura por usuário')) ?>';
 		var fid = opt.dataset.fornecedor || '';
-		if (fid) {
-			$fornSelect.value = fid;
-		}
+		var fornList = fornecedoresDaCategoria(selCat);
+		renderFornecedores(fornList, fid);
 		$prevForn.textContent = $fornSelect.options[$fornSelect.selectedIndex] ? $fornSelect.options[$fornSelect.selectedIndex].textContent : '—';
 	}
 
@@ -320,5 +326,8 @@ foreach ($categorias as $c) {
 	});
 	renderClientes('');
 	fillProdutos();
+	if (!selCliente) {
+		renderFornecedores(fornecedoresDaCategoria(selCat), '');
+	}
 })();
 </script>

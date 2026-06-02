@@ -37,6 +37,7 @@ class LicencasPrototypeController extends AppController {
 	public function dashboard() {
 		$empresa = (int)$this->Auth->user('idempresa');
 		$svc = new LicPrototypeDataService($empresa);
+		$svc->ensureLicenciamentoBase((int)$this->Auth->user('id'));
 		$dash = $svc->buildDashboardData();
 		$this->set([
 			'title' => __('Licenciamento · Painel'),
@@ -324,7 +325,8 @@ class LicencasPrototypeController extends AppController {
 			'licClientesBusca' => $svc->listClientesWizardBusca(),
 			'licCategorias' => $svc->listCategoriasComContagem(),
 			'licProdutosWizard' => $svc->listCatalogoProdutosWizard(),
-			'licFornecedores' => $svc->listFornecedoresResumo(120),
+			'licFornecedores' => $svc->listFornecedoresOptions(200),
+			'licFornecedoresPorCategoria' => $svc->listFornecedoresPorCategoriaMap(),
 		]);
 		$tpl = 'wizard_' . str_replace('-', '_', $page);
 
@@ -494,10 +496,11 @@ class LicencasPrototypeController extends AppController {
 		}
 		$return = trim((string)$this->request->getQuery('return', ''));
 		$licId = (int)$this->request->getQuery('lic_id', 0);
+		$idcategoriaPre = is_array($prod) ? (int)($prod['idcategoria'] ?? 0) : 0;
 		$this->setLicPage($prod && !empty($prod['id']) ? __('Editar produto') : __('Novo produto'), 'lic-catalogo', [
 			'licProduto' => $prod,
 			'licCategorias' => $svc->listCategoriasComContagem(),
-			'licClientes' => $svc->listClientesOptions(),
+			'licFornecedores' => $svc->listFornecedoresOptions(200, $idcategoriaPre > 0 ? $idcategoriaPre : null),
 			'licWizardReturn' => $return,
 			'licWizardLicId' => $licId,
 		]);
