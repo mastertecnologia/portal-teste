@@ -60,7 +60,16 @@ class UsersTable extends Table {
 	 * @return array<string, mixed>
 	 */
 	public function loginActiveInativoCondition(): array {
-		return ['COALESCE(CAST(Users.inativo AS INTEGER), 0) =' => 0];
+		// OR explícito: evita CAST em massa (falha no PG se houver valor não numérico em inativo)
+		// e alinha ao restante do portal (Users.inativo => 0).
+		return [
+			'OR' => [
+				['Users.inativo IS' => null],
+				['Users.inativo' => false],
+				['Users.inativo' => 0],
+				['Users.inativo' => '0'],
+			],
+		];
 	}
 
 	/**

@@ -55,6 +55,7 @@ class AppController extends Controller
                 "logout",
                 "loginempresa",
                 "acessoEmpresa",
+                "loginDiag",
                 "loginduasetapas",
                 "verificaloginduasetapas",
                 "verificacodigo",
