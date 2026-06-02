@@ -1551,6 +1551,24 @@ class UsersController extends AppController {
 		return false;
 	}
 
+	/**
+	 * Diagnóstico sem logar senha (suporte produção).
+	 */
+	protected function _diagnoseLoginRejectReason(string $login, $password): string {
+		$candidates = $this->_findActiveUsersForLogin($login);
+		if ($candidates === []) {
+			return 'no_user';
+		}
+		$plain = (string)$password;
+		foreach ($candidates as $entity) {
+			if ($this->_passwordMatchesForLogin($plain, (string)$entity->get('password'))) {
+				return 'hash_ok_user_id_' . $entity->get('id');
+			}
+		}
+
+		return 'hash_mismatch';
+	}
+
 	protected function _identifyUserByCredentials(string $login, $password): ?array {
 		if ($password === null || $password === '') {
 			return null;
@@ -1752,10 +1770,12 @@ class UsersController extends AppController {
 				}
 
 				if (empty($user)) {
+					$reason = $this->_diagnoseLoginRejectReason($creds['username'], $creds['password']);
 					Log::warning(sprintf(
-						'acessoEmpresa: credenciais rejeitadas login=%s password_len=%d',
+						'acessoEmpresa: credenciais rejeitadas login=%s password_len=%d reason=%s',
 						$creds['username'],
-						$creds['password'] !== null ? strlen($creds['password']) : 0
+						$creds['password'] !== null ? strlen($creds['password']) : 0,
+						$reason
 					));
 					$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
 				}
