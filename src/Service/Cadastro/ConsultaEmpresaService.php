@@ -92,9 +92,22 @@ class ConsultaEmpresaService
                 $raw = $this->receita->consultar($cnpjLimpo);
                 $resultado['avisos'][] = 'Dados cadastrais: Receita. Para usar Speedio, configure SPEEDIO_USERNAME e SPEEDIO_TOKEN no servidor (.env ou config/app_local.php).';
             }
-            $resultado['dados'] = $this->mapearCadastro($raw);
+            $resultado['dados'] = ClientesCadastroFiscal::enriquecerDadosConsulta($this->mapearCadastro($raw));
             $resultado['origem']['dados_cadastrais'] = $origemCadastro;
             $resultado['status_consultas']['dados_cadastrais'] = StatusConsulta::SUCESSO;
+            if (!empty($resultado['dados']['regime_tributario_rotulo'])) {
+                $resultado['avisos'][] = __('Regime tributário sugerido pela Receita Federal: {0}', $resultado['dados']['regime_tributario_rotulo']);
+            }
+            if (!empty($resultado['dados']['data_abertura'])) {
+                $resultado['avisos'][] = __('Data de abertura obtida do cadastro na Receita Federal.');
+            }
+            if (!empty($resultado['dados']['cnae_principal_formatado'])) {
+                $cnaeMsg = __('CNAE principal: {0}', $resultado['dados']['cnae_principal_formatado']);
+                if (!empty($resultado['dados']['cnae_principal_descricao'])) {
+                    $cnaeMsg .= ' — ' . $resultado['dados']['cnae_principal_descricao'];
+                }
+                $resultado['avisos'][] = $cnaeMsg;
+            }
         } catch (\Throwable $e) {
             $this->logFalha($cnpjLimpo, $origemCadastro, $e);
             return $this->erro(
@@ -126,6 +139,10 @@ class ConsultaEmpresaService
                         ];
                         $resultado['origem']['inscricao_estadual'] = 'SEFAZ_' . $uf;
                         $resultado['status_consultas']['inscricao_estadual'] = StatusConsulta::SUCESSO;
+                        if (!empty($ie['indicador'])) {
+                            $resultado['dados']['indicador_ie_sefaz'] = $ie['indicador'];
+                            $resultado['avisos'][] = __('Indicador de IE (SEFAZ/{0}): {1}', $uf, (string)$ie['indicador']);
+                        }
                     } else {
                         $resultado['dados']['inscricao_estadual'] = $this->ieVazio('NAO_LOCALIZADA');
                         $resultado['status_consultas']['inscricao_estadual'] = StatusConsulta::SEM_RESULTADO;
@@ -207,9 +224,10 @@ class ConsultaEmpresaService
         $cnaePrincipal = null;
         if (!empty($raw['atividade_principal'][0])) {
             $a = $raw['atividade_principal'][0];
+            $codeRaw = $a['code'] ?? $a['codigo'] ?? null;
             $cnaePrincipal = [
-                'codigo' => isset($a['code']) ? preg_replace('/\D+/', '', $a['code']) : null,
-                'descricao' => $a['text'] ?? null,
+                'codigo' => $codeRaw !== null ? preg_replace('/\D+/', '', (string)$codeRaw) : null,
+                'descricao' => $a['text'] ?? $a['descricao'] ?? null,
             ];
         }
         $cnaesSec = [];

@@ -100,16 +100,70 @@ class ClientesCadastroFiscal {
 		if (strpos($porte, 'MEI') !== false) {
 			return self::REGIME_MEI;
 		}
-		$simples = $raw['opcao_pelo_simples'] ?? $raw['optante_simples'] ?? null;
+		if (!empty($raw['opcao_pelo_mei']) || !empty($raw['mei'])) {
+			return self::REGIME_MEI;
+		}
+		if (isset($raw['simples']) && is_array($raw['simples'])) {
+			$opt = $raw['simples']['optante'] ?? null;
+			if ($opt === true || $opt === 1) {
+				return self::REGIME_SIMPLES;
+			}
+			if ($opt === false || $opt === 0) {
+				return self::REGIME_PRESUMIDO;
+			}
+		}
+		$simples = $raw['opcao_pelo_simples'] ?? $raw['optante_simples'] ?? $raw['simples_nacional'] ?? null;
 		if ($simples === true || $simples === 1) {
 			return self::REGIME_SIMPLES;
 		}
 		$s = strtoupper(trim((string)$simples));
-		if ($s === 'SIM' || $s === 'S' || $s === 'TRUE') {
+		if ($s === 'SIM' || $s === 'S' || $s === 'TRUE' || $s === '1') {
 			return self::REGIME_SIMPLES;
+		}
+		if ($s === 'NAO' || $s === 'NÃO' || $s === 'N' || $s === 'FALSE' || $s === '0') {
+			return self::REGIME_PRESUMIDO;
 		}
 
 		return self::REGIME_PRESUMIDO;
+	}
+
+	/**
+	 * Enriquece payload da consulta CNPJ para o front (CNAE formatado, validação, rótulos).
+	 *
+	 * @param array<string,mixed> $dados
+	 * @return array<string,mixed>
+	 */
+	public static function enriquecerDadosConsulta(array $dados): array {
+		$cnae = $dados['cnae_principal'] ?? null;
+		$codigo = null;
+		$descricao = null;
+		if (is_array($cnae)) {
+			$codigo = isset($cnae['codigo']) ? preg_replace('/\D+/', '', (string)$cnae['codigo']) : null;
+			$descricao = $cnae['descricao'] ?? null;
+		} elseif (is_string($cnae) && $cnae !== '') {
+			$codigo = preg_replace('/\D+/', '', $cnae);
+		}
+		if ($codigo !== null && strlen($codigo) > 7) {
+			$codigo = substr($codigo, 0, 7);
+		}
+		$formatado = $codigo !== null && strlen($codigo) >= 4
+			? self::formatCnaeInput(['codigo' => $codigo])
+			: null;
+		$dados['cnae_principal'] = $codigo !== null ? [
+			'codigo' => $codigo,
+			'descricao' => $descricao,
+		] : null;
+		$dados['cnae_principal_formatado'] = $formatado;
+		$dados['cnae_principal_descricao'] = $descricao;
+		$dados['cnae_principal_valido'] = $codigo !== null && strlen($codigo) === 7;
+
+		$regime = (string)($dados['regime_tributario'] ?? '');
+		if ($regime !== '') {
+			$opts = self::regimeOptions();
+			$dados['regime_tributario_rotulo'] = $opts[$regime] ?? $regime;
+		}
+
+		return $dados;
 	}
 
 	/**
@@ -128,6 +182,9 @@ class ClientesCadastroFiscal {
 			return null;
 		}
 		$d = preg_replace('/\D+/', '', (string)$cnae['codigo']);
+		if (strlen($d) > 7) {
+			$d = substr($d, 0, 7);
+		}
 		if (strlen($d) < 4) {
 			return $d !== '' ? $d : null;
 		}

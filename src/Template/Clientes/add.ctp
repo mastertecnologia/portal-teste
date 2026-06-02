@@ -111,6 +111,7 @@ $tipoOpts = [
 									'placeholder' => '0000-0/00',
 									'value' => \App\Utility\ClientesCadastroFiscal::formatCnaeStored($cliente->cnae_principal ?? null) ?? '',
 								]) ?>
+								<div id="cli-cnae-hint" style="font-size:11px;color:var(--text-muted);margin-top:4px;"></div>
 							<?php else: ?>
 								<input type="text" disabled class="form-control" placeholder="0000-0/00" title="<?= h(__('Atualize o banco (migration) para habilitar este campo.')) ?>"/>
 							<?php endif; ?>
@@ -140,12 +141,15 @@ $tipoOpts = [
 						<div class="field">
 							<label><?= h(__('Data de abertura')) ?></label>
 							<?php if (!empty($cliFiscalColumns)): ?>
-								<?= $this->Form->control('data_abertura', [
-									'type' => 'date',
-									'id' => 'data-abertura',
-									'class' => 'form-control',
-									'label' => false,
-								]) ?>
+								<?php
+								$aberturaVal = '';
+								if (!empty($cliente->data_abertura)) {
+									$aberturaVal = $cliente->data_abertura instanceof \DateTimeInterface
+										? $cliente->data_abertura->format('Y-m-d')
+										: substr((string)$cliente->data_abertura, 0, 10);
+								}
+								?>
+								<input type="date" name="data_abertura" id="data-abertura" class="form-control" value="<?= h($aberturaVal) ?>" />
 							<?php else: ?>
 								<input type="date" disabled class="form-control" title="<?= h(__('Atualize o banco (migration) para habilitar este campo.')) ?>"/>
 							<?php endif; ?>
@@ -259,25 +263,20 @@ $tipoOpts = [
 		<div style="display:flex;flex-direction:column;gap:14px;">
 			<div class="card" style="margin-bottom:0;">
 				<div class="sec-title"><?= h(__('Configuração financeira')) ?></div>
-				<p class="cli-mock-hint" style="font-size:11px;color:var(--text-muted);margin:-4px 0 10px;"><?= h(__('Campos marcados como ilustrativos abaixo não são gravados nesta versão.')) ?></p>
 				<div class="g2" style="margin-bottom:10px;">
 					<div class="field">
 						<label><?= h(__('Limite de crédito')) ?></label>
 						<?= $this->Form->control('limite_credito', ['class' => 'form-control', 'label' => false, 'placeholder' => 'R$ 0,00', 'style' => 'font-weight:600;']) ?>
 					</div>
 					<div class="field">
-						<label><?= h(__('Status')) ?></label>
-						<select disabled class="form-control cli-mock-field" title="<?= h(__('Ilustrativo — use o status na barra inferior após salvar')) ?>"><option><?= h(__('Ativo')) ?></option></select>
-					</div>
-				</div>
-				<div class="g2" style="margin-bottom:10px;">
-					<div class="field">
-						<label><?= h(__('Condição padrão')) ?></label>
-						<select disabled class="form-control"><option><?= h(__('30/60 dias')) ?></option></select>
-					</div>
-					<div class="field">
-						<label><?= h(__('Forma preferida')) ?></label>
-						<select disabled class="form-control"><option><?= h(__('Boleto bancário')) ?></option></select>
+						<label><?= h(__('Status do cadastro')) ?></label>
+						<?= $this->Form->control('inativo', [
+							'type' => 'select',
+							'options' => [0 => __('Ativo'), 1 => __('Inativo')],
+							'class' => 'form-control',
+							'label' => false,
+							'default' => 0,
+						]) ?>
 					</div>
 				</div>
 				<div class="field" style="margin-bottom:10px;">
@@ -291,52 +290,25 @@ $tipoOpts = [
 			</div>
 
 			<div class="card pessoaJuridica" style="margin-bottom:0;">
-				<div class="sec-title"><?= h(__('Configuração fiscal (NF-e / NFS-e)')) ?></div>
-				<p class="cli-mock-hint" style="font-size:11px;color:var(--text-muted);margin:-4px 0 10px;"><?= h(__('Regime tributário e CNAE ficam na coluna «Dados da empresa». Itens abaixo são ilustrativos.')) ?></p>
-				<div class="field" style="margin-bottom:10px;">
-					<label><?= h(__('Tipo de operação fiscal')) ?></label>
-					<select disabled class="form-control"><option><?= h(__('Prestação de serviço (NFS-e)')) ?></option></select>
-				</div>
-				<div class="g2" style="margin-bottom:10px;">
-					<div class="field">
-						<label><?= h(__('Indicador de IE')) ?></label>
-						<select disabled class="form-control"><option><?= h(__('9 · Não contribuinte')) ?></option></select>
-					</div>
-					<div class="field">
-						<label><?= h(__('Suframa')) ?></label>
-						<input type="text" disabled class="form-control" placeholder="<?= h(__('Apenas se aplicável')) ?>"/>
-					</div>
-				</div>
+				<div class="sec-title"><?= h(__('Dados fiscais (consulta automática)')) ?></div>
+				<p style="font-size:11px;color:var(--text-muted);margin:-4px 0 10px;"><?= h(__('Regime tributário, CNAE e data de abertura são preenchidos na coluna «Dados da empresa» ao consultar o CNPJ (Receita Federal). A IE é obtida na SEFAZ quando configurada.')) ?></p>
 				<div class="field" style="margin-bottom:0;">
-					<label><?= h(__('CFOP padrão')) ?></label>
-					<select disabled class="form-control"><option><?= h(__('5933 · Prestação de serviço de comunicação')) ?></option></select>
+					<label><?= h(__('Indicador de IE (SEFAZ)')) ?></label>
+					<input type="text" readonly id="cli-indicador-ie-sefaz" class="form-control" style="background:var(--gray-100,#f1f5f9);" placeholder="<?= h(__('Preenchido após consulta do CNPJ com Sintegra')) ?>" value="" />
 				</div>
 			</div>
 
 			<div class="card" style="margin-bottom:0;">
 				<div class="sec-title"><?= h(__('Comercial & CRM')) ?></div>
-				<div class="g2" style="margin-bottom:10px;">
-					<div class="field">
-						<label><?= h(__('Segmento')) ?> *</label>
-						<select disabled class="form-control"><option><?= h(__('Serviços')) ?></option></select>
-					</div>
-					<div class="field">
-						<label><?= h(__('Origem do contato')) ?></label>
-						<select disabled class="form-control"><option><?= h(__('Indicação')) ?></option></select>
-					</div>
-				</div>
 				<div class="field" style="margin-bottom:10px;">
 					<label><?= h(__('Empresa dominante')) ?></label>
 					<?= $this->Form->control('empresadominante', ['class' => 'form-control', 'label' => false, 'options' => $empresasOptSidebar, 'default' => $defaultEmpresaDominanteId]) ?>
 				</div>
-				<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:10px;text-transform:none;letter-spacing:0;">
+				<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:0;text-transform:none;letter-spacing:0;">
 					<?= $this->Form->checkbox('contrato', ['id' => 'contrato']) ?>
 					<?= h(__('Possui contrato de serviço')) ?>
 				</label>
-				<div class="field" style="margin-bottom:0;">
-					<label><?= h(__('Classificação ABC')) ?></label>
-					<select disabled class="form-control"><option><?= h(__('B · cliente recorrente')) ?></option></select>
-				</div>
+				<p style="font-size:11px;color:var(--text-muted);margin:10px 0 0;"><?= h(__('Segmento, origem do contato, CFOP e classificação ABC: disponíveis após salvar, na ficha do cliente ou módulo Fiscal.')) ?></p>
 			</div>
 		</div>
 	</div>
@@ -371,6 +343,7 @@ jQuery(function($) {
 
 	function toggleTipo(val) {
 		val = parseInt(val, 10);
+		var $fiscal = $('#regime-tributario, #cnae-principal, #data-abertura, #tipo-endereco');
 		if (val === TIPO_PF) {
 			$('.pessoaJuridica').hide();
 			$('.pessoaFisica').show();
@@ -378,6 +351,10 @@ jQuery(function($) {
 			$('.cli-bloco-pf').show();
 			$("#nome, #cpffisica").prop('disabled', false);
 			$("#razaosocial, #nomefantasia, #cnpj, #inscricaoestadual, #inscricaomunicipal").prop('disabled', true);
+			$fiscal.prop('disabled', true);
+			if ($('#regime-tributario').length) {
+				$('#regime-tributario').val('pessoa_fisica');
+			}
 		} else {
 			$('.pessoaFisica').hide();
 			$('.pessoaJuridica').show();
@@ -385,6 +362,7 @@ jQuery(function($) {
 			$('.cli-bloco-pj').show();
 			$("#razaosocial, #nomefantasia, #cnpj, #inscricaoestadual, #inscricaomunicipal").prop('disabled', false);
 			$("#nome, #cpffisica").prop('disabled', true);
+			$fiscal.prop('disabled', false);
 		}
 	}
 
@@ -452,25 +430,70 @@ jQuery(function($) {
 		$('#cadastro-empresa-avisos').removeClass('d-none');
 	}
 
+	function formatarCnaeDigitos(d) {
+		d = String(d || '').replace(/\D/g, '');
+		if (d.length > 7) d = d.substring(0, 7);
+		if (d.length >= 7) {
+			return d.substring(0, 4) + '-' + d.substring(4, 5) + '/' + d.substring(5, 7);
+		}
+		return d;
+	}
+
 	function cnaeValorParaInput(cnae) {
 		if (!cnae) return '';
-		if (typeof cnae === 'string') return cnae;
-		if (cnae.codigo) {
-			var d = String(cnae.codigo).replace(/\D/g, '');
-			if (d.length >= 7) return d.substring(0, 4) + '-' + d.substring(4, 1) + '/' + d.substring(5, 2);
-			return d;
-		}
+		if (typeof cnae === 'string') return formatarCnaeDigitos(cnae);
+		if (cnae.codigo) return formatarCnaeDigitos(cnae.codigo);
 		return '';
+	}
+
+	function aplicarDataAbertura(ymd) {
+		if (!ymd) return;
+		var s = String(ymd).substring(0, 10);
+		var p = s.split('-');
+		if (p.length !== 3) return;
+		var $input = $('#data-abertura');
+		if ($input.length && $input.attr('type') === 'date') {
+			$input.val(s);
+			return;
+		}
+		var $y = $('select[name="data_abertura[year]"]');
+		if ($y.length) {
+			$y.val(p[0]);
+			$('select[name="data_abertura[month]"]').val(parseInt(p[1], 10));
+			$('select[name="data_abertura[day]"]').val(parseInt(p[2], 10));
+		}
+	}
+
+	function atualizarHintCnae(d) {
+		var $hint = $('#cli-cnae-hint');
+		if (!$hint.length) return;
+		var txt = '';
+		if (d.cnae_principal_descricao) {
+			txt = String(d.cnae_principal_descricao);
+		}
+		if (d.cnae_principal_valido === false) {
+			$hint.css('color', 'var(--red-dark, #7A1822)');
+			$hint.text((txt ? txt + ' — ' : '') + '<?= h(__('CNAE com formato incompleto; confira com a Receita Federal.')) ?>');
+			return;
+		}
+		$hint.css('color', 'var(--text-muted)');
+		$hint.text(txt || '');
 	}
 
 	function inferirRegimeReceitaJs(data) {
 		if (!data) return '';
 		var porte = String(data.porte || '').toUpperCase();
 		if (porte.indexOf('MEI') !== -1) return 'mei';
+		if (data.opcao_pelo_mei || data.mei) return 'mei';
+		if (data.simples && typeof data.simples === 'object') {
+			if (data.simples.optante === true || data.simples.optante === 1) return 'simples_nacional';
+			if (data.simples.optante === false || data.simples.optante === 0) return 'lucro_presumido';
+		}
 		var simples = data.opcao_pelo_simples != null ? data.opcao_pelo_simples : data.optante_simples;
 		if (simples === true || simples === 1) return 'simples_nacional';
 		var s = String(simples || '').toUpperCase();
-		if (s === 'SIM' || s === 'S' || s === 'TRUE') return 'simples_nacional';
+		if (s === 'SIM' || s === 'S' || s === 'TRUE' || s === '1') return 'simples_nacional';
+		if (s === 'NAO' || s === 'NÃO' || s === 'N' || s === 'FALSE' || s === '0') return 'lucro_presumido';
 		return 'lucro_presumido';
 	}
 
@@ -513,12 +536,16 @@ jQuery(function($) {
 			var regime = d.regime_tributario || '';
 			if (regime) $('#regime-tributario').val(regime);
 		}
-		if (d.data_abertura && $('#data-abertura').length) {
-			$('#data-abertura').val(String(d.data_abertura).substring(0, 10));
+		if (d.data_abertura) {
+			aplicarDataAbertura(d.data_abertura);
 		}
-		var cnaeTxt = cnaeValorParaInput(d.cnae_principal);
+		var cnaeTxt = d.cnae_principal_formatado || cnaeValorParaInput(d.cnae_principal);
 		if (cnaeTxt && $('#cnae-principal').length) {
 			$('#cnae-principal').val(cnaeTxt);
+		}
+		atualizarHintCnae(d);
+		if (d.indicador_ie_sefaz && $('#cli-indicador-ie-sefaz').length) {
+			$('#cli-indicador-ie-sefaz').val(String(d.indicador_ie_sefaz));
 		}
 		if ($('#tipo-endereco').length && !$('#tipo-endereco').val()) {
 			$('#tipo-endereco').val('comercial_sede');
@@ -565,17 +592,23 @@ jQuery(function($) {
 			if (typeof $().selectpicker === 'function') { $('#idcidade').selectpicker('refresh'); }
 		}
 		if (data.telefone) $('#fone').val(data.telefone);
-		if (data.abertura && $('#data-abertura').length) {
+		if (data.abertura) {
 			var ab = String(data.abertura);
 			if (/^\d{2}\/\d{2}\/\d{4}$/.test(ab)) {
-				var p = ab.split('/');
-				$('#data-abertura').val(p[2] + '-' + p[1] + '-' + p[0]);
+				var pAb = ab.split('/');
+				aplicarDataAbertura(pAb[2] + '-' + pAb[1] + '-' + pAb[0]);
 			} else {
-				$('#data-abertura').val(ab.substring(0, 10));
+				aplicarDataAbertura(ab);
 			}
 		}
 		if (data.atividade_principal && data.atividade_principal[0] && $('#cnae-principal').length) {
-			$('#cnae-principal').val(cnaeValorParaInput({ codigo: data.atividade_principal[0].code || data.atividade_principal[0].codigo }));
+			var ap = data.atividade_principal[0];
+			var cnaeFmt = cnaeValorParaInput({ codigo: ap.code || ap.codigo });
+			$('#cnae-principal').val(cnaeFmt);
+			atualizarHintCnae({
+				cnae_principal_descricao: ap.text || ap.descricao || '',
+				cnae_principal_valido: apenasDigitos(ap.code || ap.codigo).length === 7
+			});
 		}
 		if ($('#regime-tributario').length) {
 			$('#regime-tributario').val(inferirRegimeReceitaJs(data));

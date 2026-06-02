@@ -139,12 +139,19 @@ class SpeedioProvider
             ];
         }
 
+        $abertura = $s['data_abertura'] ?? null;
+        if (is_string($abertura) && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $abertura, $mAb)) {
+            $abertura = $mAb[3] . '/' . $mAb[2] . '/' . $mAb[1];
+        }
+
         return [
             'cnpj' => preg_replace('/\D+/', '', $s['cnpj'] ?? ''),
             'nome' => $s['razao_social'] ?? null,
             'fantasia' => $s['nome_fantasia'] ?? null,
             'situacao' => 'ATIVA',
-            'abertura' => $s['data_abertura'] ?? null,
+            'abertura' => $abertura,
+            'opcao_pelo_simples' => $s['simples_nacional'] ?? $s['optante_simples'] ?? null,
+            'porte' => $s['porte'] ?? null,
             'natureza_juridica' => $s['natureza_juridica'] ?? null,
             'atividade_principal' => $cnaePrincipal ? [$cnaePrincipal] : [],
             'atividades_secundarias' => $atividadesSecundarias,
