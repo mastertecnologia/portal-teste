@@ -400,6 +400,7 @@ class LicPrototypeDataService {
 	 * @return array<int,array<string,mixed>>
 	 */
 	public function listCategoriasComContagem(): array {
+		$this->ensureLicenciamentoBase();
 		$counts = [];
 		if ($this->table('LicCatalogoProdutos') !== null) {
 			try {
@@ -434,6 +435,7 @@ class LicPrototypeDataService {
 	 * @return array<int,array<string,mixed>>
 	 */
 	public function listCatalogoProdutosWizard(): array {
+		$this->ensureLicenciamentoBase();
 		if ($this->table('LicCatalogoProdutos') === null) {
 			return [];
 		}
@@ -909,10 +911,139 @@ class LicPrototypeDataService {
 
 
 	/**
+	 * Categorias padrão do mockup (pg-lic-nova) quando a empresa ainda não tem nenhuma.
+	 *
+	 * @return int quantidade criada
+	 */
+	public function ensureCategoriasPadrao(int $userId = 0): int {
+		if (!$this->tablesAvailable() || $this->idempresa <= 0) {
+			return 0;
+		}
+		if ($this->table('LicCategorias') === null) {
+			return 0;
+		}
+		try {
+			$exists = $this->table('LicCategorias')->find()
+				->where(['idempresa' => $this->idempresa])
+				->count();
+		} catch (\Throwable $e) {
+			return 0;
+		}
+		if ($exists > 0) {
+			return 0;
+		}
+		$created = 0;
+		foreach ($this->categoriasPadraoDefinicao() as $def) {
+			$res = $this->saveCategoria([
+				'codigo' => $def['codigo'],
+				'nome' => $def['nome'],
+				'ativo' => true,
+				'iduser' => $userId,
+			], null);
+			if (!empty($res['ok'])) {
+				$created++;
+			}
+		}
+
+		return $created;
+	}
+
+	/**
+	 * Produtos de referência no catálogo quando a empresa não tem nenhum (habilita o wizard).
+	 *
+	 * @return int quantidade criada
+	 */
+	public function ensureCatalogoInicial(int $userId = 0): int {
+		if (!$this->tablesAvailable() || $this->table('LicCatalogoProdutos') === null) {
+			return 0;
+		}
+		try {
+			$total = $this->table('LicCatalogoProdutos')->find()
+				->where(['idempresa' => $this->idempresa])
+				->count();
+		} catch (\Throwable $e) {
+			return 0;
+		}
+		if ($total > 0) {
+			return 0;
+		}
+		$this->ensureCategoriasPadrao($userId);
+		$byCodigo = [];
+		foreach ($this->listCategorias() as $c) {
+			$byCodigo[mb_strtoupper((string)$c['codigo'])] = (int)$c['id'];
+		}
+		$created = 0;
+		foreach ($this->catalogoInicialDefinicao() as $item) {
+			$cod = mb_strtoupper((string)$item['categoria_codigo']);
+			$idcategoria = (int)($byCodigo[$cod] ?? 0);
+			if ($idcategoria <= 0) {
+				continue;
+			}
+			$res = $this->saveCatalogoProduto([
+				'idcategoria' => $idcategoria,
+				'sku' => $item['sku'],
+				'nome' => $item['nome'],
+				'ativo' => true,
+				'iduser' => $userId,
+			], null);
+			if (!empty($res['ok'])) {
+				$created++;
+			}
+		}
+
+		return $created;
+	}
+
+	/**
+	 * Garante categorias + catálogo mínimo antes de telas que dependem do grid.
+	 */
+	public function ensureLicenciamentoBase(int $userId = 0): void {
+		$this->ensureCategoriasPadrao($userId);
+		$this->ensureCatalogoInicial($userId);
+	}
+
+	/**
+	 * @return array<int,array{codigo:string,nome:string}>
+	 */
+	protected function categoriasPadraoDefinicao(): array {
+		return [
+			['codigo' => 'SO', 'nome' => 'Sistemas Operacionais'],
+			['codigo' => 'OFFICE', 'nome' => 'Office & Produtividade'],
+			['codigo' => 'DESIGN', 'nome' => 'Design & Engenharia'],
+			['codigo' => 'SEGURANCA', 'nome' => 'Segurança'],
+			['codigo' => 'CLOUD', 'nome' => 'Cloud & Marketing'],
+			['codigo' => 'COMUNICACAO', 'nome' => 'Comunicação'],
+			['codigo' => 'DEVOPS', 'nome' => 'DevOps'],
+			['codigo' => 'OUTRO', 'nome' => 'Outros'],
+		];
+	}
+
+	/**
+	 * @return array<int,array{categoria_codigo:string,sku:string,nome:string}>
+	 */
+	protected function catalogoInicialDefinicao(): array {
+		return [
+			['categoria_codigo' => 'OFFICE', 'sku' => 'M365-BASIC', 'nome' => 'Microsoft 365 Business Basic'],
+			['categoria_codigo' => 'OFFICE', 'sku' => 'M365-STANDARD', 'nome' => 'Microsoft 365 Business Standard'],
+			['categoria_codigo' => 'OFFICE', 'sku' => 'M365-PREMIUM', 'nome' => 'Microsoft 365 Business Premium'],
+			['categoria_codigo' => 'OFFICE', 'sku' => 'M365-E3', 'nome' => 'Microsoft 365 E3'],
+			['categoria_codigo' => 'OFFICE', 'sku' => 'M365-E5', 'nome' => 'Microsoft 365 E5'],
+			['categoria_codigo' => 'SO', 'sku' => 'WIN11-PRO', 'nome' => 'Windows 11 Pro'],
+			['categoria_codigo' => 'SO', 'sku' => 'WIN-SRV-2022', 'nome' => 'Windows Server 2022'],
+			['categoria_codigo' => 'DESIGN', 'sku' => 'ACAD-LT', 'nome' => 'AutoCAD LT'],
+			['categoria_codigo' => 'DESIGN', 'sku' => 'ADOBE-CC', 'nome' => 'Adobe Creative Cloud'],
+			['categoria_codigo' => 'SEGURANCA', 'sku' => 'KASP-EP', 'nome' => 'Kaspersky Endpoint'],
+			['categoria_codigo' => 'CLOUD', 'sku' => 'AZURE-SUB', 'nome' => 'Microsoft Azure Subscription'],
+			['categoria_codigo' => 'COMUNICACAO', 'sku' => 'TEAMS-PHONE', 'nome' => 'Microsoft Teams Phone'],
+			['categoria_codigo' => 'DEVOPS', 'sku' => 'GITHUB-ENT', 'nome' => 'GitHub Enterprise'],
+			['categoria_codigo' => 'OUTRO', 'sku' => 'GEN-SW', 'nome' => 'Software genérico'],
+		];
+	}
+
+	/**
 	 * @return array<int,array<string,mixed>>
 	 */
 	public function listCategorias(): array {
-		$loc = TableRegistry::getTableLocator();
 		if ($this->table('LicCategorias') === null) {
 			return [];
 		}

@@ -286,6 +286,7 @@ class LicencasPrototypeController extends AppController {
 	protected function renderWizard(string $page, int $stepNum) {
 		$empresa = (int)$this->Auth->user('idempresa');
 		$svc = new LicPrototypeDataService($empresa);
+		$userId = (int)$this->Auth->user('id');
 		if (!$svc->tablesAvailable()) {
 			$this->Flash->error(__('Migration lic_* pendente.'));
 
@@ -301,6 +302,7 @@ class LicencasPrototypeController extends AppController {
 
 			return $this->redirect(['action' => 'view', 'nova']);
 		}
+		$svc->ensureLicenciamentoBase($userId);
 		$steps = $this->wizardSteps($stepNum);
 		$this->set([
 			'title' => __('Nova licença') . ' · ' . $stepNum . '/4',
@@ -377,6 +379,16 @@ class LicencasPrototypeController extends AppController {
 			return $this->redirect(['action' => 'view', $id > 0 ? 'produto-editar' : 'produto-novo', '?' => $id > 0 ? ['id' => $id] : []]);
 		}
 		$this->Flash->success(__('Produto salvo.'));
+		$return = trim((string)$this->request->getData('return', ''));
+		if ($return === 'nova') {
+			return $this->redirect(['action' => 'view', 'nova']);
+		}
+		if ($return === 'nova-2' || $return === 'nova-3' || $return === 'nova-4') {
+			$licId = (int)$this->request->getData('lic_id', 0);
+
+			return $this->redirect(['action' => 'view', $return, '?' => $licId > 0 ? ['id' => $licId] : []]);
+		}
+
 		return $this->redirect(['action' => 'view', 'catalogo']);
 	}
 
@@ -393,6 +405,11 @@ class LicencasPrototypeController extends AppController {
 			return $this->redirect(['action' => 'view', 'categoria-editar', '?' => $id > 0 ? ['id' => $id] : []]);
 		}
 		$this->Flash->success(__('Categoria salva.'));
+		$return = trim((string)$this->request->getData('return', ''));
+		if ($return === 'nova') {
+			return $this->redirect(['action' => 'view', 'nova']);
+		}
+
 		return $this->redirect(['action' => 'view', 'categorias']);
 	}
 
@@ -415,20 +432,32 @@ class LicencasPrototypeController extends AppController {
 	protected function catalogo() {
 		$empresa = (int)$this->Auth->user('idempresa');
 		$svc = new LicPrototypeDataService($empresa);
-		$this->setLicPage(__('Catálogo'), 'lic-catalogo', ['licProdutos' => $svc->listCatalogoProdutos(), 'licCategorias' => $svc->listCategorias()]);
+		$svc->ensureLicenciamentoBase((int)$this->Auth->user('id'));
+		$this->setLicPage(__('Catálogo'), 'lic-catalogo', [
+			'licProdutos' => $svc->listCatalogoProdutos(),
+			'licCategorias' => $svc->listCategoriasComContagem(),
+		]);
+
 		return $this->render('catalogo');
 	}
 
 	protected function categorias() {
 		$empresa = (int)$this->Auth->user('idempresa');
 		$svc = new LicPrototypeDataService($empresa);
-		$this->setLicPage(__('Categorias'), 'lic-catalogo', ['licCategorias' => $svc->listCategorias()]);
+		$svc->ensureLicenciamentoBase((int)$this->Auth->user('id'));
+		$return = trim((string)$this->request->getQuery('return', ''));
+		$this->setLicPage(__('Categorias'), 'lic-catalogo', [
+			'licCategorias' => $svc->listCategoriasComContagem(),
+			'licWizardReturn' => $return,
+		]);
+
 		return $this->render('categorias');
 	}
 
 	protected function categoriaEditar(int $id) {
 		$empresa = (int)$this->Auth->user('idempresa');
 		$svc = new LicPrototypeDataService($empresa);
+		$svc->ensureLicenciamentoBase((int)$this->Auth->user('id'));
 		$cat = null;
 		if ($id > 0) {
 			foreach ($svc->listCategorias() as $c) {
@@ -438,23 +467,41 @@ class LicencasPrototypeController extends AppController {
 				}
 			}
 		}
-		$this->setLicPage(__('Categoria'), 'lic-catalogo', ['licCategoria' => $cat, 'licCategoriaId' => $id]);
+		$return = trim((string)$this->request->getQuery('return', ''));
+		$this->setLicPage(__('Categoria'), 'lic-catalogo', [
+			'licCategoria' => $cat,
+			'licCategoriaId' => $id,
+			'licWizardReturn' => $return,
+		]);
+
 		return $this->render('categoria_editar');
 	}
 
 	protected function produtoForm(?int $id) {
 		$empresa = (int)$this->Auth->user('idempresa');
 		$svc = new LicPrototypeDataService($empresa);
+		$svc->ensureLicenciamentoBase((int)$this->Auth->user('id'));
 		$prod = $id !== null && $id > 0 ? $svc->getCatalogoProduto($id) : null;
 		if ($id !== null && $id > 0 && $prod === null) {
 			$this->Flash->error(__('Produto não encontrado.'));
 			return $this->redirect(['action' => 'view', 'catalogo']);
 		}
-		$this->setLicPage($prod ? __('Editar produto') : __('Novo produto'), 'lic-catalogo', [
+		if ($prod === null) {
+			$idcategoria = (int)$this->request->getQuery('idcategoria', 0);
+			if ($idcategoria > 0) {
+				$prod = ['idcategoria' => $idcategoria];
+			}
+		}
+		$return = trim((string)$this->request->getQuery('return', ''));
+		$licId = (int)$this->request->getQuery('lic_id', 0);
+		$this->setLicPage($prod && !empty($prod['id']) ? __('Editar produto') : __('Novo produto'), 'lic-catalogo', [
 			'licProduto' => $prod,
-			'licCategorias' => $svc->listCategorias(),
+			'licCategorias' => $svc->listCategoriasComContagem(),
 			'licClientes' => $svc->listClientesOptions(),
+			'licWizardReturn' => $return,
+			'licWizardLicId' => $licId,
 		]);
+
 		return $this->render('produto_form');
 	}
 
