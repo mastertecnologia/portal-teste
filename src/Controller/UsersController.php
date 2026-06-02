@@ -8,6 +8,7 @@ use App\Service\Common\ModelService;
 use App\Service\ClienteDomain\ClienteDomainBridge;
 use App\Service\Ticket\DashboardService;
 use App\Utility\ClienteDomainEventType;
+use App\Utility\Fiscal\FiscalSqlConditions;
 use App\Utility\PortalUi;
 use App\Utility\RbacClientePortal;
 use App\Utility\SupportInboxMail;
@@ -1472,21 +1473,32 @@ class UsersController extends AppController {
 		if ($login === '') {
 			return [];
 		}
-		$lower = strtolower($login);
 
-		return $this->Users->find()
-			->where([
-				'OR' => [
-					'Users.inativo IS' => null,
-					'Users.inativo' => 0,
-				],
-			])
-			->where(['OR' => [
-				['LOWER(Users.email)' => $lower],
-				['LOWER(Users.username)' => $lower],
-			]])
-			->order(['Users.id' => 'ASC'])
-			->toArray();
+		try {
+			$conn = $this->Users->getConnection();
+			$loginMatch = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $login);
+
+			return $this->Users->find()
+				->where([
+					'OR' => [
+						'Users.inativo IS' => null,
+						// PG: inativo boolean — `= 0` gera SQLSTATE 42883; IS NOT TRUE cobre bool e smallint.
+						'Users.inativo IS NOT' => true,
+					],
+				])
+				->where([
+					'OR' => array_merge(
+						FiscalSqlConditions::caseInsensitiveLike($conn, 'Users.email', $loginMatch),
+						FiscalSqlConditions::caseInsensitiveLike($conn, 'Users.username', $loginMatch)
+					),
+				])
+				->order(['Users.id' => 'ASC'])
+				->toArray();
+		} catch (\Throwable $e) {
+			Log::error('_findActiveUsersForLogin: ' . $e->getMessage(), ['exception' => $e]);
+
+			return [];
+		}
 	}
 
 	/**

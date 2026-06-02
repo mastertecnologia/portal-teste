@@ -19,6 +19,7 @@ if (!defined('C_RoleCliente'))             define('C_RoleCliente', 1);
 if (!defined('C_RoleFuncionario'))          define('C_RoleFuncionario', 0);
 if (!defined('C_EmpresaPGM'))               define('C_EmpresaPGM', 2);
 
+use App\Utility\Fiscal\FiscalSqlConditions;
 use Cake\ORM\TableRegistry;
 
 $login = isset($argv[1]) ? trim((string)$argv[1]) : '';
@@ -27,15 +28,23 @@ if ($login === '') {
 	exit(2);
 }
 
-$lower = strtolower($login);
+$loginMatch = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $login);
 
 $Users = TableRegistry::getTableLocator()->get('Users');
+$conn = $Users->getConnection();
 $user = $Users->find()
-	->where(['inativo' => 0])
-	->where(['OR' => [
-		['LOWER(Users.email)' => $lower],
-		['LOWER(Users.username)' => $lower],
-	]])
+	->where([
+		'OR' => [
+			'Users.inativo IS' => null,
+			'Users.inativo IS NOT' => true,
+		],
+	])
+	->where([
+		'OR' => array_merge(
+			FiscalSqlConditions::caseInsensitiveLike($conn, 'Users.email', $loginMatch),
+			FiscalSqlConditions::caseInsensitiveLike($conn, 'Users.username', $loginMatch)
+		),
+	])
 	->first();
 
 echo "\n=== debug_login_lookup ===\n";
