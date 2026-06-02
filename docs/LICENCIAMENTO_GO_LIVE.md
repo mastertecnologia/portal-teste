@@ -35,9 +35,12 @@ Alternativa manual: **Permissões → Sincronizar catálogo** e atribuir na matr
 ## `.env` (opcional)
 
 ```env
+# Gerar: openssl rand -base64 48
 LIC_COFRE_CIPHER_KEY=chave-longa-aleatoria
 LICENCAS_CANONICAL_ROUTES=0
 ```
+
+Após UAT aprovada: `docs/LICENCIAMENTO_POS_UAT_OPCIONAL.md` (cofre GCM, registo de sign-off, alias `/licencas`).
 
 ## Git em produção
 

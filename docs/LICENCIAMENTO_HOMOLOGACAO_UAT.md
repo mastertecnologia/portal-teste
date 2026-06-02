@@ -64,6 +64,21 @@ Utilizador **admin_equipe**: revelar cofre → evento em auditoria.
 - [ ] APIs Grid documentadas **não** alteradas (`listAPI` / `addAPI` clientes/produtos)
 - [ ] Módulos legados (tickets, fiscal) abrem normalmente
 
+## Sign-off UAT
+
+| Verificado por | Data | Commit `main` | Notas |
+|----------------|------|---------------|--------|
+| | | | |
+
+## Pós-UAT (opcional)
+
+Após assinar o quadro acima: `docs/LICENCIAMENTO_POS_UAT_OPCIONAL.md`
+
+- [ ] `LIC_COFRE_CIPHER_KEY` em `.env` + `uat_check` sem aviso de cofre
+- [ ] Revelação de cofre (`admin_equipe`) testada com chave GCM
+- [ ] `LICENCAS_CANONICAL_ROUTES` decidido (`0` recomendado até switchover de menus)
+- [ ] Política sobre dados `seed_demo` em produção
+
 ## Produção
 
 Ver também `docs/LICENCIAMENTO_GO_LIVE.md`.
