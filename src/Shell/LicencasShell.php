@@ -35,6 +35,9 @@ class LicencasShell extends Shell {
 		$parser->addSubcommand('uat_check', [
 			'help' => 'Pré-vôo homologação: schema lic_*, RBAC e opcional KPIs por empresa.',
 		]);
+		$parser->addSubcommand('url_check', [
+			'help' => 'Diagnóstico DNS/HTTPS: portal.pgm.inf.br vs Apache local (Linux).',
+		]);
 		$parser->addOption('idempresa', [
 			'default' => '',
 			'help' => 'Filtrar por idempresa (obrigatório em seed_demo).',
@@ -76,6 +79,7 @@ class LicencasShell extends Shell {
 		$this->out('  stats [--idempresa=N]');
 		$this->out('  seed_demo --idempresa=N [--dry-run] [--force]');
 		$this->out('  uat_check [--idempresa=N] [--strict]');
+		$this->out('  url_check [--host=portal.pgm.inf.br]');
 	}
 
 	/**
@@ -88,6 +92,11 @@ class LicencasShell extends Shell {
 	public function uatCheck() {
 		return $this->uat_check();
 	}
+
+	public function urlCheck() {
+		return $this->url_check();
+	}
+
 
 
 	public function stats() {
@@ -272,6 +281,113 @@ class LicencasShell extends Shell {
 		$this->out('<success>Seed demo concluído.</success>');
 	}
 
+
+
+	/**
+	 * Compara resposta HTTPS pública vs Apache local (detecta DNS no Windows).
+	 *
+	 * @return int
+	 */
+	public function url_check() {
+		$host = trim((string)($this->params['host'] ?? 'portal.pgm.inf.br'));
+		if ($host === '') {
+			$host = 'portal.pgm.inf.br';
+		}
+		$base = trim((string)\Cake\Core\Configure::read('App.base'));
+		if ($base === '' || $base === '/') {
+			$base = '';
+		}
+		$path = rtrim($base, '/') . '/licencas-prototype';
+		$url = 'https://' . $host . $path;
+
+		$this->out('=== Licenciamento — url_check ===');
+		$this->out('URL: ' . $url);
+		$this->out('APP_BASE=' . ($base !== '' ? $base : '(raiz)'));
+
+		$ip = @gethostbyname($host);
+		if ($ip !== $host && $ip !== '') {
+			$this->out('DNS ' . $host . ' → ' . $ip);
+		} else {
+			$this->err('[WARN] não resolveu DNS para ' . $host);
+		}
+
+		$localIps = [];
+		if (function_exists('gethostname')) {
+			$hn = gethostname();
+			if ($hn) {
+				$localIps[] = gethostbyname($hn);
+			}
+		}
+		foreach (['127.0.0.1', '10.0.2.25'] as $lip) {
+			if (!in_array($lip, $localIps, true)) {
+				$localIps[] = $lip;
+			}
+		}
+		$this->out('Teste local (--resolve 127.0.0.1):');
+		$this->probeUrl($url, true);
+		$this->out('Teste DNS público:');
+		$code = $this->probeUrl($url, false);
+		$this->out('');
+		if ($code === 404) {
+			$this->err('[FAIL] 404 na URL pública — ver docs/LICENCIAMENTO_DNS_PUBLICO.md');
+			return 1;
+		}
+		if ($code >= 200 && $code < 400) {
+			$this->out('<success>URL pública responde ' . $code . ' (esperado 302 sem sessão)</success>');
+			return 0;
+		}
+		$this->err('[WARN] http_code=' . $code . ' — ver SSL ou proxy');
+		return 0;
+	}
+
+	protected function probeUrl(string $url, bool $resolveLocal): void {
+		$ch = curl_init($url);
+		if ($ch === false) {
+			$this->err('curl_init falhou');
+			return;
+		}
+		$headers = [];
+		curl_setopt_array($ch, [
+			CURLOPT_NOBODY => true,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_HEADER => true,
+			CURLOPT_FOLLOWLOCATION => false,
+			CURLOPT_TIMEOUT => 15,
+			CURLOPT_SSL_VERIFYPEER => false,
+			CURLOPT_SSL_VERIFYHOST => 0,
+			CURLOPT_HEADERFUNCTION => static function ($curl, $line) use (&$headers) {
+				if (preg_match('/^([^:]+):\s*(.*)$/i', trim($line), $m)) {
+					$headers[strtolower($m[1])] = trim($m[2]);
+				}
+				return strlen($line);
+			},
+		]);
+		if ($resolveLocal) {
+			$parsed = parse_url($url);
+			$h = $parsed['host'] ?? '';
+			$port = $parsed['port'] ?? 443;
+			curl_setopt($ch, CURLOPT_RESOLVE, [$h . ':' . $port . ':127.0.0.1']);
+		}
+		curl_exec($ch);
+		$code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$err = curl_error($ch);
+		curl_close($ch);
+		$server = $headers['server'] ?? '(sem Server)';
+		$location = $headers['location'] ?? '';
+		$this->out('  http_code=' . $code . ' Server=' . $server);
+		if ($location !== '') {
+			$this->out('  Location=' . $location);
+		}
+		if ($err !== '') {
+			$this->err('  curl: ' . $err);
+		}
+		if (stripos($server, 'Win64') !== false) {
+			$this->err('  [FAIL] resposta do ERP Windows — DNS/proxy deve apontar para 10.0.2.25');
+		}
+		if (stripos($server, 'Debian') !== false && ($code === 302 || $code === 301)) {
+			$this->out('  [OK] Apache Linux / Cake');
+		}
+	}
 
 	/**
 	 * Pré-vôo pós-deploy (schema, RBAC, cofre). Não altera dados.
