@@ -2,10 +2,10 @@
 /**
  * Testa se a senha confere com algum usuário ativo (e-mail/username), sem gravar a senha em log.
  *
- * Uso (senha pelo stdin — não passe na linha de comando):
- *   read -rs LOGIN_PW; echo; printf '%s' "$LOGIN_PW" | php scripts/debug_login_password_check.php "email@exemplo.com"
+ * Uso (recomendado — prompt visível, suporta $ na senha):
+ *   bash scripts/sh/debug_login_password_check.sh "email@exemplo.com"
  *
- * O read -rs não mostra caracteres: digite a senha e pressione Enter (ou Ctrl+C para cancelar).
+ * Alternativa: read -rs LOGIN_PW; echo; printf '%s' "$LOGIN_PW" | php scripts/...
  *
  * Não altera o banco.
  */
