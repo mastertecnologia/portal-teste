@@ -10,6 +10,9 @@ use App\Service\Common\CryptoService;
 use App\Service\ClienteDomain\ClienteDomainBridge;
 use App\Service\ClienteDomain\InfrastructureGuard;
 use App\Service\ClienteIntegration\ClienteErpSyncService;
+use App\Service\Cadastro\ConsultaEmpresaService;
+use App\Service\Cadastro\Provider\SpeedioProvider;
+use App\Utility\TextoUtil;
 use App\Model\Table\ClientesTable;
 use App\Utility\ClientesPapelCadastro;
 use App\Utility\ClienteDomainEventType;
@@ -1004,6 +1007,107 @@ class ClientesController extends AppController {
 			return $this->jsonResponse($clientes, 200);
 		}
 		return $this->jsonResponse([], 400);
+	}
+
+	/**
+	 * Consulta cadastro por CNPJ (Receita/consolidado) ou pré-preenchimento por CPF existente na base.
+	 * GET /clientes/consulta-documento-cadastro/:documento
+	 */
+	public function consultaDocumentoCadastro($documento = null) {
+		$this->autoRender = false;
+
+		if (!$this->request->is('ajax')) {
+			return $this->jsonResponse(['sucesso' => false, 'mensagem' => __('Requisição inválida')], 400);
+		}
+
+		$doc = preg_replace('/\D+/', '', (string)($documento ?? ''));
+		$len = strlen($doc);
+
+		if ($len === 14) {
+			try {
+				$service = $this->_buildConsultaEmpresaService();
+				$resposta = $service->consultar($doc, [
+					'consultar_ie' => true,
+					'consultar_im' => true,
+					'usar_cache' => true,
+				]);
+			} catch (\Throwable $e) {
+				return $this->jsonResponse([
+					'sucesso' => false,
+					'mensagem' => __('Falha ao consultar serviço cadastral.'),
+					'codigo_erro' => 'ERRO_SERVICO_EXTERNO',
+				], 200);
+			}
+			$status = isset($resposta['codigo_erro']) && $resposta['codigo_erro'] === 'CNPJ_INVALIDO' ? 400 : 200;
+
+			return $this->jsonResponse($resposta, $status);
+		}
+
+		if ($len === 11) {
+			$q = $this->Clientes->find()
+				->where(['cpf' => $doc, 'tipo' => C_ClientesTipoFisica]);
+			$this->Abac->applyToQuery($q, 'Clientes');
+			$cliente = $q->first();
+			if ($cliente) {
+				return $this->jsonResponse([
+					'sucesso' => true,
+					'origem' => 'cliente_cadastrado',
+					'dados' => [
+						'nome' => $cliente->nome ?? '',
+						'email' => $cliente->email ?? '',
+						'cep' => $cliente->cep ?? '',
+						'endereco' => $cliente->endereco ?? '',
+						'nroendereco' => $cliente->nroendereco ?? '',
+						'complemento' => $cliente->complemento ?? '',
+						'bairro' => $cliente->bairro ?? '',
+						'idcidade' => $cliente->idcidade ?? null,
+						'fone' => $cliente->fone ?? '',
+						'fone2' => $cliente->fone2 ?? '',
+						'site' => $cliente->site ?? '',
+					],
+					'avisos' => [__('Cadastro já existente na base — dados carregados para conferência.')],
+				], 200);
+			}
+
+			return $this->jsonResponse([
+				'sucesso' => false,
+				'codigo_erro' => 'CPF_SEM_CONSULTA_RECEITA',
+				'mensagem' => __('Consulta automática da Receita Federal disponível para CNPJ. Informe o nome do titular manualmente.'),
+				'dados' => null,
+				'avisos' => [],
+			], 200);
+		}
+
+		return $this->jsonResponse([
+			'sucesso' => false,
+			'mensagem' => __('Documento inválido'),
+			'codigo_erro' => 'DOCUMENTO_INVALIDO',
+		], 400);
+	}
+
+	/**
+	 * @return \App\Service\Cadastro\ConsultaEmpresaService
+	 */
+	protected function _buildConsultaEmpresaService(): ConsultaEmpresaService {
+		$cidades = $this->Cidades;
+		$estados = $this->Estados;
+		$resolveIdCidade = function (string $municipio, string $uf) use ($cidades, $estados) {
+			$estado = $estados->find()->where(['sigla' => strtoupper($uf)])->first();
+			if (!$estado) {
+				return null;
+			}
+			$lista = $cidades->find()->where(['idestado' => $estado->id])->all();
+			$norm = TextoUtil::normalizaParaBusca($municipio);
+			foreach ($lista as $c) {
+				if (TextoUtil::normalizaParaBusca($c->nome) === $norm) {
+					return $c->id;
+				}
+			}
+
+			return null;
+		};
+
+		return new ConsultaEmpresaService(null, new SpeedioProvider(), null, null, $resolveIdCidade);
 	}
 
 	public function consultacnpj($cnpj = null) {

@@ -78,7 +78,7 @@ $tipoOpts = [
 								<button type="button" class="btn btn-blue btn-sm" id="btn-buscar-cnpj" title="<?= h(__('Consultar Receita Federal')) ?>">🔍</button>
 							</div>
 							<input type="hidden" id="uf_contribuinte" value="" />
-							<div style="font-size:11px;color:var(--text-muted);margin-top:4px;"><?= h(__('Clique em Buscar para preencher automaticamente via Receita Federal')) ?></div>
+							<div id="cli-consulta-cnpj-status" style="font-size:11px;color:var(--text-muted);margin-top:4px;"><?= h(__('Ao completar o CNPJ, a consulta na Receita Federal é feita automaticamente.')) ?></div>
 						</div>
 						<div class="field">
 							<label><?= h(__('Inscrição estadual')) ?></label>
@@ -137,12 +137,13 @@ $tipoOpts = [
 				<div class="cli-bloco-pf pessoaFisica" style="display:none;">
 					<div class="g2" style="margin-bottom:0;">
 						<div class="field">
-							<label><?= h(__('Nome completo')) ?> *</label>
-							<?= $this->Form->control('nome', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Nome completo')]) ?>
-						</div>
-						<div class="field">
 							<label><?= h(__('CPF')) ?></label>
 							<?= $this->Form->control('cpf', ['id' => 'cpffisica', 'class' => 'form-control', 'label' => false, 'placeholder' => '000.000.000-00']) ?>
+							<div id="cli-consulta-cpf-status" style="font-size:11px;color:var(--text-muted);margin-top:4px;"><?= h(__('Ao completar o CPF, verificamos a base do portal; a Receita Federal consulta automaticamente apenas CNPJ.')) ?></div>
+						</div>
+						<div class="field">
+							<label><?= h(__('Nome completo')) ?> *</label>
+							<?= $this->Form->control('nome', ['class' => 'form-control', 'label' => false, 'placeholder' => __('Nome completo')]) ?>
 						</div>
 					</div>
 				</div>
@@ -372,47 +373,195 @@ jQuery(function($) {
 		$.get(url, function(data) { if (typeof checkInscEstadual === 'function') checkInscEstadual($('#inscricaoestadual').val(), data); });
 	});
 
-	$('#btn-buscar-cnpj').on('click', function(e) {
-		e.preventDefault();
-		var cnpj = ($('#cnpj').val() || '').replace(/\D/g, '');
-		if (cnpj.length !== 14) { alert('<?= h(__('Informe um CNPJ válido com 14 dígitos.')) ?>'); return; }
-		var $btn = $(this);
-		$btn.prop('disabled', true).text('…');
-		$('#cadastro-empresa-avisos').addClass('d-none');
-		var baseUrl = "<?= rtrim(Router::url('/', true), '/'); ?>";
-		var urlApi = baseUrl + '/api/cadastro/empresa/' + encodeURIComponent(cnpj) + '?consultar_ie=1&consultar_im=1&usar_cache=1';
-		var urlFallback = "<?= Router::url(['controller' => 'Clientes', 'action' => 'consultacnpj']); ?>/" + cnpj;
-		$.getJSON(urlApi, function(resposta) {
-			$btn.prop('disabled', false).text('🔍');
-			if (!resposta.sucesso) { alert(resposta.mensagem || '<?= h(__('Não foi possível consultar o CNPJ.')) ?>'); return; }
-			var d = resposta.dados || {}, end = d.endereco || {}, contato = d.contato || {};
-			if (d.razao_social) $('#razaosocial').val(d.razao_social.toUpperCase());
-			if (d.nome_fantasia) $('#nomefantasia').val(d.nome_fantasia.toUpperCase());
-			if (contato.email) $('#email').val(String(contato.email).trim().toLowerCase());
-			var cep = (end.cep || '').toString().replace(/\D/g, '');
-			if (cep.length >= 8) $('#cep').val(cep.substring(0,5) + '-' + cep.substring(5,8));
-			if (end.bairro) $('#bairro').val(end.bairro.toUpperCase());
-			if (end.logradouro) $('#endereco').val(end.logradouro.toUpperCase());
-			if (end.numero) $('#nroendereco').val(end.numero);
-			if (end.complemento) $('#complemento').val(end.complemento.toUpperCase());
-			if (end.uf) $('#uf_contribuinte').val(String(end.uf).trim().toUpperCase());
-			if (d.idcidade) { $('#idcidade').val(d.idcidade); if (typeof $().selectpicker === 'function') { $('#idcidade').selectpicker('refresh'); } }
-			if (d.inscricao_estadual && d.inscricao_estadual.numero) $('#inscricaoestadual').val(String(d.inscricao_estadual.numero).replace(/\D/g,''));
-			if (d.inscricao_municipal && d.inscricao_municipal.numero) $('#inscricaomunicipal').val(String(d.inscricao_municipal.numero).replace(/\D/g,''));
-			if (contato.telefone) $('#fone').val(contato.telefone);
-			if (Array.isArray(d.qsa) && d.qsa.length) {
-				var s = d.qsa.find(function(x){ return String(x.qual||'').indexOf('Administrador')!==-1; }) || d.qsa[0];
-				if (s && s.nome) $('#nomeresponsavel').val(s.nome.toUpperCase());
-			}
-		}).fail(function() {
-			$.getJSON(urlFallback, function(data) {
-				$btn.prop('disabled', false).text('🔍');
-				if (data && data.status === 'ERROR') { alert(data.message || '<?= h(__('Erro na consulta.')) ?>'); return; }
-				if (data.nome) $('#razaosocial').val(data.nome.toUpperCase());
-				if (data.fantasia) $('#nomefantasia').val(data.fantasia.toUpperCase());
-				if (data.email) $('#email').val(String(data.email).trim().toLowerCase());
-			}).fail(function() { $btn.prop('disabled', false).text('🔍'); alert('<?= h(__('Erro ao consultar CNPJ.')) ?>'); });
+	var urlConsultaDoc = "<?= Router::url(['controller' => 'Clientes', 'action' => 'consultaDocumentoCadastro']); ?>";
+	var urlConsultaCnpjFallback = "<?= Router::url(['controller' => 'Clientes', 'action' => 'consultacnpj']); ?>";
+	var urlConsultaIe = "<?= Router::url(['controller' => 'Clientes', 'action' => 'consultaIe']); ?>";
+	var cliConsultaDoc = { timer: null, ultimo: '', emAndamento: false };
+
+	function apenasDigitos(v) {
+		return String(v || '').replace(/\D/g, '');
+	}
+
+	function setStatusConsulta(tipo, msg, isError) {
+		var $el = tipo === 'pf' ? $('#cli-consulta-cpf-status') : $('#cli-consulta-cnpj-status');
+		if (!$el.length) return;
+		$el.text(msg || '');
+		$el.css('color', isError ? 'var(--red-dark, #7A1822)' : 'var(--text-muted)');
+	}
+
+	function aplicarAvisosConsulta(avisos, origem) {
+		var lista = [];
+		if (origem) lista.push(String(origem));
+		if (Array.isArray(avisos)) avisos.forEach(function (a) { lista.push(String(a)); });
+		if (!lista.length) {
+			$('#cadastro-empresa-avisos').addClass('d-none');
+			return;
+		}
+		$('#cadastro-empresa-avisos-lista').empty();
+		lista.forEach(function (t) { $('#cadastro-empresa-avisos-lista').append('<li>' + t + '</li>'); });
+		$('#cadastro-empresa-avisos').removeClass('d-none');
+	}
+
+	function aplicarDadosEmpresa(d, contato, end) {
+		d = d || {};
+		end = end || d.endereco || {};
+		contato = contato || d.contato || {};
+		if (d.razao_social) $('#razaosocial').val(String(d.razao_social).toUpperCase());
+		if (d.nome_fantasia) $('#nomefantasia').val(String(d.nome_fantasia).toUpperCase());
+		if (d.nome) $('#nome').val(String(d.nome).toUpperCase());
+		if (contato.email) $('#email').val(String(contato.email).trim().toLowerCase());
+		var cep = (end.cep || '').toString().replace(/\D/g, '');
+		if (cep.length >= 8) $('#cep').val(cep.substring(0, 5) + '-' + cep.substring(5, 8));
+		if (end.bairro) $('#bairro').val(String(end.bairro).toUpperCase());
+		if (end.logradouro) $('#endereco').val(String(end.logradouro).toUpperCase());
+		if (end.numero) $('#nroendereco').val(end.numero);
+		if (end.complemento) $('#complemento').val(String(end.complemento).toUpperCase());
+		if (end.uf) $('#uf_contribuinte').val(String(end.uf).trim().toUpperCase());
+		if (d.idcidade) {
+			$('#idcidade').val(d.idcidade);
+			if (typeof $().selectpicker === 'function') { $('#idcidade').selectpicker('refresh'); }
+		}
+		if (d.inscricao_estadual && d.inscricao_estadual.numero) {
+			$('#inscricaoestadual').val(String(d.inscricao_estadual.numero).replace(/\D/g, ''));
+		} else if (d.inscricaoestadual) {
+			$('#inscricaoestadual').val(String(d.inscricaoestadual).replace(/\D/g, ''));
+		}
+		if (d.inscricao_municipal && d.inscricao_municipal.numero) {
+			$('#inscricaomunicipal').val(String(d.inscricao_municipal.numero).replace(/\D/g, ''));
+		}
+		if (contato.telefone) $('#fone').val(contato.telefone);
+		if (d.fone) $('#fone').val(d.fone);
+		if (d.fone2) $('#fone2').val(d.fone2);
+		if (d.site) $('#site').val(d.site);
+		if (Array.isArray(d.qsa) && d.qsa.length) {
+			var s = d.qsa.find(function (x) { return String(x.qual || '').indexOf('Administrador') !== -1; }) || d.qsa[0];
+			if (s && s.nome) $('#nomeresponsavel').val(String(s.nome).toUpperCase());
+		}
+	}
+
+	function buscarIeAutomatica() {
+		var cnpj = apenasDigitos($('#cnpj').val());
+		var uf = ($('#uf_contribuinte').val() || '').trim().toUpperCase();
+		if (cnpj.length !== 14 || !uf || $('#inscricaoestadual').val()) return;
+		$.getJSON(urlConsultaIe + '/' + encodeURIComponent(cnpj) + '/' + encodeURIComponent(uf), function (data) {
+			if (data && data.success && data.ie) $('#inscricaoestadual').val(data.ie);
 		});
+	}
+
+	function aplicarRespostaConsulta(resposta) {
+		if (!resposta || !resposta.sucesso) return false;
+		var d = resposta.dados || {};
+		if (resposta.origem === 'cliente_cadastrado') {
+			aplicarDadosEmpresa(d, {}, {});
+			aplicarAvisosConsulta(resposta.avisos, null);
+			return true;
+		}
+		aplicarDadosEmpresa(d, d.contato, d.endereco);
+		aplicarAvisosConsulta(resposta.avisos, resposta.origem ? ('Origem: ' + resposta.origem) : null);
+		buscarIeAutomatica();
+		return true;
+	}
+
+	function aplicarFallbackReceitaCnpj(data) {
+		if (!data || data.status === 'ERROR') return false;
+		if (data.nome) $('#razaosocial').val(String(data.nome).toUpperCase());
+		if (data.fantasia) $('#nomefantasia').val(String(data.fantasia).toUpperCase());
+		if (data.email) $('#email').val(String(data.email).trim().toLowerCase());
+		var cepNum = (data.cep || '').replace(/\D/g, '');
+		if (cepNum.length >= 8) $('#cep').val(cepNum.substring(0, 5) + '-' + cepNum.substring(5, 8));
+		if (data.bairro) $('#bairro').val(String(data.bairro).toUpperCase());
+		if (data.logradouro) $('#endereco').val(String(data.logradouro).toUpperCase());
+		if (data.numero) $('#nroendereco').val(data.numero);
+		if (data.complemento) $('#complemento').val(String(data.complemento).toUpperCase());
+		if (data.uf) $('#uf_contribuinte').val(String(data.uf).trim().toUpperCase());
+		if (data.idcidade) {
+			$('#idcidade').val(data.idcidade);
+			if (typeof $().selectpicker === 'function') { $('#idcidade').selectpicker('refresh'); }
+		}
+		if (data.telefone) $('#fone').val(data.telefone);
+		buscarIeAutomatica();
+		return true;
+	}
+
+	function buscarDocumentoCadastro(silent) {
+		var tipo = parseInt($('#tipo').val(), 10);
+		var doc = tipo === TIPO_PF ? apenasDigitos($('#cpffisica').val()) : apenasDigitos($('#cnpj').val());
+		var esperado = tipo === TIPO_PF ? 11 : 14;
+		if (doc.length !== esperado) {
+			if (!silent) {
+				alert(tipo === TIPO_PF
+					? '<?= h(__('Informe um CPF válido com 11 dígitos.')) ?>'
+					: '<?= h(__('Informe um CNPJ válido com 14 dígitos.')) ?>');
+			}
+			return;
+		}
+		if (cliConsultaDoc.emAndamento) return;
+		cliConsultaDoc.emAndamento = true;
+		setStatusConsulta(tipo === TIPO_PF ? 'pf' : 'pj', '<?= h(__('Consultando…')) ?>', false);
+		$('#btn-buscar-cnpj').prop('disabled', true);
+		$.getJSON(urlConsultaDoc + '/' + encodeURIComponent(doc), function (resposta) {
+			cliConsultaDoc.emAndamento = false;
+			$('#btn-buscar-cnpj').prop('disabled', false);
+			if (aplicarRespostaConsulta(resposta)) {
+				cliConsultaDoc.ultimo = doc;
+				setStatusConsulta(tipo === TIPO_PF ? 'pf' : 'pj', '<?= h(__('Dados carregados.')) ?>', false);
+				return;
+			}
+			if (tipo === TIPO_PJ) {
+				$.getJSON(urlConsultaCnpjFallback + '/' + encodeURIComponent(doc), function (data) {
+					if (aplicarFallbackReceitaCnpj(data)) {
+						cliConsultaDoc.ultimo = doc;
+						setStatusConsulta('pj', '<?= h(__('Dados da Receita preenchidos.')) ?>', false);
+						return;
+					}
+					setStatusConsulta('pj', resposta.mensagem || '<?= h(__('Não foi possível consultar o CNPJ.')) ?>', true);
+					if (!silent) alert(resposta.mensagem || '<?= h(__('Não foi possível consultar o CNPJ.')) ?>');
+				}).fail(function () {
+					setStatusConsulta('pj', '<?= h(__('Erro ao consultar CNPJ.')) ?>', true);
+					if (!silent) alert('<?= h(__('Erro ao consultar CNPJ.')) ?>');
+				});
+				return;
+			}
+			setStatusConsulta('pf', resposta.mensagem || '', false);
+		}).fail(function () {
+			cliConsultaDoc.emAndamento = false;
+			$('#btn-buscar-cnpj').prop('disabled', false);
+			setStatusConsulta(tipo === TIPO_PF ? 'pf' : 'pj', '<?= h(__('Erro na consulta.')) ?>', true);
+			if (!silent) alert('<?= h(__('Erro na consulta.')) ?>');
+		});
+	}
+
+	function agendarConsultaDocumento() {
+		clearTimeout(cliConsultaDoc.timer);
+		cliConsultaDoc.timer = setTimeout(function () {
+			var tipo = parseInt($('#tipo').val(), 10);
+			var doc = tipo === TIPO_PF ? apenasDigitos($('#cpffisica').val()) : apenasDigitos($('#cnpj').val());
+			var esperado = tipo === TIPO_PF ? 11 : 14;
+			if (doc.length !== esperado) return;
+			if (doc !== cliConsultaDoc.ultimo) buscarDocumentoCadastro(true);
+		}, 550);
+	}
+
+	$('#cnpj, #cpffisica').on('input paste', function () {
+		var tipo = parseInt($('#tipo').val(), 10);
+		var doc = tipo === TIPO_PF ? apenasDigitos($('#cpffisica').val()) : apenasDigitos($('#cnpj').val());
+		var esperado = tipo === TIPO_PF ? 11 : 14;
+		if (doc.length < esperado) {
+			cliConsultaDoc.ultimo = '';
+			setStatusConsulta(tipo === TIPO_PF ? 'pf' : 'pj', '', false);
+		}
+		agendarConsultaDocumento();
+	});
+
+	$('#tipo').on('change', function () {
+		cliConsultaDoc.ultimo = '';
+		cliConsultaDoc.emAndamento = false;
+	});
+
+	$('#btn-buscar-cnpj').on('click', function (e) {
+		e.preventDefault();
+		cliConsultaDoc.ultimo = '';
+		buscarDocumentoCadastro(false);
 	});
 
 	$('#btn-buscar-ie').on('click', function(e) {
