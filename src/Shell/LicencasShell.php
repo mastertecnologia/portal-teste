@@ -385,11 +385,18 @@ class LicencasShell extends Shell {
 
 		$key = trim((string)env('LIC_COFRE_CIPHER_KEY', ''));
 		if ($key === '') {
-			$this->err('[WARN] LIC_COFRE_CIPHER_KEY vazio — cofre usa chave derivada (defina em .env em produção)');
+			$this->err('[WARN] LIC_COFRE_CIPHER_KEY vazio — cofre grava segredos em b64: (homologação)');
 			$warns++;
 		} else {
 			$this->out('[OK] LIC_COFRE_CIPHER_KEY definido');
+			if (!extension_loaded('openssl')) {
+				$this->err('[FAIL] ext-openssl necessária para AES-256-GCM do cofre');
+				$errors++;
+			}
 		}
+
+		$canonical = Configure::read('Licencas.canonical_routes') ? '1' : '0';
+		$this->out('LICENCAS_CANONICAL_ROUTES=' . $canonical . ' (menu ERP continua /licencas-prototype)');
 
 		$mode = (string)Configure::read('Rbac.mode');
 		$this->out('RBAC_MODE=' . ($mode !== '' ? $mode : '(default config)'));
@@ -423,7 +430,7 @@ class LicencasShell extends Shell {
 			return 0;
 		}
 		$this->out("<success>Resumo: OK ({$warns} aviso(s))</success>");
-		$this->out('Próximo: UI conforme docs/LICENCIAMENTO_HOMOLOGACAO_UAT.md');
+		$this->out('Pós-UAT opcional: docs/LICENCIAMENTO_POS_UAT_OPCIONAL.md');
 
 		return 0;
 	}
