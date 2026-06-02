@@ -46,14 +46,22 @@ class LicPrototypeDataService {
 	}
 
 	/**
-	 * @return array<string,int>
+	 * @return array<string,int|float>
 	 */
 	public function dashboardKpis(): array {
 		$out = [
+			'empresas_cliente' => 0,
+			'empresas_novas_30d' => 0,
 			'licencas_ativas' => 0,
 			'assentos' => 0,
 			'venc_30' => 0,
+			'vencidas' => 0,
+			'renovacao_valor_30' => 0.0,
+			'receita_anual' => 0.0,
+			'cofre_itens' => 0,
+			'cofre_views_7d' => 0,
 			'dispositivos' => 0,
+			'subutilizadas' => 0,
 			'solicitacoes_abertas' => 0,
 		];
 		if (!$this->tablesAvailable() || $this->idempresa <= 0) {
@@ -63,28 +71,68 @@ class LicPrototypeDataService {
 		if ($lic === null) {
 			return $out;
 		}
+		$hoje = new \DateTimeImmutable('today');
+		$hojeS = $hoje->format('Y-m-d');
+		$lim30 = $hoje->modify('+30 days')->format('Y-m-d');
+		$lim30Clientes = $hoje->modify('-30 days')->format('Y-m-d 00:00:00');
+		$clientesComLic = [];
+		$clientesNovos = [];
 		try {
 			$out['licencas_ativas'] = $lic->find()
 				->where(['idempresa' => $this->idempresa, 'status' => 'ativa'])
 				->count();
 			$assentos = 0;
+			$subutil = 0;
 			foreach ($lic->find()
 				->where(['idempresa' => $this->idempresa, 'status IN' => ['ativa', 'rascunho']])
-				->select(['assentos'])
+				->contain(['LicAssentos'])
 				->all() as $row) {
 				$assentos += (int)$row->get('assentos');
+				if ((string)$row->get('status') !== 'ativa') {
+					continue;
+				}
+				$cid = (int)$row->get('idcliente');
+				if ($cid > 0) {
+					$clientesComLic[$cid] = true;
+				}
+				$created = $row->get('created');
+				if ($created !== null) {
+					$createdS = is_object($created) && method_exists($created, 'format')
+						? $created->format('Y-m-d H:i:s')
+						: (string)$created;
+					if ($createdS >= $lim30Clientes) {
+						$clientesNovos[$cid] = true;
+					}
+				}
+				$va = $row->get('valor_anual');
+				if ($va !== null && $va !== '') {
+					$out['receita_anual'] += (float)$va;
+				}
+				$fim = $row->get('fim');
+				$fimS = is_object($fim) && method_exists($fim, 'format') ? $fim->format('Y-m-d') : (string)$fim;
+				if ($fimS !== '' && $fimS < $hojeS) {
+					$out['vencidas']++;
+				} elseif ($fimS !== '' && $fimS >= $hojeS && $fimS <= $lim30) {
+					$out['venc_30']++;
+					if ($va !== null && $va !== '') {
+						$out['renovacao_valor_30'] += (float)$va;
+					}
+				}
+				$cap = (int)$row->get('assentos');
+				$used = 0;
+				foreach ($row->get('lic_assentos') ?? [] as $a) {
+					if (trim((string)$a->get('email')) !== '') {
+						$used++;
+					}
+				}
+				if ($cap > $used && $cap > 0) {
+					$subutil++;
+				}
 			}
 			$out['assentos'] = $assentos;
-			$limite = (new \DateTimeImmutable('today'))->modify('+30 days')->format('Y-m-d');
-			$hoje = (new \DateTimeImmutable('today'))->format('Y-m-d');
-			$out['venc_30'] = $lic->find()
-				->where([
-					'idempresa' => $this->idempresa,
-					'status' => 'ativa',
-					'fim <=' => $limite,
-					'fim >=' => $hoje,
-				])
-				->count();
+			$out['empresas_cliente'] = count($clientesComLic);
+			$out['empresas_novas_30d'] = count($clientesNovos);
+			$out['subutilizadas'] = $subutil;
 		} catch (\Throwable $e) {
 		}
 		try {
@@ -100,10 +148,420 @@ class LicPrototypeDataService {
 					->where(['idempresa' => $this->idempresa, 'status' => 'aberta'])
 					->count();
 			}
+			$cofre = $this->table('LicCofreItens');
+			if ($cofre !== null) {
+				$out['cofre_itens'] = $cofre->find()
+					->where(['idempresa' => $this->idempresa])
+					->count();
+			}
+			$aud = $this->table('LicAuditoriaEventos');
+			if ($aud !== null) {
+				$desde = $hoje->modify('-7 days')->format('Y-m-d H:i:s');
+				$out['cofre_views_7d'] = $aud->find()
+					->where([
+						'idempresa' => $this->idempresa,
+						'acao' => 'cofre.revelar_segredo',
+						'created >=' => $desde,
+					])
+					->count();
+			}
 		} catch (\Throwable $e) {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Dados agregados do painel (pg-lic-dashboard).
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function buildDashboardData(): array {
+		return [
+			'kpis' => $this->dashboardKpis(),
+			'proximos_vencimentos' => $this->dashboardProximosVencimentos(5),
+			'top_empresas' => array_slice($this->listEmpresasClienteResumo(4), 0, 4),
+			'por_categoria' => $this->dashboardPorCategoria(),
+			'atividade_recente' => $this->dashboardAtividadeRecente(5),
+		];
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function dashboardProximosVencimentos(int $limit = 5): array {
+		$lic = $this->licTable();
+		if ($lic === null) {
+			return [];
+		}
+		$hoje = new \DateTimeImmutable('today');
+		$lim = $hoje->modify('+90 days');
+		$out = [];
+		try {
+			$rows = $lic->find()
+				->contain(['Clientes', 'LicCatalogoProdutos'])
+				->where([
+					'LicLicencas.idempresa' => $this->idempresa,
+					'LicLicencas.status' => 'ativa',
+					'LicLicencas.fim IS NOT' => null,
+					'LicLicencas.fim <=' => $lim->format('Y-m-d'),
+				])
+				->order(['LicLicencas.fim' => 'ASC'])
+				->limit($limit)
+				->all();
+		} catch (\Throwable $e) {
+			return [];
+		}
+		foreach ($rows as $row) {
+			$fim = $row->get('fim');
+			if ($fim === null) {
+				continue;
+			}
+			$fimDt = is_object($fim) && method_exists($fim, 'format')
+				? new \DateTimeImmutable($fim->format('Y-m-d'))
+				: new \DateTimeImmutable((string)$fim);
+			$dias = (int)round(($fimDt->getTimestamp() - $hoje->getTimestamp()) / 86400);
+			$cli = $row->get('cliente');
+			$cat = $row->get('lic_catalogo_produto');
+			$produto = (string)($row->get('produto_label') ?? '');
+			if ($produto === '' && $cat !== null) {
+				$produto = (string)$cat->get('nome');
+			}
+			$assentos = (int)$row->get('assentos');
+			$modelo = (string)$row->get('modelo');
+			$licLabel = $produto;
+			if ($licLabel !== '' && $assentos > 0) {
+				$unidade = $modelo === 'perpetua' ? __('licenças') : __('assentos');
+				$licLabel .= ' · ' . $assentos . ' ' . $unidade;
+			}
+			$va = $row->get('valor_anual');
+			$renovacao = $va !== null && $va !== '' ? (float)$va / 12 : 0.0;
+			$st = $this->vencimentoStatusBadge($dias);
+			$out[] = [
+				'id' => (int)$row->get('id'),
+				'dias' => $dias,
+				'fim' => $fimDt->format('Y-m-d'),
+				'fim_fmt' => $fimDt->format('d/m/Y'),
+				'cliente' => $this->clienteNomeFromEntity($cli),
+				'licenca' => $licLabel,
+				'renovacao' => $renovacao,
+				'status_label' => $st['label'],
+				'status_kind' => $st['kind'],
+				'row_bg' => $st['row_bg'],
+			];
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function dashboardPorCategoria(): array {
+		if (!$this->tablesAvailable()) {
+			return [];
+		}
+		$counts = [];
+		$lic = $this->licTable();
+		if ($lic !== null) {
+			try {
+				foreach ($lic->find()
+					->contain(['LicCatalogoProdutos' => ['LicCategorias']])
+					->where(['LicLicencas.idempresa' => $this->idempresa, 'LicLicencas.status' => 'ativa'])
+					->all() as $row) {
+					$cat = $row->get('lic_catalogo_produto');
+					$catEnt = $cat ? $cat->get('lic_categoria') : null;
+					$nome = $catEnt ? (string)$catEnt->get('nome') : __('Sem categoria');
+					$counts[$nome] = ($counts[$nome] ?? 0) + 1;
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		if ($counts === []) {
+			foreach ($this->listCategorias() as $c) {
+				$counts[(string)$c['nome']] = 0;
+			}
+		}
+		arsort($counts);
+		$max = max(1, max($counts));
+		$out = [];
+		$palette = [
+			__('Sistemas Operacionais') => ['color' => 'var(--blue)', 'icon' => '💻'],
+			__('Office') => ['color' => 'var(--teal)', 'icon' => '📄'],
+			__('Office & Produtividade') => ['color' => 'var(--teal)', 'icon' => '📄'],
+			__('Design & Engenharia') => ['color' => '#6B21A8', 'icon' => '🎨'],
+			__('Segurança') => ['color' => '#991B1B', 'icon' => '🛡'],
+			__('Cloud & Marketing') => ['color' => '#F59E0B', 'icon' => '☁'],
+		];
+		foreach ($counts as $nome => $total) {
+			$meta = $palette[$nome] ?? ['color' => 'var(--text-muted)', 'icon' => '📦'];
+			$out[] = [
+				'nome' => $nome,
+				'total' => $total,
+				'pct' => (int)round(($total / $max) * 100),
+				'color' => $meta['color'],
+				'icon' => $meta['icon'],
+			];
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function dashboardAtividadeRecente(int $limit = 5): array {
+		$events = $this->listAuditoria($limit);
+		if ($events === []) {
+			return [];
+		}
+		$userNames = [];
+		try {
+			$ids = array_values(array_unique(array_filter(array_map(static function ($e) {
+				return (int)($e['iduser'] ?? 0);
+			}, $events))));
+			if ($ids !== []) {
+				foreach ($this->table('Users')->find()
+					->select(['id', 'name'])
+					->where(['id IN' => $ids])
+					->all() as $u) {
+					$userNames[(int)$u->get('id')] = (string)$u->get('name');
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+		$out = [];
+		foreach ($events as $ev) {
+			$uid = (int)($ev['iduser'] ?? 0);
+			$autor = $uid > 0 ? ($userNames[$uid] ?? __('Usuário')) : __('Sistema');
+			$parsed = $this->formatAuditoriaLinha((string)$ev['acao'], (string)($ev['detalhe'] ?? ''), $ev['created']);
+			$out[] = [
+				'autor' => $autor,
+				'titulo' => $parsed['titulo'],
+				'detalhe' => $parsed['detalhe'],
+				'cor' => $parsed['cor'],
+				'quando' => $parsed['quando'],
+			];
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Clientes do ERP para busca no wizard (passo 1).
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listClientesWizardBusca(int $limit = 400): array {
+		if ($this->idempresa <= 0) {
+			return [];
+		}
+		$licAtivas = [];
+		$lic = $this->licTable();
+		if ($lic !== null) {
+			try {
+				foreach ($lic->find()
+					->select(['idcliente'])
+					->where(['idempresa' => $this->idempresa, 'status' => 'ativa'])
+					->all() as $row) {
+					$cid = (int)$row->get('idcliente');
+					$licAtivas[$cid] = ($licAtivas[$cid] ?? 0) + 1;
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		$out = [];
+		try {
+			foreach ($this->table('Clientes')->find()
+				->where(['Clientes.idempresa' => $this->idempresa, 'Clientes.inativo' => 0])
+				->order(['Clientes.nome' => 'ASC'])
+				->limit($limit)
+				->all() as $c) {
+				$cid = (int)$c->get('id');
+				$nome = $this->clienteNomeFromEntity($c);
+				$cnpj = (string)($c->get('cnpj') ?? $c->get('cpf') ?? '');
+				$out[] = [
+					'id' => $cid,
+					'nome' => $nome,
+					'cnpj' => $cnpj,
+					'licencas_ativas' => (int)($licAtivas[$cid] ?? 0),
+					'iniciais' => $this->iniciaisNome($nome),
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Categorias com contagem de produtos ativos (wizard / catálogo).
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listCategoriasComContagem(): array {
+		$counts = [];
+		if ($this->table('LicCatalogoProdutos') !== null) {
+			try {
+				foreach ($this->table('LicCatalogoProdutos')->find()
+					->select(['idcategoria'])
+					->where(['idempresa' => $this->idempresa, 'ativo' => true])
+					->all() as $p) {
+					$idc = (int)$p->get('idcategoria');
+					$counts[$idc] = ($counts[$idc] ?? 0) + 1;
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		$out = [];
+		foreach ($this->listCategorias() as $c) {
+			if (empty($c['ativo'])) {
+				continue;
+			}
+			$id = (int)$c['id'];
+			$out[] = $c + [
+				'produtos' => (int)($counts[$id] ?? 0),
+				'icon' => $this->categoriaIcon((string)$c['codigo']),
+			];
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Produtos do catálogo com fornecedor (wizard passo 1).
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function listCatalogoProdutosWizard(): array {
+		if ($this->table('LicCatalogoProdutos') === null) {
+			return [];
+		}
+		$out = [];
+		try {
+			foreach ($this->table('LicCatalogoProdutos')->find()
+				->contain(['LicCategorias'])
+				->where(['LicCatalogoProdutos.idempresa' => $this->idempresa, 'LicCatalogoProdutos.ativo' => true])
+				->order(['LicCatalogoProdutos.nome' => 'ASC'])
+				->limit(500)
+				->all() as $p) {
+				$cat = $p->get('lic_categoria');
+				$out[] = [
+					'id' => (int)$p->get('id'),
+					'nome' => (string)$p->get('nome'),
+					'sku' => (string)($p->get('sku') ?? ''),
+					'idcategoria' => (int)$p->get('idcategoria'),
+					'categoria' => $cat ? (string)$cat->get('nome') : '',
+					'categoria_codigo' => $cat ? (string)$cat->get('codigo') : '',
+					'idfornecedor_cliente' => (int)$p->get('idfornecedor_cliente'),
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @return array{label:string,kind:string,row_bg:string}
+	 */
+	protected function vencimentoStatusBadge(int $dias): array {
+		if ($dias < 0) {
+			return ['label' => 'URGENTE', 'kind' => 'urgente', 'row_bg' => '#FEF2F2'];
+		}
+		if ($dias <= 7) {
+			return ['label' => __('Aviso'), 'kind' => 'aviso', 'row_bg' => '#FFFBEB'];
+		}
+		if ($dias <= 30) {
+			return ['label' => __('Em renovação'), 'kind' => 'renovacao', 'row_bg' => ''];
+		}
+
+		return ['label' => __('Planejada'), 'kind' => 'planejada', 'row_bg' => ''];
+	}
+
+	/**
+	 * @return array{titulo:string,detalhe:string,cor:string,quando:string}
+	 */
+	protected function formatAuditoriaLinha(string $acao, string $detalhe, string $created): array {
+		$cor = 'var(--teal)';
+		$titulo = $acao;
+		if (strpos($acao, 'cofre') !== false) {
+			$cor = '#6B21A8';
+			$titulo = __('revelou senha do cofre');
+		} elseif (strpos($acao, 'licenca') !== false) {
+			$cor = 'var(--teal)';
+			$titulo = __('atualizou licença');
+		} elseif (strpos($acao, 'config') !== false) {
+			$cor = 'var(--blue)';
+			$titulo = __('alterou configurações');
+		} elseif (strpos($acao, 'dispositivo') !== false) {
+			$cor = 'var(--blue)';
+			$titulo = __('registrou dispositivo');
+		}
+		$quando = $created;
+		if ($created !== '') {
+			$ts = strtotime($created);
+			if ($ts !== false) {
+				$diff = time() - $ts;
+				if ($diff < 3600) {
+					$quando = __('há {0} min', max(1, (int)round($diff / 60)));
+				} elseif ($diff < 86400) {
+					$quando = __('há {0} h', max(1, (int)round($diff / 3600)));
+				}
+			}
+		}
+
+		return [
+			'titulo' => $titulo,
+			'detalhe' => $detalhe !== '' ? $detalhe : $acao,
+			'cor' => $cor,
+			'quando' => $quando,
+		];
+	}
+
+	protected function iniciaisNome(string $nome): string {
+		$nome = trim(preg_replace('/\s+/', ' ', $nome) ?? '');
+		if ($nome === '') {
+			return '?';
+		}
+		$parts = explode(' ', $nome);
+		$ini = mb_substr($parts[0], 0, 1);
+		if (count($parts) > 1) {
+			$ini .= mb_substr($parts[count($parts) - 1], 0, 1);
+		}
+
+		return mb_strtoupper($ini);
+	}
+
+	protected function categoriaIcon(string $codigo): string {
+		$map = [
+			'SO' => '💻',
+			'OFFICE' => '📄',
+			'DESIGN' => '🎨',
+			'SEG' => '🛡',
+			'SEGURANCA' => '🛡',
+			'CLOUD' => '☁',
+			'COM' => '📞',
+			'DEVOPS' => '⚡',
+		];
+		$key = mb_strtoupper(preg_replace('/[^A-Z0-9]/', '', $codigo) ?? $codigo);
+
+		return $map[$key] ?? '📦';
+	}
+
+	/**
+	 * @param float $v
+	 */
+	public function formatReceitaCompacta($v): string {
+		$n = is_numeric($v) ? (float)$v : 0.0;
+		if ($n >= 1000000) {
+			return 'R$ ' . number_format($n / 1000000, 2, ',', '.') . 'M';
+		}
+		if ($n >= 1000) {
+			return 'R$ ' . number_format($n / 1000, 1, ',', '.') . 'k';
+		}
+
+		return 'R$ ' . number_format($n, 2, ',', '.');
 	}
 
 	/**

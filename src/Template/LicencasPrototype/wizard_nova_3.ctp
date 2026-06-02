@@ -11,14 +11,7 @@ foreach ((array)($row['assentos_rows'] ?? []) as $a) {
 	}
 }
 ?>
-<div class="pg-page-head" style="margin-bottom:14px;">
-	<div>
-		<h1 class="pg-page-title" style="font-size:20px;">+ <?= h(__('Nova licença')) ?></h1>
-		<p style="font-size:12px;color:var(--text-muted);"><?= h(__('Passo 3 de 4')) ?></p>
-	</div>
-</div>
-
-<?= $this->ErpPrototype->stepper($wizardSteps) ?>
+<?= $this->element('LicencasPrototype/wizard_header', ['wizardStepNum' => 3, 'wizardSteps' => $wizardSteps ?? [], 'licId' => (int)$licId]) ?>
 
 <form method="post" action="<?= h($this->Url->build(['action' => 'salvarWizard'])) ?>">
 <input type="hidden" name="_csrfToken" value="<?= h($csrf) ?>">

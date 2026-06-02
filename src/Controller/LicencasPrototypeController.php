@@ -37,6 +37,7 @@ class LicencasPrototypeController extends AppController {
 	public function dashboard() {
 		$empresa = (int)$this->Auth->user('idempresa');
 		$svc = new LicPrototypeDataService($empresa);
+		$dash = $svc->buildDashboardData();
 		$this->set([
 			'title' => __('Licenciamento · Painel'),
 			'erpNavActive' => 'lic-dashboard',
@@ -45,7 +46,9 @@ class LicencasPrototypeController extends AppController {
 				['label' => __('Licenciamento'), 'cur' => true],
 			],
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
-			'licKpi' => $svc->dashboardKpis(),
+			'licKpi' => (array)($dash['kpis'] ?? []),
+			'licDash' => $dash,
+			'licSvc' => $svc,
 			'licMigrationHint' => !$svc->tablesAvailable(),
 		]);
 
@@ -316,6 +319,10 @@ class LicencasPrototypeController extends AppController {
 			'licId' => $licId,
 			'licCatalogo' => $svc->listCatalogo(),
 			'licClientes' => $svc->listClientesOptions(),
+			'licClientesBusca' => $svc->listClientesWizardBusca(),
+			'licCategorias' => $svc->listCategoriasComContagem(),
+			'licProdutosWizard' => $svc->listCatalogoProdutosWizard(),
+			'licFornecedores' => $svc->listFornecedoresResumo(120),
 		]);
 		$tpl = 'wizard_' . str_replace('-', '_', $page);
 
@@ -327,10 +334,10 @@ class LicencasPrototypeController extends AppController {
 	 */
 	protected function wizardSteps(int $current): array {
 		$labels = [
-			__('Cliente & produto'),
-			__('Quantidade & vigência'),
-			__('Assentos'),
-			__('Finalizar'),
+			__('Cliente & Produto'),
+			__('Quantidade & Datas'),
+			__('Atribuir'),
+			__('Cofre & Documentos'),
 		];
 		$out = [];
 		foreach ($labels as $i => $label) {
