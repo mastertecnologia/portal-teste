@@ -3,8 +3,7 @@
  * Redefine a senha de um usuário ativo (CLI, servidor). Usa o mesmo bcrypt do portal.
  *
  * Uso:
- *   CONFIRM=yes read -rs NEW_PW && printf '%s' "$NEW_PW" | \
- *     php scripts/admin_set_user_password.php "email@exemplo.com"
+ *   CONFIRM=yes read -rs NEW_PW; echo; printf '%s' "$NEW_PW" | php scripts/admin_set_user_password.php "email@exemplo.com"
  *
  * Não passe a senha na linha de comando. Não registra a senha em log.
  */
@@ -21,24 +20,23 @@ if (getenv('CONFIRM') !== 'yes') {
 	exit(1);
 }
 
+require $root . DIRECTORY_SEPARATOR . 'scripts' . DIRECTORY_SEPARATOR . 'cli_password_stdin_helper.php';
+
+$login = isset($argv[1]) ? trim((string)$argv[1]) : '';
+if ($login === '') {
+	fwrite(STDERR, "Uso: CONFIRM=yes read -rs P; echo; printf '%s' \"\$P\" | php scripts/admin_set_user_password.php \"email@exemplo.com\"\n");
+	exit(2);
+}
+
+$plain = cli_read_password_from_stdin('admin_set_user_password.php');
+
+fwrite(STDERR, "Conectando ao banco (bootstrap Cake)...\n");
 require $root . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 require $root . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 use App\Utility\Fiscal\FiscalSqlConditions;
 use Cake\Auth\DefaultPasswordHasher;
 use Cake\ORM\TableRegistry;
-
-$login = isset($argv[1]) ? trim((string)$argv[1]) : '';
-if ($login === '') {
-	fwrite(STDERR, "Uso: CONFIRM=yes printf 'senha' | php scripts/admin_set_user_password.php \"email@exemplo.com\"\n");
-	exit(2);
-}
-
-$plain = stream_get_contents(STDIN);
-if ($plain === false || $plain === '') {
-	fwrite(STDERR, "Informe a nova senha via stdin.\n");
-	exit(2);
-}
 
 if (strlen($plain) < 4) {
 	fwrite(STDERR, "Senha muito curta (mínimo 4 caracteres, alinhado ao portal).\n");
