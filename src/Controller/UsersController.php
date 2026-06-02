@@ -41,6 +41,9 @@ use Cake\Mailer\TransportFactory;
 use Cake\Utility\Security;
 
 class UsersController extends AppController {
+	/** @var string|null último erro em {@see _findActiveUsersForLogin()} (diagnóstico) */
+	protected static $lastFindActiveUsersForLoginError;
+
 	public function initialize() {
 		parent::initialize();
 		// Use ModelService instead of repetitive loadModel calls
@@ -56,7 +59,7 @@ class UsersController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$this->set('title', 'Usuários');
-		$this->Auth->allow(['login', 'acessoEmpresa', 'desativaverificacaosemlogin', 'enviaEmailAutenticacaoSemLogin', 'loginempresa', 'logout', 'privacyPolicy', 'cadastrocliente', 'verificacnpjcliente', 'verificacpfcliente', 'verificalogincadastro', 'resetPassword', 'resetPasswordNew', 'verificacpf', 'verificacodigo', 'verificaloginduasetapas']);
+		$this->Auth->allow(['login', 'acessoEmpresa', 'loginDiag', 'desativaverificacaosemlogin', 'enviaEmailAutenticacaoSemLogin', 'loginempresa', 'logout', 'privacyPolicy', 'cadastrocliente', 'verificacnpjcliente', 'verificacpfcliente', 'verificalogincadastro', 'resetPassword', 'resetPasswordNew', 'verificacpf', 'verificacodigo', 'verificaloginduasetapas']);
 
 		if ($this->request->getParam('action') === 'resetPasswordNew' && in_array('Security', $this->components()->loaded(), true)) {
 			$existing = $this->Security->getConfig('unlockedFields');
@@ -1507,6 +1510,7 @@ class UsersController extends AppController {
 			return [];
 		}
 
+		static::$lastFindActiveUsersForLoginError = null;
 		try {
 			$conn = $this->Users->getConnection();
 			$loginMatch = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $login);
@@ -1522,7 +1526,14 @@ class UsersController extends AppController {
 				->order(['Users.id' => 'ASC'])
 				->toArray();
 		} catch (\Throwable $e) {
-			Log::error('_findActiveUsersForLogin: ' . $e->getMessage(), ['exception' => $e]);
+			static::$lastFindActiveUsersForLoginError = $e->getMessage();
+			$cfg = $this->Users->getConnection()->config();
+			Log::error(sprintf(
+				'_findActiveUsersForLogin: %s (db_host=%s db=%s)',
+				$e->getMessage(),
+				$cfg['host'] ?? '?',
+				$cfg['database'] ?? '?'
+			), ['exception' => $e]);
 
 			return [];
 		}
@@ -1730,6 +1741,56 @@ class UsersController extends AppController {
 	}
 
 	/**
+	 * Diagnóstico de login (somente localhost). Compara DB/candidatos no contexto Apache/PHP-FPM.
+	 * GET /portal/users/login-diag?login=email@exemplo.com
+	 */
+	public function loginDiag() {
+		$this->autoRender = false;
+		$ip = (string)$this->request->clientIp();
+		if (!in_array($ip, ['127.0.0.1', '::1'], true)) {
+			$this->response = $this->response->withStatus(403)->withType('application/json')
+				->withStringBody(json_encode(['ok' => false, 'error' => 'forbidden']));
+
+			return;
+		}
+		$login = strtolower(trim((string)$this->request->getQuery('login')));
+		$conn = $this->Users->getConnection();
+		$cfg = $conn->config();
+		$active = $this->_findActiveUsersForLogin($login);
+		$anyCount = 0;
+		if ($login !== '') {
+			try {
+				$loginMatch = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $login);
+				$anyCount = $this->Users->find()
+					->where([
+						'OR' => array_merge(
+							FiscalSqlConditions::caseInsensitiveLike($conn, 'Users.email', $loginMatch),
+							FiscalSqlConditions::caseInsensitiveLike($conn, 'Users.username', $loginMatch)
+						),
+					])
+					->count();
+			} catch (\Throwable $e) {
+				static::$lastFindActiveUsersForLoginError = $e->getMessage();
+			}
+		}
+		$payload = [
+			'ok' => true,
+			'db_host' => $cfg['host'] ?? null,
+			'db_name' => $cfg['database'] ?? null,
+			'db_driver' => $conn->getDriver() ? get_class($conn->getDriver()) : null,
+			'login' => $login,
+			'candidates_active' => count($active),
+			'candidate_ids' => array_map(static function ($u) {
+				return (int)$u->get('id');
+			}, $active),
+			'candidates_any_inativo' => $anyCount,
+			'find_err' => static::$lastFindActiveUsersForLoginError,
+		];
+		$this->response = $this->response->withType('application/json')
+			->withStringBody(json_encode($payload, JSON_UNESCAPED_UNICODE));
+	}
+
+	/**
 	 * Equipe PGM/Master — URL típica: /portal/users/acesso-empresa
 	 * Espera users.role = C_RoleFuncionario (0). Clientes (role 1) devem usar login().
 	 */
@@ -1805,15 +1866,20 @@ class UsersController extends AppController {
 					if (is_array($parsedBody)) {
 						$postKeys = implode(',', array_keys($parsedBody));
 					}
-					$dbName = (string)($this->Users->getConnection()->config()['database'] ?? '');
+					$dsCfg = $this->Users->getConnection()->config();
+					$dbName = (string)($dsCfg['database'] ?? '');
+					$dbHost = (string)($dsCfg['host'] ?? '');
+					$findErr = static::$lastFindActiveUsersForLoginError;
 					Log::warning(sprintf(
-						'acessoEmpresa: credenciais rejeitadas login=%s password_len=%d reason=%s candidate_ids=%s db=%s post_keys=%s%s',
+						'acessoEmpresa: credenciais rejeitadas login=%s password_len=%d reason=%s candidate_ids=%s db_host=%s db=%s post_keys=%s find_err=%s%s',
 						$creds['username'],
 						$pwd !== null ? strlen($pwd) : 0,
 						$reason,
 						$candidateIds === [] ? '-' : implode(',', $candidateIds),
+						$dbHost !== '' ? $dbHost : '-',
 						$dbName !== '' ? $dbName : '-',
 						$postKeys !== '' ? $postKeys : '-',
+						$findErr !== null && $findErr !== '' ? substr($findErr, 0, 120) : '-',
 						$pwdMeta
 					));
 					$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));

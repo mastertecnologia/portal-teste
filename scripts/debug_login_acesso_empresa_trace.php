@@ -175,6 +175,39 @@ echo "--- Simulação _extractLoginCredentials ---\n";
 echo "  POST username literal: len=" . strlen($extFlat['username']) . " password_len=" . ($extFlat['password'] !== null ? strlen($extFlat['password']) : 0) . "\n";
 echo "  POST username já lower:  password_len=" . ($extNorm['password'] !== null ? strlen($extNorm['password']) : 0) . "\n\n";
 
+// --- Contexto web (PHP-FPM/Apache) via login-diag (somente 127.0.0.1) ---
+echo "--- Contexto WEB (users/login-diag) ---\n";
+$diagUrl = 'https://127.0.0.1/portal/users/login-diag?login=' . rawurlencode($loginNorm);
+$hostArgDiag = escapeshellarg('Host: portal.pgm.inf.br');
+$diagJson = shell_exec(
+	'curl -sk -H ' . $hostArgDiag . ' ' . escapeshellarg($diagUrl) . ' 2>/dev/null'
+);
+if ($diagJson !== null && $diagJson !== '') {
+	$diag = json_decode($diagJson, true);
+	if (is_array($diag) && !empty($diag['ok'])) {
+		echo '  db_host: ' . ($diag['db_host'] ?? '?') . "\n";
+		echo '  db_name: ' . ($diag['db_name'] ?? '?') . "\n";
+		echo '  candidates_active (web): ' . ($diag['candidates_active'] ?? '?') . "\n";
+		echo '  candidate_ids (web): ' . (isset($diag['candidate_ids']) ? implode(',', $diag['candidate_ids']) : '-') . "\n";
+		echo '  candidates_any_inativo: ' . ($diag['candidates_any_inativo'] ?? '?') . "\n";
+		if (!empty($diag['find_err'])) {
+			echo '  find_err (web): ' . $diag['find_err'] . "\n";
+		}
+		$webActive = (int)($diag['candidates_active'] ?? 0);
+		$cliActive = $candidates->count();
+		if ($cliActive > 0 && $webActive === 0) {
+			echo "  ATENÇÃO: CLI vê {$cliActive} candidato(s), WEB vê 0 — Apache/PHP não usa o mesmo banco ou a query falhou (find_err).\n";
+		} elseif ($cliActive > 0 && $webActive > 0) {
+			echo "  WEB e CLI concordam nos candidatos — se login falha, é hash/sessão (não lookup).\n";
+		}
+	} else {
+		echo "  Resposta inválida ou 403 (faça deploy com loginDiag e curl -sk).\n";
+	}
+} else {
+	echo "  Não foi possível chamar login-diag.\n";
+}
+echo "\n";
+
 if (!$doHttp) {
 	exit($matchedId === null ? 1 : 0);
 }
