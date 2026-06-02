@@ -11,6 +11,17 @@ use Cake\ORM\TableRegistry;
  * Dados reais do módulo Licenciamento (tabelas lic_*).
  */
 class LicPrototypeDataService {
+	/**
+	 * Carrega Table ORM (TableLocator::exists dá falso negativo antes do primeiro get).
+	 */
+	protected function table(string $alias): ?\Cake\ORM\Table {
+		try {
+			return TableRegistry::getTableLocator()->get($alias);
+		} catch (\Throwable $e) {
+			return null;
+		}
+	}
+
 
 	/** @var int */
 	private $idempresa;
@@ -77,14 +88,15 @@ class LicPrototypeDataService {
 		} catch (\Throwable $e) {
 		}
 		try {
-			$loc = TableRegistry::getTableLocator();
-			if ($loc->exists('LicDispositivos')) {
-				$out['dispositivos'] = $loc->get('LicDispositivos')->find()
+			$disp = $this->table('LicDispositivos');
+			if ($disp !== null) {
+				$out['dispositivos'] = $disp->find()
 					->where(['idempresa' => $this->idempresa])
 					->count();
 			}
-			if ($loc->exists('LicSolicitacoes')) {
-				$out['solicitacoes_abertas'] = $loc->get('LicSolicitacoes')->find()
+			$sol = $this->table('LicSolicitacoes');
+			if ($sol !== null) {
+				$out['solicitacoes_abertas'] = $sol->find()
 					->where(['idempresa' => $this->idempresa, 'status' => 'aberta'])
 					->count();
 			}
@@ -221,12 +233,12 @@ class LicPrototypeDataService {
 			return [];
 		}
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicCatalogoProdutos')) {
+		if ($this->table('LicCatalogoProdutos') === null) {
 			return [];
 		}
 		$out = [];
 		try {
-			foreach ($loc->get('LicCatalogoProdutos')->find()
+			foreach ($this->table('LicCatalogoProdutos')->find()
 				->where(['idempresa' => $this->idempresa, 'ativo' => true])
 				->order(['nome' => 'ASC'])
 				->limit($limit)
@@ -336,10 +348,10 @@ class LicPrototypeDataService {
 
 	protected function syncAssentosEmails(int $licId, string $emailsRaw): void {
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicAssentos')) {
+		if ($this->table('LicAssentos') === null) {
 			return;
 		}
-		$tbl = $loc->get('LicAssentos');
+		$tbl = $this->table('LicAssentos');
 		$tbl->deleteAll(['idlicenca' => $licId]);
 		$lines = preg_split('/[\r\n,;]+/', $emailsRaw) ?: [];
 		foreach ($lines as $line) {
@@ -417,11 +429,11 @@ class LicPrototypeDataService {
 
 	protected function audit(string $acao, string $entidade, int $entidadeId, int $userId = 0, ?string $detalhe = null, ?string $ip = null): void {
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicAuditoriaEventos')) {
+		if ($this->table('LicAuditoriaEventos') === null) {
 			return;
 		}
 		try {
-			$tbl = $loc->get('LicAuditoriaEventos');
+			$tbl = $this->table('LicAuditoriaEventos');
 			$entity = $tbl->newEntity([
 				'idempresa' => $this->idempresa,
 				'iduser' => $userId > 0 ? $userId : null,
@@ -443,12 +455,12 @@ class LicPrototypeDataService {
 	 */
 	public function listCategorias(): array {
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicCategorias')) {
+		if ($this->table('LicCategorias') === null) {
 			return [];
 		}
 		$out = [];
 		try {
-			foreach ($loc->get('LicCategorias')->find()
+			foreach ($this->table('LicCategorias')->find()
 				->where(['idempresa' => $this->idempresa])
 				->order(['nome' => 'ASC'])
 				->all() as $c) {
@@ -470,12 +482,12 @@ class LicPrototypeDataService {
 	 */
 	public function listCatalogoProdutos(): array {
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicCatalogoProdutos')) {
+		if ($this->table('LicCatalogoProdutos') === null) {
 			return [];
 		}
 		$out = [];
 		try {
-			foreach ($loc->get('LicCatalogoProdutos')->find()
+			foreach ($this->table('LicCatalogoProdutos')->find()
 				->contain(['LicCategorias'])
 				->where(['LicCatalogoProdutos.idempresa' => $this->idempresa])
 				->order(['LicCatalogoProdutos.nome' => 'ASC'])
@@ -501,12 +513,11 @@ class LicPrototypeDataService {
 	 * @return array<string,mixed>|null
 	 */
 	public function getCatalogoProduto(int $id): ?array {
-		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicCatalogoProdutos') || $id <= 0) {
+		if ($id <= 0 || $this->table('LicCatalogoProdutos') === null) {
 			return null;
 		}
 		try {
-			$p = $loc->get('LicCatalogoProdutos')->find()
+			$p = $this->table('LicCatalogoProdutos')->find()
 				->contain(['LicCategorias'])
 				->where(['LicCatalogoProdutos.id' => $id, 'LicCatalogoProdutos.idempresa' => $this->idempresa])
 				->first();
@@ -535,10 +546,10 @@ class LicPrototypeDataService {
 	 */
 	public function saveCatalogoProduto(array $data, ?int $id = null): array {
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicCatalogoProdutos')) {
+		if ($this->table('LicCatalogoProdutos') === null) {
 			return ['ok' => false, 'errors' => ['_base' => __('Tabelas indisponíveis.')]];
 		}
-		$tbl = $loc->get('LicCatalogoProdutos');
+		$tbl = $this->table('LicCatalogoProdutos');
 		$payload = [
 			'idempresa' => $this->idempresa,
 			'idcategoria' => (int)($data['idcategoria'] ?? 0) ?: null,
@@ -576,10 +587,10 @@ class LicPrototypeDataService {
 	 */
 	public function saveCategoria(array $data, ?int $id = null): array {
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicCategorias')) {
+		if ($this->table('LicCategorias') === null) {
 			return ['ok' => false, 'errors' => ['_base' => __('Tabelas indisponíveis.')]];
 		}
-		$tbl = $loc->get('LicCategorias');
+		$tbl = $this->table('LicCategorias');
 		$payload = [
 			'idempresa' => $this->idempresa,
 			'codigo' => trim((string)($data['codigo'] ?? '')),
@@ -720,10 +731,10 @@ class LicPrototypeDataService {
 	 */
 	public function listDispositivos(array $filters = []): array {
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicDispositivos')) {
+		if ($this->table('LicDispositivos') === null) {
 			return [];
 		}
-		$q = $loc->get('LicDispositivos')->find()
+		$q = $this->table('LicDispositivos')->find()
 			->contain(['Clientes'])
 			->where(['LicDispositivos.idempresa' => $this->idempresa])
 			->order(['LicDispositivos.modified' => 'DESC'])
@@ -755,12 +766,11 @@ class LicPrototypeDataService {
 	 * @return array<string,mixed>|null
 	 */
 	public function getDispositivo(int $id): ?array {
-		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicDispositivos') || $id <= 0) {
+		if ($id <= 0 || $this->table('LicDispositivos') === null) {
 			return null;
 		}
 		try {
-			$d = $loc->get('LicDispositivos')->find()
+			$d = $this->table('LicDispositivos')->find()
 				->contain(['Clientes'])
 				->where(['LicDispositivos.id' => $id, 'LicDispositivos.idempresa' => $this->idempresa])
 				->first();
@@ -790,14 +800,14 @@ class LicPrototypeDataService {
 	 */
 	public function saveDispositivo(array $data, ?int $id = null): array {
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicDispositivos')) {
+		if ($this->table('LicDispositivos') === null) {
 			return ['ok' => false, 'errors' => ['_base' => __('Tabelas indisponíveis.')]];
 		}
 		$idcliente = (int)($data['idcliente'] ?? 0);
 		if ($idcliente <= 0) {
 			return ['ok' => false, 'errors' => ['idcliente' => __('Cliente obrigatório.')]];
 		}
-		$tbl = $loc->get('LicDispositivos');
+		$tbl = $this->table('LicDispositivos');
 		$payload = [
 			'idempresa' => $this->idempresa,
 			'idcliente' => $idcliente,
@@ -854,10 +864,10 @@ class LicPrototypeDataService {
 	 */
 	public function listCofreItens(array $filters = [], int $limit = 150): array {
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicCofreItens')) {
+		if ($this->table('LicCofreItens') === null) {
 			return [];
 		}
-		$q = $loc->get('LicCofreItens')->find()
+		$q = $this->table('LicCofreItens')->find()
 			->contain(['Clientes', 'LicLicencas'])
 			->where(['LicCofreItens.idempresa' => $this->idempresa])
 			->order(['LicCofreItens.modified' => 'DESC'])
@@ -893,8 +903,7 @@ class LicPrototypeDataService {
 	 * @return array<string,mixed>|null
 	 */
 	public function getCofreItem(int $id, bool $includeSecret = false): ?array {
-		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicCofreItens') || $id <= 0) {
+		if ($id <= 0 || $this->table('LicCofreItens') === null) {
 			return null;
 		}
 		$where = ['LicCofreItens.id' => $id, 'LicCofreItens.idempresa' => $this->idempresa];
@@ -902,7 +911,7 @@ class LicPrototypeDataService {
 			$where['LicCofreItens.idcliente'] = $this->idclienteScope;
 		}
 		try {
-			$row = $loc->get('LicCofreItens')->find()
+			$row = $this->table('LicCofreItens')->find()
 				->contain(['Clientes', 'LicLicencas'])
 				->where($where)
 				->first();
@@ -937,10 +946,10 @@ class LicPrototypeDataService {
 	 */
 	public function saveCofreItem(array $data, ?int $id = null): array {
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicCofreItens')) {
+		if ($this->table('LicCofreItens') === null) {
 			return ['ok' => false, 'errors' => ['_base' => __('Tabelas indisponíveis.')]];
 		}
-		$tbl = $loc->get('LicCofreItens');
+		$tbl = $this->table('LicCofreItens');
 		$titulo = trim((string)($data['titulo'] ?? ''));
 		if ($titulo === '') {
 			return ['ok' => false, 'errors' => ['titulo' => __('Título obrigatório.')]];
@@ -1005,10 +1014,10 @@ class LicPrototypeDataService {
 	 */
 	public function listSolicitacoes(array $filters = [], int $limit = 100): array {
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicSolicitacoes')) {
+		if ($this->table('LicSolicitacoes') === null) {
 			return [];
 		}
-		$q = $loc->get('LicSolicitacoes')->find()
+		$q = $this->table('LicSolicitacoes')->find()
 			->contain(['Clientes'])
 			->where(['LicSolicitacoes.idempresa' => $this->idempresa])
 			->order(['LicSolicitacoes.created' => 'DESC'])
@@ -1044,8 +1053,7 @@ class LicPrototypeDataService {
 	 * @return array<string,mixed>|null
 	 */
 	public function getSolicitacao(int $id): ?array {
-		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicSolicitacoes') || $id <= 0) {
+		if ($id <= 0 || $this->table('LicSolicitacoes') === null) {
 			return null;
 		}
 		$where = ['LicSolicitacoes.id' => $id, 'LicSolicitacoes.idempresa' => $this->idempresa];
@@ -1053,7 +1061,7 @@ class LicPrototypeDataService {
 			$where['LicSolicitacoes.idcliente'] = $this->idclienteScope;
 		}
 		try {
-			$row = $loc->get('LicSolicitacoes')->find()
+			$row = $this->table('LicSolicitacoes')->find()
 				->contain(['Clientes'])
 				->where($where)
 				->first();
@@ -1085,7 +1093,7 @@ class LicPrototypeDataService {
 	 */
 	public function createSolicitacao(array $data): array {
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicSolicitacoes')) {
+		if ($this->table('LicSolicitacoes') === null) {
 			return ['ok' => false, 'errors' => ['_base' => __('Tabelas indisponíveis.')]];
 		}
 		$idcliente = (int)($data['idcliente'] ?? 0);
@@ -1104,7 +1112,7 @@ class LicPrototypeDataService {
 			'assentos' => max(1, (int)($data['assentos'] ?? 1)),
 			'observacao' => trim((string)($data['observacao'] ?? '')),
 		];
-		$tbl = $loc->get('LicSolicitacoes');
+		$tbl = $this->table('LicSolicitacoes');
 		$entity = $tbl->newEntity([
 			'idempresa' => $this->idempresa,
 			'idcliente' => $idcliente,
@@ -1126,8 +1134,7 @@ class LicPrototypeDataService {
 	 * @return array{ok:bool,errors?:array}
 	 */
 	public function updateSolicitacaoStatus(int $id, string $status, int $userId = 0): array {
-		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicSolicitacoes') || $id <= 0) {
+		if ($id <= 0 || $this->table('LicSolicitacoes') === null) {
 			return ['ok' => false, 'errors' => ['_base' => __('Indisponível.')]];
 		}
 		$allowed = ['aberta', 'em_analise', 'aprovada', 'recusada', 'cancelada'];
@@ -1135,7 +1142,7 @@ class LicPrototypeDataService {
 		if (!in_array($status, $allowed, true)) {
 			return ['ok' => false, 'errors' => ['status' => __('Status inválido.')]];
 		}
-		$tbl = $loc->get('LicSolicitacoes');
+		$tbl = $this->table('LicSolicitacoes');
 		$row = $tbl->find()->where(['id' => $id, 'idempresa' => $this->idempresa])->first();
 		if ($row === null) {
 			return ['ok' => false, 'errors' => ['_base' => __('Solicitação não encontrada.')]];
@@ -1172,12 +1179,12 @@ class LicPrototypeDataService {
 			return [];
 		}
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicAuditoriaEventos')) {
+		if ($this->table('LicAuditoriaEventos') === null) {
 			return [];
 		}
 		$out = [];
 		try {
-			foreach ($loc->get('LicAuditoriaEventos')->find()
+			foreach ($this->table('LicAuditoriaEventos')->find()
 				->where(['idempresa' => $this->idempresa])
 				->order(['created' => 'DESC'])
 				->limit($limit)
@@ -1212,11 +1219,11 @@ class LicPrototypeDataService {
 			'cofre_exige_aprovacao' => false,
 		];
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicModuloConfig')) {
+		if ($this->table('LicModuloConfig') === null) {
 			return $defaults;
 		}
 		try {
-			$row = $loc->get('LicModuloConfig')->find()
+			$row = $this->table('LicModuloConfig')->find()
 				->where(['idempresa' => $this->idempresa])
 				->first();
 		} catch (\Throwable $e) {
@@ -1239,10 +1246,10 @@ class LicPrototypeDataService {
 	 */
 	public function saveModuloConfig(array $data, int $userId = 0): array {
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicModuloConfig')) {
+		if ($this->table('LicModuloConfig') === null) {
 			return ['ok' => false, 'errors' => ['_base' => __('Execute a migration lic_modulo_config.')]];
 		}
-		$tbl = $loc->get('LicModuloConfig');
+		$tbl = $this->table('LicModuloConfig');
 		$payload = [
 			'idempresa' => $this->idempresa,
 			'alerta_vencimento_dias' => max(1, min(365, (int)($data['alerta_vencimento_dias'] ?? 30))),
@@ -1383,12 +1390,12 @@ class LicPrototypeDataService {
 			return [];
 		}
 		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicAuditoriaEventos')) {
+		if ($this->table('LicAuditoriaEventos') === null) {
 			return [];
 		}
 		$out = [];
 		try {
-			foreach ($loc->get('LicAuditoriaEventos')->find()
+			foreach ($this->table('LicAuditoriaEventos')->find()
 				->where([
 					'idempresa' => $this->idempresa,
 					'entidade' => 'lic_licencas',
@@ -1487,7 +1494,7 @@ class LicPrototypeDataService {
 		$loc = TableRegistry::getTableLocator();
 		$clientes = [];
 		try {
-			foreach ($loc->get('Clientes')->find()
+			foreach ($this->table('Clientes')->find()
 				->where(['Clientes.idempresa' => $this->idempresa, 'Clientes.inativo' => 0])
 				->order(['Clientes.nome' => 'ASC'])
 				->limit($limit)
@@ -1529,9 +1536,9 @@ class LicPrototypeDataService {
 			} catch (\Throwable $e) {
 			}
 		}
-		if ($loc->exists('LicDispositivos')) {
+		if ($this->table('LicDispositivos') !== null) {
 			try {
-				foreach ($loc->get('LicDispositivos')->find()
+				foreach ($this->table('LicDispositivos')->find()
 					->select(['idcliente'])
 					->where(['idempresa' => $this->idempresa, 'idcliente IN' => $ids])
 					->all() as $d) {
@@ -1571,7 +1578,7 @@ class LicPrototypeDataService {
 		}
 		$loc = TableRegistry::getTableLocator();
 		try {
-			$c = $loc->get('Clientes')->find()
+			$c = $this->table('Clientes')->find()
 				->where(['Clientes.id' => $idcliente, 'Clientes.idempresa' => $this->idempresa])
 				->first();
 		} catch (\Throwable $e) {
@@ -1614,7 +1621,7 @@ class LicPrototypeDataService {
 		$pjTipo = defined('C_ClientesTipoJuridica') ? (int)C_ClientesTipoJuridica : 2;
 		$fornecedores = [];
 		try {
-			foreach ($loc->get('Clientes')->find()
+			foreach ($this->table('Clientes')->find()
 				->where(['Clientes.idempresa' => $this->idempresa, 'Clientes.tipo' => $pjTipo, 'Clientes.inativo' => 0])
 				->order(['Clientes.razaosocial' => 'ASC'])
 				->limit($limit)
@@ -1630,9 +1637,9 @@ class LicPrototypeDataService {
 		$ids = array_keys($fornecedores);
 		$prodCounts = [];
 		$licCounts = [];
-		if ($loc->exists('LicCatalogoProdutos')) {
+		if ($this->table('LicCatalogoProdutos') !== null) {
 			try {
-				foreach ($loc->get('LicCatalogoProdutos')->find()
+				foreach ($this->table('LicCatalogoProdutos')->find()
 					->select(['id', 'idfornecedor_cliente'])
 					->where(['idempresa' => $this->idempresa, 'idfornecedor_cliente IN' => $ids])
 					->all() as $prod) {
@@ -1643,7 +1650,7 @@ class LicPrototypeDataService {
 			}
 		}
 		$lic = $this->licTable();
-		if ($lic !== null && $loc->exists('LicCatalogoProdutos')) {
+		if ($lic !== null && $this->table('LicCatalogoProdutos') !== null) {
 			try {
 				foreach ($lic->find()
 					->select(['LicLicencas.id', 'LicCatalogoProdutos.idfornecedor_cliente'])
@@ -1689,9 +1696,9 @@ class LicPrototypeDataService {
 			if ((int)$row['id'] === $idfornecedor) {
 				$loc = TableRegistry::getTableLocator();
 				$produtos = [];
-				if ($loc->exists('LicCatalogoProdutos')) {
+				if ($this->table('LicCatalogoProdutos') !== null) {
 					try {
-						foreach ($loc->get('LicCatalogoProdutos')->find()
+						foreach ($this->table('LicCatalogoProdutos')->find()
 							->where([
 								'idempresa' => $this->idempresa,
 								'idfornecedor_cliente' => $idfornecedor,
@@ -1724,11 +1731,7 @@ class LicPrototypeDataService {
 		if (!$this->tablesAvailable()) {
 			return null;
 		}
-		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicLicencas')) {
-			return null;
-		}
 
-		return $loc->get('LicLicencas');
+		return $this->table('LicLicencas');
 	}
 }

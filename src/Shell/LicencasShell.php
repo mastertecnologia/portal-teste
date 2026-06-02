@@ -5,7 +5,9 @@ namespace App\Shell;
 
 use App\Service\Lic\LicPrototypeDataService;
 use Cake\Console\Shell;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
 
 /**
  * Diagnóstico e seed de homologação do módulo Licenciamento (lic_*).
@@ -22,6 +24,12 @@ class LicencasShell extends Shell {
 	public function getOptionParser() {
 		$parser = parent::getOptionParser();
 		$parser->setDescription('Licenciamento: estatísticas e seed de homologação (ORM).');
+		$parser->addSubcommand('stats', [
+			'help' => 'Contagens lic_* e KPIs por empresa.',
+		]);
+		$parser->addSubcommand('seed_demo', [
+			'help' => 'Seed de homologação (categoria, produtos, licenças, cofre, solicitação).',
+		]);
 		$parser->addOption('idempresa', [
 			'default' => '',
 			'help' => 'Filtrar por idempresa (obrigatório em seed_demo).',
@@ -40,10 +48,30 @@ class LicencasShell extends Shell {
 		return $parser;
 	}
 
+
+	public function hasMethod($name) {
+		if (parent::hasMethod($name)) {
+			return true;
+		}
+		$snake = Inflector::underscore($name);
+		if ($snake !== $name && parent::hasMethod($snake)) {
+			return true;
+		}
+
+		return false;
+	}
+
 	public function main() {
 		$this->out('Subcomandos:');
 		$this->out('  stats [--idempresa=N]');
 		$this->out('  seed_demo --idempresa=N [--dry-run] [--force]');
+	}
+
+	/**
+	 * Cake pode invocar seedDemo (camelCase) em vez de seed_demo.
+	 */
+	public function seedDemo() {
+		return $this->seed_demo();
 	}
 
 	public function stats() {
@@ -59,13 +87,13 @@ class LicencasShell extends Shell {
 			'LicAuditoriaEventos',
 			'LicModuloConfig',
 		];
-		$loc = TableRegistry::getTableLocator();
 		foreach ($aliases as $alias) {
-			if (!$loc->exists($alias)) {
-				$this->err("Tabela {$alias} indisponível.");
+			$tbl = $this->loadTable($alias);
+			if ($tbl === null) {
+				$this->err("{$alias}: indisponível (autoload ou migration).");
+
 				continue;
 			}
-			$tbl = $loc->get($alias);
 			$q = $tbl->find();
 			if ($idempresa > 0 && $tbl->hasField('idempresa')) {
 				$q->where([$alias . '.idempresa' => $idempresa]);
@@ -74,6 +102,11 @@ class LicencasShell extends Shell {
 		}
 		if ($idempresa > 0) {
 			$svc = new LicPrototypeDataService($idempresa);
+			if (!$svc->tablesAvailable()) {
+				$this->err('Schema lic_* não encontrado na BD.');
+
+				return;
+			}
 			$kpi = $svc->dashboardKpis();
 			$this->out('');
 			$this->out('KPIs (LicPrototypeDataService):');
@@ -89,24 +122,24 @@ class LicencasShell extends Shell {
 		$force = !empty($this->params['force']);
 		$svc = new LicPrototypeDataService($idempresa);
 		if (!$svc->tablesAvailable()) {
-			$this->err('Tabelas lic_* indisponíveis. Execute bin/cake migrations migrate.');
+			$this->err('Tabelas lic_* indisponíveis na BD. Execute bin/cake migrations migrate.');
 
 			return;
 		}
-		$loc = TableRegistry::getTableLocator();
-		if (!$loc->exists('LicLicencas') || !$loc->exists('Clientes')) {
-			$this->err('Models LicLicencas/Clientes indisponíveis.');
+		$licTbl = $this->loadTable('LicLicencas');
+		$cliTbl = $this->loadTable('Clientes');
+		if ($licTbl === null || $cliTbl === null) {
+			$this->err('Models LicLicencas/Clientes não carregaram. Execute: composer dump-autoload -o');
 
 			return;
 		}
-		$licTbl = $loc->get('LicLicencas');
 		$existing = $licTbl->find()->where(['idempresa' => $idempresa])->count();
 		if ($existing > 0 && !$force) {
 			$this->err("Empresa #{$idempresa} já tem {$existing} licença(s). Use --force para acrescentar demo.");
 
 			return;
 		}
-		$clientes = $loc->get('Clientes')->find()
+		$clientes = $cliTbl->find()
 			->where(['Clientes.idempresa' => $idempresa, 'Clientes.inativo' => 0])
 			->order(['Clientes.id' => 'ASC'])
 			->limit(2)
@@ -220,7 +253,18 @@ class LicencasShell extends Shell {
 			'notificar_email' => '',
 			'cofre_exige_aprovacao' => false,
 		], 0);
-		$this->success('Seed demo concluído.');
+		$this->out('<success>Seed demo concluído.</success>');
+	}
+
+	/**
+	 * @return Table|null
+	 */
+	protected function loadTable(string $alias): ?Table {
+		try {
+			return TableRegistry::getTableLocator()->get($alias);
+		} catch (\Throwable $e) {
+			return null;
+		}
 	}
 
 	protected function parseIdempresa(bool $required): int {
@@ -231,5 +275,14 @@ class LicencasShell extends Shell {
 		$id = (int)$raw;
 
 		return $id > 0 ? $id : 0;
+	}
+
+	public function __call($name, $args) {
+		$snake = Inflector::underscore($name);
+		if ($snake !== $name && method_exists($this, $snake)) {
+			return $this->{$snake}(...$args);
+		}
+
+		return parent::__call($name, $args);
 	}
 }
