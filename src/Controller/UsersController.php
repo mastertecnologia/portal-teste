@@ -1429,6 +1429,20 @@ class UsersController extends AppController {
 		if ($password === null || $password === '') {
 			$password = $body['password'] ?? ($body['Users']['password'] ?? null);
 		}
+		// Fallback: em alguns ambientes getData() vem vazio com application/x-www-form-urlencoded.
+		if (($password === null || $password === '') && $req->is('post')) {
+			$raw = (string)$req->input();
+			if ($raw !== '') {
+				$parsedRaw = [];
+				parse_str($raw, $parsedRaw);
+				if ($username === null || $username === '') {
+					$username = $parsedRaw['username'] ?? ($parsedRaw['Users']['username'] ?? null);
+				}
+				if ($password === null || $password === '') {
+					$password = $parsedRaw['password'] ?? ($parsedRaw['Users']['password'] ?? null);
+				}
+			}
+		}
 
 		// Não aplicar trim na senha (espaços/$ no fim podem ser válidos; trim quebrava em alguns POSTs).
 		$passwordOut = null;
@@ -1775,17 +1789,31 @@ class UsersController extends AppController {
 					$pwdMeta = '';
 					if ($pwd !== null && $pwd !== '') {
 						$pwdMeta = sprintf(
-							' has_dollar=%d ord_first=%d ord_last=%d',
+							' has_dollar=%d ord_first=%d ord_last=%d pwd_fp=%s',
 							strpos($pwd, '$') !== false ? 1 : 0,
 							ord($pwd[0]),
-							ord($pwd[strlen($pwd) - 1])
+							ord($pwd[strlen($pwd) - 1]),
+							substr(hash('sha256', $pwd), 0, 12)
 						);
 					}
+					$candidateIds = [];
+					foreach ($this->_findActiveUsersForLogin($creds['username']) as $cand) {
+						$candidateIds[] = (string)$cand->get('id');
+					}
+					$postKeys = '';
+					$parsedBody = $this->request->getParsedBody();
+					if (is_array($parsedBody)) {
+						$postKeys = implode(',', array_keys($parsedBody));
+					}
+					$dbName = (string)($this->Users->getConnection()->config()['database'] ?? '');
 					Log::warning(sprintf(
-						'acessoEmpresa: credenciais rejeitadas login=%s password_len=%d reason=%s%s',
+						'acessoEmpresa: credenciais rejeitadas login=%s password_len=%d reason=%s candidate_ids=%s db=%s post_keys=%s%s',
 						$creds['username'],
 						$pwd !== null ? strlen($pwd) : 0,
 						$reason,
+						$candidateIds === [] ? '-' : implode(',', $candidateIds),
+						$dbName !== '' ? $dbName : '-',
+						$postKeys !== '' ? $postKeys : '-',
 						$pwdMeta
 					));
 					$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
