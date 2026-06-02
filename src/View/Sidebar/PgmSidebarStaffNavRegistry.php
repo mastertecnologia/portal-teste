@@ -512,7 +512,11 @@ final class PgmSidebarStaffNavRegistry
     {
         $adminFlag = $admin ? 1 : 0;
         $gate = static function (string $key) use ($adminFlag, $userId): bool {
-            return ErpPrototypeAccess::sidebarKeyVisible($adminFlag, 0, $userId, $key);
+            try {
+                return ErpPrototypeAccess::sidebarKeyVisible($adminFlag, 0, $userId, $key);
+            } catch (\Throwable $e) {
+                return false;
+            }
         };
 
         $items = [];

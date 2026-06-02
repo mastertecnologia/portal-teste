@@ -26,6 +26,7 @@ use Cake\Controller\Controller;
 use Cake\Core\Configure;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
+use Cake\Log\Log;
 
 class AppController extends Controller
 {
@@ -253,42 +254,84 @@ class AppController extends Controller
             $this->set("pgmAdvancedModuleStylesheet", true);
         }
 
-        if (
-            (bool) Configure::read("PgmSidebar.react_enabled")
-            && $this->components()->has("Auth")
-            && $this->Auth->user("id")
-        ) {
-            $role = (int) $this->Auth->user("role");
-            if ($role === 0) {
-                $ctx = PgmSidebarStaffContext::computeFromArray(
-                    $this->viewVars,
-                    $this->request,
-                );
-                $props = PgmSidebarStaffPayloadBuilder::build(
-                    $ctx,
-                    $this->viewVars,
-                    $this->request,
-                );
-                $api = PgmPortalSidebarNotifUrls::build(
-                    $this->request,
-                    $this->response,
-                    isset($ctx["sg"]) && is_array($ctx["sg"]) ? $ctx["sg"] : [],
-                    0,
-                );
-                if ($api !== null) {
-                    $props["notificationBellApi"] = $api;
-                }
-                $this->set("pgmSidebarReactProps", $props);
-            } else {
-                $this->set(
-                    "pgmSidebarReactProps",
-                    PgmSidebarClientPayloadBuilder::build(
+        if ($this->shouldBuildPgmSidebarReactProps()) {
+            try {
+                $role = (int) $this->Auth->user("role");
+                if ($role === 0) {
+                    $ctx = PgmSidebarStaffContext::computeFromArray(
                         $this->viewVars,
                         $this->request,
-                    ),
-                );
+                    );
+                    $props = PgmSidebarStaffPayloadBuilder::build(
+                        $ctx,
+                        $this->viewVars,
+                        $this->request,
+                    );
+                    $api = PgmPortalSidebarNotifUrls::build(
+                        $this->request,
+                        $this->response,
+                        isset($ctx["sg"]) && is_array($ctx["sg"]) ? $ctx["sg"] : [],
+                        0,
+                    );
+                    if ($api !== null) {
+                        $props["notificationBellApi"] = $api;
+                    }
+                    $this->set("pgmSidebarReactProps", $props);
+                } else {
+                    $this->set(
+                        "pgmSidebarReactProps",
+                        PgmSidebarClientPayloadBuilder::build(
+                            $this->viewVars,
+                            $this->request,
+                        ),
+                    );
+                }
+            } catch (\Throwable $e) {
+                Log::warning(sprintf(
+                    'pgmSidebarReactProps build failed (%s/%s): %s',
+                    (string) $this->request->getParam('controller'),
+                    (string) $this->request->getParam('action'),
+                    $e->getMessage()
+                ));
             }
         }
+    }
+
+    /**
+     * Sidebar React só em telas autenticadas com layout app — nunca em login (evita 500 no POST acessoEmpresa).
+     */
+    protected function shouldBuildPgmSidebarReactProps(): bool
+    {
+        if (!(bool) Configure::read('PgmSidebar.react_enabled')) {
+            return false;
+        }
+        if (!$this->components()->has('Auth') || !$this->Auth->user('id')) {
+            return false;
+        }
+        $layout = (string) $this->viewBuilder()->getLayout();
+        if ($layout === 'login') {
+            return false;
+        }
+        $controller = (string) $this->request->getParam('controller');
+        $action = (string) $this->request->getParam('action');
+        if ($controller === 'Users' && in_array($action, [
+            'login',
+            'acessoEmpresa',
+            'loginempresa',
+            'logout',
+            'cadastrocliente',
+            'resetPassword',
+            'resetPasswordNew',
+            'verificacpf',
+            'verificacodigo',
+            'verificaloginduasetapas',
+            'loginduasetapas',
+            'privacyPolicy',
+        ], true)) {
+            return false;
+        }
+
+        return true;
     }
 
     public function afterFilter(Event $event)
