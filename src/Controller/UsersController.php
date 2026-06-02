@@ -1409,17 +1409,36 @@ class UsersController extends AppController {
 	 */
 	protected function _extractLoginCredentials(): array {
 		$req = $this->request;
+		$body = $req->getParsedBody();
+		if (!is_array($body)) {
+			$body = [];
+		}
+
 		$username = $req->getData('username');
 		if ($username === null || $username === '') {
 			$username = $req->getData('Users.username');
 		}
+		if ($username === null || $username === '') {
+			$username = $body['username'] ?? ($body['Users']['username'] ?? null);
+		}
+
 		$password = $req->getData('password');
-		if ($password === null) {
+		if ($password === null || $password === '') {
 			$password = $req->getData('Users.password');
 		}
+		if ($password === null || $password === '') {
+			$password = $body['password'] ?? ($body['Users']['password'] ?? null);
+		}
+
+		// Não aplicar trim na senha (espaços/$ no fim podem ser válidos; trim quebrava em alguns POSTs).
+		$passwordOut = null;
+		if ($password !== null && $password !== '') {
+			$passwordOut = (string)$password;
+		}
+
 		return [
-			'username' => trim((string)$username),
-			'password' => $password !== null ? trim((string)$password) : null,
+			'username' => strtolower(trim((string)$username)),
+			'password' => $passwordOut,
 		];
 	}
 
@@ -1733,7 +1752,11 @@ class UsersController extends AppController {
 				}
 
 				if (empty($user)) {
-					Log::warning('acessoEmpresa: credenciais rejeitadas para login=' . $creds['username']);
+					Log::warning(sprintf(
+						'acessoEmpresa: credenciais rejeitadas login=%s password_len=%d',
+						$creds['username'],
+						$creds['password'] !== null ? strlen($creds['password']) : 0
+					));
 					$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
 				}
 				$r = $this->_redirectServicedeskLoginIfEmbedded();

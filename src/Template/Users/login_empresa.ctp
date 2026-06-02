@@ -97,8 +97,8 @@ $this->end();
 					</div>
 				</div>
 
-				<!-- Botão entrar -->
-				<button type="button" class="lm-btn-submit login-btn btn-login login">Entrar no Sistema</button>
+				<!-- Botão entrar (submit nativo — garante envio de username+password no POST) -->
+				<button type="submit" class="lm-btn-submit login-btn login">Entrar no Sistema</button>
 
 				<!-- Links auxiliares -->
 				<div class="lm-links">
@@ -271,9 +271,26 @@ $('#btn-toggle-pwd').on('click', function(){
 
 window.duasEtapas = true;
 window.modalAberto = false;
+window.pgmLoginSkip2faCheck = false;
 
 $('#username').on('change', function(){ $(this).val($(this).val().toLowerCase()); });
-$('#username, #password').on('keyup', function(e){ if (e.keyCode == 13) verificaduasetapas('login'); });
+
+$('#login.signin-form').on('submit', function(e) {
+	if (window.pgmLoginSkip2faCheck) {
+		window.pgmLoginSkip2faCheck = false;
+		return true;
+	}
+	e.preventDefault();
+	verificaduasetapas('login');
+	return false;
+});
+
+$('#username, #password').on('keydown', function(e) {
+	if (e.key === 'Enter' || e.keyCode === 13) {
+		e.preventDefault();
+		verificaduasetapas('login');
+	}
+});
 
 $('#codigo').on('keyup', function() {
 	if ($(this).val().length == 6) {
@@ -281,7 +298,7 @@ $('#codigo').on('keyup', function() {
 			url: "<?= Router::url(['controller'=>'Users','action'=>'verificacodigo']); ?>/"+encodeURIComponent($('#username').val())+'/'+encodeURIComponent($('#codigo').val()),
 			async: false,
 			success: function(data) {
-				if (data == 'sucesso') $('.signin-form').submit();
+				if (data == 'sucesso') pgmLoginSubmitForm();
 				else { $('#codigo').val(''); $('.codigoInvalido').show(); }
 			},
 			error: function() { $('#codigo').val(''); $('.codigoInvalido').show(); }
@@ -289,13 +306,22 @@ $('#codigo').on('keyup', function() {
 	}
 });
 
-$('.btn-login').on('click', function(e){ e.preventDefault(); verificaduasetapas('login'); });
 $(".btn-fecha-modal, #modal-duasetapas .btn-close-login-erp").on('click', function(e){
 	e.preventDefault();
 	$("#modal-duasetapas").modal('hide');
 	window.modalAberto = false;
 });
 $('#modal-duasetapas').on('shown.bs.modal', function(){ $('#codigo').focus(); });
+
+function pgmLoginSubmitForm() {
+	window.pgmLoginSkip2faCheck = true;
+	var form = document.getElementById('login');
+	if (form && typeof form.requestSubmit === 'function') {
+		form.requestSubmit();
+	} else if (form) {
+		form.submit();
+	}
+}
 
 function verificaduasetapas(acao) {
 	if (acao === 'login') {
@@ -312,10 +338,10 @@ function verificaduasetapas(acao) {
 		success: function(data) {
 			var d = (data == null ? '' : String(data)).replace(/^\s+|\s+$/g, '');
 			if (d === 'temcodigo') $('#modal-duasetapas').modal('toggle');
-			else if (acao === 'login') $('.signin-form').submit();
+			else if (acao === 'login') pgmLoginSubmitForm();
 		},
 		error: function() {
-			if (acao === 'login') $('.signin-form').submit();
+			if (acao === 'login') pgmLoginSubmitForm();
 		},
 	});
 }
