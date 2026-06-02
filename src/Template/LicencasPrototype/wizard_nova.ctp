@@ -49,27 +49,35 @@ foreach ($categorias as $c) {
 		<div class="card" style="margin-bottom:14px;">
 			<div class="sec-title">📚 <?= h(__('Categoria & Produto')) ?> *</div>
 			<div class="field" style="margin-bottom:12px;">
-				<label>1. <?= h(__('Escolha a categoria')) ?> · <?= $this->Html->link(__('gerenciar categorias →'), ['action' => 'view', 'categorias'], ['style' => 'color:var(--teal);font-size:11px;']) ?></label>
-				<div id="lic-cat-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;">
+				<label>1. <?= h(__('ESCOLHA A CATEGORIA')) ?> · <?= $this->Html->link(__('GERENCIAR CATEGORIAS →'), ['action' => 'view', 'categorias', '?' => ['return' => 'nova']], ['style' => 'color:var(--teal);font-size:11px;']) ?></label>
+				<?php if ($categorias === []) : ?>
+				<p style="font-size:12px;color:var(--text-muted);"><?= h(__('Nenhuma categoria cadastrada.')) ?> <?= $this->Html->link(__('Criar categorias padrão'), ['action' => 'view', 'categorias', '?' => ['return' => 'nova']], ['style' => 'color:var(--teal);']) ?></p>
+				<?php else : ?>
+				<div id="lic-cat-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;">
 					<?php foreach ($categorias as $c) :
 						$cid = (int)$c['id'];
 						$sel = $cid === (int)$catDefault;
+						$codLabel = mb_strtoupper((string)($c['codigo'] ?? ''));
+						if ($codLabel === 'SEGURANCA') {
+							$codLabel = 'SEGURANÇA';
+						}
 						?>
-					<label class="lic-cat-pick" data-id="<?= $cid ?>" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px;background:<?= $sel ? 'var(--teal-light)' : '#fff' ?>;border:1px solid <?= $sel ? 'var(--teal-mid)' : 'var(--border)' ?>;border-radius:6px;cursor:pointer;">
+					<label class="lic-cat-pick" data-id="<?= $cid ?>" data-codigo="<?= h($codLabel) ?>" data-nome="<?= h($c['nome'] ?? '') ?>" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px;background:<?= $sel ? 'var(--teal-light)' : '#fff' ?>;border:1px solid <?= $sel ? 'var(--teal-mid)' : 'var(--border)' ?>;border-radius:6px;cursor:pointer;">
 						<input type="radio" name="idcategoria_ui" value="<?= $cid ?>"<?= $sel ? ' checked' : '' ?> style="display:none;">
 						<span style="font-size:20px;"><?= h($c['icon'] ?? '📦') ?></span>
-						<span style="font-size:11px;<?= $sel ? 'font-weight:600;color:var(--teal-dark);' : '' ?>"><?= h($c['codigo'] ?: $c['nome']) ?></span>
-						<span style="font-size:9px;color:var(--text-muted);"><?= h(__('{0} produtos', (int)($c['produtos'] ?? 0))) ?></span>
+						<span style="font-size:11px;<?= $sel ? 'font-weight:600;color:var(--teal-dark);' : '' ?>"><?= h($codLabel) ?></span>
+						<span style="font-size:9px;color:var(--text-muted);"><?= (int)($c['produtos'] ?? 0) ?> <?= h(__('produtos')) ?></span>
 					</label>
 					<?php endforeach; ?>
 				</div>
+				<?php endif; ?>
 			</div>
 			<div class="field">
 				<label>2. <?= h(__('Escolha o produto')) ?> <span id="lic-prod-count" style="font-size:11px;color:var(--text-muted);"></span></label>
 				<select id="lic-produto-select" name="idcatalogo_ui" style="font-size:13px;" required disabled>
 					<option value=""><?= h(__('Selecione um cliente e uma categoria…')) ?></option>
 				</select>
-				<div style="font-size:10px;color:var(--text-muted);margin-top:4px;"><?= h(__('A lista muda automaticamente ao trocar de categoria')) ?> · <?= $this->Html->link('+ ' . __('Novo produto nesta categoria'), ['action' => 'view', 'produto-novo'], ['style' => 'color:var(--teal);']) ?></div>
+				<div style="font-size:10px;color:var(--text-muted);margin-top:4px;"><?= h(__('A lista muda automaticamente ao trocar de categoria')) ?> · <a id="lic-link-novo-produto" href="<?= h($this->Url->build(['action' => 'view', 'produto-novo', '?' => ['idcategoria' => (int)$catDefault, 'return' => 'nova']])) ?>" style="color:var(--teal);">+ <?= h(__('Novo produto nesta categoria')) ?></a></div>
 			</div>
 		</div>
 
@@ -136,6 +144,7 @@ foreach ($categorias as $c) {
 	var clientes = <?= json_encode($clientes, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 	var produtos = <?= json_encode($produtos, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 	var catDefault = <?= (int)$catDefault ?>;
+	var baseProdutoUrl = <?= json_encode($this->Url->build(['action' => 'view', 'produto-novo'])) ?>;
 	var selCliente = null;
 	var selCat = catDefault;
 
@@ -153,6 +162,13 @@ foreach ($categorias as $c) {
 	var $prevForn = document.getElementById('lic-prev-fornecedor');
 	var $prodCount = document.getElementById('lic-prod-count');
 	var $fornHint = document.getElementById('lic-forn-hint');
+	var $linkNovoProd = document.getElementById('lic-link-novo-produto');
+	var allFornOpts = [];
+	if ($fornSelect) {
+		Array.prototype.forEach.call($fornSelect.options, function (o) {
+			if (o.value) allFornOpts.push({ value: o.value, text: o.textContent });
+		});
+	}
 
 	function renderClientes(q) {
 		q = (q || '').toLowerCase();
@@ -215,12 +231,34 @@ foreach ($categorias as $c) {
 		var catName = '';
 		document.querySelectorAll('.lic-cat-pick').forEach(function (el) {
 			if (parseInt(el.dataset.id, 10) === selCat) {
-				catName = el.querySelector('span:nth-child(3)') ? el.querySelectorAll('span')[1].textContent : '';
+				catName = el.dataset.nome || el.dataset.codigo || '';
 			}
 		});
-		$prodCount.textContent = '· <?= h(__('mostrando')) ?> ' + list.length + ' <?= h(__('produtos da categoria')) ?> ' + catName;
-		$fornHint.textContent = catName ? '· <?= h(__('filtrando fornecedores da categoria')) ?> ' + catName : '';
+		$prodCount.textContent = '· <?= h(__('MOSTRANDO')) ?> ' + list.length + ' <?= h(__('PRODUTOS DA CATEGORIA')) ?> ' + (catName || '').toUpperCase();
+		$fornHint.textContent = catName ? '· <?= h(__('FILTRANDO FORNECEDORES DA CATEGORIA')) ?> ' + catName.toUpperCase() : '';
+		if ($linkNovoProd) {
+			$linkNovoProd.href = baseProdutoUrl + '?idcategoria=' + selCat + '&return=nova';
+		}
+		filterFornecedores(list);
 		onProdutoChange();
+	}
+
+	function filterFornecedores(prodList) {
+		if (!$fornSelect || !allFornOpts.length) return;
+		var allowed = {};
+		prodList.forEach(function (p) {
+			if (p.idfornecedor_cliente) allowed[String(p.idfornecedor_cliente)] = true;
+		});
+		var hasFilter = Object.keys(allowed).length > 0;
+		$fornSelect.innerHTML = '<option value=""><?= h(__('Selecione…')) ?></option>';
+		allFornOpts.forEach(function (o) {
+			if (!hasFilter || allowed[o.value]) {
+				var opt = document.createElement('option');
+				opt.value = o.value;
+				opt.textContent = o.text;
+				$fornSelect.appendChild(opt);
+			}
+		});
 	}
 
 	function onProdutoChange() {
@@ -254,9 +292,13 @@ foreach ($categorias as $c) {
 			document.querySelectorAll('.lic-cat-pick').forEach(function (x) {
 				x.style.background = '#fff';
 				x.style.borderColor = 'var(--border)';
+				var sp = x.querySelectorAll('span')[1];
+				if (sp) { sp.style.fontWeight = ''; sp.style.color = ''; }
 			});
 			el.style.background = 'var(--teal-light)';
 			el.style.borderColor = 'var(--teal-mid)';
+			var spActive = el.querySelectorAll('span')[1];
+			if (spActive) { spActive.style.fontWeight = '600'; spActive.style.color = 'var(--teal-dark)'; }
 			fillProdutos();
 		});
 	});

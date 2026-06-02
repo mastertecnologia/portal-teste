@@ -21,9 +21,7 @@ $cancelUrl = ['action' => 'licencas'];
 	</div>
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
 		<?= $this->Html->link('← ' . __('Cancelar'), $cancelUrl, ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?php if ($stepNum === 1) : ?>
-		<button type="submit" form="lic-wizard-form" class="btn btn-ghost btn-sm" name="salvar_rascunho" value="1">💾 <?= h(__('Salvar rascunho')) ?></button>
-		<?php endif; ?>
+		<button type="submit" form="lic-wizard-form" class="btn btn-ghost btn-sm">💾 <?= h(__('Salvar rascunho')) ?></button>
 	</div>
 </div>
 
@@ -42,12 +40,14 @@ $cancelUrl = ['action' => 'licencas'];
 			$done = $n < $stepNum;
 			$circleBg = $active || $done ? 'var(--teal)' : '#CBD5E1';
 			?>
-		<?php if ($i > 0) : ?><div style="flex:1;min-width:12px;height:2px;background:var(--border);"></div><?php endif; ?>
+		<?php if ($i > 0) :
+			$lineBg = $n <= $stepNum ? 'var(--teal)' : 'var(--border)';
+			?><div style="flex:1;min-width:12px;height:2px;background:<?= h($lineBg) ?>;"></div><?php endif; ?>
 		<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:100px;">
 			<div style="width:32px;height:32px;border-radius:50%;background:<?= h($circleBg) ?>;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;"><?= $done ? '✓' : (string)$n ?></div>
 			<div>
 				<strong style="font-size:12px;<?= !$active && !$done ? 'color:var(--text-muted);' : '' ?>"><?= h($label) ?></strong>
-				<?php if ($active) : ?><div style="font-size:10px;color:var(--text-muted);"><?= h(__('passo atual')) ?></div><?php endif; ?>
+				<?php if ($active) : ?><div style="font-size:10px;color:var(--text-muted);"><?= h(__('passo atual')) ?></div><?php elseif ($done) : ?><div style="font-size:10px;color:var(--teal-dark);"><?= h(__('concluído')) ?></div><?php endif; ?>
 			</div>
 		</div>
 		<?php endforeach; ?>
