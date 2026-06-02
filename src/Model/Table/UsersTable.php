@@ -38,20 +38,50 @@ class UsersTable extends Table {
 	}
 
 	/**
-	 * Em PostgreSQL, users.inativo/bloqueado costumam ser boolean; o schema refletido como integer
-	 * quebra a hidratação (IntegerType: Cannot convert boolean to integer) e o login falha em silêncio.
+	 * Só colunas realmente boolean no PG (information_schema) — evita forçar boolean em smallint
+	 * (quebra WHERE com 't') e corrige hidratação quando o driver devolve bool com schema integer.
 	 */
 	protected function _initializeSchema(TableSchema $schema) {
-		$driver = $this->getConnection()->getDriver();
-		if ($driver instanceof Postgres) {
-			foreach (['inativo', 'bloqueado'] as $col) {
-				if ($schema->getColumn($col) !== null) {
-					$schema->setColumnType($col, 'boolean');
-				}
+		if (!$this->getConnection()->getDriver() instanceof Postgres) {
+			return $schema;
+		}
+		foreach (['inativo', 'bloqueado'] as $col) {
+			if ($schema->getColumn($col) !== null && $this->_postgresColumnDataType($col) === 'boolean') {
+				$schema->setColumnType($col, 'boolean');
 			}
 		}
 
 		return $schema;
+	}
+
+	/**
+	 * Condição de usuário ativo no login: NULL, 0 ou false (coluna boolean ou smallint/int no PostgreSQL).
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function loginActiveInativoCondition(): array {
+		return ['COALESCE(CAST(Users.inativo AS INTEGER), 0) =' => 0];
+	}
+
+	/**
+	 * @return string|null data_type em information_schema (ex.: boolean, smallint)
+	 */
+	protected function _postgresColumnDataType(string $column): ?string {
+		static $cache = [];
+		$table = $this->getTable();
+		$key = $table . '.' . $column;
+		if (array_key_exists($key, $cache)) {
+			return $cache[$key];
+		}
+		$row = $this->getConnection()->execute(
+			'SELECT data_type FROM information_schema.columns
+			 WHERE table_schema = current_schema() AND table_name = :table AND column_name = :col
+			 LIMIT 1',
+			['table' => $table, 'col' => $column]
+		)->fetch('assoc');
+		$cache[$key] = $row ? strtolower((string)$row['data_type']) : null;
+
+		return $cache[$key];
 	}
 
 	public function validationDefault(Validator $validator) {

@@ -33,12 +33,7 @@ $loginMatch = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $login);
 $Users = TableRegistry::getTableLocator()->get('Users');
 $conn = $Users->getConnection();
 $user = $Users->find()
-	->where([
-		'OR' => [
-			'Users.inativo IS' => null,
-			'Users.inativo IS NOT' => true,
-		],
-	])
+	->where($Users->loginActiveInativoCondition())
 	->where([
 		'OR' => array_merge(
 			FiscalSqlConditions::caseInsensitiveLike($conn, 'Users.email', $loginMatch),
