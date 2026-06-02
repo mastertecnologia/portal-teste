@@ -19,17 +19,29 @@ function cli_print_password_stdin_help(string $scriptName): void {
 }
 
 /**
+ * Senha via CLI_LOGIN_PASSWORD (wrapper .sh) ou stdin. Nunca logar o valor.
+ *
  * @return string
  */
 function cli_read_password_from_stdin(string $scriptName): string {
+	$fromEnv = getenv('CLI_LOGIN_PASSWORD');
+	if ($fromEnv !== false && $fromEnv !== '') {
+		putenv('CLI_LOGIN_PASSWORD');
+		fwrite(STDERR, "Senha recebida (CLI_LOGIN_PASSWORD).\n");
+
+		return $fromEnv;
+	}
+
 	if (cli_stdin_is_tty()) {
 		cli_print_password_stdin_help($scriptName);
+		fwrite(STDERR, "Recomendado: bash scripts/sh/debug_login_password_check.sh \"email@exemplo.com\"\n\n");
 		exit(2);
 	}
 	fwrite(STDERR, "Lendo senha do stdin...\n");
 	$plain = stream_get_contents(STDIN);
 	if ($plain === false || $plain === '') {
-		fwrite(STDERR, "Senha vazia ou stdin indisponível.\n");
+		fwrite(STDERR, "Senha vazia no pipe (Enter sem digitar no read -rs?).\n");
+		fwrite(STDERR, "Use: bash scripts/sh/debug_login_password_check.sh \"email@exemplo.com\"\n");
 		exit(2);
 	}
 
