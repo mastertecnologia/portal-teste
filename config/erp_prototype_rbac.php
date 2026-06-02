@@ -189,6 +189,8 @@ return [
 		'lic-catalogo' => ['licencas.view', 'licencas.manage'],
 		'lic-cofre' => ['licencas.cofre.view', 'licencas.manage'],
 		'lic-renovacoes' => ['licencas.view', 'licencas.manage'],
+		'lic-calendario' => ['licencas.view', 'licencas.manage'],
+		'lic-dispositivos' => ['licencas.view', 'licencas.manage'],
 		'lic-solicitacoes' => ['licencas.view', 'licencas.manage'],
 		'lic-auditoria' => ['licencas.manage'],
 		'lic-config' => ['licencas.manage'],

@@ -115,6 +115,7 @@ final class PgmSidebarStaffContext
             || (bool)$orcamentosActive;
         $pgmSbOpenSdModulos = $ctrl === 'ServicedeskPrototype';
         $pgmSbOpenPcp = $ctrl === 'PcpPrototype';
+        $pgmSbOpenLicenciamento = $ctrl === 'LicencasPrototype';
         $pgmSbOpenSistema = in_array($ctrl, ['SistemaPrototype', 'EmpresasPrototype', 'PrototypeHistory'], true);
         $pgmSbOpenComercial = (bool)$orcamentosActive || $orcamentosListNavActive;
         $pgmSbOpenFaturamento = (bool)$prefaturamentoActive || (bool)$faturamentoActive;
@@ -226,6 +227,7 @@ final class PgmSidebarStaffContext
             'pgmSbOpenOperacoes' => $pgmSbOpenOperacoes,
             'pgmSbOpenSdModulos' => $pgmSbOpenSdModulos,
             'pgmSbOpenPcp' => $pgmSbOpenPcp,
+            'pgmSbOpenLicenciamento' => $pgmSbOpenLicenciamento,
             'pgmSbOpenSistema' => $pgmSbOpenSistema,
             'pgmSbOpenIncidentes' => $pgmSbOpenIncidentes,
             'pgmSbOpenComercial' => $pgmSbOpenComercial,
