@@ -239,7 +239,7 @@ class PortalUi {
      */
     public static function isProdutosNavActive(string $controller, string $action): bool {
         if ($controller === 'ProdutosPrototype') {
-            return in_array($action, ['lista', 'estoque', 'view', 'exportcsv', 'precosave'], true);
+            return in_array($action, ['lista', 'estoque', 'view', 'exportcsv', 'precosave', 'reajustesave'], true);
         }
 
         return $controller === 'Produtos';

@@ -93,6 +93,7 @@ return [
 		'ProdutosPrototype' => [
 			'apiatualizarcampo' => 'write',
 			'precosave' => 'pricing',
+			'reajustesave' => 'pricing',
 		],
 		'OrcamentosPrototype' => [
 			'mudarstatus' => 'write',

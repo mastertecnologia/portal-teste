@@ -766,6 +766,10 @@ Router::scope("/", function ($routes) {
         "controller" => "ProdutosPrototype",
         "action" => "precoSave",
     ]);
+    $routes->connect("/produtos-prototype/reajuste-save", [
+        "controller" => "ProdutosPrototype",
+        "action" => "reajusteSave",
+    ]);
     $routes->connect("/produtos-prototype/api/atualizar-campo", [
         "controller" => "ProdutosPrototype",
         "action" => "apiAtualizarCampo",

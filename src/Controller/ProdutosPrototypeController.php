@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Controller\Traits\ErpPrototypeRbacTrait;
 use App\Controller\Traits\PrototypeApiSecurityTrait;
+use App\Utility\ProdutosPrecosPrototypeBuilder;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 
@@ -198,20 +199,22 @@ class ProdutosPrototypeController extends AppController {
 		if (in_array($page, ['estoque-log', 'inventario', 'inv-historico'], true)) {
 			return $this->redirect(['controller' => 'Produtos', 'action' => 'estoque']);
 		}
-		if ($page === 'historico-precos') {
-			return $this->redirect(['controller' => 'Produtos', 'action' => 'index']);
-		}
 		if (in_array($page, ['pc-lista', 'pc-novo'], true)) {
 			return $this->redirect(['controller' => 'Prefaturamento', 'action' => 'index']);
 		}
-		$allowed = ['novo', 'detalhe', 'precos', 'precificacao', 'estoque-log', 'historico-precos', 'import', 'pc-lista', 'pc-novo', 'inventario', 'inv-historico'];
+		$allowed = [
+			'novo', 'detalhe', 'precos', 'precificacao', 'estoque-log', 'historico-precos',
+			'preco-tabela-nova', 'preco-reajuste-massa', 'preco-ajuste', 'preco-tabela-detalhe',
+			'import', 'pc-lista', 'pc-novo', 'inventario', 'inv-historico',
+		];
 		if (!in_array($page, $allowed, true)) {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));
 		}
 
+		$navPrecos = in_array($page, ['precos', 'preco-tabela-nova', 'preco-reajuste-massa', 'preco-ajuste', 'preco-tabela-detalhe'], true);
 		$set = [
 			'title' => __('Produtos · {0}', ucfirst((string)$page)),
-			'erpNavActive' => $page === 'precos' ? 'precos' : ($page === 'historico-precos' ? 'historico-precos' : 'produtos'),
+			'erpNavActive' => $navPrecos ? 'precos' : ($page === 'historico-precos' ? 'historico-precos' : 'produtos'),
 			'erpBreadcrumb' => [
 				['label' => 'PGM ERP'],
 				['label' => __('Cadastros')],
@@ -227,6 +230,47 @@ class ProdutosPrototypeController extends AppController {
 			$this->set($set);
 
 			return $this->render('precos');
+		}
+
+		if ($page === 'historico-precos') {
+			$set += $this->precosBuilder()->buildHistorico((int)$this->Auth->user('idempresa'), $this->request->getQueryParams());
+			$this->set($set);
+
+			return $this->render('historico_precos');
+		}
+
+		if ($page === 'preco-tabela-nova') {
+			$set += $this->precosBuilder()->buildNovaTabela((int)$this->Auth->user('idempresa'));
+			$this->set($set);
+
+			return $this->render('preco_tabela_nova');
+		}
+
+		if ($page === 'preco-reajuste-massa') {
+			$set += $this->precosBuilder()->buildReajuste((int)$this->Auth->user('idempresa'), $this->request->getQueryParams());
+			$this->set($set);
+
+			return $this->render('preco_reajuste_massa');
+		}
+
+		if ($page === 'preco-ajuste') {
+			$prodId = (int)$this->request->getQuery('id', 0);
+			$ajuste = $this->precosBuilder()->buildAjuste((int)$this->Auth->user('idempresa'), $prodId);
+			if ($ajuste === null) {
+				$this->Flash->error(__('Produto não encontrado.'));
+				return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos']);
+			}
+			$set += $ajuste;
+			$this->set($set);
+
+			return $this->render('preco_ajuste');
+		}
+
+		if ($page === 'preco-tabela-detalhe') {
+			$set += $this->precosBuilder()->buildTabelaDetalhe((int)$this->Auth->user('idempresa'));
+			$this->set($set);
+
+			return $this->render('preco_tabela_detalhe');
 		}
 
 		if ($page === 'precificacao') {
@@ -295,66 +339,74 @@ class ProdutosPrototypeController extends AppController {
 	 * @return array<string,mixed>
 	 */
 	protected function buildPrecosPayload(): array {
-		$empresa = (int)$this->Auth->user('idempresa');
-		$busca = trim((string)$this->request->getQuery('q', ''));
-		$rows = [];
-		try {
-			$q = $this->Produtos->find()
-				->where(['Produtos.idempresa' => $empresa, 'Produtos.ativo' => 1])
-				->order(['Produtos.tipo' => 'ASC', 'Produtos.descricao' => 'ASC'])
-				->limit(200);
-			if ($busca !== '') {
-				$q->where(['OR' => [
-					'Produtos.descricao ILIKE' => '%' . $busca . '%',
-					'Produtos.codigo ILIKE' => '%' . $busca . '%',
-				]]);
-			}
-			foreach ($q->all() as $p) {
-				$rows[] = [
-					'id' => (int)$p->get('id'),
-					'codigo' => (string)$p->get('codigo'),
-					'descricao' => (string)$p->get('descricao'),
-					'tipo' => (string)$p->get('tipo'),
-					'unidade' => (string)$p->get('unidade'),
-					'venda' => (float)$p->get('vlunitario'),
-					'loc_diaria' => (float)$p->get('vllocdiario'),
-					'loc_semanal' => (float)$p->get('vllocsemanal'),
-					'loc_mensal' => (float)$p->get('vllocmensal'),
-				];
-			}
-		} catch (\Throwable $e) {
-		}
+		return $this->precosBuilder()->buildLista(
+			(int)$this->Auth->user('idempresa'),
+			$this->request->getQueryParams()
+		);
+	}
 
-		$kpi = ['total' => count($rows), 'media' => 0.0, 'min' => 0.0, 'max' => 0.0];
-		if ($rows !== []) {
-			$valores = array_filter(array_column($rows, 'venda'), static function ($v) { return $v > 0; });
-			if ($valores !== []) {
-				$kpi['media'] = array_sum($valores) / count($valores);
-				$kpi['min'] = min($valores);
-				$kpi['max'] = max($valores);
-			}
-		}
-
-		return [
-			'precosItems' => $rows,
-			'precosKpi' => $kpi,
-			'precosFiltro' => $busca,
-		];
+	protected function precosBuilder(): ProdutosPrecosPrototypeBuilder {
+		return new ProdutosPrecosPrototypeBuilder($this->Produtos);
 	}
 
 	/**
 	 * Atualiza preço unitário de um produto (edição inline a partir da tabela de preços).
 	 * Aceita POST com produto_id + vlunitario; faz update direto via ORM.
 	 */
+	/**
+	 * POST reajuste em massa (% sobre preço atual).
+	 */
+	public function reajusteSave() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$pct = (float)str_replace(',', '.', (string)$this->request->getData('pct', '0'));
+		$ids = $this->request->getData('produto_ids');
+		if (!is_array($ids) || $pct === 0.0) {
+			$this->Flash->error(__('Selecione produtos e informe o percentual.'));
+			return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-reajuste-massa']);
+		}
+		$salvos = 0;
+		foreach ($ids as $id) {
+			$id = (int)$id;
+			if ($id <= 0) {
+				continue;
+			}
+			try {
+				$prod = $this->Produtos->find()
+					->where(['Produtos.id' => $id, 'Produtos.idempresa' => $empresa])
+					->first();
+				if ($prod === null) {
+					continue;
+				}
+				$atual = (float)$prod->get('vlunitario');
+				$prod->set('vlunitario', round($atual * (1 + ($pct / 100)), 2));
+				if ($this->Produtos->save($prod)) {
+					$salvos++;
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		if ($salvos > 0) {
+			$this->Flash->success(__('{0} preço(s) reajustado(s) em {1}%.', $salvos, number_format($pct, 1, ',', '.')));
+		} else {
+			$this->Flash->error(__('Nenhum preço foi atualizado.'));
+		}
+
+		return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos']);
+	}
+
 	public function precoSave() {
 		$this->request->allowMethod(['post']);
 		$empresa = (int)$this->Auth->user('idempresa');
 		$id = (int)$this->request->getData('produto_id');
 		$novo = (float)str_replace(',', '.', (string)$this->request->getData('vlunitario'));
+		$redirectAjuste = (string)$this->request->getData('redirect') === 'ajuste';
 		if ($id <= 0 || $novo < 0) {
 			$this->Flash->error(__('Dados inválidos.'));
 
-			return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos']);
+			return $this->redirect($redirectAjuste
+				? ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-ajuste', '?' => ['id' => $id]]
+				: ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos']);
 		}
 		try {
 			$prod = $this->Produtos->find()
@@ -363,7 +415,9 @@ class ProdutosPrototypeController extends AppController {
 			if ($prod === null) {
 				$this->Flash->error(__('Produto fora do seu escopo.'));
 
-				return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos']);
+				return $this->redirect($redirectAjuste
+					? ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-ajuste', '?' => ['id' => $id]]
+					: ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos']);
 			}
 			$prod->set('vlunitario', $novo);
 			if ($this->Produtos->save($prod)) {
@@ -376,6 +430,9 @@ class ProdutosPrototypeController extends AppController {
 		}
 
 		$q = trim((string)$this->request->getData('q'));
+		if ($redirectAjuste) {
+			return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos']);
+		}
 
 		return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos', '?' => $q !== '' ? ['q' => $q] : []]);
 	}
