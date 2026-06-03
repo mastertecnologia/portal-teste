@@ -71,24 +71,45 @@ class ProdutosPrecosPrototypeBuilder {
 	}
 
 	/**
+	 * @param array<string,mixed> $query
 	 * @return array<string,mixed>|null
 	 */
-	public function buildAjuste(int $empresaId, int $produtoId): ?array {
+	public function buildAjuste(int $empresaId, int $produtoId, array $query = []): ?array {
 		if ($produtoId <= 0) {
 			return null;
 		}
 		$tabelas = $this->loadTabelas($empresaId);
-		$rows = $this->loadEnrichedRows($empresaId, '', $this->resolveTabelaId($empresaId, [], $tabelas));
+		$tabelaId = $this->resolveTabelaId($empresaId, $query, $tabelas);
+		$rows = $this->loadEnrichedRows($empresaId, '', $tabelaId);
+		$produto = null;
 		foreach ($rows as $r) {
 			if ((int)$r['id'] === $produtoId) {
-				return [
-					'produto' => $r,
-					'historico' => $this->historicoProduto($r),
-				];
+				$produto = $r;
+				break;
+			}
+		}
+		if ($produto === null) {
+			$produto = $this->loadEnrichedProdutoById($empresaId, $produtoId);
+		}
+		if ($produto === null) {
+			return null;
+		}
+		$ajusteTabelas = $this->buildTabelasAjuste($empresaId, $produtoId, $tabelas, (float)$produto['venda']);
+		foreach ($ajusteTabelas as $tb) {
+			if ((int)$tb['id'] === $tabelaId) {
+				$produto['venda'] = (float)$tb['venda'];
+				$produto['margem'] = $this->margemPct((float)$tb['venda'], (float)$produto['custo']);
+				break;
 			}
 		}
 
-		return null;
+		return [
+			'produto' => $produto,
+			'historico' => $this->historicoProduto($produto),
+			'ajusteTabelas' => $ajusteTabelas,
+			'ajusteTabelaId' => $tabelaId,
+			'ajusteVigenciaData' => FrozenTime::now()->format('Y-m-d'),
+		];
 	}
 
 	/**
@@ -388,6 +409,7 @@ class ProdutosPrecosPrototypeBuilder {
 				$markup = $this->markupPct($venda, $custo);
 				$sugestao = $this->sugestaoPreco($venda, $custo);
 				$modified = null;
+				$created = null;
 				if ($p->has('modified')) {
 					$raw = $p->get('modified');
 					if ($raw instanceof FrozenTime) {
@@ -395,6 +417,17 @@ class ProdutosPrecosPrototypeBuilder {
 					} elseif ($raw !== null && $raw !== '') {
 						try {
 							$modified = new FrozenTime((string)$raw);
+						} catch (\Throwable $e) {
+						}
+					}
+				}
+				if ($p->has('created')) {
+					$rawC = $p->get('created');
+					if ($rawC instanceof FrozenTime) {
+						$created = $rawC;
+					} elseif ($rawC !== null && $rawC !== '') {
+						try {
+							$created = new FrozenTime((string)$rawC);
 						} catch (\Throwable $e) {
 						}
 					}
@@ -416,6 +449,7 @@ class ProdutosPrecosPrototypeBuilder {
 					'sugestao_destaque' => $sugestao['destaque'],
 					'modified' => $modified,
 					'modified_fmt' => $modified ? $modified->format('d/m/Y') : '—',
+					'created' => $created,
 					'nota' => $this->notaLinha($tipo, $margem, $custo, $venda),
 					'row_style' => $this->rowStyle($margem, $modified),
 					'btn_ajuste' => $margem !== null && $margem < self::MARGEM_BAIXA_PCT ? 'amber' : 'ghost',
@@ -426,6 +460,121 @@ class ProdutosPrecosPrototypeBuilder {
 		}
 
 		return $rows;
+	}
+
+	/**
+	 * @return array<string,mixed>|null
+	 */
+	protected function loadEnrichedProdutoById(int $empresaId, int $produtoId): ?array {
+		try {
+			$p = $this->Produtos->find()
+				->where(['Produtos.id' => $produtoId, 'Produtos.idempresa' => $empresaId, 'Produtos.ativo' => 1])
+				->first();
+		} catch (\Throwable $e) {
+			return null;
+		}
+		if ($p === null) {
+			return null;
+		}
+		$erpCustos = $this->fetchErpCustos($empresaId);
+		$codigo = trim((string)$p->get('codigo'));
+		$tipo = (string)$p->get('tipo');
+		$venda = (float)$p->get('vlunitario');
+		$custo = 0.0;
+		$temCusto = false;
+		if ($this->tipoEhProduto($tipo) && isset($erpCustos[$codigo])) {
+			$custo = (float)$erpCustos[$codigo];
+			$temCusto = $custo > 0;
+		}
+		if (!$temCusto && $venda > 0) {
+			if ($tipo === 'loc' && (float)$p->get('vllocdiario') > 0) {
+				$custo = (float)$p->get('vllocdiario');
+				$temCusto = true;
+			} elseif ($tipo !== 'lic') {
+				$custo = round($venda * (1 - (self::MARGEM_ALVO_PCT / 100)), 2);
+				$temCusto = $custo > 0;
+			}
+		}
+		$margem = $this->margemPct($venda, $custo);
+		$markup = $this->markupPct($venda, $custo);
+		$sugestao = $this->sugestaoPreco($venda, $custo);
+		$modified = $this->parseFrozenTime($p->get('modified'));
+		$created = $this->parseFrozenTime($p->get('created'));
+
+		return [
+			'id' => (int)$p->get('id'),
+			'codigo' => $codigo,
+			'descricao' => (string)$p->get('descricao'),
+			'tipo' => $tipo,
+			'unidade' => (string)$p->get('unidade'),
+			'venda' => $venda,
+			'custo' => $custo,
+			'tem_custo' => $temCusto,
+			'margem' => $margem,
+			'markup' => $markup,
+			'markup_inf' => $custo <= 0 && $venda > 0,
+			'sugestao_preco' => $sugestao['preco'],
+			'sugestao_label' => $sugestao['label'],
+			'sugestao_destaque' => $sugestao['destaque'],
+			'modified' => $modified,
+			'modified_fmt' => $modified ? $modified->format('d/m/Y') : '—',
+			'created' => $created,
+			'nota' => $this->notaLinha($tipo, $margem, $custo, $venda),
+			'row_style' => $this->rowStyle($margem, $modified),
+			'btn_ajuste' => $margem !== null && $margem < self::MARGEM_BAIXA_PCT ? 'amber' : 'ghost',
+		];
+	}
+
+	/**
+	 * @param array<int,array<string,mixed>> $tabelas
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function buildTabelasAjuste(int $empresaId, int $produtoId, array $tabelas, float $fallbackVenda): array {
+		$out = [];
+		if ($tabelas === []) {
+			return [
+				[
+					'id' => 0,
+					'nome' => __('Padrão'),
+					'venda' => $fallbackVenda,
+					'item_id' => 0,
+				],
+			];
+		}
+		try {
+			$Itens = TableRegistry::getTableLocator()->get('PrecosTabelaItens');
+		} catch (\Throwable $e) {
+			$Itens = null;
+		}
+		foreach ($tabelas as $tb) {
+			$tid = (int)$tb['id'];
+			$venda = $fallbackVenda;
+			$itemId = 0;
+			if ($Itens !== null) {
+				try {
+					$item = $Itens->find()
+						->where([
+							'PrecosTabelaItens.precos_tabela_id' => $tid,
+							'PrecosTabelaItens.produto_id' => $produtoId,
+							'PrecosTabelaItens.ativo' => true,
+						])
+						->first();
+					if ($item !== null) {
+						$venda = (float)$item->get('vlunitario');
+						$itemId = (int)$item->get('id');
+					}
+				} catch (\Throwable $e) {
+				}
+			}
+			$out[] = [
+				'id' => $tid,
+				'nome' => (string)$tb['nome'],
+				'venda' => $venda,
+				'item_id' => $itemId,
+			];
+		}
+
+		return $out;
 	}
 
 	/**
@@ -480,13 +629,8 @@ class ProdutosPrecosPrototypeBuilder {
 				$margem = $this->margemPct($venda, $custo);
 				$markup = $this->markupPct($venda, $custo);
 				$sugestao = $this->sugestaoPreco($venda, $custo);
-				$modified = null;
-				if ($p !== null && $p->has('modified')) {
-					$raw = $p->get('modified');
-					if ($raw instanceof FrozenTime) {
-						$modified = $raw;
-					}
-				}
+				$modified = $p !== null ? $this->parseFrozenTime($p->get('modified')) : null;
+				$created = $p !== null ? $this->parseFrozenTime($p->get('created')) : null;
 				$cat = (string)$item->get('categoria');
 				$nota = $this->notaLinha($tipo, $margem, $custo, $venda);
 				if ($nota === null && $cat !== '') {
@@ -510,6 +654,7 @@ class ProdutosPrecosPrototypeBuilder {
 					'sugestao_destaque' => $sugestao['destaque'],
 					'modified' => $modified,
 					'modified_fmt' => $modified ? $modified->format('d/m/Y') : '—',
+					'created' => $created,
 					'nota' => $nota,
 					'row_style' => $this->rowStyle($margem, $modified),
 					'btn_ajuste' => $margem !== null && $margem < self::MARGEM_BAIXA_PCT ? 'amber' : 'ghost',
@@ -521,6 +666,23 @@ class ProdutosPrecosPrototypeBuilder {
 		}
 
 		return $rows;
+	}
+
+	/**
+	 * @param mixed $raw
+	 */
+	protected function parseFrozenTime($raw): ?FrozenTime {
+		if ($raw instanceof FrozenTime) {
+			return $raw;
+		}
+		if ($raw === null || $raw === '') {
+			return null;
+		}
+		try {
+			return new FrozenTime((string)$raw);
+		} catch (\Throwable $e) {
+			return null;
+		}
 	}
 
 	protected function tipoEhProduto($tipo): bool {
@@ -704,21 +866,80 @@ class ProdutosPrecosPrototypeBuilder {
 	 * @return array<int,array<string,mixed>>
 	 */
 	protected function historicoProduto(array $r): array {
-		$base = (float)$r['venda'];
-		$hist = [
-			['dia' => __('criação'), 'de' => null, 'para' => $base, 'pct' => null],
-		];
+		$venda = (float)$r['venda'];
 		$mod = $r['modified'] ?? null;
-		if ($mod instanceof FrozenTime) {
+		$created = $r['created'] ?? null;
+		$hist = [];
+		$precoInicial = $venda > 0 ? round($venda / 1.04 / 1.042, 2) : 0.0;
+		$precoInter = $precoInicial > 0 ? round($precoInicial * 1.04, 2) : 0.0;
+		$precoAntesPromo = $venda > 0 ? round($venda * 1.044, 2) : 0.0;
+		if ($precoAntesPromo > $venda * 1.005) {
 			$hist[] = [
-				'dia' => $mod->format('d/m'),
-				'de' => round($base * 0.96, 2),
-				'para' => $base,
-				'pct' => '+4%',
+				'dia' => $mod instanceof FrozenTime ? $mod->format('d/m') : date('d/m'),
+				'de' => $precoAntesPromo,
+				'para' => $venda,
+				'pct' => $this->formatPctHistorico($precoAntesPromo, $venda),
+				'pct_color' => '#7A1822',
+				'border' => 'var(--teal)',
+				'motivo' => __('promoção'),
 			];
 		}
+		if ($precoInter > 0 && abs($precoInter - $venda) > 0.01) {
+			$diaMid = '28/03';
+			if ($mod instanceof FrozenTime) {
+				$diaMid = $mod->copy()->subDays(38)->format('d/m');
+			} elseif ($created instanceof FrozenTime) {
+				$diaMid = $created->copy()->addDays(14)->format('d/m');
+			}
+			$hist[] = [
+				'dia' => $diaMid,
+				'de' => $precoInicial,
+				'para' => $precoInter,
+				'pct' => $this->formatPctHistorico($precoInicial, $precoInter),
+				'pct_color' => 'var(--teal-dark)',
+				'border' => 'var(--blue)',
+				'motivo' => null,
+			];
+		}
+		$diaCriacao = $created instanceof FrozenTime ? $created->format('d/m') : '10/01';
+		$hist[] = [
+			'dia' => $diaCriacao,
+			'de' => null,
+			'para' => $precoInicial > 0 ? $precoInicial : $venda,
+			'pct' => __('criação'),
+			'pct_color' => 'var(--text-muted)',
+			'border' => 'var(--text-muted)',
+			'motivo' => null,
+		];
+		if ($mod instanceof FrozenTime && count($hist) > 0) {
+			$de = round($venda / 1.04, 2);
+			if ($de > 0 && abs($de - $venda) > 0.01) {
+				$hist[0]['dia'] = $mod->format('d/m');
+				$hist[0]['de'] = $de;
+				$hist[0]['para'] = $venda;
+				$hist[0]['pct'] = $this->formatPctHistorico($de, $venda);
+				$hist[0]['pct_color'] = $venda >= $de ? 'var(--teal-dark)' : '#7A1822';
+				$hist[0]['motivo'] = null;
+			}
+		}
 
-		return array_reverse($hist);
+		return $hist;
+	}
+
+	protected function formatPctHistorico(float $de, float $para): string {
+		if ($de <= 0) {
+			return '—';
+		}
+		$pct = round((($para / $de) - 1) * 100, 1);
+		$abs = number_format(abs($pct), 1, ',', '.');
+		if ($pct > 0) {
+			return '↑ +' . $abs . '%';
+		}
+		if ($pct < 0) {
+			return '↓ -' . $abs . '%';
+		}
+
+		return '—';
 	}
 
 	protected function margemPct(float $venda, float $custo): ?float {

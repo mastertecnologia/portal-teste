@@ -255,7 +255,11 @@ class ProdutosPrototypeController extends AppController {
 
 		if ($page === 'preco-ajuste') {
 			$prodId = (int)$this->request->getQuery('id', 0);
-			$ajuste = $this->precosBuilder()->buildAjuste((int)$this->Auth->user('idempresa'), $prodId);
+			$ajuste = $this->precosBuilder()->buildAjuste(
+				(int)$this->Auth->user('idempresa'),
+				$prodId,
+				$this->request->getQueryParams()
+			);
 			if ($ajuste === null) {
 				$this->Flash->error(__('Produto não encontrado.'));
 				return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos']);
@@ -407,9 +411,26 @@ class ProdutosPrototypeController extends AppController {
 		$this->request->allowMethod(['post']);
 		$empresa = (int)$this->Auth->user('idempresa');
 		$id = (int)$this->request->getData('produto_id');
-		$novo = (float)str_replace(',', '.', (string)$this->request->getData('vlunitario'));
+		$metodo = (string)$this->request->getData('metodo', 'pct');
+		$tabelaId = (int)$this->request->getData('tabela_id', 0);
 		$redirectAjuste = (string)$this->request->getData('redirect') === 'ajuste';
-		if ($id <= 0 || $novo < 0) {
+		$motivo = trim((string)$this->request->getData('motivo', ''));
+		if ($redirectAjuste && $motivo === '') {
+			$this->Flash->error(__('Informe o motivo do ajuste (histórico).'));
+
+			return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-ajuste', '?' => ['id' => $id]]);
+		}
+		$novo = 0.0;
+		$calcularPct = false;
+		if (!$redirectAjuste) {
+			$novo = (float)str_replace(',', '.', (string)$this->request->getData('vlunitario'));
+		} elseif ($metodo === 'valor') {
+			$novo = (float)str_replace(',', '.', (string)$this->request->getData('vlunitario'));
+		} else {
+			$calcularPct = true;
+			$novo = -1.0;
+		}
+		if ($id <= 0 || (!$calcularPct && $novo < 0)) {
 			$this->Flash->error(__('Dados inválidos.'));
 
 			return $this->redirect($redirectAjuste
@@ -427,17 +448,59 @@ class ProdutosPrototypeController extends AppController {
 					? ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-ajuste', '?' => ['id' => $id]]
 					: ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos']);
 			}
+			$atual = (float)$prod->get('vlunitario');
+			if ($calcularPct) {
+				$pct = (float)str_replace(',', '.', (string)$this->request->getData('reajuste_pct', '0'));
+				if ($tabelaId > 0) {
+					try {
+						$itensTbl = $this->loadModel('PrecosTabelaItens');
+						$item = $itensTbl->find()
+							->where([
+								'PrecosTabelaItens.precos_tabela_id' => $tabelaId,
+								'PrecosTabelaItens.produto_id' => $id,
+								'PrecosTabelaItens.ativo' => true,
+							])
+							->first();
+						if ($item !== null) {
+							$atual = (float)$item->get('vlunitario');
+						}
+					} catch (\Throwable $e) {
+					}
+				}
+				$novo = round($atual * (1 + ($pct / 100)), 2);
+			}
+			if ($novo < 0) {
+				$this->Flash->error(__('Dados inválidos.'));
+
+				return $this->redirect($redirectAjuste
+					? ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-ajuste', '?' => ['id' => $id]]
+					: ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos']);
+			}
 			$prod->set('vlunitario', $novo);
 			if ($this->Produtos->save($prod)) {
 				try {
 					$itensTbl = $this->loadModel('PrecosTabelaItens');
-					$itensTbl->updateAll(
-						['vlunitario' => $novo],
-						['produto_id' => $id]
-					);
+					if ($tabelaId > 0) {
+						$itensTbl->updateAll(
+							['vlunitario' => $novo],
+							[
+								'produto_id' => $id,
+								'precos_tabela_id' => $tabelaId,
+							]
+						);
+					} else {
+						$itensTbl->updateAll(
+							['vlunitario' => $novo],
+							['produto_id' => $id]
+						);
+					}
 				} catch (\Throwable $e) {
 				}
-				$this->Flash->success(__('Preço do produto {0} atualizado para {1}.', (string)$prod->get('codigo'), 'R$ ' . number_format($novo, 2, ',', '.')));
+				$msg = __('Preço do produto {0} atualizado para {1}.', (string)$prod->get('codigo'), 'R$ ' . number_format($novo, 2, ',', '.'));
+				if ($motivo !== '') {
+					$msg .= ' ' . __('Motivo: {0}', $motivo);
+				}
+				$this->Flash->success($msg);
 			} else {
 				$this->Flash->error(__('Falha ao salvar.'));
 			}
