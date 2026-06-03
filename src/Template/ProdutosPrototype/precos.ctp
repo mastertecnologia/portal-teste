@@ -41,8 +41,8 @@ $mkFiltro = static function (string $f) use ($urlPrecos, $precosFiltro, $filtroA
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
 		<?= $this->Html->link('📊 ' . __('Exportar'), ['controller' => 'ProdutosPrototype', 'action' => 'exportCsv'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('📜 ' . __('Histórico'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'historico-precos'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('📈 ' . __('Reajuste em massa'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-reajuste-massa'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('⚙ ' . __('Gerenciar tabela'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-tabela-detalhe'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('📈 ' . __('Reajuste em massa'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-reajuste-massa', '?' => $tabelaAtiva > 0 ? ['tabela' => $tabelaAtiva] : []], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('⚙ ' . __('Gerenciar tabelas'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-tabelas'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('+ ' . __('Nova tabela'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-tabela-nova'], ['class' => 'btn btn-primary btn-sm']) ?>
 	</div>
 </div>
@@ -211,9 +211,23 @@ $mkFiltro = static function (string $f) use ($urlPrecos, $precosFiltro, $filtroA
 			<div style="font-size:48px;flex-shrink:0;">🧮</div>
 			<div style="flex:1;min-width:200px;">
 				<div style="font-size:18px;font-weight:700;margin-bottom:4px;color:#fff;">' . h(__('Centro de Cálculo de Precificação')) . '</div>
-				<div style="font-size:13px;opacity:.9;line-height:1.5;color:#fff;">' . h(__('Simulador profissional com os 3 regimes tributários · Tabelas atualizadas 2026')) . '</div>
+				<div style="font-size:13px;opacity:.9;line-height:1.5;color:#fff;">' . h(__('Simulador profissional com os')) . ' <strong style="color:#fff;">' . h(__('3 regimes tributários')) . '</strong> ' . h(__('(Simples Nacional, Lucro Presumido, Lucro Real) · Tabelas atualizadas 2026 · LC 224/2025 · IBS+CBS · Comparativo automático')) . '</div>
 			</div>
 			<span class="btn" style="background:#fff;color:var(--teal-dark);font-weight:600;flex-shrink:0;">' . h(__('Abrir simulador →')) . '</span>
+		</div>
+		<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;">
+			<div style="background:rgba(255,255,255,.15);padding:10px;border-radius:var(--radius);text-align:center;">
+				<div style="font-size:11px;opacity:.85;color:#fff;">📊 ' . h(__('Simples Nacional')) . '</div>
+				<div style="font-size:13px;font-weight:600;margin-top:2px;color:#fff;">' . h(__('5 anexos · Fator R')) . '</div>
+			</div>
+			<div style="background:rgba(255,255,255,.15);padding:10px;border-radius:var(--radius);text-align:center;">
+				<div style="font-size:11px;opacity:.85;color:#fff;">📈 ' . h(__('Lucro Presumido')) . '</div>
+				<div style="font-size:13px;font-weight:600;margin-top:2px;color:#fff;">' . h(__('8% / 32% · LC 224')) . '</div>
+			</div>
+			<div style="background:rgba(255,255,255,.15);padding:10px;border-radius:var(--radius);text-align:center;">
+				<div style="font-size:11px;opacity:.85;color:#fff;">🎯 ' . h(__('Lucro Real')) . '</div>
+				<div style="font-size:13px;font-weight:600;margin-top:2px;color:#fff;">' . h(__('Não-cumulativo')) . '</div>
+			</div>
 		</div>',
 		['controller' => 'ProdutosPrototype', 'action' => 'view', 'precificacao'],
 		['class' => 'card', 'escape' => false, 'style' => 'background:linear-gradient(135deg,#0a3d2c 0%,#1D9E75 100%);color:#fff;border:none;display:block;text-decoration:none;']

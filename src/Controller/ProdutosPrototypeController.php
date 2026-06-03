@@ -204,14 +204,14 @@ class ProdutosPrototypeController extends AppController {
 		}
 		$allowed = [
 			'novo', 'detalhe', 'precos', 'precificacao', 'estoque-log', 'historico-precos',
-			'preco-tabela-nova', 'preco-reajuste-massa', 'preco-ajuste', 'preco-tabela-detalhe',
+			'preco-tabela-nova', 'preco-reajuste-massa', 'preco-ajuste', 'preco-tabela-detalhe', 'preco-tabelas',
 			'import', 'pc-lista', 'pc-novo', 'inventario', 'inv-historico',
 		];
 		if (!in_array($page, $allowed, true)) {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));
 		}
 
-		$navPrecos = in_array($page, ['precos', 'preco-tabela-nova', 'preco-reajuste-massa', 'preco-ajuste', 'preco-tabela-detalhe'], true);
+		$navPrecos = in_array($page, ['precos', 'preco-tabela-nova', 'preco-reajuste-massa', 'preco-ajuste', 'preco-tabela-detalhe', 'preco-tabelas'], true);
 		$set = [
 			'title' => __('Produtos · {0}', ucfirst((string)$page)),
 			'erpNavActive' => $navPrecos ? 'precos' : ($page === 'historico-precos' ? 'historico-precos' : 'produtos'),
@@ -270,8 +270,27 @@ class ProdutosPrototypeController extends AppController {
 			return $this->render('preco_ajuste');
 		}
 
+		if ($page === 'preco-tabelas') {
+			$set += $this->precosBuilder()->buildTabelasLista((int)$this->Auth->user('idempresa'));
+			$this->set($set);
+
+			return $this->render('preco_tabelas');
+		}
+
 		if ($page === 'preco-tabela-detalhe') {
-			$set += $this->precosBuilder()->buildTabelaDetalhe((int)$this->Auth->user('idempresa'));
+			$tabelaId = (int)$this->request->getQuery('tabela', 0);
+			if ($tabelaId <= 0) {
+				return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-tabelas']);
+			}
+			$detalhe = $this->precosBuilder()->buildTabelaDetalhe(
+				(int)$this->Auth->user('idempresa'),
+				$this->request->getQueryParams()
+			);
+			if ($detalhe === null) {
+				$this->Flash->error(__('Tabela não encontrada.'));
+				return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-tabelas']);
+			}
+			$set += $detalhe;
 			$this->set($set);
 
 			return $this->render('preco_tabela_detalhe');
@@ -364,12 +383,19 @@ class ProdutosPrototypeController extends AppController {
 		$this->request->allowMethod(['post']);
 		$empresa = (int)$this->Auth->user('idempresa');
 		$pct = (float)str_replace(',', '.', (string)$this->request->getData('pct', '0'));
+		$tabelaId = (int)$this->request->getData('tabela_id', 0);
 		$ids = $this->request->getData('produto_ids');
+		$redirectQ = $tabelaId > 0 ? ['tabela' => $tabelaId] : [];
 		if (!is_array($ids) || $pct === 0.0) {
 			$this->Flash->error(__('Selecione produtos e informe o percentual.'));
-			return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-reajuste-massa']);
+			return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-reajuste-massa', '?' => $redirectQ]);
 		}
 		$salvos = 0;
+		$itensTbl = null;
+		try {
+			$itensTbl = $this->loadModel('PrecosTabelaItens');
+		} catch (\Throwable $e) {
+		}
 		foreach ($ids as $id) {
 			$id = (int)$id;
 			if ($id <= 0) {
@@ -383,15 +409,39 @@ class ProdutosPrototypeController extends AppController {
 					continue;
 				}
 				$atual = (float)$prod->get('vlunitario');
+				if ($tabelaId > 0 && $itensTbl !== null) {
+					$item = $itensTbl->find()
+						->where([
+							'PrecosTabelaItens.precos_tabela_id' => $tabelaId,
+							'PrecosTabelaItens.produto_id' => $id,
+							'PrecosTabelaItens.ativo' => true,
+						])
+						->first();
+					if ($item !== null) {
+						$atual = (float)$item->get('vlunitario');
+					}
+				}
 				$novo = round($atual * (1 + ($pct / 100)), 2);
 				$prod->set('vlunitario', $novo);
 				if ($this->Produtos->save($prod)) {
-					try {
-						$this->loadModel('PrecosTabelaItens')->updateAll(
-							['vlunitario' => $novo],
-							['produto_id' => $id]
-						);
-					} catch (\Throwable $e) {
+					if ($itensTbl !== null) {
+						try {
+							if ($tabelaId > 0) {
+								$itensTbl->updateAll(
+									['vlunitario' => $novo],
+									[
+										'produto_id' => $id,
+										'precos_tabela_id' => $tabelaId,
+									]
+								);
+							} else {
+								$itensTbl->updateAll(
+									['vlunitario' => $novo],
+									['produto_id' => $id]
+								);
+							}
+						} catch (\Throwable $e) {
+						}
 					}
 					$salvos++;
 				}
@@ -404,7 +454,7 @@ class ProdutosPrototypeController extends AppController {
 			$this->Flash->error(__('Nenhum preço foi atualizado.'));
 		}
 
-		return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos']);
+		return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos', '?' => $redirectQ !== [] ? $redirectQ : []]);
 	}
 
 	public function precoSave() {

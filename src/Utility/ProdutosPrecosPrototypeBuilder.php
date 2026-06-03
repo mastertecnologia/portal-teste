@@ -126,7 +126,8 @@ class ProdutosPrecosPrototypeBuilder {
 			$trava = 25.0;
 		}
 		$tabelas = $this->loadTabelas($empresaId);
-		$rows = $this->loadEnrichedRows($empresaId, '', $this->resolveTabelaId($empresaId, [], $tabelas));
+		$tabelaId = $this->resolveTabelaId($empresaId, $query, $tabelas);
+		$rows = $this->loadEnrichedRows($empresaId, '', $tabelaId);
 		$itens = [];
 		$abaixoTrava = 0;
 		$somaPct = 0.0;
@@ -179,7 +180,42 @@ class ProdutosPrecosPrototypeBuilder {
 			'reajusteMargemAntes' => $margemAntes,
 			'reajusteMargemDepois' => $margemDepois,
 			'reajustePctMedio' => $sel > 0 ? round($somaPct / $sel, 1) : 0.0,
+			'reajusteTabelas' => $tabelas,
+			'reajusteTabelaId' => $tabelaId,
 		];
+	}
+
+	/**
+	 * Lista tabelas de preço para escolha (gerenciar tabelas).
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function buildTabelasLista(int $empresaId): array {
+		$tabelas = $this->loadTabelas($empresaId);
+		$lista = [];
+		try {
+			$Itens = TableRegistry::getTableLocator()->get('PrecosTabelaItens');
+		} catch (\Throwable $e) {
+			return ['precosTabelasGerenciar' => $lista];
+		}
+		foreach ($tabelas as $tb) {
+			$count = 0;
+			try {
+				$count = (int)$Itens->find()
+					->where([
+						'PrecosTabelaItens.precos_tabela_id' => (int)$tb['id'],
+						'PrecosTabelaItens.ativo' => true,
+					])
+					->count();
+			} catch (\Throwable $e) {
+			}
+			$lista[] = $tb + [
+				'total_itens' => $count,
+				'vigencia_label' => $this->formatVigenciaLabel($tb),
+			];
+		}
+
+		return ['precosTabelasGerenciar' => $lista];
 	}
 
 	/**
@@ -231,36 +267,134 @@ class ProdutosPrecosPrototypeBuilder {
 	}
 
 	/**
-	 * @return array<string,mixed>
+	 * @param array<string,mixed> $query
+	 * @return array<string,mixed>|null
 	 */
-	public function buildTabelaDetalhe(int $empresaId, float $descontoPct = 12.0): array {
-		$rows = $this->loadEnrichedRows($empresaId, '');
-		$fator = 1 - ($descontoPct / 100);
-		$amostra = [];
-		foreach (array_slice($rows, 0, 3) as $r) {
-			$padrao = (float)$r['venda'];
-			$tabela = round($padrao * $fator, 2);
-			$margem = $this->margemPct($tabela, (float)$r['custo']);
-			$amostra[] = [
-				'descricao' => $r['descricao'],
-				'padrao' => $padrao,
-				'tabela' => $tabela,
-				'delta_pct' => $padrao > 0 ? round((($tabela / $padrao) - 1) * 100, 0) : 0,
-				'margem' => $margem,
-				'id' => (int)$r['id'],
-			];
+	public function buildTabelaDetalhe(int $empresaId, array $query = []): ?array {
+		$tabelaId = (int)($query['tabela'] ?? 0);
+		if ($tabelaId <= 0) {
+			return null;
 		}
-		$margemMedia = $this->margemMedia(array_map(static function ($a) use ($fator) {
-			return ['venda' => round((float)$a['venda'] * $fator, 2), 'custo' => $a['custo']];
-		}, $rows));
+		$meta = null;
+		foreach ($this->loadTabelas($empresaId) as $tb) {
+			if ((int)$tb['id'] === $tabelaId) {
+				$meta = $tb;
+				break;
+			}
+		}
+		if ($meta === null) {
+			return null;
+		}
+		$meta['vigencia_label'] = $this->formatVigenciaLabel($meta);
+		$busca = trim((string)($query['q'] ?? ''));
+		$produtos = $this->loadTabelaDetalheRows($empresaId, $tabelaId, $busca);
+		$deltas = [];
+		$rowsMargem = [];
+		foreach ($produtos as $p) {
+			if ((float)$p['padrao'] > 0) {
+				$deltas[] = round(((((float)$p['tabela'] / (float)$p['padrao']) - 1) * 100), 0);
+			}
+			$rowsMargem[] = ['venda' => (float)$p['tabela'], 'custo' => (float)$p['custo']];
+		}
+		$descontoMedio = 0;
+		if ($deltas !== []) {
+			$descontoMedio = (int)round(array_sum($deltas) / count($deltas));
+		}
+		$vig = $this->vigenciaAnoCorrente();
+		if (!empty($meta['vigencia_inicio'])) {
+			$vig['inicio'] = (string)$meta['vigencia_inicio'];
+		}
+		if (!empty($meta['vigencia_fim'])) {
+			$vig['fim'] = (string)$meta['vigencia_fim'];
+		}
 
 		return [
-			'detalheDesconto' => $descontoPct,
-			'detalheProdutos' => $amostra,
-			'detalheTotal' => count($rows),
-			'detalheMargemMedia' => $margemMedia,
-			'detalheVigencia' => $this->vigenciaAnoCorrente(),
+			'detalheTabela' => $meta,
+			'detalheTabelaId' => $tabelaId,
+			'detalheDesconto' => abs($descontoMedio),
+			'detalheDescontoSinal' => $descontoMedio,
+			'detalheProdutos' => $produtos,
+			'detalheTotal' => count($produtos),
+			'detalheMargemMedia' => $this->margemMedia($rowsMargem),
+			'detalheVigencia' => $vig,
+			'detalheBusca' => $busca,
 		];
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function loadTabelaDetalheRows(int $empresaId, int $tabelaId, string $busca): array {
+		try {
+			$Itens = TableRegistry::getTableLocator()->get('PrecosTabelaItens');
+		} catch (\Throwable $e) {
+			return [];
+		}
+		$erpCustos = $this->fetchErpCustos($empresaId);
+		$out = [];
+		try {
+			$q = $Itens->find()
+				->contain(['Produtos'])
+				->where([
+					'PrecosTabelaItens.precos_tabela_id' => $tabelaId,
+					'PrecosTabelaItens.ativo' => true,
+				])
+				->order(['PrecosTabelaItens.ordem' => 'ASC', 'PrecosTabelaItens.descricao' => 'ASC']);
+			if ($busca !== '') {
+				$q->where(['OR' => [
+					'PrecosTabelaItens.descricao ILIKE' => '%' . $busca . '%',
+					'PrecosTabelaItens.codigo_item ILIKE' => '%' . $busca . '%',
+					'PrecosTabelaItens.categoria ILIKE' => '%' . $busca . '%',
+				]]);
+			}
+			foreach ($q->all() as $item) {
+				$p = $item->produto ?? null;
+				$codigo = trim((string)$item->get('codigo_item'));
+				$descricao = (string)$item->get('descricao');
+				$tabela = (float)$item->get('vlunitario');
+				$padrao = $tabela;
+				$prodId = 0;
+				$tipo = 'serv';
+				if ($p !== null) {
+					$prodId = (int)$p->get('id');
+					$codigo = trim((string)$p->get('codigo')) ?: $codigo;
+					$descricao = (string)$p->get('descricao') ?: $descricao;
+					$padrao = (float)$p->get('vlunitario');
+					$tipo = (string)$p->get('tipo');
+				}
+				$custo = 0.0;
+				if ($this->tipoEhProduto($tipo) && isset($erpCustos[$codigo])) {
+					$custo = (float)$erpCustos[$codigo];
+				} elseif ($tabela > 0 && $tipo !== 'lic') {
+					$custo = round($tabela * (1 - (self::MARGEM_ALVO_PCT / 100)), 2);
+				}
+				$delta = $padrao > 0 ? round((($tabela / $padrao) - 1) * 100, 0) : 0;
+				$out[] = [
+					'id' => $prodId,
+					'codigo' => $codigo,
+					'descricao' => $descricao,
+					'padrao' => $padrao,
+					'tabela' => $tabela,
+					'custo' => $custo,
+					'delta_pct' => $delta,
+					'margem' => $this->margemPct($tabela, $custo),
+				];
+			}
+		} catch (\Throwable $e) {
+			Log::warning('loadTabelaDetalheRows: ' . $e->getMessage());
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @param array<string,mixed> $tb
+	 */
+	protected function formatVigenciaLabel(array $tb): string {
+		$ini = !empty($tb['vigencia_inicio']) ? date('d/m/Y', strtotime((string)$tb['vigencia_inicio'])) : '—';
+		$fim = !empty($tb['vigencia_fim']) ? date('d/m/Y', strtotime((string)$tb['vigencia_fim'])) : '—';
+
+		return $ini . ' → ' . $fim;
 	}
 
 	/**
