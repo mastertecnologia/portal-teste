@@ -496,8 +496,9 @@ class ProdutosPrecosPrototypeBuilder {
 					$tipo = (string)$p->get('tipo');
 				}
 				$custo = 0.0;
-				if ($this->tipoEhProduto($tipo) && isset($erpCustos[$codigo])) {
-					$custo = (float)$erpCustos[$codigo];
+				$erpRow = $this->erpDadosProduto($erpCustos, $codigo);
+				if ($erpRow['custo'] > 0) {
+					$custo = $erpRow['custo'];
 				} elseif ($tabela > 0 && $tipo !== 'lic') {
 					$custo = round($tabela * (1 - (self::MARGEM_ALVO_PCT / 100)), 2);
 				}
@@ -693,9 +694,13 @@ class ProdutosPrecosPrototypeBuilder {
 				$venda = (float)$p->get('vlunitario');
 				$custo = 0.0;
 				$temCusto = false;
-				if ($this->tipoEhProduto($tipo) && isset($erpCustos[$codigo])) {
-					$custo = (float)$erpCustos[$codigo];
-					$temCusto = $custo > 0;
+				$erpRow = $this->erpDadosProduto($erpCustos, $codigo);
+				if ($erpRow['custo'] > 0) {
+					$custo = $erpRow['custo'];
+					$temCusto = true;
+				}
+				if ($venda <= 0 && $erpRow['venda'] > 0) {
+					$venda = $erpRow['venda'];
 				}
 				if (!$temCusto && $venda > 0) {
 					if ($tipo === 'loc' && (float)$p->get('vllocdiario') > 0) {
@@ -783,9 +788,13 @@ class ProdutosPrecosPrototypeBuilder {
 		$venda = (float)$p->get('vlunitario');
 		$custo = 0.0;
 		$temCusto = false;
-		if ($this->tipoEhProduto($tipo) && isset($erpCustos[$codigo])) {
-			$custo = (float)$erpCustos[$codigo];
-			$temCusto = $custo > 0;
+		$erpRow = $this->erpDadosProduto($erpCustos, $codigo);
+		if ($erpRow['custo'] > 0) {
+			$custo = $erpRow['custo'];
+			$temCusto = true;
+		}
+		if ($venda <= 0 && $erpRow['venda'] > 0) {
+			$venda = $erpRow['venda'];
 		}
 		if (!$temCusto && $venda > 0) {
 			if ($tipo === 'loc' && (float)$p->get('vllocdiario') > 0) {
@@ -912,16 +921,20 @@ class ProdutosPrecosPrototypeBuilder {
 				if ($p !== null) {
 					$codigo = trim((string)$p->get('codigo')) ?: $codigo;
 					$descricao = (string)$p->get('descricao') ?: $descricao;
-					if ((float)$p->get('vlunitario') > 0) {
+					if ($venda <= 0 && (float)$p->get('vlunitario') > 0) {
 						$venda = (float)$p->get('vlunitario');
 					}
 				}
 				$tipo = $p !== null ? (string)$p->get('tipo') : 'serv';
 				$custo = 0.0;
 				$temCusto = false;
-				if ($this->tipoEhProduto($tipo) && isset($erpCustos[$codigo])) {
-					$custo = (float)$erpCustos[$codigo];
-					$temCusto = $custo > 0;
+				$erpRow = $this->erpDadosProduto($erpCustos, $codigo);
+				if ($erpRow['custo'] > 0) {
+					$custo = $erpRow['custo'];
+					$temCusto = true;
+				}
+				if ($venda <= 0 && $erpRow['venda'] > 0) {
+					$venda = $erpRow['venda'];
 				}
 				if (!$temCusto && $venda > 0) {
 					$custo = round($venda * (1 - (self::MARGEM_ALVO_PCT / 100)), 2);
@@ -991,9 +1004,9 @@ class ProdutosPrecosPrototypeBuilder {
 	}
 
 	/**
-	 * @return array<string,float>
+	 * @return array<string,array{custo:float,venda:float}>
 	 */
-	protected function fetchErpCustos(int $empresaId): array {
+	public function fetchErpPrecosMap(int $empresaId): array {
 		$out = [];
 		try {
 			$empresas = TableRegistry::getTableLocator()->get('Empresas');
@@ -1021,7 +1034,10 @@ class ProdutosPrecosPrototypeBuilder {
 						if ($cod === '') {
 							continue;
 						}
-						$out[$cod] = (float)($item->nPrecoCusto ?? 0);
+						$out[$cod] = [
+							'custo' => (float)($item->nPrecoCusto ?? 0),
+							'venda' => (float)($item->nPrecoVenda ?? 0),
+						];
 					}
 				}
 			} catch (\Throwable $e) {
@@ -1038,6 +1054,127 @@ class ProdutosPrecosPrototypeBuilder {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * @return array<string,array{custo:float,venda:float}>
+	 */
+	protected function fetchErpCustos(int $empresaId): array {
+		return $this->fetchErpPrecosMap($empresaId);
+	}
+
+	/**
+	 * @param array<string,array{custo:float,venda:float}> $erpMap
+	 * @return array{custo:float,venda:float}
+	 */
+	protected function erpDadosProduto(array $erpMap, string $codigo): array {
+		$empty = ['custo' => 0.0, 'venda' => 0.0];
+		$codigo = trim($codigo);
+		if ($codigo === '' || $erpMap === []) {
+			return $empty;
+		}
+		if (isset($erpMap[$codigo])) {
+			return $erpMap[$codigo];
+		}
+		$semZeros = ltrim($codigo, '0');
+		if ($semZeros !== '' && isset($erpMap[$semZeros])) {
+			return $erpMap[$semZeros];
+		}
+		foreach ($erpMap as $erpCod => $dados) {
+			if (ltrim((string)$erpCod, '0') === $semZeros) {
+				return $dados;
+			}
+		}
+
+		return $empty;
+	}
+
+	/**
+	 * Preço e custo reais para o simulador de precificação (tabela vigente + cadastro + ERP).
+	 *
+	 * @param array<string,array{custo:float,venda:float}>|null $erpMap
+	 * @return array<string,mixed>|null
+	 */
+	public function resolveProdutoPrecificacao(int $empresaId, int $produtoId, int $tabelaId = 0, ?array $erpMap = null): ?array {
+		if ($produtoId <= 0) {
+			return null;
+		}
+		if ($erpMap === null) {
+			$erpMap = $this->fetchErpPrecosMap($empresaId);
+		}
+		$row = $this->loadEnrichedProdutoById($empresaId, $produtoId);
+		if ($row === null) {
+			return null;
+		}
+		if ($tabelaId <= 0) {
+			$tabelaId = $this->resolveTabelaId($empresaId, [], $this->loadTabelas($empresaId));
+		}
+		$erpRow = $this->erpDadosProduto($erpMap, (string)$row['codigo']);
+		$precoTabela = $this->findPrecoNaTabela($tabelaId, $produtoId, (string)$row['codigo']);
+		$fonteVenda = 'cadastro';
+		if ($precoTabela !== null && $precoTabela > 0) {
+			$row['venda'] = $precoTabela;
+			$fonteVenda = 'tabela';
+		} elseif ((float)$row['venda'] <= 0 && $erpRow['venda'] > 0) {
+			$row['venda'] = $erpRow['venda'];
+			$fonteVenda = 'erp';
+		}
+		$fonteCusto = 'estimado';
+		if ((float)$row['custo'] <= 0 && $erpRow['custo'] > 0) {
+			$row['custo'] = $erpRow['custo'];
+			$fonteCusto = 'erp';
+		} elseif ((float)$row['custo'] <= 0 && (float)$row['venda'] > 0 && (string)($row['tipo'] ?? '') !== 'lic') {
+			$row['custo'] = round((float)$row['venda'] * (1 - (self::MARGEM_ALVO_PCT / 100)), 2);
+			$fonteCusto = 'estimado_margem';
+		} elseif ((float)$row['custo'] > 0) {
+			$fonteCusto = 'cadastro';
+		}
+		$row['margem'] = $this->margemPct((float)$row['venda'], (float)$row['custo']);
+		$row['fonte_venda'] = $fonteVenda;
+		$row['fonte_custo'] = $fonteCusto;
+
+		return $row;
+	}
+
+	protected function findPrecoNaTabela(int $tabelaId, int $produtoId, string $codigo): ?float {
+		if ($tabelaId <= 0) {
+			return null;
+		}
+		try {
+			$Itens = TableRegistry::getTableLocator()->get('PrecosTabelaItens');
+		} catch (\Throwable $e) {
+			return null;
+		}
+		try {
+			if ($produtoId > 0) {
+				$item = $Itens->find()
+					->where([
+						'PrecosTabelaItens.precos_tabela_id' => $tabelaId,
+						'PrecosTabelaItens.produto_id' => $produtoId,
+						'PrecosTabelaItens.ativo' => 1,
+					])
+					->first();
+				if ($item !== null && (float)$item->get('vlunitario') > 0) {
+					return (float)$item->get('vlunitario');
+				}
+			}
+			$codigo = trim($codigo);
+			if ($codigo !== '') {
+				$item = $Itens->find()
+					->where([
+						'PrecosTabelaItens.precos_tabela_id' => $tabelaId,
+						'PrecosTabelaItens.codigo_item' => $codigo,
+						'PrecosTabelaItens.ativo' => 1,
+					])
+					->first();
+				if ($item !== null && (float)$item->get('vlunitario') > 0) {
+					return (float)$item->get('vlunitario');
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return null;
 	}
 
 	/**

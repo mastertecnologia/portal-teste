@@ -13,7 +13,7 @@ $ini = $precificInicial;
 $nav = $this->ErpPrototype->navLinkOpts();
 $urlPrecos = ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'];
 $urlHist = ['controller' => 'ProdutosPrototype', 'action' => 'view', 'historico-precos'];
-$jsSim = $this->Url->build('/js/pgm-precificacao-simulador.js') . '?v=20260603';
+$jsSim = $this->Url->build('/js/pgm-precificacao-simulador.js') . '?v=20260604';
 $urlAplicar = ['controller' => 'ProdutosPrototype', 'action' => 'precificacaoAplicar'];
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
@@ -166,6 +166,14 @@ $urlAplicar = ['controller' => 'ProdutosPrototype', 'action' => 'precificacaoApl
 <div class="g2" style="margin-bottom:14px;">
 	<div class="card">
 		<div class="sec-title">2️⃣ <?= h(__('Custos diretos do produto')) ?></div>
+		<div class="field" style="margin-bottom:10px;">
+			<label><?= h(__('Preço de venda atual (referência)')) ?></label>
+			<div style="display:flex;gap:6px;align-items:center;">
+				<span style="font-size:13px;color:var(--text-muted);">R$</span>
+				<input type="text" id="prec-venda-atual" value="<?= h((string)($ini['venda'] ?? '0,00')) ?>" readonly style="flex:1;font-weight:600;font-size:15px;text-align:right;background:var(--bg-surface);"/>
+			</div>
+			<div style="font-size:11px;color:var(--text-muted);margin-top:4px;"><?= h(__('Tabela vigente, cadastro do produto ou ERP (GetEstoqueProdutos).')) ?></div>
+		</div>
 		<div class="field" style="margin-bottom:10px;">
 			<label><?= h(__('Custo de aquisição / produção')) ?> *</label>
 			<div style="display:flex;gap:6px;align-items:center;">
@@ -339,10 +347,13 @@ window.PGM_PREC_EMPRESA = <?= $precificEmpresaJson ?: '{}' ?>;
 	} else {
 		runBoot();
 	}
-	document.addEventListener('turbo:frame-render', function (e) {
-		if (e.target && e.target.id === 'pgm-main-frame') {
-			runBoot();
+	function onFrameReady(e) {
+		if (!e.target || e.target.id !== 'pgm-main-frame') {
+			return;
 		}
-	});
+		setTimeout(runBoot, 0);
+	}
+	document.addEventListener('turbo:frame-load', onFrameReady);
+	document.addEventListener('turbo:frame-render', onFrameReady);
 })();
 </script>

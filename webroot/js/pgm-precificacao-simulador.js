@@ -55,7 +55,12 @@
 		return global.PGM_PREC_EMPRESA || {};
 	}
 
+	function safeReceita(receita) {
+		return receita > 0.009 ? receita : 0.01;
+	}
+
 	function calcPresumido(rbt12, presIRPJ, presCSLL, receita) {
+		receita = safeReceita(receita);
 		var tax = empresaTax();
 		var pisPct = tax.pis_pct !== undefined ? tax.pis_pct : 0.65;
 		var cofinsPct = tax.cofins_pct !== undefined ? tax.cofins_pct : 3;
@@ -96,6 +101,7 @@
 	}
 
 	function calcReal(margemReal, creditosPct, receita, ehServico) {
+		receita = safeReceita(receita);
 		var tax = empresaTax();
 		var pisPct = tax.pis_pct !== undefined ? tax.pis_pct : 1.65;
 		var cofinsPct = tax.cofins_pct !== undefined ? tax.cofins_pct : 7.6;
@@ -134,6 +140,16 @@
 	}
 
 	function recalcularTudo() {
+		try {
+			recalcularTudoCore();
+		} catch (err) {
+			if (typeof console !== 'undefined' && console.error) {
+				console.error('PgmPrecificacao.recalcularTudo', err);
+			}
+		}
+	}
+
+	function recalcularTudoCore() {
 		var regimeEl = document.querySelector('input[name="regime"]:checked');
 		var regime = regimeEl ? regimeEl.value : 'simples';
 		var opEl = document.getElementById('prec-operacao');
@@ -228,6 +244,9 @@
 		var resultado = calcPreco(regime);
 		var preco = resultado.preco;
 		var tribAtual = resultado.trib;
+		if (!tribAtual || !tribAtual.tributos) {
+			return;
+		}
 
 		var cargaFed = 0;
 		var cargaEst = 0;
@@ -426,6 +445,8 @@
 
 	function aplicarDadosProduto(p) {
 		if (!p) return;
+		if (p.venda_fmt) setVal('prec-venda-atual', p.venda_fmt);
+		else if (p.venda > 0) setVal('prec-venda-atual', (p.venda).toFixed(2).replace('.', ','));
 		var custoFmt = p.custo_fmt;
 		if ((!custoFmt || p2num(custoFmt) <= 0) && p.venda > 0) {
 			custoFmt = (p.venda * 0.7).toFixed(2).replace('.', ',');
@@ -485,10 +506,13 @@
 
 	function bootProdutoSelect() {
 		var sel = document.getElementById('prec-produto-base');
-		if (!sel || sel.getAttribute('data-pgm-prec-bound') === '1') {
+		if (!sel) {
 			return;
 		}
-		sel.setAttribute('data-pgm-prec-bound', '1');
+		if (sel.__pgmPrecBound) {
+			return;
+		}
+		sel.__pgmPrecBound = true;
 		sel.addEventListener('change', function () {
 			var id = sel.value;
 			if (id === '0') {
