@@ -51,7 +51,15 @@
 		return { aliquotaEfetiva: efetiva * 100, aliquotaNominal: faixa.nominal * 100, parcelaDeduzir: faixa.deduzir, faixa: idx + 1, valor: valor, tributos: tributos };
 	}
 
+	function empresaTax() {
+		return global.PGM_PREC_EMPRESA || {};
+	}
+
 	function calcPresumido(rbt12, presIRPJ, presCSLL, receita) {
+		var tax = empresaTax();
+		var pisPct = tax.pis_pct !== undefined ? tax.pis_pct : 0.65;
+		var cofinsPct = tax.cofins_pct !== undefined ? tax.cofins_pct : 3;
+		var icmsPct = tax.icms_pct !== undefined ? tax.icms_pct : 18;
 		var limAnual = 5000000;
 		var acimaLim = rbt12 > limAnual;
 		var presIRPJReal = acimaLim ? presIRPJ * 1.1 : presIRPJ;
@@ -64,10 +72,10 @@
 		var irpj = irpjBase + irpjAdic;
 		var baseCSLL = receita * (presCSLLReal / 100);
 		var csll = baseCSLL * 0.09;
-		var pis = receita * 0.0065;
-		var cofins = receita * 0.03;
+		var pis = receita * (pisPct / 100);
+		var cofins = receita * (cofinsPct / 100);
 		var ehServico = presIRPJ === 32;
-		var icms = ehServico ? 0 : receita * 0.18;
+		var icms = ehServico ? 0 : receita * (icmsPct / 100);
 		var iss = ehServico ? receita * 0.05 : 0;
 		var ibsCbs = receita * 0.01;
 		var total = irpj + csll + pis + cofins + icms + iss;
@@ -78,9 +86,9 @@
 			tributos: {
 				IRPJ: { pct: (irpj / receita) * 100, valor: irpj, base: 'Presunção ' + presIRPJReal.toFixed(1) + '% × 15% (+adic 10%)' },
 				CSLL: { pct: (csll / receita) * 100, valor: csll, base: 'Presunção ' + presCSLLReal.toFixed(1) + '% × 9%' },
-				PIS: { pct: 0.65, valor: pis, base: 'Receita bruta · 0,65% cumulativo' },
-				COFINS: { pct: 3.00, valor: cofins, base: 'Receita bruta · 3% cumulativo' },
-				ICMS: { pct: ehServico ? 0 : 18, valor: icms, base: 'Operação interna · 17-18% RS' },
+				PIS: { pct: pisPct, valor: pis, base: 'Receita bruta · ' + pisPct + '% cumulativo' },
+				COFINS: { pct: cofinsPct, valor: cofins, base: 'Receita bruta · ' + cofinsPct + '% cumulativo' },
+				ICMS: { pct: ehServico ? 0 : icmsPct, valor: icms, base: 'Cadastro fiscal · ' + icmsPct + '%' },
 				ISS: { pct: ehServico ? 5 : 0, valor: iss, base: 'Município · 2-5% (BG: 5%)' },
 				IBS_CBS: { pct: 1.00, valor: ibsCbs, base: 'Teste 2026 · 100% compensável' }
 			}
@@ -88,16 +96,20 @@
 	}
 
 	function calcReal(margemReal, creditosPct, receita, ehServico) {
+		var tax = empresaTax();
+		var pisPct = tax.pis_pct !== undefined ? tax.pis_pct : 1.65;
+		var cofinsPct = tax.cofins_pct !== undefined ? tax.cofins_pct : 7.6;
+		var icmsPct = tax.icms_pct !== undefined ? tax.icms_pct : 18;
 		var lucroReal = receita * (margemReal / 100);
 		var irpjBase = lucroReal * 0.15;
 		var irpjAdic = lucroReal > 0 ? lucroReal * 0.10 : 0;
 		var irpj = irpjBase + irpjAdic;
 		var csll = lucroReal * 0.09;
-		var pisBruto = receita * 0.0165;
+		var pisBruto = receita * (pisPct / 100);
 		var pis = Math.max(0, pisBruto - pisBruto * (creditosPct / 100));
-		var cofinsBruto = receita * 0.076;
+		var cofinsBruto = receita * (cofinsPct / 100);
 		var cofins = Math.max(0, cofinsBruto - cofinsBruto * (creditosPct / 100));
-		var icms = ehServico ? 0 : receita * 0.18;
+		var icms = ehServico ? 0 : receita * (icmsPct / 100);
 		var iss = ehServico ? receita * 0.05 : 0;
 		var ibsCbs = receita * 0.01;
 		var total = irpj + csll + pis + cofins + icms + iss;
@@ -107,9 +119,9 @@
 			tributos: {
 				IRPJ: { pct: (irpj / receita) * 100, valor: irpj, base: 'Lucro real ' + margemReal + '% · 15% + 10% adic' },
 				CSLL: { pct: (csll / receita) * 100, valor: csll, base: 'Lucro real ' + margemReal + '% · 9%' },
-				PIS: { pct: (pis / receita) * 100, valor: pis, base: '1,65% − ' + creditosPct + '% créditos' },
-				COFINS: { pct: (cofins / receita) * 100, valor: cofins, base: '7,6% − ' + creditosPct + '% créditos' },
-				ICMS: { pct: ehServico ? 0 : 18, valor: icms, base: 'Operação interna · 17-18% RS' },
+				PIS: { pct: (pis / receita) * 100, valor: pis, base: pisPct + '% − ' + creditosPct + '% créditos' },
+				COFINS: { pct: (cofins / receita) * 100, valor: cofins, base: cofinsPct + '% − ' + creditosPct + '% créditos' },
+				ICMS: { pct: ehServico ? 0 : icmsPct, valor: icms, base: 'Cadastro fiscal · ' + icmsPct + '%' },
 				ISS: { pct: ehServico ? 5 : 0, valor: iss, base: 'Município · 2-5% (BG: 5%)' },
 				IBS_CBS: { pct: 1.00, valor: ibsCbs, base: 'Teste 2026 · 100% compensável' }
 			}
@@ -370,11 +382,86 @@
 		});
 	}
 
+	function setVal(id, val) {
+		var el = document.getElementById(id);
+		if (el && val !== undefined && val !== null) {
+			el.value = val;
+		}
+	}
+
+	function setRadioRegime(regime) {
+		var r = document.querySelector('input[name="regime"][value="' + regime + '"]');
+		if (r) {
+			r.checked = true;
+			trocarRegime(regime);
+		}
+	}
+
+	function aplicarDadosEmpresa(emp) {
+		if (!emp) return;
+		if (emp.rbt12_fmt) setVal('prec-rbt12', emp.rbt12_fmt);
+		if (emp.operacao) setVal('prec-operacao', emp.operacao);
+		if (emp.anexo) setVal('prec-anexo', emp.anexo);
+		if (emp.fator_r !== undefined) setVal('prec-fator-r', String(emp.fator_r));
+		if (emp.pres_irpj !== undefined) setVal('prec-pres-irpj', String(emp.pres_irpj));
+		if (emp.pres_csll !== undefined) setVal('prec-pres-csll', String(emp.pres_csll));
+		if (emp.margem_real !== undefined) setVal('prec-margem-real', String(emp.margem_real).replace('.', ','));
+		if (emp.creditos_pct !== undefined) setVal('prec-creditos', String(emp.creditos_pct).replace('.', ','));
+		if (emp.regime_ui) setRadioRegime(emp.regime_ui);
+	}
+
+	function aplicarDadosProduto(p) {
+		if (!p) return;
+		if (p.custo_fmt) setVal('prec-custo', p.custo_fmt);
+		if (p.frete_fmt) setVal('prec-frete', p.frete_fmt);
+		if (p.margem_lucro_pct !== undefined) {
+			setVal('prec-margem', String(p.margem_lucro_pct).replace('.', ','));
+		}
+		if (p.operacao) setVal('prec-operacao', p.operacao);
+		if (p.anexo) setVal('prec-anexo', p.anexo);
+		if (p.regime) setRadioRegime(p.regime);
+		var info = document.getElementById('prec-produto-info');
+		if (info) {
+			var fonteC = p.fonte_custo === 'erp' ? 'ERP' : (p.fonte_custo === 'cadastro' ? 'cadastro' : 'estimativa');
+			var fonteV = p.fonte_venda === 'erp' ? 'ERP' : (p.fonte_venda === 'tabela' ? 'tabela ativa' : 'cadastro');
+			info.textContent = (p.codigo || '') + ' · ' + (p.tipo_label || '') +
+				' · Custo (' + fonteC + '): ' + (p.custo_fmt || '—') +
+				' · Venda (' + fonteV + '): ' + (p.venda_fmt || '—') +
+				' · Margem atual: ' + (p.margem_fmt || '—');
+			info.style.display = 'block';
+		}
+		var hid = document.getElementById('precificacao-produto-id');
+		if (hid) hid.value = p.id || '0';
+		recalcularTudo();
+	}
+
 	function aplicarProdutoBase(custoFmt) {
-		var el = document.getElementById('prec-custo');
-		if (el && custoFmt) {
-			el.value = custoFmt;
-			recalcularTudo();
+		setVal('prec-custo', custoFmt);
+		recalcularTudo();
+	}
+
+	function parsePrecoSugerido() {
+		var el = document.getElementById('prec-res-preco');
+		if (!el) return 0;
+		return p2num(el.textContent);
+	}
+
+	function aplicarAoProduto(formId) {
+		var form = document.getElementById(formId);
+		var pid = document.getElementById('precificacao-produto-id');
+		var preco = parsePrecoSugerido();
+		if (!form || !pid || parseInt(pid.value, 10) <= 0) {
+			alert('Selecione um produto do catálogo antes de aplicar o preço.');
+			return;
+		}
+		var hidden = document.getElementById('precificacao-vl-hidden');
+		if (hidden) hidden.value = preco.toFixed(2);
+		if (preco <= 0) {
+			alert('Preço sugerido inválido. Ajuste os custos e recalcule.');
+			return;
+		}
+		if (confirm('Aplicar preço sugerido de ' + num2BRL(preco) + ' ao produto selecionado?')) {
+			form.submit();
 		}
 	}
 
@@ -383,9 +470,13 @@
 		trocarRegime: trocarRegime,
 		alternarTributos: alternarTributos,
 		aplicarProdutoBase: aplicarProdutoBase,
+		aplicarDadosEmpresa: aplicarDadosEmpresa,
+		aplicarDadosProduto: aplicarDadosProduto,
+		aplicarAoProduto: aplicarAoProduto,
 		num2BRL: num2BRL,
-		init: function () {
+		init: function (empresaCtx) {
 			bindRecalc();
+			if (empresaCtx) aplicarDadosEmpresa(empresaCtx);
 			recalcularTudo();
 		}
 	};

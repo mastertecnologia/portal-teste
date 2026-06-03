@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Controller\Traits\ErpPrototypeRbacTrait;
 use App\Controller\Traits\PrototypeApiSecurityTrait;
+use App\Utility\ProdutosPrecificacaoBuilder;
 use App\Utility\ProdutosPrecosPrototypeBuilder;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
@@ -670,45 +671,51 @@ class ProdutosPrototypeController extends AppController {
 	 * @return array<string,mixed>
 	 */
 	protected function buildPrecificacaoPayload(): array {
+		return (new ProdutosPrecificacaoBuilder($this->Produtos))->buildPayload(
+			(int)$this->Auth->user('idempresa'),
+			$this->request->getQueryParams()
+		);
+	}
+
+	/**
+	 * POST — aplica preço sugerido do simulador ao produto selecionado.
+	 */
+	public function precificacaoAplicar() {
+		$this->request->allowMethod(['post']);
 		$empresa = (int)$this->Auth->user('idempresa');
-		$query = $this->request->getQueryParams();
-		$prodId = (int)($query['produto_id'] ?? 0);
-		$opcoes = [];
-		$produtosData = [];
-		$custoInicial = 1000.0;
-		$freteInicial = 50.0;
+		$id = (int)$this->request->getData('produto_id');
+		$novo = (float)str_replace(',', '.', (string)$this->request->getData('vlunitario', '0'));
+		if ($id <= 0 || $novo < 0) {
+			$this->Flash->error(__('Selecione um produto e informe o preço sugerido.'));
+			return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precificacao']);
+		}
 		try {
-			foreach ($this->Produtos->find()
-				->where(['Produtos.idempresa' => $empresa, 'Produtos.ativo' => 1])
-				->order(['Produtos.descricao' => 'ASC'])
-				->limit(500)
-				->all() as $p) {
-				$id = (int)$p->get('id');
-				$venda = (float)$p->get('vlunitario');
-				$custoEst = $venda > 0 ? round($venda * 0.7, 2) : 0.0;
-				$opcoes[$id] = trim(sprintf('%s · %s', (string)$p->get('codigo'), (string)$p->get('descricao')));
-				$produtosData[$id] = [
-					'custo_fmt' => number_format($custoEst > 0 ? $custoEst : 1000, 2, ',', '.'),
-					'venda' => $venda,
-				];
-				if ($prodId > 0 && $id === $prodId && $custoEst > 0) {
-					$custoInicial = $custoEst;
-					$freteInicial = 0.0;
+			$prod = $this->Produtos->find()
+				->where(['Produtos.id' => $id, 'Produtos.idempresa' => $empresa])
+				->first();
+			if ($prod === null) {
+				$this->Flash->error(__('Produto não encontrado.'));
+				return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precificacao', '?' => ['produto_id' => $id]]);
+			}
+			$codigo = (string)$prod->get('codigo');
+			$prod->set('vlunitario', $novo);
+			if ($this->Produtos->save($prod)) {
+				try {
+					$this->loadModel('PrecosTabelaItens')->updateAll(
+						['vlunitario' => $novo],
+						['produto_id' => $id]
+					);
+				} catch (\Throwable $e) {
 				}
+				$this->Flash->success(__('Preço de {0} atualizado para {1}.', $codigo, 'R$ ' . number_format($novo, 2, ',', '.')));
+			} else {
+				$this->Flash->error(__('Falha ao salvar o preço.'));
 			}
 		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro: {0}', $e->getMessage()));
 		}
 
-		return [
-			'precificOpcoes' => $opcoes,
-			'precificProdutosJson' => json_encode($produtosData, JSON_UNESCAPED_UNICODE),
-			'precificProdutoId' => $prodId,
-			'precificInicial' => [
-				'custo' => number_format($custoInicial, 2, ',', '.'),
-				'frete' => number_format($freteInicial, 2, ',', '.'),
-				'rbt12' => '1.420.000,00',
-			],
-		];
+		return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precificacao', '?' => ['produto_id' => $id]]);
 	}
 
 	/**

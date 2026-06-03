@@ -4,13 +4,16 @@
  *
  * @var array<int,string> $precificOpcoes
  * @var string $precificProdutosJson
+ * @var string $precificEmpresaJson
  * @var int $precificProdutoId
- * @var array{custo:string,frete:string,rbt12:string} $precificInicial
+ * @var array<string,string> $precificInicial
+ * @var int $precificTabelaAtivaId
  */
 $ini = $precificInicial;
 $urlPrecos = ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'];
 $urlHist = ['controller' => 'ProdutosPrototype', 'action' => 'view', 'historico-precos'];
 $jsSim = $this->Url->build('/js/pgm-precificacao-simulador.js');
+$urlAplicar = ['controller' => 'ProdutosPrototype', 'action' => 'precificacaoAplicar'];
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
 	<div>
@@ -22,7 +25,7 @@ $jsSim = $this->Url->build('/js/pgm-precificacao-simulador.js');
 		<?= $this->Html->link('📜 ' . __('Histórico'), $urlHist, ['class' => 'btn btn-ghost btn-sm']) ?>
 		<button type="button" class="btn btn-ghost btn-sm" onclick="window.print()">📥 <?= h(__('Exportar PDF')) ?></button>
 		<button type="button" class="btn btn-ghost btn-sm" onclick="alert('<?= h(__('Simulação arquivada no protótipo (histórico de precificação).')) ?>')">💾 <?= h(__('Salvar simulação')) ?></button>
-		<button type="button" class="btn btn-primary btn-sm" onclick="var p=document.getElementById('prec-res-preco');alert('<?= h(__('Preço sugerido aplicado:')) ?> '+(p?p.textContent:''));">✓ <?= h(__('Aplicar ao produto')) ?></button>
+		<button type="button" class="btn btn-primary btn-sm" onclick="PgmPrecificacao.aplicarAoProduto('precificacao-aplicar-form')">✓ <?= h(__('Aplicar ao produto')) ?></button>
 	</div>
 </div>
 
@@ -34,7 +37,7 @@ $jsSim = $this->Url->build('/js/pgm-precificacao-simulador.js');
 <div class="card" style="margin-bottom:14px;padding:12px 14px;">
 	<div class="field" style="margin:0;">
 		<label><?= h(__('Carregar custo de um produto do catálogo (opcional)')) ?></label>
-		<select id="prec-produto-base" onchange="PgmPrecificacao.aplicarProdutoBase(window.PGM_PREC_PRODUTOS[this.value])">
+		<select id="prec-produto-base">
 			<option value="0"><?= h(__('— Simulação manual —')) ?></option>
 			<?php foreach ($precificOpcoes as $id => $lbl) :
 				$sel = (int)$id === (int)$precificProdutoId ? ' selected' : '';
@@ -42,7 +45,15 @@ $jsSim = $this->Url->build('/js/pgm-precificacao-simulador.js');
 				<option value="<?= (int)$id ?>"<?= $sel ?>><?= h((string)$lbl) ?></option>
 			<?php endforeach; ?>
 		</select>
+		<div id="prec-produto-info" style="display:none;margin-top:8px;padding:10px;background:var(--teal-light);border-radius:6px;font-size:12px;color:var(--teal-dark);"></div>
+		<?php if ((int)($precificTabelaAtivaId ?? 0) > 0) : ?>
+			<div style="font-size:11px;color:var(--text-muted);margin-top:6px;"><?= h(__('Preços de venda da tabela ativa de preços aplicados aos serviços/produtos vinculados.')) ?></div>
+		<?php endif; ?>
 	</div>
+	<?= $this->Form->create(null, ['url' => $urlAplicar, 'id' => 'precificacao-aplicar-form', 'style' => 'display:none;']) ?>
+	<input type="hidden" name="produto_id" id="precificacao-produto-id" value="<?= (int)($ini['produto_id'] ?? $precificProdutoId) ?>">
+	<input type="hidden" name="vlunitario" id="precificacao-vl-hidden" value="0">
+	<?= $this->Form->end() ?>
 </div>
 <?php endif; ?>
 
@@ -81,7 +92,7 @@ $jsSim = $this->Url->build('/js/pgm-precificacao-simulador.js');
 		</div>
 		<div class="field">
 			<label><?= h(__('Receita bruta · 12 meses (RBT12)')) ?></label>
-			<input type="text" id="prec-rbt12" value="R$ <?= h((string)$ini['rbt12']) ?>"/>
+			<input type="text" id="prec-rbt12" value="<?= h((string)($ini['rbt12'] ?? 'R$ 1.420.000,00')) ?>"/>
 			<div style="font-size:11px;color:var(--text-muted);margin-top:4px;"><?= h(__('Base para definição da faixa do Simples ou aplicação do limite de R$ 5M no Presumido')) ?></div>
 		</div>
 	</div>
@@ -312,15 +323,29 @@ $jsSim = $this->Url->build('/js/pgm-precificacao-simulador.js');
 
 <script>
 window.PGM_PREC_PRODUTOS = <?= $precificProdutosJson ?: '{}' ?>;
+window.PGM_PREC_EMPRESA = <?= $precificEmpresaJson ?: '{}' ?>;
 </script>
 <script src="<?= h($jsSim) ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-	if (window.PgmPrecificacao) {
-		PgmPrecificacao.init();
-		var sel = document.getElementById('prec-produto-base');
-		if (sel && sel.value !== '0' && window.PGM_PREC_PRODUTOS[sel.value]) {
-			PgmPrecificacao.aplicarProdutoBase(window.PGM_PREC_PRODUTOS[sel.value].custo_fmt);
+	if (!window.PgmPrecificacao) return;
+	PgmPrecificacao.init(window.PGM_PREC_EMPRESA);
+	var sel = document.getElementById('prec-produto-base');
+	if (sel) {
+		sel.addEventListener('change', function () {
+			var id = sel.value;
+			if (id === '0') {
+				var info = document.getElementById('prec-produto-info');
+				if (info) info.style.display = 'none';
+				document.getElementById('precificacao-produto-id').value = '0';
+				PgmPrecificacao.aplicarDadosEmpresa(window.PGM_PREC_EMPRESA);
+				return;
+			}
+			var p = window.PGM_PREC_PRODUTOS[id];
+			if (p) PgmPrecificacao.aplicarDadosProduto(p);
+		});
+		if (sel.value !== '0' && window.PGM_PREC_PRODUTOS[sel.value]) {
+			PgmPrecificacao.aplicarDadosProduto(window.PGM_PREC_PRODUTOS[sel.value]);
 		}
 	}
 });
