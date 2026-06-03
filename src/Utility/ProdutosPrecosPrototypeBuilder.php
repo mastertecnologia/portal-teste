@@ -5,6 +5,7 @@ namespace App\Utility;
 
 use App\Model\Table\ProdutosTable;
 use App\Utility\ErpGridUrl;
+use App\Utility\PrecosHistoricoService;
 use App\Utility\PrecosTabelaServicosTecnicosCatalog;
 use Cake\I18n\FrozenTime;
 use Cake\Log\Log;
@@ -102,6 +103,8 @@ class ProdutosPrecosPrototypeBuilder {
 				break;
 			}
 		}
+
+		$produto['idempresa'] = $empresaId;
 
 		return [
 			'produto' => $produto,
@@ -224,46 +227,172 @@ class ProdutosPrecosPrototypeBuilder {
 	 */
 	public function buildHistorico(int $empresaId, array $query = []): array {
 		$busca = trim((string)($query['q'] ?? ''));
+		$eventos = PrecosHistoricoService::listar($empresaId, $query, 100);
+		if ($eventos === []) {
+			$eventos = $this->buildHistoricoFallbackModified($empresaId, $busca);
+		}
+		$kpi = PrecosHistoricoService::kpi30d($empresaId);
+		if ((int)$kpi['alteracoes_30d'] === 0 && $eventos !== []) {
+			$kpi['alteracoes_30d'] = count($eventos);
+		}
+		$kpi['proximo_reajuste'] = $this->proximaRevisao()->format('d/m/Y');
+
+		return [
+			'historicoEventos' => $eventos,
+			'historicoKpi' => $kpi,
+			'historicoFiltro' => $busca,
+			'historicoTabelas' => $this->loadTabelas($empresaId),
+			'historicoFiltroTipo' => (string)($query['tipo'] ?? 'todos'),
+			'historicoFiltroTabela' => (int)($query['tabela'] ?? 0),
+			'historicoDesde' => (string)($query['desde'] ?? ''),
+			'historicoAte' => (string)($query['ate'] ?? ''),
+		];
+	}
+
+	/**
+	 * @return array<string,mixed>|null
+	 */
+	public function buildHistoricoDetalhe(int $empresaId, int $historicoId): ?array {
+		$ev = PrecosHistoricoService::obter($empresaId, $historicoId);
+		if ($ev === null) {
+			return null;
+		}
+		$timeline = [];
+		if ((int)$ev['produto_id'] > 0) {
+			$timeline = PrecosHistoricoService::timelineProduto($empresaId, (int)$ev['produto_id'], 8);
+		}
+
+		return [
+			'historicoDetalhe' => $ev,
+			'historicoTimeline' => $timeline,
+		];
+	}
+
+	/**
+	 * Fallback quando ainda não há registros em precos_historico.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function buildHistoricoFallbackModified(int $empresaId, string $busca): array {
 		$rows = $this->loadEnrichedRows($empresaId, $busca);
 		$eventos = [];
-		$agora = FrozenTime::now();
-		$limite30 = $agora->subDays(30);
-		$aumentos = 0;
-		$reducoes = 0;
+		$limite30 = FrozenTime::now()->subDays(30);
 		foreach ($rows as $r) {
 			$mod = $r['modified'] ?? null;
-			if (!$mod instanceof FrozenTime) {
+			if (!$mod instanceof FrozenTime || $mod < $limite30) {
 				continue;
 			}
-			if ($mod < $limite30) {
-				continue;
-			}
+			$venda = (float)$r['venda'];
 			$eventos[] = [
+				'id' => 0,
 				'data' => $mod,
+				'produto_id' => (int)$r['id'],
 				'codigo' => $r['codigo'],
 				'descricao' => $r['descricao'],
-				'preco_novo' => (float)$r['venda'],
-				'tipo' => 'atualizacao',
+				'tabela' => __('Catálogo'),
+				'preco_anterior' => null,
+				'preco_novo' => $venda,
+				'variacao_pct' => null,
+				'tipo' => 'ajuste',
+				'motivo' => __('Atualização de preço no catálogo'),
+				'autor' => '—',
+				'seta' => '↔',
+				'row_bg' => '#F0FDF4',
 			];
-			$aumentos++;
 		}
 		usort($eventos, static function ($a, $b) {
 			return $b['data'] <=> $a['data'];
 		});
-		$eventos = array_slice($eventos, 0, 50);
 
-		return [
-			'historicoEventos' => $eventos,
-			'historicoKpi' => [
-				'alteracoes_30d' => count($eventos),
-				'aumentos' => $aumentos,
-				'reducoes' => $reducoes,
-				'promocoes' => 0,
-				'reajuste_medio' => count($eventos) > 0 ? '+2,8%' : '—',
-				'proximo_reajuste' => $this->proximaRevisao()->format('d/m/Y'),
-			],
-			'historicoFiltro' => $busca,
-		];
+		return array_slice($eventos, 0, 50);
+	}
+
+	/**
+	 * Cria tabela de preços e itens a partir do formulário (pg-preco-tabela-nova).
+	 *
+	 * @param array<string,mixed> $data
+	 * @return array{id:int,nome:string,itens:int}|null
+	 */
+	public function criarTabela(int $empresaId, array $data): ?array {
+		$nome = trim((string)($data['nome'] ?? ''));
+		if ($nome === '') {
+			return null;
+		}
+		try {
+			$Tabelas = TableRegistry::getTableLocator()->get('PrecosTabelas');
+			$Itens = TableRegistry::getTableLocator()->get('PrecosTabelaItens');
+		} catch (\Throwable $e) {
+			return null;
+		}
+		$codigo = trim((string)($data['codigo'] ?? ''));
+		if ($codigo === '') {
+			$codigo = 'TAB-' . strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $nome) ?: 'NOVA', 0, 12));
+		}
+		$base = (string)($data['base'] ?? 'copiar');
+		$pctAjuste = (float)str_replace(',', '.', (string)($data['pct_ajuste'] ?? '0'));
+		$tabelaOrigemId = (int)($data['tabela_origem_id'] ?? 0);
+		if ($tabelaOrigemId <= 0) {
+			$tabelas = $this->loadTabelas($empresaId);
+			foreach ($tabelas as $tb) {
+				if (!empty($tb['vigente'])) {
+					$tabelaOrigemId = (int)$tb['id'];
+					break;
+				}
+			}
+			if ($tabelaOrigemId <= 0 && $tabelas !== []) {
+				$tabelaOrigemId = (int)$tabelas[0]['id'];
+			}
+		}
+		$agora = FrozenTime::now();
+		$header = $Tabelas->newEntity([
+			'idempresa' => $empresaId,
+			'codigo' => $codigo,
+			'nome' => $nome,
+			'descricao' => trim((string)($data['descricao'] ?? '')),
+			'moeda' => (string)($data['moeda'] ?? 'BRL'),
+			'vigencia_inicio' => !empty($data['vigencia_inicio']) ? $data['vigencia_inicio'] : $agora->format('Y-m-d'),
+			'vigencia_fim' => !empty($data['vigencia_fim']) ? $data['vigencia_fim'] : null,
+			'vigente' => !empty($data['vigente']),
+			'ativo' => true,
+			'created' => $agora,
+		]);
+		if (!$Tabelas->save($header)) {
+			return null;
+		}
+		$tabelaId = (int)$header->get('id');
+		$rows = $this->loadEnrichedRows($empresaId, '', $tabelaOrigemId > 0 ? $tabelaOrigemId : 0);
+		if ($base === 'custo') {
+			foreach ($rows as $i => $r) {
+				$custo = (float)$r['custo'];
+				$rows[$i]['venda'] = $custo > 0
+					? round($custo / (1 - (self::MARGEM_ALVO_PCT / 100)), 2)
+					: (float)$r['venda'];
+			}
+		} elseif ($base !== 'branco' && $pctAjuste !== 0.0) {
+			foreach ($rows as $i => $r) {
+				$rows[$i]['venda'] = round((float)$r['venda'] * (1 + ($pctAjuste / 100)), 2);
+			}
+		}
+		$ordem = 0;
+		$cnt = 0;
+		foreach ($rows as $r) {
+			$ordem++;
+			$item = $Itens->newEntity([
+				'precos_tabela_id' => $tabelaId,
+				'produto_id' => (int)$r['id'],
+				'codigo_item' => (string)$r['codigo'],
+				'descricao' => (string)$r['descricao'],
+				'vlunitario' => (float)$r['venda'],
+				'ordem' => $ordem,
+				'ativo' => true,
+				'created' => $agora,
+			]);
+			if ($Itens->save($item)) {
+				$cnt++;
+			}
+		}
+
+		return ['id' => $tabelaId, 'nome' => $nome, 'itens' => $cnt];
 	}
 
 	/**
@@ -437,6 +566,8 @@ class ProdutosPrecosPrototypeBuilder {
 			'novaTotalProdutos' => $total,
 			'novaSimulacao' => $sim,
 			'novaMargemMedia' => $this->margemMedia($simMargem) ?? $this->margemMedia($rows),
+			'novaTabelas' => $this->loadTabelas($empresaId),
+			'novaTabelaOrigemId' => $this->resolveTabelaId($empresaId, [], $this->loadTabelas($empresaId)),
 		];
 	}
 
@@ -1000,6 +1131,32 @@ class ProdutosPrecosPrototypeBuilder {
 	 * @return array<int,array<string,mixed>>
 	 */
 	protected function historicoProduto(array $r): array {
+		$produtoId = (int)($r['id'] ?? 0);
+		$empresaId = (int)($r['idempresa'] ?? 0);
+		if ($produtoId > 0 && $empresaId > 0) {
+			$db = PrecosHistoricoService::timelineProduto($empresaId, $produtoId, 6);
+			if ($db !== []) {
+				$hist = [];
+				foreach ($db as $ev) {
+					$de = $ev['preco_anterior'];
+					$para = (float)$ev['preco_novo'];
+					$pct = $ev['variacao_pct'];
+					$hist[] = [
+						'dia' => $ev['data'] instanceof FrozenTime ? $ev['data']->format('d/m') : '',
+						'de' => $de,
+						'para' => $para,
+						'pct' => $pct !== null
+							? (($pct >= 0 ? '↑ +' : '↓ ') . number_format(abs($pct), 1, ',', '.') . '%')
+							: ($ev['tipo'] === 'criacao' ? __('criação') : '—'),
+						'pct_color' => $pct !== null && $pct < 0 ? '#7A1822' : 'var(--teal-dark)',
+						'border' => 'var(--teal)',
+						'motivo' => $ev['motivo'] !== '' ? $ev['motivo'] : null,
+					];
+				}
+
+				return $hist;
+			}
+		}
 		$venda = (float)$r['venda'];
 		$mod = $r['modified'] ?? null;
 		$created = $r['created'] ?? null;

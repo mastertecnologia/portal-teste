@@ -94,6 +94,9 @@ return [
 			'apiatualizarcampo' => 'write',
 			'precosave' => 'pricing',
 			'reajustesave' => 'pricing',
+			'precificacaoaplicar' => 'pricing',
+			'tabelasave' => 'pricing',
+			'historicorevert' => 'pricing',
 		],
 		'OrcamentosPrototype' => [
 			'mudarstatus' => 'write',
