@@ -440,7 +440,7 @@
 		if (p.regime) setRadioRegime(p.regime);
 		var info = document.getElementById('prec-produto-info');
 		if (info) {
-			var fonteC = p.fonte_custo === 'erp' ? 'ERP' : (p.fonte_custo === 'cadastro' ? 'cadastro' : 'estimativa');
+			var fonteC = p.fonte_custo === 'erp' ? 'ERP' : (p.fonte_custo === 'cadastro' ? 'cadastro' : (p.fonte_custo === 'estimado_margem' ? 'estimativa (margem)' : 'estimativa'));
 			var fonteV = p.fonte_venda === 'erp' ? 'ERP' : (p.fonte_venda === 'tabela' ? 'tabela ativa' : 'cadastro');
 			info.textContent = (p.codigo || '') + ' · ' + (p.tipo_label || '') +
 				' · Custo (' + fonteC + '): ' + (p.custo_fmt || '—') +
