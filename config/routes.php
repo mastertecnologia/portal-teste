@@ -774,6 +774,14 @@ Router::scope("/", function ($routes) {
         "controller" => "ProdutosPrototype",
         "action" => "precificacaoAplicar",
     ]);
+    $routes->connect("/produtos-prototype/tabela-save", [
+        "controller" => "ProdutosPrototype",
+        "action" => "tabelaSave",
+    ]);
+    $routes->connect("/produtos-prototype/historico-revert", [
+        "controller" => "ProdutosPrototype",
+        "action" => "historicoRevert",
+    ]);
     $routes->connect("/produtos-prototype/api/atualizar-campo", [
         "controller" => "ProdutosPrototype",
         "action" => "apiAtualizarCampo",

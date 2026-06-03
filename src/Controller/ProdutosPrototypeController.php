@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Controller\Traits\ErpPrototypeRbacTrait;
 use App\Controller\Traits\PrototypeApiSecurityTrait;
+use App\Utility\PrecosHistoricoService;
 use App\Utility\ProdutosPrecificacaoBuilder;
 use App\Utility\ProdutosPrecosPrototypeBuilder;
 use Cake\Event\Event;
@@ -206,13 +207,14 @@ class ProdutosPrototypeController extends AppController {
 		$allowed = [
 			'novo', 'detalhe', 'precos', 'precificacao', 'estoque-log', 'historico-precos',
 			'preco-tabela-nova', 'preco-reajuste-massa', 'preco-ajuste', 'preco-tabela-detalhe', 'preco-tabelas',
+			'historico-preco-detalhe',
 			'import', 'pc-lista', 'pc-novo', 'inventario', 'inv-historico',
 		];
 		if (!in_array($page, $allowed, true)) {
 			throw new NotFoundException(__('Tela do protótipo não encontrada.'));
 		}
 
-		$navPrecos = in_array($page, ['precos', 'preco-tabela-nova', 'preco-reajuste-massa', 'preco-ajuste', 'preco-tabela-detalhe', 'preco-tabelas'], true);
+		$navPrecos = in_array($page, ['precos', 'preco-tabela-nova', 'preco-reajuste-massa', 'preco-ajuste', 'preco-tabela-detalhe', 'preco-tabelas', 'precificacao'], true);
 		$set = [
 			'title' => __('Produtos · {0}', ucfirst((string)$page)),
 			'erpNavActive' => $navPrecos ? 'precos' : ($page === 'historico-precos' ? 'historico-precos' : 'produtos'),
@@ -238,6 +240,20 @@ class ProdutosPrototypeController extends AppController {
 			$this->set($set);
 
 			return $this->render('historico_precos');
+		}
+
+		if ($page === 'historico-preco-detalhe') {
+			$hid = (int)$this->request->getQuery('id', 0);
+			$det = $this->precosBuilder()->buildHistoricoDetalhe((int)$this->Auth->user('idempresa'), $hid);
+			if ($det === null) {
+				$this->Flash->error(__('Registro de histórico não encontrado.'));
+				return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'historico-precos']);
+			}
+			$set += $det;
+			$set['erpNavActive'] = 'historico-precos';
+			$this->set($set);
+
+			return $this->render('historico_preco_detalhe');
 		}
 
 		if ($page === 'preco-tabela-nova') {
@@ -444,6 +460,7 @@ class ProdutosPrototypeController extends AppController {
 						} catch (\Throwable $e) {
 						}
 					}
+					$this->registrarHistoricoPreco($empresa, $prod, $atual, $novo, $tabelaId, sprintf(__('Reajuste em massa %s%%'), number_format($pct, 1, ',', '.')), 'massa');
 					$salvos++;
 				}
 			} catch (\Throwable $e) {
@@ -547,6 +564,7 @@ class ProdutosPrototypeController extends AppController {
 					}
 				} catch (\Throwable $e) {
 				}
+				$this->registrarHistoricoPreco($empresa, $prod, $atual, $novo, $tabelaId, $motivo !== '' ? $motivo : __('Ajuste manual de preço'), 'ajuste');
 				$msg = __('Preço do produto {0} atualizado para {1}.', (string)$prod->get('codigo'), 'R$ ' . number_format($novo, 2, ',', '.'));
 				if ($motivo !== '') {
 					$msg .= ' ' . __('Motivo: {0}', $motivo);
@@ -698,6 +716,7 @@ class ProdutosPrototypeController extends AppController {
 				return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precificacao', '?' => ['produto_id' => $id]]);
 			}
 			$codigo = (string)$prod->get('codigo');
+			$anterior = (float)$prod->get('vlunitario');
 			$prod->set('vlunitario', $novo);
 			if ($this->Produtos->save($prod)) {
 				try {
@@ -707,6 +726,7 @@ class ProdutosPrototypeController extends AppController {
 					);
 				} catch (\Throwable $e) {
 				}
+				$this->registrarHistoricoPreco($empresa, $prod, $anterior, $novo, 0, __('Preço aplicado pelo Centro de Cálculo'), 'ajuste');
 				$this->Flash->success(__('Preço de {0} atualizado para {1}.', $codigo, 'R$ ' . number_format($novo, 2, ',', '.')));
 			} else {
 				$this->Flash->error(__('Falha ao salvar o preço.'));
@@ -716,6 +736,122 @@ class ProdutosPrototypeController extends AppController {
 		}
 
 		return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'precificacao', '?' => ['produto_id' => $id]]);
+	}
+
+	/**
+	 * POST — cria nova tabela de preços (pg-preco-tabela-nova).
+	 */
+	public function tabelaSave() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$data = $this->request->getData();
+		$pct = (float)str_replace(',', '.', (string)($data['pct_ajuste'] ?? '0'));
+		if ((string)($data['tipo_ajuste'] ?? '') === 'desconto') {
+			$pct = -abs($pct);
+		} else {
+			$pct = abs($pct);
+		}
+		$data['pct_ajuste'] = (string)$pct;
+		$result = $this->precosBuilder()->criarTabela($empresa, $data);
+		if ($result === null) {
+			$this->Flash->error(__('Informe o nome da tabela e tente novamente.'));
+			return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-tabela-nova']);
+		}
+		$this->Flash->success(__('Tabela {0} criada com {1} itens.', $result['nome'], (int)$result['itens']));
+
+		return $this->redirect([
+			'controller' => 'ProdutosPrototype',
+			'action' => 'view',
+			'preco-tabela-detalhe',
+			'?' => ['tabela' => (int)$result['id']],
+		]);
+	}
+
+	/**
+	 * POST — reverte preço conforme registro de histórico (gera nova entrada de auditoria).
+	 */
+	public function historicoRevert() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$hid = (int)$this->request->getData('historico_id');
+		$ev = PrecosHistoricoService::obter($empresa, $hid);
+		if ($ev === null || (int)$ev['produto_id'] <= 0 || $ev['preco_anterior'] === null) {
+			$this->Flash->error(__('Não foi possível reverter esta alteração.'));
+			return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'historico-precos']);
+		}
+		$id = (int)$ev['produto_id'];
+		$novo = (float)$ev['preco_anterior'];
+		try {
+			$prod = $this->Produtos->find()
+				->where(['Produtos.id' => $id, 'Produtos.idempresa' => $empresa])
+				->first();
+			if ($prod === null) {
+				$this->Flash->error(__('Produto não encontrado.'));
+				return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'historico-preco-detalhe', '?' => ['id' => $hid]]);
+			}
+			$atual = (float)$prod->get('vlunitario');
+			$prod->set('vlunitario', $novo);
+			if ($this->Produtos->save($prod)) {
+				try {
+					$this->loadModel('PrecosTabelaItens')->updateAll(
+						['vlunitario' => $novo],
+						['produto_id' => $id]
+					);
+				} catch (\Throwable $e) {
+				}
+				$this->registrarHistoricoPreco($empresa, $prod, $atual, $novo, 0, __('Reversão de alteração #{0}', $hid), 'ajuste');
+				$this->Flash->warning(__('Preço revertido para {0}.', 'R$ ' . number_format($novo, 2, ',', '.')));
+			}
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro: {0}', $e->getMessage()));
+		}
+
+		return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'historico-preco-detalhe', '?' => ['id' => $hid]]);
+	}
+
+	/**
+	 * @param \Cake\Datasource\EntityInterface $prod
+	 */
+	protected function registrarHistoricoPreco(
+		int $empresaId,
+		$prod,
+		float $anterior,
+		float $novo,
+		int $tabelaId = 0,
+		string $motivo = '',
+		string $tipo = 'ajuste'
+	): void {
+		if (abs($novo - $anterior) < 0.009) {
+			return;
+		}
+		$tabelaNome = __('Catálogo');
+		if ($tabelaId > 0) {
+			try {
+				$tb = $this->loadModel('PrecosTabelas')->get($tabelaId);
+				$tabelaNome = (string)$tb->get('nome');
+			} catch (\Throwable $e) {
+			}
+		}
+		$user = (array)$this->Auth->user();
+		$autor = trim((string)($user['name'] ?? $user['username'] ?? $user['email'] ?? ''));
+		if ($autor === '') {
+			$autor = __('Sistema');
+		}
+		PrecosHistoricoService::registrar([
+			'idempresa' => $empresaId,
+			'produto_id' => (int)$prod->get('id'),
+			'precos_tabela_id' => $tabelaId > 0 ? $tabelaId : null,
+			'codigo_produto' => (string)$prod->get('codigo'),
+			'descricao_produto' => (string)$prod->get('descricao'),
+			'tabela_nome' => $tabelaNome,
+			'preco_anterior' => $anterior,
+			'preco_novo' => $novo,
+			'tipo' => $tipo,
+			'motivo' => $motivo,
+			'user_id' => (int)($user['id'] ?? 0),
+			'autor_nome' => $autor,
+			'ip_origem' => (string)$this->request->clientIp(),
+		]);
 	}
 
 	/**
