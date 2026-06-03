@@ -673,74 +673,41 @@ class ProdutosPrototypeController extends AppController {
 		$empresa = (int)$this->Auth->user('idempresa');
 		$query = $this->request->getQueryParams();
 		$prodId = (int)($query['produto_id'] ?? 0);
-		$margem = (float)str_replace(',', '.', (string)($query['margem'] ?? '30'));
-		$descontoMax = (float)str_replace(',', '.', (string)($query['desconto'] ?? '10'));
-		$icms = (float)str_replace(',', '.', (string)($query['icms'] ?? '18'));
-		$pisCofins = (float)str_replace(',', '.', (string)($query['pis_cofins'] ?? '9.25'));
-		if ($margem < 0 || $margem > 500) {
-			$margem = 30;
-		}
-		if ($descontoMax < 0 || $descontoMax > 90) {
-			$descontoMax = 10;
-		}
-		if ($icms < 0 || $icms > 35) {
-			$icms = 18;
-		}
-		if ($pisCofins < 0 || $pisCofins > 20) {
-			$pisCofins = 9.25;
-		}
-
-		$produto = null;
 		$opcoes = [];
+		$produtosData = [];
+		$custoInicial = 1000.0;
+		$freteInicial = 50.0;
 		try {
 			foreach ($this->Produtos->find()
-				->where(['Produtos.idempresa' => $empresa, 'Produtos.ativo' => 1, 'Produtos.tipo' => 'prod'])
+				->where(['Produtos.idempresa' => $empresa, 'Produtos.ativo' => 1])
 				->order(['Produtos.descricao' => 'ASC'])
-				->limit(200)
+				->limit(500)
 				->all() as $p) {
-				$opcoes[(int)$p->get('id')] = trim(sprintf('%s · %s', (string)$p->get('codigo'), (string)$p->get('descricao')));
-				if ($prodId > 0 && (int)$p->get('id') === $prodId) {
-					$produto = [
-						'id' => (int)$p->get('id'),
-						'codigo' => (string)$p->get('codigo'),
-						'descricao' => (string)$p->get('descricao'),
-						'venda' => (float)$p->get('vlunitario'),
-					];
+				$id = (int)$p->get('id');
+				$venda = (float)$p->get('vlunitario');
+				$custoEst = $venda > 0 ? round($venda * 0.7, 2) : 0.0;
+				$opcoes[$id] = trim(sprintf('%s · %s', (string)$p->get('codigo'), (string)$p->get('descricao')));
+				$produtosData[$id] = [
+					'custo_fmt' => number_format($custoEst > 0 ? $custoEst : 1000, 2, ',', '.'),
+					'venda' => $venda,
+				];
+				if ($prodId > 0 && $id === $prodId && $custoEst > 0) {
+					$custoInicial = $custoEst;
+					$freteInicial = 0.0;
 				}
 			}
 		} catch (\Throwable $e) {
 		}
 
-		$resultado = null;
-		if ($produto !== null) {
-			$custoEstimado = round((float)$produto['venda'] / (1 + ($margem / 100)), 2);
-			$precoSugerido = $custoEstimado * (1 + ($margem / 100));
-			$precoMinDesc = $precoSugerido * (1 - ($descontoMax / 100));
-			$margemLiquida = $custoEstimado > 0
-				? (($precoMinDesc - $custoEstimado) / $precoMinDesc) * 100
-				: 0;
-			$valorImpostos = $precoSugerido * (($icms + $pisCofins) / 100);
-			$resultado = [
-				'custo_estimado' => $custoEstimado,
-				'preco_sugerido' => round($precoSugerido, 2),
-				'preco_minimo_com_desconto' => round($precoMinDesc, 2),
-				'margem_liquida_pct' => round($margemLiquida, 2),
-				'valor_impostos' => round($valorImpostos, 2),
-				'preco_total_com_impostos' => round($precoSugerido + $valorImpostos, 2),
-			];
-		}
-
 		return [
 			'precificOpcoes' => $opcoes,
-			'precificProduto' => $produto,
-			'precificFiltro' => [
-				'produto_id' => $prodId,
-				'margem' => $margem,
-				'desconto' => $descontoMax,
-				'icms' => $icms,
-				'pis_cofins' => $pisCofins,
+			'precificProdutosJson' => json_encode($produtosData, JSON_UNESCAPED_UNICODE),
+			'precificProdutoId' => $prodId,
+			'precificInicial' => [
+				'custo' => number_format($custoInicial, 2, ',', '.'),
+				'frete' => number_format($freteInicial, 2, ',', '.'),
+				'rbt12' => '1.420.000,00',
 			],
-			'precificResultado' => $resultado,
 		];
 	}
 

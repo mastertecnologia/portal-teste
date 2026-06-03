@@ -1,86 +1,327 @@
 <?php
 /**
- * Centro de Cálculo — simulador de margem, desconto e impostos.
+ * Centro de Cálculo de Precificação — pg-precificacao (paridade mock).
  *
- * @var \App\View\AppView $this
  * @var array<int,string> $precificOpcoes
- * @var array<string,mixed>|null $precificProduto
- * @var array{produto_id:int,margem:float,desconto:float,icms:float,pis_cofins:float} $precificFiltro
- * @var array<string,float>|null $precificResultado
+ * @var string $precificProdutosJson
+ * @var int $precificProdutoId
+ * @var array{custo:string,frete:string,rbt12:string} $precificInicial
  */
-$H = $this->ErpPrototype;
+$ini = $precificInicial;
+$urlPrecos = ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'];
+$urlHist = ['controller' => 'ProdutosPrototype', 'action' => 'view', 'historico-precos'];
+$jsSim = $this->Url->build('/js/pgm-precificacao-simulador.js');
 ?>
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
 	<div>
-		<div style="font-size:11px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;"><?= h(__('Produtos · Precificação')) ?></div>
-		<h1 style="font-size:22px;font-weight:600;margin:0;">🧮 <?= h(__('Centro de Cálculo de Preço')) ?></h1>
-		<div style="font-size:12px;color:var(--text-muted);"><?= h(__('Simule margem, desconto máximo e carga tributária para qualquer produto')) ?></div>
+		<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;"><?= h(__('Produtos ›')) ?> <?= $this->Html->link(__('Tabela de preços'), $urlPrecos, ['style' => 'color:var(--teal);']) ?> › <?= h(__('Centro de Cálculo')) ?></div>
+		<h1 style="font-size:22px;font-weight:600;margin:0;">🧮 <?= h(__('Centro de Cálculo de Precificação')) ?></h1>
+		<div style="font-size:12px;color:var(--text-muted);margin-top:2px;"><?= h(__('Simulador profissional · Tributação 2026 · Atualizado conforme LC 224/2025')) ?></div>
 	</div>
-	<?= $this->Html->link('← ' . __('Tabela de preços'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'], ['class' => 'btn btn-ghost btn-sm']) ?>
+	<div style="display:flex;gap:8px;flex-wrap:wrap;">
+		<?= $this->Html->link('📜 ' . __('Histórico'), $urlHist, ['class' => 'btn btn-ghost btn-sm']) ?>
+		<button type="button" class="btn btn-ghost btn-sm" onclick="window.print()">📥 <?= h(__('Exportar PDF')) ?></button>
+		<button type="button" class="btn btn-ghost btn-sm" onclick="alert('<?= h(__('Simulação arquivada no protótipo (histórico de precificação).')) ?>')">💾 <?= h(__('Salvar simulação')) ?></button>
+		<button type="button" class="btn btn-primary btn-sm" onclick="var p=document.getElementById('prec-res-preco');alert('<?= h(__('Preço sugerido aplicado:')) ?> '+(p?p.textContent:''));">✓ <?= h(__('Aplicar ao produto')) ?></button>
+	</div>
 </div>
 
-<div class="card">
-	<form method="get" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;align-items:flex-end;">
-		<div class="field" style="grid-column:1/-1;">
-			<label><?= h(__('Produto base')) ?></label>
-			<select name="produto_id" onchange="this.form.submit()">
-				<option value="0"><?= h(__('— Escolha um produto —')) ?></option>
-				<?php foreach ($precificOpcoes as $id => $lbl) :
-					$sel = (int)$id === (int)$precificFiltro['produto_id'] ? ' selected' : '';
-				?>
-					<option value="<?= (int)$id ?>"<?= $sel ?>><?= h((string)$lbl) ?></option>
-				<?php endforeach; ?>
+<div class="alert-box alert-blue" style="margin-bottom:14px;">
+	📚 <strong><?= h(__('Tributação 2026:')) ?></strong> <?= h(__('alíquotas atualizadas conforme LC 123/2006 (Simples), Lei 9.249/95 (Presumido/Real), LC 224/2025 (presunção majorada acima R$ 5M/ano) e LC 214/2025 (Reforma Tributária · IBS/CBS em fase de teste). Consulte sempre seu contador.')) ?>
+</div>
+
+<?php if (!empty($precificOpcoes)) : ?>
+<div class="card" style="margin-bottom:14px;padding:12px 14px;">
+	<div class="field" style="margin:0;">
+		<label><?= h(__('Carregar custo de um produto do catálogo (opcional)')) ?></label>
+		<select id="prec-produto-base" onchange="PgmPrecificacao.aplicarProdutoBase(window.PGM_PREC_PRODUTOS[this.value])">
+			<option value="0"><?= h(__('— Simulação manual —')) ?></option>
+			<?php foreach ($precificOpcoes as $id => $lbl) :
+				$sel = (int)$id === (int)$precificProdutoId ? ' selected' : '';
+			?>
+				<option value="<?= (int)$id ?>"<?= $sel ?>><?= h((string)$lbl) ?></option>
+			<?php endforeach; ?>
+		</select>
+	</div>
+</div>
+<?php endif; ?>
+
+<div class="card" style="margin-bottom:14px;">
+	<div class="sec-title">1️⃣ <?= h(__('Regime tributário e atividade')) ?></div>
+	<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
+		<label style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;background:var(--teal-light);border:2px solid var(--teal);border-radius:var(--radius);cursor:pointer;text-align:center;" id="reg-card-simples">
+			<input type="radio" name="regime" value="simples" checked onchange="PgmPrecificacao.trocarRegime('simples')"/>
+			<div style="font-size:24px;">📊</div>
+			<div style="font-size:13px;font-weight:600;"><?= h(__('Simples Nacional')) ?></div>
+			<div style="font-size:10px;color:var(--text-muted);"><?= h(__('Faturamento até R$ 4,8M/ano · DAS unificado')) ?></div>
+		</label>
+		<label style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;background:var(--bg-surface);border:2px solid var(--border-light);border-radius:var(--radius);cursor:pointer;text-align:center;" id="reg-card-presumido">
+			<input type="radio" name="regime" value="presumido" onchange="PgmPrecificacao.trocarRegime('presumido')"/>
+			<div style="font-size:24px;">📈</div>
+			<div style="font-size:13px;font-weight:600;"><?= h(__('Lucro Presumido')) ?></div>
+			<div style="font-size:10px;color:var(--text-muted);"><?= h(__('Até R$ 78M/ano · presunção 8%/32%')) ?></div>
+		</label>
+		<label style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;background:var(--bg-surface);border:2px solid var(--border-light);border-radius:var(--radius);cursor:pointer;text-align:center;" id="reg-card-real">
+			<input type="radio" name="regime" value="real" onchange="PgmPrecificacao.trocarRegime('real')"/>
+			<div style="font-size:24px;">🎯</div>
+			<div style="font-size:13px;font-weight:600;"><?= h(__('Lucro Real')) ?></div>
+			<div style="font-size:10px;color:var(--text-muted);"><?= h(__('Sem limite · não-cumulativo · com créditos')) ?></div>
+		</label>
+	</div>
+	<div class="g2" style="margin-bottom:12px;">
+		<div class="field">
+			<label><?= h(__('Tipo de operação')) ?> *</label>
+			<select id="prec-operacao">
+				<option value="comercio"><?= h(__('Comércio · revenda de produtos')) ?></option>
+				<option value="industria"><?= h(__('Indústria · transformação')) ?></option>
+				<option value="servico" selected><?= h(__('Prestação de serviços')) ?></option>
+				<option value="locacao"><?= h(__('Locação de bens')) ?></option>
+				<option value="misto"><?= h(__('Comércio + serviços (atividade mista)')) ?></option>
 			</select>
 		</div>
-		<div class="field"><label><?= h(__('Margem alvo (%)')) ?></label><input type="number" name="margem" value="<?= h((string)$precificFiltro['margem']) ?>" step="0.01" min="0" max="500"></div>
-		<div class="field"><label><?= h(__('Desconto máx (%)')) ?></label><input type="number" name="desconto" value="<?= h((string)$precificFiltro['desconto']) ?>" step="0.01" min="0" max="90"></div>
-		<div class="field"><label><?= h(__('ICMS (%)')) ?></label><input type="number" name="icms" value="<?= h((string)$precificFiltro['icms']) ?>" step="0.01" min="0" max="35"></div>
-		<div class="field"><label><?= h(__('PIS + COFINS (%)')) ?></label><input type="number" name="pis_cofins" value="<?= h((string)$precificFiltro['pis_cofins']) ?>" step="0.01" min="0" max="20"></div>
-		<div><button type="submit" class="btn btn-primary btn-sm">🧮 <?= h(__('Recalcular')) ?></button></div>
-	</form>
+		<div class="field">
+			<label><?= h(__('Receita bruta · 12 meses (RBT12)')) ?></label>
+			<input type="text" id="prec-rbt12" value="R$ <?= h((string)$ini['rbt12']) ?>"/>
+			<div style="font-size:11px;color:var(--text-muted);margin-top:4px;"><?= h(__('Base para definição da faixa do Simples ou aplicação do limite de R$ 5M no Presumido')) ?></div>
+		</div>
+	</div>
+	<div id="prec-simples-config">
+		<div class="g2" style="margin-bottom:0;">
+			<div class="field">
+				<label><?= h(__('Anexo do Simples Nacional')) ?></label>
+				<select id="prec-anexo">
+					<option value="I"><?= h(__('Anexo I · Comércio (4% a 19%)')) ?></option>
+					<option value="II"><?= h(__('Anexo II · Indústria (4,5% a 30%)')) ?></option>
+					<option value="III" selected><?= h(__('Anexo III · Serviços com Fator R ≥ 28% (6% a 33%)')) ?></option>
+					<option value="IV"><?= h(__('Anexo IV · Serviços com INSS patronal (4,5% a 33%)')) ?></option>
+					<option value="V"><?= h(__('Anexo V · Serviços com Fator R < 28% (15,5% a 30,5%)')) ?></option>
+				</select>
+			</div>
+			<div class="field">
+				<label><?= h(__('Fator R (folha ÷ receita)')) ?> <span style="font-size:10px;color:var(--text-muted);"><?= h(__('opcional')) ?></span></label>
+				<div style="display:flex;gap:6px;align-items:center;">
+					<input type="text" id="prec-fator-r" value="32" style="flex:1;"/>
+					<span style="font-size:13px;color:var(--text-muted);">%</span>
+					<span class="badge b-paga" id="prec-fator-status" style="font-size:10px;">✓ <?= h(__('Anexo III')) ?></span>
+				</div>
+			</div>
+		</div>
+		<div class="alert-box alert-teal" style="margin-top:10px;margin-bottom:0;font-size:11px;">
+			💡 <strong><?= h(__('Faixa atual detectada:')) ?></strong> <span id="prec-faixa-info">—</span>
+		</div>
+	</div>
+	<div id="prec-presumido-config" style="display:none;">
+		<div class="g2" style="margin-bottom:0;">
+			<div class="field">
+				<label><?= h(__('Atividade · presunção IRPJ')) ?></label>
+				<select id="prec-pres-irpj">
+					<option value="1.6">1,6% · <?= h(__('revenda de combustíveis')) ?></option>
+					<option value="8" selected>8% · <?= h(__('comércio, indústria, transporte de cargas')) ?></option>
+					<option value="16">16% · <?= h(__('serviços de transporte (exceto carga)')) ?></option>
+					<option value="32">32% · <?= h(__('prestação de serviços em geral')) ?></option>
+				</select>
+			</div>
+			<div class="field">
+				<label><?= h(__('Atividade · presunção CSLL')) ?></label>
+				<select id="prec-pres-csll">
+					<option value="12" selected>12% · <?= h(__('comércio, indústria, transporte de cargas')) ?></option>
+					<option value="32">32% · <?= h(__('serviços em geral')) ?></option>
+				</select>
+			</div>
+		</div>
+		<div class="alert-box alert-amber" style="margin-top:10px;margin-bottom:0;font-size:11px;">
+			⚠ <strong>LC 224/2025:</strong> <?= h(__('empresas com receita acima de R$ 5M/ano têm presunção majorada em 10% sobre o excedente.')) ?>
+			<span id="prec-aviso-lc224"></span>
+		</div>
+	</div>
+	<div id="prec-real-config" style="display:none;">
+		<div class="g2" style="margin-bottom:0;">
+			<div class="field">
+				<label><?= h(__('Margem de lucro real estimada (%)')) ?></label>
+				<input type="text" id="prec-margem-real" value="18,00"/>
+			</div>
+			<div class="field">
+				<label><?= h(__('% de créditos PIS/COFINS aproveitáveis')) ?></label>
+				<input type="text" id="prec-creditos" value="35,00"/>
+			</div>
+		</div>
+		<div class="alert-box alert-teal" style="margin-top:10px;margin-bottom:0;font-size:11px;">
+			💡 <?= h(__('Lucro Real é vantajoso quando a margem real é menor que a presunção ou há muitos créditos de PIS/COFINS.')) ?>
+		</div>
+	</div>
 </div>
 
-<?php if ($precificProduto === null) : ?>
-	<div class="alert-box alert-blue"><?= h(__('Escolha um produto acima para ver a simulação de margem e impostos.')) ?></div>
-<?php elseif ($precificResultado !== null) : ?>
-	<div class="card" style="background:linear-gradient(135deg,var(--teal-light),#fff);">
-		<div style="font-size:11px;color:var(--text-muted);"><?= h(__('Produto base')) ?></div>
-		<div style="font-size:16px;font-weight:600;color:var(--teal-dark);">
-			<?= h((string)$precificProduto['codigo']) ?> · <?= h((string)$precificProduto['descricao']) ?>
+<div class="g2" style="margin-bottom:14px;">
+	<div class="card">
+		<div class="sec-title">2️⃣ <?= h(__('Custos diretos do produto')) ?></div>
+		<div class="field" style="margin-bottom:10px;">
+			<label><?= h(__('Custo de aquisição / produção')) ?> *</label>
+			<div style="display:flex;gap:6px;align-items:center;">
+				<span style="font-size:13px;color:var(--text-muted);">R$</span>
+				<input type="text" id="prec-custo" value="<?= h((string)$ini['custo']) ?>" style="flex:1;font-weight:700;font-size:16px;text-align:right;"/>
+			</div>
+			<div style="font-size:11px;color:var(--text-muted);margin-top:4px;"><?= h(__('Para produtos: preço de compra. Para serviços: custo da hora técnica × tempo previsto.')) ?></div>
 		</div>
-		<div style="font-size:12px;color:var(--text-muted);margin-top:4px;"><?= h(__('Preço atual de tabela')) ?>: <strong><?= h($H->brl((float)$precificProduto['venda'])) ?></strong></div>
+		<div class="g2" style="margin-bottom:10px;">
+			<div class="field"><label><?= h(__('Frete e logística (R$)')) ?></label><input type="text" id="prec-frete" value="<?= h((string)$ini['frete']) ?>"/></div>
+			<div class="field"><label><?= h(__('Embalagem (R$)')) ?></label><input type="text" id="prec-embal" value="0,00"/></div>
+		</div>
+		<div class="g2" style="margin-bottom:10px;">
+			<div class="field"><label><?= h(__('Outros custos diretos (R$)')) ?></label><input type="text" id="prec-outros-custos" value="0,00"/></div>
+			<div class="field"><label><?= h(__('ICMS-ST / IPI substituição (R$)')) ?></label><input type="text" id="prec-icmsst" value="0,00"/></div>
+		</div>
+		<div style="background:var(--bg-surface);padding:12px 14px;border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center;">
+			<span style="font-size:12px;color:var(--text-muted);font-weight:600;"><?= h(__('CUSTO TOTAL DO PRODUTO')) ?></span>
+			<strong id="prec-custo-total" style="font-size:18px;font-variant-numeric:tabular-nums;">R$ 1.050,00</strong>
+		</div>
 	</div>
+	<div class="card">
+		<div class="sec-title">3️⃣ <?= h(__('Despesas operacionais (% sobre venda)')) ?></div>
+		<div class="g2" style="margin-bottom:10px;">
+			<div class="field"><label><?= h(__('Despesas administrativas (%)')) ?></label><input type="text" id="prec-desp-adm" value="8,00"/></div>
+			<div class="field"><label><?= h(__('Despesas comerciais (%)')) ?></label><input type="text" id="prec-desp-com" value="5,00"/></div>
+		</div>
+		<div class="g2" style="margin-bottom:10px;">
+			<div class="field"><label><?= h(__('Comissão do vendedor (%)')) ?></label><input type="text" id="prec-comissao" value="3,00"/></div>
+			<div class="field"><label><?= h(__('Taxas (cartão / boleto / gateway) (%)')) ?></label><input type="text" id="prec-taxa-pagto" value="2,50"/></div>
+		</div>
+		<div class="g2" style="margin-bottom:10px;">
+			<div class="field"><label><?= h(__('Inadimplência prevista (%)')) ?></label><input type="text" id="prec-inadim" value="1,50"/></div>
+			<div class="field"><label><?= h(__('Frete saída ao cliente (%)')) ?></label><input type="text" id="prec-frete-saida" value="0,00"/></div>
+		</div>
+		<div class="field" style="margin-bottom:10px;">
+			<label><?= h(__('Margem de lucro líquida desejada (%)')) ?> *</label>
+			<input type="text" id="prec-margem" value="20,00" style="font-weight:700;font-size:15px;"/>
+		</div>
+		<div style="background:#FAEEDA;padding:12px 14px;border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center;">
+			<span style="font-size:12px;color:#8A4D02;font-weight:600;"><?= h(__('DESPESAS + MARGEM (% sobre venda)')) ?></span>
+			<strong id="prec-desp-total-pct" style="font-size:18px;color:#8A4D02;font-variant-numeric:tabular-nums;">40,00%</strong>
+		</div>
+	</div>
+</div>
 
-	<div class="summary-grid" style="margin-bottom:14px;">
-		<div class="summary-card" style="border-left:3px solid var(--blue);">
-			<div class="lbl"><?= h(__('Custo estimado')) ?></div>
-			<div class="val" style="color:#0C447C;"><?= h($H->brl((float)$precificResultado['custo_estimado'])) ?></div>
-			<div style="font-size:10px;color:var(--text-muted);"><?= h(__('preço atual ÷ (1+margem%)')) ?></div>
-		</div>
-		<div class="summary-card" style="border-left:3px solid var(--teal);">
-			<div class="lbl"><?= h(__('Preço sugerido (margem ' . (float)$precificFiltro['margem'] . '%)')) ?></div>
-			<div class="val" style="color:var(--teal-dark);"><?= h($H->brl((float)$precificResultado['preco_sugerido'])) ?></div>
-		</div>
-		<div class="summary-card" style="border-left:3px solid var(--amber);">
-			<div class="lbl"><?= h(__('Preço mín. com desconto')) ?></div>
-			<div class="val" style="color:#8A4D02;"><?= h($H->brl((float)$precificResultado['preco_minimo_com_desconto'])) ?></div>
-			<div style="font-size:10px;color:var(--text-muted);">−<?= (float)$precificFiltro['desconto'] ?>%</div>
-		</div>
-		<div class="summary-card" style="border-left:3px solid <?= (float)$precificResultado['margem_liquida_pct'] >= 10 ? 'var(--teal)' : 'var(--red)' ?>;">
-			<div class="lbl"><?= h(__('Margem líquida no piso')) ?></div>
-			<div class="val" style="color:<?= (float)$precificResultado['margem_liquida_pct'] >= 10 ? 'var(--teal-dark)' : '#7A1822' ?>;"><?= h((string)$precificResultado['margem_liquida_pct']) ?>%</div>
-		</div>
-		<div class="summary-card" style="border-left:3px solid var(--purple);">
-			<div class="lbl"><?= h(__('Impostos (ICMS+PIS+COFINS)')) ?></div>
-			<div class="val" style="color:var(--purple-dark);"><?= h($H->brl((float)$precificResultado['valor_impostos'])) ?></div>
-		</div>
-		<div class="summary-card" style="border-left:3px solid var(--teal-dark);">
-			<div class="lbl"><?= h(__('Total com impostos')) ?></div>
-			<div class="val" style="color:var(--teal-dark);"><?= h($H->brl((float)$precificResultado['preco_total_com_impostos'])) ?></div>
+<div class="card" style="margin-bottom:14px;">
+	<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+		<div class="sec-title" style="margin:0;border:none;">4️⃣ <?= h(__('Tributos aplicáveis ·')) ?> <span id="prec-regime-label" style="color:var(--teal-dark);"><?= h(__('Simples Nacional · Anexo III')) ?></span></div>
+		<div style="display:flex;gap:6px;">
+			<button type="button" class="btn btn-ghost btn-xs" onclick="PgmPrecificacao.alternarTributos()" id="btn-toggle-trib">▼ <?= h(__('Detalhar')) ?></button>
+			<button type="button" class="btn btn-ghost btn-xs" onclick="alert('<?= h(__('Simples: alíquota efetiva = (RBT12 × Nominal − Dedução) ÷ RBT12. Presumido: IRPJ 15% + CSLL 9% + PIS/COFINS cumulativo. Real: sobre lucro com créditos.')) ?>')">❔ <?= h(__('Ajuda')) ?></button>
 		</div>
 	</div>
+	<div id="prec-trib-resumo" style="display:flex;gap:10px;flex-wrap:wrap;">
+		<div style="flex:1;min-width:160px;padding:14px;background:var(--teal-light);border-radius:var(--radius);text-align:center;border-left:3px solid var(--teal);">
+			<div style="font-size:11px;color:var(--teal-dark);text-transform:uppercase;font-weight:600;"><?= h(__('Carga federal')) ?></div>
+			<div style="font-size:22px;font-weight:700;color:var(--teal-dark);" id="prec-carga-fed">—</div>
+			<div style="font-size:11px;color:var(--text-muted);" id="prec-carga-fed-rs">—</div>
+		</div>
+		<div style="flex:1;min-width:160px;padding:14px;background:var(--blue-light);border-radius:var(--radius);text-align:center;border-left:3px solid var(--blue);">
+			<div style="font-size:11px;color:#0C447C;text-transform:uppercase;font-weight:600;"><?= h(__('Carga estadual/municipal')) ?></div>
+			<div style="font-size:22px;font-weight:700;color:#0C447C;" id="prec-carga-est">—</div>
+			<div style="font-size:11px;color:var(--text-muted);" id="prec-carga-est-rs">—</div>
+		</div>
+		<div style="flex:1;min-width:160px;padding:14px;background:#FCE0EC;border-radius:var(--radius);text-align:center;border-left:3px solid #D946A0;">
+			<div style="font-size:11px;color:#7A1B5C;text-transform:uppercase;font-weight:600;"><?= h(__('Reforma Trib. (IBS+CBS)')) ?></div>
+			<div style="font-size:22px;font-weight:700;color:#7A1B5C;" id="prec-carga-ibs">—</div>
+			<div style="font-size:11px;color:var(--text-muted);" id="prec-carga-ibs-rs"><?= h(__('teste · compensável')) ?></div>
+		</div>
+		<div style="flex:1;min-width:160px;padding:14px;background:#FAEEDA;border-radius:var(--radius);text-align:center;border-left:3px solid var(--amber);">
+			<div style="font-size:11px;color:#8A4D02;text-transform:uppercase;font-weight:600;"><?= h(__('Carga total')) ?></div>
+			<div style="font-size:22px;font-weight:700;color:#8A4D02;" id="prec-carga-total">—</div>
+			<div style="font-size:11px;color:var(--text-muted);" id="prec-carga-total-rs">—</div>
+		</div>
+	</div>
+	<div id="prec-trib-detalhe" style="display:none;margin-top:14px;">
+		<div style="overflow-x:auto;">
+			<table style="width:100%;border-collapse:collapse;font-size:12px;">
+				<thead>
+					<tr style="background:var(--bg-surface);border-bottom:1px solid var(--border);">
+						<th style="padding:10px;text-align:left;font-size:11px;text-transform:uppercase;color:var(--text-muted);"><?= h(__('Tributo')) ?></th>
+						<th style="padding:10px;text-align:left;font-size:11px;text-transform:uppercase;color:var(--text-muted);"><?= h(__('Esfera')) ?></th>
+						<th style="padding:10px;text-align:left;font-size:11px;text-transform:uppercase;color:var(--text-muted);"><?= h(__('Base de cálculo')) ?></th>
+						<th style="padding:10px;text-align:right;font-size:11px;text-transform:uppercase;color:var(--text-muted);"><?= h(__('Alíquota')) ?></th>
+						<th style="padding:10px;text-align:right;font-size:11px;text-transform:uppercase;color:var(--text-muted);"><?= h(__('Valor (R$)')) ?></th>
+						<th style="padding:10px;text-align:right;font-size:11px;text-transform:uppercase;color:var(--text-muted);">% <?= h(__('sobre venda')) ?></th>
+					</tr>
+				</thead>
+				<tbody id="prec-trib-tabela"></tbody>
+				<tfoot id="prec-trib-foot"></tfoot>
+			</table>
+		</div>
+		<div class="alert-box alert-blue" style="margin-top:14px;margin-bottom:0;font-size:11px;">
+			ℹ <strong>IBS + CBS:</strong> <?= h(__('em 2026 a alíquota de teste é de 1% destacada na NF-e mas integralmente compensada nas guias de PIS/COFINS.')) ?>
+		</div>
+	</div>
+</div>
 
-	<div class="alert-box alert-blue">
-		<?= h(__('Os cálculos são estimativas. O custo é deduzido do preço atual usando a margem alvo informada, e os impostos são calculados sobre o preço sugerido.')) ?>
+<div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,#0a3d2c 0%,#1D9E75 100%);color:#fff;border:none;">
+	<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+		<div style="font-size:24px;">🎯</div>
+		<div style="font-size:16px;font-weight:700;">5️⃣ <?= h(__('Preço de venda sugerido')) ?></div>
 	</div>
-<?php endif; ?>
+	<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+		<div style="background:rgba(255,255,255,.15);padding:18px;border-radius:var(--radius);">
+			<div style="font-size:11px;opacity:.85;text-transform:uppercase;font-weight:600;"><?= h(__('Custo total')) ?></div>
+			<div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="prec-res-custo">—</div>
+		</div>
+		<div style="background:rgba(255,255,255,.15);padding:18px;border-radius:var(--radius);">
+			<div style="font-size:11px;opacity:.85;text-transform:uppercase;font-weight:600;"><?= h(__('Mark-up divisor')) ?></div>
+			<div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="prec-res-divisor">—</div>
+		</div>
+	</div>
+	<div style="background:rgba(255,255,255,.25);padding:24px;border-radius:var(--radius);text-align:center;margin-bottom:14px;">
+		<div style="font-size:12px;opacity:.85;text-transform:uppercase;font-weight:600;letter-spacing:.6px;"><?= h(__('PREÇO DE VENDA SUGERIDO')) ?></div>
+		<div style="font-size:42px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:4px;" id="prec-res-preco">—</div>
+		<div style="font-size:13px;opacity:.85;margin-top:4px;"><?= h(__('por unidade · líquido para o cliente')) ?></div>
+	</div>
+	<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:11px;">
+		<div style="padding:10px;background:rgba(255,255,255,.15);border-radius:var(--radius);text-align:center;"><div style="opacity:.85;"><?= h(__('Markup')) ?></div><strong style="font-size:14px;" id="prec-res-markup">—</strong></div>
+		<div style="padding:10px;background:rgba(255,255,255,.15);border-radius:var(--radius);text-align:center;"><div style="opacity:.85;"><?= h(__('Margem bruta')) ?></div><strong style="font-size:14px;" id="prec-res-margem-bruta">—</strong></div>
+		<div style="padding:10px;background:rgba(255,255,255,.15);border-radius:var(--radius);text-align:center;"><div style="opacity:.85;"><?= h(__('Margem líquida')) ?></div><strong style="font-size:14px;" id="prec-res-margem">—</strong></div>
+		<div style="padding:10px;background:rgba(255,255,255,.15);border-radius:var(--radius);text-align:center;"><div style="opacity:.85;"><?= h(__('Lucro líquido')) ?></div><strong style="font-size:14px;" id="prec-res-lucro">—</strong></div>
+	</div>
+</div>
+
+<div class="g2">
+	<div class="card">
+		<div class="sec-title">📊 <?= h(__('DRE Gerencial · por unidade')) ?></div>
+		<div style="overflow-x:auto;">
+			<table style="width:100%;border-collapse:collapse;font-size:12px;">
+				<tbody id="prec-dre-body"></tbody>
+			</table>
+		</div>
+	</div>
+	<div class="card">
+		<div class="sec-title">⚖ <?= h(__('Comparativo de regimes · este produto')) ?></div>
+		<div style="display:flex;flex-direction:column;gap:8px;">
+			<div style="padding:10px 12px;background:var(--bg-surface);border-radius:var(--radius);border-left:3px solid var(--teal);" id="comp-simples">
+				<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><strong style="font-size:13px;"><?= h(__('Simples Nacional')) ?></strong><strong style="font-size:14px;color:var(--teal-dark);" id="comp-simples-preco">—</strong></div>
+				<div style="font-size:11px;color:var(--text-muted);"><?= h(__('Carga:')) ?> <span id="comp-simples-carga">—</span> · <?= h(__('Lucro:')) ?> <span id="comp-simples-lucro">—</span></div>
+			</div>
+			<div style="padding:10px 12px;background:var(--bg-surface);border-radius:var(--radius);border-left:3px solid var(--blue);" id="comp-presumido">
+				<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><strong style="font-size:13px;"><?= h(__('Lucro Presumido')) ?></strong><strong style="font-size:14px;" id="comp-presumido-preco">—</strong></div>
+				<div style="font-size:11px;color:var(--text-muted);"><?= h(__('Carga:')) ?> <span id="comp-presumido-carga">—</span> · <?= h(__('Lucro:')) ?> <span id="comp-presumido-lucro">—</span></div>
+			</div>
+			<div style="padding:10px 12px;background:var(--bg-surface);border-radius:var(--radius);border-left:3px solid #D946A0;" id="comp-real">
+				<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><strong style="font-size:13px;"><?= h(__('Lucro Real')) ?></strong><strong style="font-size:14px;" id="comp-real-preco">—</strong></div>
+				<div style="font-size:11px;color:var(--text-muted);"><?= h(__('Carga:')) ?> <span id="comp-real-carga">—</span> · <?= h(__('Lucro:')) ?> <span id="comp-real-lucro">—</span></div>
+			</div>
+		</div>
+		<div class="alert-box alert-teal" style="margin-top:12px;margin-bottom:0;font-size:11px;" id="prec-comp-recomenda">—</div>
+	</div>
+</div>
+
+<script>
+window.PGM_PREC_PRODUTOS = <?= $precificProdutosJson ?: '{}' ?>;
+</script>
+<script src="<?= h($jsSim) ?>"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+	if (window.PgmPrecificacao) {
+		PgmPrecificacao.init();
+		var sel = document.getElementById('prec-produto-base');
+		if (sel && sel.value !== '0' && window.PGM_PREC_PRODUTOS[sel.value]) {
+			PgmPrecificacao.aplicarProdutoBase(window.PGM_PREC_PRODUTOS[sel.value].custo_fmt);
+		}
+	}
+});
+</script>
