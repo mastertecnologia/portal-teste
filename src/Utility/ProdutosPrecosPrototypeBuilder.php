@@ -5,6 +5,7 @@ namespace App\Utility;
 
 use App\Model\Table\ProdutosTable;
 use App\Utility\ErpGridUrl;
+use App\Utility\PrecosTabelaServicosTecnicosCatalog;
 use Cake\I18n\FrozenTime;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
@@ -34,11 +35,26 @@ class ProdutosPrecosPrototypeBuilder {
 	public function buildLista(int $empresaId, array $query = []): array {
 		$busca = trim((string)($query['q'] ?? ''));
 		$filtro = (string)($query['f'] ?? 'todos');
-		$rows = $this->loadEnrichedRows($empresaId, $busca);
+		$tabelas = $this->loadTabelas($empresaId);
+		$tabelaId = $this->resolveTabelaId($empresaId, $query, $tabelas);
+		$rows = $this->loadEnrichedRows($empresaId, $busca, $tabelaId);
 		$filtrados = $this->filterRows($rows, $filtro);
 		$kpis = $this->aggregateKpis($rows);
-		$exibir = array_slice($filtrados, 0, self::LISTAGEM_LIMITE);
+		$limite = $tabelaId > 0 ? 200 : self::LISTAGEM_LIMITE;
+		$exibir = array_slice($filtrados, 0, $limite);
 		$timeline = $this->buildTimeline($rows);
+		$vigencia = $this->vigenciaAnoCorrente();
+		foreach ($tabelas as $tb) {
+			if ((int)$tb['id'] === $tabelaId) {
+				if (!empty($tb['vigencia_inicio'])) {
+					$vigencia['inicio'] = (string)$tb['vigencia_inicio'];
+				}
+				if (!empty($tb['vigencia_fim'])) {
+					$vigencia['fim'] = (string)$tb['vigencia_fim'];
+				}
+				break;
+			}
+		}
 
 		return [
 			'precosItems' => $exibir,
@@ -48,7 +64,9 @@ class ProdutosPrecosPrototypeBuilder {
 			'precosFiltro' => $busca,
 			'precosFiltroMargem' => $filtro,
 			'precosTimeline' => $timeline,
-			'precosVigencia' => $this->vigenciaAnoCorrente(),
+			'precosVigencia' => $vigencia,
+			'precosTabelas' => $tabelas,
+			'precosTabelaAtivaId' => $tabelaId,
 		];
 	}
 
@@ -59,7 +77,8 @@ class ProdutosPrecosPrototypeBuilder {
 		if ($produtoId <= 0) {
 			return null;
 		}
-		$rows = $this->loadEnrichedRows($empresaId, '');
+		$tabelas = $this->loadTabelas($empresaId);
+		$rows = $this->loadEnrichedRows($empresaId, '', $this->resolveTabelaId($empresaId, [], $tabelas));
 		foreach ($rows as $r) {
 			if ((int)$r['id'] === $produtoId) {
 				return [
@@ -85,7 +104,8 @@ class ProdutosPrecosPrototypeBuilder {
 		if ($trava < 0 || $trava > 90) {
 			$trava = 25.0;
 		}
-		$rows = $this->loadEnrichedRows($empresaId, '');
+		$tabelas = $this->loadTabelas($empresaId);
+		$rows = $this->loadEnrichedRows($empresaId, '', $this->resolveTabelaId($empresaId, [], $tabelas));
 		$itens = [];
 		$abaixoTrava = 0;
 		$somaPct = 0.0;
@@ -268,7 +288,70 @@ class ProdutosPrecosPrototypeBuilder {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	protected function loadEnrichedRows(int $empresaId, string $busca): array {
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function loadTabelas(int $empresaId): array {
+		try {
+			$tbl = TableRegistry::getTableLocator()->get('PrecosTabelas');
+		} catch (\Throwable $e) {
+			return [];
+		}
+		$out = [];
+		try {
+			foreach ($tbl->find()
+				->where(['PrecosTabelas.idempresa' => $empresaId, 'PrecosTabelas.ativo' => true])
+				->order(['PrecosTabelas.vigente' => 'DESC', 'PrecosTabelas.nome' => 'ASC'])
+				->all() as $t) {
+				$out[] = [
+					'id' => (int)$t->get('id'),
+					'codigo' => (string)$t->get('codigo'),
+					'nome' => (string)$t->get('nome'),
+					'vigente' => (bool)$t->get('vigente'),
+					'vigencia_inicio' => $t->get('vigencia_inicio') ? (string)$t->get('vigencia_inicio') : null,
+					'vigencia_fim' => $t->get('vigencia_fim') ? (string)$t->get('vigencia_fim') : null,
+				];
+			}
+		} catch (\Throwable $e) {
+			return [];
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @param array<int,array<string,mixed>> $tabelas
+	 */
+	protected function resolveTabelaId(int $empresaId, array $query, array $tabelas): int {
+		$tid = (int)($query['tabela'] ?? 0);
+		if ($tid > 0) {
+			return $tid;
+		}
+		foreach ($tabelas as $tb) {
+			if ((string)$tb['codigo'] === PrecosTabelaServicosTecnicosCatalog::TABELA_CODIGO) {
+				return (int)$tb['id'];
+			}
+		}
+		foreach ($tabelas as $tb) {
+			if (!empty($tb['vigente'])) {
+				return (int)$tb['id'];
+			}
+		}
+
+		return isset($tabelas[0]) ? (int)$tabelas[0]['id'] : 0;
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function loadEnrichedRows(int $empresaId, string $busca, int $tabelaId = 0): array {
+		if ($tabelaId > 0) {
+			$fromTabela = $this->loadEnrichedFromTabela($empresaId, $tabelaId, $busca);
+			if ($fromTabela !== []) {
+				return $fromTabela;
+			}
+		}
+
 		$erpCustos = $this->fetchErpCustos($empresaId);
 		$rows = [];
 		try {
@@ -288,7 +371,7 @@ class ProdutosPrecosPrototypeBuilder {
 				$venda = (float)$p->get('vlunitario');
 				$custo = 0.0;
 				$temCusto = false;
-				if ($tipo === 'prod' && isset($erpCustos[$codigo])) {
+				if ($this->tipoEhProduto($tipo) && isset($erpCustos[$codigo])) {
 					$custo = (float)$erpCustos[$codigo];
 					$temCusto = $custo > 0;
 				}
@@ -343,6 +426,105 @@ class ProdutosPrecosPrototypeBuilder {
 		}
 
 		return $rows;
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function loadEnrichedFromTabela(int $empresaId, int $tabelaId, string $busca): array {
+		try {
+			$Itens = TableRegistry::getTableLocator()->get('PrecosTabelaItens');
+		} catch (\Throwable $e) {
+			return [];
+		}
+		$erpCustos = $this->fetchErpCustos($empresaId);
+		$rows = [];
+		try {
+			$q = $Itens->find()
+				->contain(['Produtos'])
+				->where([
+					'PrecosTabelaItens.precos_tabela_id' => $tabelaId,
+					'PrecosTabelaItens.ativo' => true,
+				])
+				->order(['PrecosTabelaItens.ordem' => 'ASC', 'PrecosTabelaItens.descricao' => 'ASC']);
+			if ($busca !== '') {
+				$q->where(['OR' => [
+					'PrecosTabelaItens.descricao ILIKE' => '%' . $busca . '%',
+					'PrecosTabelaItens.codigo_item ILIKE' => '%' . $busca . '%',
+					'PrecosTabelaItens.categoria ILIKE' => '%' . $busca . '%',
+				]]);
+			}
+			foreach ($q->all() as $item) {
+				$p = $item->produto ?? null;
+				$codigo = trim((string)$item->get('codigo_item'));
+				$descricao = (string)$item->get('descricao');
+				$venda = (float)$item->get('vlunitario');
+				if ($p !== null) {
+					$codigo = trim((string)$p->get('codigo')) ?: $codigo;
+					$descricao = (string)$p->get('descricao') ?: $descricao;
+					if ((float)$p->get('vlunitario') > 0) {
+						$venda = (float)$p->get('vlunitario');
+					}
+				}
+				$tipo = $p !== null ? (string)$p->get('tipo') : 'serv';
+				$custo = 0.0;
+				$temCusto = false;
+				if ($this->tipoEhProduto($tipo) && isset($erpCustos[$codigo])) {
+					$custo = (float)$erpCustos[$codigo];
+					$temCusto = $custo > 0;
+				}
+				if (!$temCusto && $venda > 0) {
+					$custo = round($venda * (1 - (self::MARGEM_ALVO_PCT / 100)), 2);
+					$temCusto = $custo > 0;
+				}
+				$margem = $this->margemPct($venda, $custo);
+				$markup = $this->markupPct($venda, $custo);
+				$sugestao = $this->sugestaoPreco($venda, $custo);
+				$modified = null;
+				if ($p !== null && $p->has('modified')) {
+					$raw = $p->get('modified');
+					if ($raw instanceof FrozenTime) {
+						$modified = $raw;
+					}
+				}
+				$cat = (string)$item->get('categoria');
+				$nota = $this->notaLinha($tipo, $margem, $custo, $venda);
+				if ($nota === null && $cat !== '') {
+					$nota = ['text' => $cat, 'color' => 'var(--text-muted)'];
+				}
+				$rows[] = [
+					'id' => $p !== null ? (int)$p->get('id') : 0,
+					'item_id' => (int)$item->get('id'),
+					'codigo' => $codigo,
+					'descricao' => $descricao,
+					'tipo' => $tipo,
+					'unidade' => $p !== null ? (string)$p->get('unidade') : 'UN',
+					'venda' => $venda,
+					'custo' => $custo,
+					'tem_custo' => $temCusto,
+					'margem' => $margem,
+					'markup' => $markup,
+					'markup_inf' => $custo <= 0 && $venda > 0,
+					'sugestao_preco' => $sugestao['preco'],
+					'sugestao_label' => $sugestao['label'],
+					'sugestao_destaque' => $sugestao['destaque'],
+					'modified' => $modified,
+					'modified_fmt' => $modified ? $modified->format('d/m/Y') : '—',
+					'nota' => $nota,
+					'row_style' => $this->rowStyle($margem, $modified),
+					'btn_ajuste' => $margem !== null && $margem < self::MARGEM_BAIXA_PCT ? 'amber' : 'ghost',
+					'categoria' => $cat,
+				];
+			}
+		} catch (\Throwable $e) {
+			Log::warning('ProdutosPrecosPrototypeBuilder tabela: ' . $e->getMessage());
+		}
+
+		return $rows;
+	}
+
+	protected function tipoEhProduto($tipo): bool {
+		return in_array($tipo, ['prod', '1', 1], true);
 	}
 
 	/**

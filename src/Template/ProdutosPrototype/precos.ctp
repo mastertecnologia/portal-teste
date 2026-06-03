@@ -11,10 +11,14 @@
  * @var string $precosFiltroMargem
  * @var array<int,array<string,mixed>> $precosTimeline
  * @var array{inicio:string,fim:string} $precosVigencia
+ * @var array<int,array<string,mixed>> $precosTabelas
+ * @var int $precosTabelaAtivaId
  */
 $H = $this->ErpPrototype;
 $k = $precosKpi;
 $vig = $precosVigencia;
+$tabelas = (array)($precosTabelas ?? []);
+$tabelaAtiva = (int)($precosTabelaAtivaId ?? 0);
 $urlPrecos = ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'];
 $filtroAtual = (string)$precosFiltroMargem;
 $mkFiltro = static function (string $f) use ($urlPrecos, $precosFiltro, $filtroAtual) {
@@ -47,9 +51,27 @@ $mkFiltro = static function (string $f) use ($urlPrecos, $precosFiltro, $filtroA
 	<div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;">
 		<div style="flex:1;min-width:240px;">
 			<label style="font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:600;letter-spacing:.4px;"><?= h(__('Tabela ativa')) ?></label>
-			<select style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-weight:600;background:#fff;margin-top:4px;" disabled title="<?= h(__('Tabela única vinculada ao catálogo de produtos')) ?>">
-				<option><?= sprintf('📋 %s · %d %s', h(__('Tabela Padrão · Preço de varejo (vigente)')), (int)$k['total'], h(__('produtos'))) ?></option>
-			</select>
+			<?php if ($tabelas === []) : ?>
+				<select style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-weight:600;background:#fff;margin-top:4px;" disabled>
+					<option><?= sprintf('📋 %s · %d %s', h(__('Catálogo de produtos (vigente)')), (int)$k['total'], h(__('produtos'))) ?></option>
+				</select>
+			<?php else : ?>
+				<form method="get" id="form-tabela-precos" style="margin:0;">
+					<?php if ($precosFiltro !== '') : ?><input type="hidden" name="q" value="<?= h($precosFiltro) ?>"><?php endif; ?>
+					<?php if ($filtroAtual !== 'todos') : ?><input type="hidden" name="f" value="<?= h($filtroAtual) ?>"><?php endif; ?>
+					<select name="tabela" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-weight:600;background:#fff;margin-top:4px;" onchange="this.form.submit()">
+						<?php foreach ($tabelas as $tb) :
+							$sel = (int)$tb['id'] === $tabelaAtiva ? ' selected' : '';
+							$lbl = h((string)$tb['nome']);
+							if (!empty($tb['vigente'])) {
+								$lbl .= ' · ' . h(__('vigente'));
+							}
+						?>
+							<option value="<?= (int)$tb['id'] ?>"<?= $sel ?>><?= $lbl ?></option>
+						<?php endforeach; ?>
+					</select>
+				</form>
+			<?php endif; ?>
 		</div>
 		<div style="flex:1;min-width:200px;">
 			<label style="font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:600;letter-spacing:.4px;"><?= h(__('Período de vigência')) ?></label>

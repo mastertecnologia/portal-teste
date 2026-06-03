@@ -379,8 +379,16 @@ class ProdutosPrototypeController extends AppController {
 					continue;
 				}
 				$atual = (float)$prod->get('vlunitario');
-				$prod->set('vlunitario', round($atual * (1 + ($pct / 100)), 2));
+				$novo = round($atual * (1 + ($pct / 100)), 2);
+				$prod->set('vlunitario', $novo);
 				if ($this->Produtos->save($prod)) {
+					try {
+						$this->loadModel('PrecosTabelaItens')->updateAll(
+							['vlunitario' => $novo],
+							['produto_id' => $id]
+						);
+					} catch (\Throwable $e) {
+					}
 					$salvos++;
 				}
 			} catch (\Throwable $e) {
@@ -421,6 +429,14 @@ class ProdutosPrototypeController extends AppController {
 			}
 			$prod->set('vlunitario', $novo);
 			if ($this->Produtos->save($prod)) {
+				try {
+					$itensTbl = $this->loadModel('PrecosTabelaItens');
+					$itensTbl->updateAll(
+						['vlunitario' => $novo],
+						['produto_id' => $id]
+					);
+				} catch (\Throwable $e) {
+				}
 				$this->Flash->success(__('Preço do produto {0} atualizado para {1}.', (string)$prod->get('codigo'), 'R$ ' . number_format($novo, 2, ',', '.')));
 			} else {
 				$this->Flash->error(__('Falha ao salvar.'));
