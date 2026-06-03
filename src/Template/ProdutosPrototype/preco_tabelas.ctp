@@ -5,6 +5,7 @@
  * @var array<int,array<string,mixed>> $precosTabelasGerenciar
  */
 $tabelas = $precosTabelasGerenciar ?? [];
+$nav = $this->ErpPrototype->navLinkOpts();
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
 	<div>
@@ -13,8 +14,8 @@ $tabelas = $precosTabelasGerenciar ?? [];
 		<div style="font-size:12px;color:var(--text-muted);"><?= h(__('Escolha a tabela para ver itens, margens e reajustar valores')) ?></div>
 	</div>
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
-		<?= $this->Html->link('← ' . __('Voltar'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('+ ' . __('Nova tabela'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-tabela-nova'], ['class' => 'btn btn-primary btn-sm']) ?>
+		<?= $this->Html->link('← ' . __('Voltar'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'], array_merge($nav, ['class' => 'btn btn-ghost btn-sm'])) ?>
+		<?= $this->Html->link('+ ' . __('Nova tabela'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-tabela-nova'], array_merge($nav, ['class' => 'btn btn-primary btn-sm'])) ?>
 	</div>
 </div>
 
@@ -41,8 +42,8 @@ $tabelas = $precosTabelasGerenciar ?? [];
 					<div><?= h((string)$tb['vigencia_label']) ?></div>
 				</div>
 				<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;">
-					<?= $this->Html->link(__('Abrir tabela →'), $urlDetalhe, ['class' => 'btn btn-primary btn-sm']) ?>
-					<?= $this->Html->link('📈 ' . __('Reajustar'), $urlReajuste, ['class' => 'btn btn-ghost btn-sm']) ?>
+					<?= $this->Html->link(__('Abrir tabela →'), $urlDetalhe, array_merge($nav, ['class' => 'btn btn-primary btn-sm'])) ?>
+					<?= $this->Html->link('📈 ' . __('Reajustar'), $urlReajuste, array_merge($nav, ['class' => 'btn btn-ghost btn-sm'])) ?>
 				</div>
 			</div>
 		<?php endforeach; ?>

@@ -15,6 +15,7 @@
  * @var int $precosTabelaAtivaId
  */
 $H = $this->ErpPrototype;
+$nav = $H->navLinkOpts();
 $k = $precosKpi;
 $vig = $precosVigencia;
 $tabelas = (array)($precosTabelas ?? []);
@@ -39,11 +40,11 @@ $mkFiltro = static function (string $f) use ($urlPrecos, $precosFiltro, $filtroA
 		<div style="font-size:12px;color:var(--text-muted);margin-top:2px;"><?= h(__('Análise de precificação · Simulação de margens · Reajustes em massa')) ?></div>
 	</div>
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
-		<?= $this->Html->link('📊 ' . __('Exportar'), ['controller' => 'ProdutosPrototype', 'action' => 'exportCsv'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('📜 ' . __('Histórico'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'historico-precos'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('📈 ' . __('Reajuste em massa'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-reajuste-massa', '?' => $tabelaAtiva > 0 ? ['tabela' => $tabelaAtiva] : []], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('⚙ ' . __('Gerenciar tabelas'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-tabelas'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('+ ' . __('Nova tabela'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-tabela-nova'], ['class' => 'btn btn-primary btn-sm']) ?>
+		<?= $this->Html->link('📊 ' . __('Exportar'), ['controller' => 'ProdutosPrototype', 'action' => 'exportCsv'], array_merge($nav, ['class' => 'btn btn-ghost btn-sm'])) ?>
+		<?= $this->Html->link('📜 ' . __('Histórico'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'historico-precos'], array_merge($nav, ['class' => 'btn btn-ghost btn-sm'])) ?>
+		<?= $this->Html->link('📈 ' . __('Reajuste em massa'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-reajuste-massa', '?' => $tabelaAtiva > 0 ? ['tabela' => $tabelaAtiva] : []], array_merge($nav, ['class' => 'btn btn-ghost btn-sm'])) ?>
+		<?= $this->Html->link('⚙ ' . __('Gerenciar tabelas'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-tabelas'], array_merge($nav, ['class' => 'btn btn-ghost btn-sm'])) ?>
+		<?= $this->Html->link('+ ' . __('Nova tabela'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-tabela-nova'], array_merge($nav, ['class' => 'btn btn-primary btn-sm'])) ?>
 	</div>
 </div>
 
@@ -230,7 +231,7 @@ $mkFiltro = static function (string $f) use ($urlPrecos, $precosFiltro, $filtroA
 			</div>
 		</div>',
 		['controller' => 'ProdutosPrototype', 'action' => 'view', 'precificacao'],
-		['class' => 'card', 'escape' => false, 'style' => 'background:linear-gradient(135deg,#0a3d2c 0%,#1D9E75 100%);color:#fff;border:none;display:block;text-decoration:none;']
+		array_merge($nav, ['class' => 'card', 'escape' => false, 'style' => 'background:linear-gradient(135deg,#0a3d2c 0%,#1D9E75 100%);color:#fff;border:none;display:block;text-decoration:none;'])
 	) ?>
 
 	<div class="card">

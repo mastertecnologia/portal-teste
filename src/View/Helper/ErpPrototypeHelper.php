@@ -84,10 +84,15 @@ class ErpPrototypeHelper extends Helper {
 	}
 
 	/**
-	 * Formata BRL (sem o "R$" repetido em colunas).
+	 * Links do shell protótipo — navegação completa (sem turbo-frame).
 	 *
-	 * @param float|int|string|null $v
+	 * @param array<string,mixed> $extra
+	 * @return array<string,mixed>
 	 */
+	public function navLinkOpts(array $extra = []): array {
+		return array_merge(['data-turbo' => 'false'], $extra);
+	}
+
 	public function brl($v): string {
 		$n = is_numeric($v) ? (float)$v : 0.0;
 

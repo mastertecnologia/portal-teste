@@ -10,6 +10,7 @@ use App\Utility\ProdutosPrecificacaoBuilder;
 use App\Utility\ProdutosPrecosPrototypeBuilder;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
+use Cake\Log\Log;
 
 /**
  * Produtos — protótipo (mockup pg-produtos, pg-produto-novo, pg-produto-detalhe,
@@ -229,7 +230,13 @@ class ProdutosPrototypeController extends AppController {
 		];
 
 		if ($page === 'precos') {
-			$set += $this->buildPrecosPayload();
+			try {
+				$set += $this->buildPrecosPayload();
+			} catch (\Throwable $e) {
+				Log::error('ProdutosPrototype::precos: ' . $e->getMessage());
+				$this->Flash->error(__('Não foi possível carregar a tabela de preços. Verifique os logs do servidor.'));
+				$set += $this->precosBuilder()->buildLista((int)$this->Auth->user('idempresa'), []);
+			}
 			$this->set($set);
 
 			return $this->render('precos');
@@ -288,7 +295,13 @@ class ProdutosPrototypeController extends AppController {
 		}
 
 		if ($page === 'preco-tabelas') {
-			$set += $this->precosBuilder()->buildTabelasLista((int)$this->Auth->user('idempresa'));
+			try {
+				$set += $this->precosBuilder()->buildTabelasLista((int)$this->Auth->user('idempresa'));
+			} catch (\Throwable $e) {
+				Log::error('ProdutosPrototype::preco-tabelas: ' . $e->getMessage());
+				$this->Flash->error(__('Não foi possível listar as tabelas de preço.'));
+				$set['precosTabelasGerenciar'] = [];
+			}
 			$this->set($set);
 
 			return $this->render('preco_tabelas');

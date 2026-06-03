@@ -63,6 +63,10 @@
 						a.setAttribute('data-turbo', 'false');
 						return;
 					}
+					if (/-prototype(\/|$)/i.test(uPath)) {
+						a.setAttribute('data-turbo', 'false');
+						return;
+					}
 					a.setAttribute('data-turbo-frame', FRAME_ID);
 					a.setAttribute('data-turbo-action', 'advance');
 				});
@@ -169,13 +173,35 @@
 					if (!e.target || e.target.id !== FRAME_ID) {
 						return;
 					}
+					pgmTurboMarkContentLinks();
 					pgmTurboSyncSidebarActive();
 					pgmTurboRebindDynamicUi();
 				});
 			}
 
+			function pgmTurboMarkContentLinks() {
+				document.querySelectorAll(
+					'.pgm-erp-prototype-dynamic a[href], .pgm-erp-content a[href], #pgm-dynamic-content.pgm-erp-prototype-dynamic a[href]'
+				).forEach(function (a) {
+					if (a.getAttribute('data-turbo') === 'false') {
+						return;
+					}
+					if (a.getAttribute('target') === '_blank') {
+						return;
+					}
+					var u = pgmTurboSameOriginHref(a);
+					if (!u) {
+						return;
+					}
+					if (/-prototype(\/|$)/i.test(u.pathname || '')) {
+						a.setAttribute('data-turbo', 'false');
+					}
+				});
+			}
+
 			function pgmTurboBoot() {
 				pgmTurboMarkNavLinks();
+				pgmTurboMarkContentLinks();
 				pgmTurboSyncSidebarActive();
 			}
 			if (document.readyState === 'loading') {

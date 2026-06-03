@@ -63,6 +63,10 @@ export function getTurboLinkProps(href, target, skipTurboFrame = false) {
     const u = new URL(raw, window.location.href);
     if (u.origin !== window.location.origin) return {};
     if (/\/users\/logout(\/|$)/i.test(u.pathname)) return {};
+    /* Protótipos ERP: navegação completa (evita "Content missing" no turbo-frame). */
+    if (/-prototype(\/|$)/i.test(u.pathname)) {
+      return { 'data-turbo': 'false' };
+    }
     return {
       'data-turbo-frame': PGM_MAIN_FRAME_ID,
       'data-turbo-action': 'advance',

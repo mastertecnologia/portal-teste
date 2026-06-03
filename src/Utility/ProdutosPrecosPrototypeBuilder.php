@@ -47,11 +47,13 @@ class ProdutosPrecosPrototypeBuilder {
 		$vigencia = $this->vigenciaAnoCorrente();
 		foreach ($tabelas as $tb) {
 			if ((int)$tb['id'] === $tabelaId) {
-				if (!empty($tb['vigencia_inicio'])) {
-					$vigencia['inicio'] = (string)$tb['vigencia_inicio'];
+				$iniIso = $this->formatIsoDate($tb['vigencia_inicio'] ?? null);
+				$fimIso = $this->formatIsoDate($tb['vigencia_fim'] ?? null);
+				if ($iniIso !== null) {
+					$vigencia['inicio'] = $iniIso;
 				}
-				if (!empty($tb['vigencia_fim'])) {
-					$vigencia['fim'] = (string)$tb['vigencia_fim'];
+				if ($fimIso !== null) {
+					$vigencia['fim'] = $fimIso;
 				}
 				break;
 			}
@@ -207,7 +209,7 @@ class ProdutosPrecosPrototypeBuilder {
 				$count = (int)$Itens->find()
 					->where([
 						'PrecosTabelaItens.precos_tabela_id' => (int)$tb['id'],
-						'PrecosTabelaItens.ativo' => true,
+						'PrecosTabelaItens.ativo' => 1,
 					])
 					->count();
 			} catch (\Throwable $e) {
@@ -430,11 +432,13 @@ class ProdutosPrecosPrototypeBuilder {
 			$descontoMedio = (int)round(array_sum($deltas) / count($deltas));
 		}
 		$vig = $this->vigenciaAnoCorrente();
-		if (!empty($meta['vigencia_inicio'])) {
-			$vig['inicio'] = (string)$meta['vigencia_inicio'];
+		$iniIso = $this->formatIsoDate($meta['vigencia_inicio'] ?? null);
+		$fimIso = $this->formatIsoDate($meta['vigencia_fim'] ?? null);
+		if ($iniIso !== null) {
+			$vig['inicio'] = $iniIso;
 		}
-		if (!empty($meta['vigencia_fim'])) {
-			$vig['fim'] = (string)$meta['vigencia_fim'];
+		if ($fimIso !== null) {
+			$vig['fim'] = $fimIso;
 		}
 
 		return [
@@ -520,10 +524,40 @@ class ProdutosPrecosPrototypeBuilder {
 	 * @param array<string,mixed> $tb
 	 */
 	protected function formatVigenciaLabel(array $tb): string {
-		$ini = !empty($tb['vigencia_inicio']) ? date('d/m/Y', strtotime((string)$tb['vigencia_inicio'])) : '—';
-		$fim = !empty($tb['vigencia_fim']) ? date('d/m/Y', strtotime((string)$tb['vigencia_fim'])) : '—';
+		$ini = $this->formatDateField($tb['vigencia_inicio'] ?? null);
+		$fim = $this->formatDateField($tb['vigencia_fim'] ?? null);
 
 		return $ini . ' → ' . $fim;
+	}
+
+	/**
+	 * @param mixed $value
+	 */
+	protected function formatDateField($value): string {
+		if ($value === null || $value === '') {
+			return '—';
+		}
+		if ($value instanceof \DateTimeInterface) {
+			return $value->format('d/m/Y');
+		}
+		$ts = strtotime((string)$value);
+
+		return $ts !== false ? date('d/m/Y', $ts) : '—';
+	}
+
+	/**
+	 * @param mixed $value
+	 */
+	protected function formatIsoDate($value): ?string {
+		if ($value === null || $value === '') {
+			return null;
+		}
+		if ($value instanceof \DateTimeInterface) {
+			return $value->format('Y-m-d');
+		}
+		$ts = strtotime((string)$value);
+
+		return $ts !== false ? date('Y-m-d', $ts) : null;
 	}
 
 	/**
@@ -589,13 +623,15 @@ class ProdutosPrecosPrototypeBuilder {
 				->where(['PrecosTabelas.idempresa' => $empresaId, 'PrecosTabelas.ativo' => true])
 				->order(['PrecosTabelas.vigente' => 'DESC', 'PrecosTabelas.nome' => 'ASC'])
 				->all() as $t) {
+				$vIni = $t->get('vigencia_inicio');
+				$vFim = $t->get('vigencia_fim');
 				$out[] = [
 					'id' => (int)$t->get('id'),
 					'codigo' => (string)$t->get('codigo'),
 					'nome' => (string)$t->get('nome'),
 					'vigente' => (bool)$t->get('vigente'),
-					'vigencia_inicio' => $t->get('vigencia_inicio') ? (string)$t->get('vigencia_inicio') : null,
-					'vigencia_fim' => $t->get('vigencia_fim') ? (string)$t->get('vigencia_fim') : null,
+					'vigencia_inicio' => $vIni,
+					'vigencia_fim' => $vFim,
 				];
 			}
 		} catch (\Throwable $e) {
