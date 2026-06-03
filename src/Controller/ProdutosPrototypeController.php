@@ -327,7 +327,20 @@ class ProdutosPrototypeController extends AppController {
 		}
 
 		if ($page === 'precificacao') {
-			$set += $this->buildPrecificacaoPayload();
+			try {
+				$set += $this->buildPrecificacaoPayload();
+			} catch (\Throwable $e) {
+				Log::error('ProdutosPrototype::precificacao: ' . $e->getMessage());
+				$this->Flash->error(__('Não foi possível carregar os dados de precificação. Verifique os logs do servidor.'));
+				$set += [
+					'precificOpcoes' => [],
+					'precificProdutosJson' => '{}',
+					'precificEmpresaJson' => '{}',
+					'precificProdutoId' => 0,
+					'precificInicial' => ['custo' => '0,00', 'frete' => '0,00', 'rbt12' => 'R$ 0,00', 'regime' => 'simples'],
+					'precificTabelaAtivaId' => 0,
+				];
+			}
 			$this->set($set);
 
 			return $this->render('precificacao');

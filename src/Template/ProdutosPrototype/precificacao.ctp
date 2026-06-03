@@ -10,19 +10,20 @@
  * @var int $precificTabelaAtivaId
  */
 $ini = $precificInicial;
+$nav = $this->ErpPrototype->navLinkOpts();
 $urlPrecos = ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'];
 $urlHist = ['controller' => 'ProdutosPrototype', 'action' => 'view', 'historico-precos'];
-$jsSim = $this->Url->build('/js/pgm-precificacao-simulador.js');
+$jsSim = $this->Url->build('/js/pgm-precificacao-simulador.js') . '?v=20260603';
 $urlAplicar = ['controller' => 'ProdutosPrototype', 'action' => 'precificacaoAplicar'];
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
 	<div>
-		<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;"><?= h(__('Produtos ›')) ?> <?= $this->Html->link(__('Tabela de preços'), $urlPrecos, ['style' => 'color:var(--teal);']) ?> › <?= h(__('Centro de Cálculo')) ?></div>
+		<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;"><?= h(__('Produtos ›')) ?> <?= $this->Html->link(__('Tabela de preços'), $urlPrecos, array_merge($nav, ['style' => 'color:var(--teal);'])) ?> › <?= h(__('Centro de Cálculo')) ?></div>
 		<h1 style="font-size:22px;font-weight:600;margin:0;">🧮 <?= h(__('Centro de Cálculo de Precificação')) ?></h1>
 		<div style="font-size:12px;color:var(--text-muted);margin-top:2px;"><?= h(__('Simulador profissional · Tributação 2026 · Atualizado conforme LC 224/2025')) ?></div>
 	</div>
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
-		<?= $this->Html->link('📜 ' . __('Histórico'), $urlHist, ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('📜 ' . __('Histórico'), $urlHist, array_merge($nav, ['class' => 'btn btn-ghost btn-sm'])) ?>
 		<button type="button" class="btn btn-ghost btn-sm" onclick="window.print()">📥 <?= h(__('Exportar PDF')) ?></button>
 		<button type="button" class="btn btn-ghost btn-sm" onclick="alert('<?= h(__('Simulação arquivada no protótipo (histórico de precificação).')) ?>')">💾 <?= h(__('Salvar simulação')) ?></button>
 		<button type="button" class="btn btn-primary btn-sm" onclick="PgmPrecificacao.aplicarAoProduto('precificacao-aplicar-form')">✓ <?= h(__('Aplicar ao produto')) ?></button>
@@ -327,26 +328,21 @@ window.PGM_PREC_EMPRESA = <?= $precificEmpresaJson ?: '{}' ?>;
 </script>
 <script src="<?= h($jsSim) ?>"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-	if (!window.PgmPrecificacao) return;
-	PgmPrecificacao.init(window.PGM_PREC_EMPRESA);
-	var sel = document.getElementById('prec-produto-base');
-	if (sel) {
-		sel.addEventListener('change', function () {
-			var id = sel.value;
-			if (id === '0') {
-				var info = document.getElementById('prec-produto-info');
-				if (info) info.style.display = 'none';
-				document.getElementById('precificacao-produto-id').value = '0';
-				PgmPrecificacao.aplicarDadosEmpresa(window.PGM_PREC_EMPRESA);
-				return;
-			}
-			var p = window.PGM_PREC_PRODUTOS[id];
-			if (p) PgmPrecificacao.aplicarDadosProduto(p);
-		});
-		if (sel.value !== '0' && window.PGM_PREC_PRODUTOS[sel.value]) {
-			PgmPrecificacao.aplicarDadosProduto(window.PGM_PREC_PRODUTOS[sel.value]);
+(function () {
+	function runBoot() {
+		if (typeof window.pgmPrecificacaoBoot === 'function') {
+			window.pgmPrecificacaoBoot();
 		}
 	}
-});
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', runBoot);
+	} else {
+		runBoot();
+	}
+	document.addEventListener('turbo:frame-render', function (e) {
+		if (e.target && e.target.id === 'pgm-main-frame') {
+			runBoot();
+		}
+	});
+})();
 </script>

@@ -36,7 +36,7 @@ class ProdutosPrecificacaoBuilder {
 		$precosBuilder = new ProdutosPrecosPrototypeBuilder($this->Produtos);
 		$listaPrecos = $precosBuilder->buildLista($empresaId, $query);
 		$tabelaId = (int)($listaPrecos['precosTabelaAtivaId'] ?? 0);
-		$precosPorProduto = $this->loadPrecosTabelaPorProduto($empresaId, $tabelaId);
+		$precosTabela = $this->loadPrecosTabelaMaps($tabelaId);
 
 		$opcoes = [];
 		$produtosData = [];
@@ -51,32 +51,19 @@ class ProdutosPrecificacaoBuilder {
 				$id = (int)$p->get('id');
 				$codigo = trim((string)$p->get('codigo'));
 				$tipoNorm = $this->normalizarTipo($p->get('tipo'));
-				$venda = (float)$p->get('vlunitario');
-				if (isset($precosPorProduto[$id]) && (float)$precosPorProduto[$id] > 0) {
-					$venda = (float)$precosPorProduto[$id];
-					$fonteVenda = 'tabela';
-				} else {
-					$fonteVenda = 'cadastro';
-				}
-				$custo = 0.0;
-				$fonteCusto = 'estimado';
-				if ($tipoNorm === 'prod' && isset($erpEstoque[$codigo])) {
-					$erpRow = $erpEstoque[$codigo];
-					if ((float)($erpRow['custo'] ?? 0) > 0) {
-						$custo = (float)$erpRow['custo'];
-						$fonteCusto = 'erp';
-					}
-					if (($fonteVenda ?? '') !== 'tabela' && (float)($erpRow['venda'] ?? 0) > 0) {
-						$venda = (float)$erpRow['venda'];
-						$fonteVenda = 'erp';
-					}
-				} elseif ($tipoNorm === 'loc' && (float)$p->get('vllocdiario') > 0) {
-					$custo = (float)$p->get('vllocdiario');
-					$fonteCusto = 'cadastro';
-				} elseif ($venda > 0 && $tipoNorm !== 'lic') {
-					$custo = round($venda * (1 - (self::MARGEM_ESTIMADA_PCT / 100)), 2);
-					$fonteCusto = 'estimado_margem';
-				}
+				$resolvido = $this->resolverVendaCusto(
+					$id,
+					$codigo,
+					$tipoNorm,
+					(float)$p->get('vlunitario'),
+					(float)$p->get('vllocdiario'),
+					$precosTabela,
+					$erpEstoque
+				);
+				$venda = $resolvido['venda'];
+				$custo = $resolvido['custo'];
+				$fonteVenda = $resolvido['fonte_venda'];
+				$fonteCusto = $resolvido['fonte_custo'];
 				$margem = $this->margemPct($venda, $custo);
 				$margemLucro = $margem !== null && $margem > 0 ? $margem : 20.0;
 				$operacao = $this->operacaoPorTipo($tipoNorm);
@@ -119,8 +106,8 @@ class ProdutosPrecificacaoBuilder {
 
 		return [
 			'precificOpcoes' => $opcoes,
-			'precificProdutosJson' => json_encode($produtosData, JSON_UNESCAPED_UNICODE),
-			'precificEmpresaJson' => json_encode($empresaCtx, JSON_UNESCAPED_UNICODE),
+			'precificProdutosJson' => json_encode($produtosData, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE),
+			'precificEmpresaJson' => json_encode($empresaCtx, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE),
 			'precificProdutoId' => $prodId,
 			'precificInicial' => $inicial,
 			'precificTabelaAtivaId' => $tabelaId,
@@ -228,31 +215,97 @@ class ProdutosPrecificacaoBuilder {
 	}
 
 	/**
-	 * @return array<int,float>
+	 * Preços da tabela vigente por produto_id e codigo_item.
+	 *
+	 * @return array{by_produto: array<int,float>, by_codigo: array<string,float>}
 	 */
-	protected function loadPrecosTabelaPorProduto(int $empresaId, int $tabelaId): array {
+	protected function loadPrecosTabelaMaps(int $tabelaId): array {
+		$empty = ['by_produto' => [], 'by_codigo' => []];
 		if ($tabelaId <= 0) {
-			return [];
+			return $empty;
 		}
-		$out = [];
+		$byProduto = [];
+		$byCodigo = [];
 		try {
 			$Itens = TableRegistry::getTableLocator()->get('PrecosTabelaItens');
 			foreach ($Itens->find()
 				->where([
 					'PrecosTabelaItens.precos_tabela_id' => $tabelaId,
-					'PrecosTabelaItens.ativo' => true,
-					'PrecosTabelaItens.produto_id >' => 0,
+					'PrecosTabelaItens.ativo' => 1,
 				])
 				->all() as $item) {
+				$vl = (float)$item->get('vlunitario');
+				if ($vl <= 0) {
+					continue;
+				}
 				$pid = (int)$item->get('produto_id');
 				if ($pid > 0) {
-					$out[$pid] = (float)$item->get('vlunitario');
+					$byProduto[$pid] = $vl;
+				}
+				$cod = trim((string)$item->get('codigo_item'));
+				if ($cod !== '') {
+					$byCodigo[$cod] = $vl;
 				}
 			}
 		} catch (\Throwable $e) {
+			Log::warning('ProdutosPrecificacaoBuilder::loadPrecosTabelaMaps: ' . $e->getMessage());
 		}
 
-		return $out;
+		return ['by_produto' => $byProduto, 'by_codigo' => $byCodigo];
+	}
+
+	/**
+	 * @param array{by_produto: array<int,float>, by_codigo: array<string,float>} $precosTabela
+	 * @param array<string,array{custo:float,venda:float}> $erpEstoque
+	 * @return array{venda:float,custo:float,fonte_venda:string,fonte_custo:string}
+	 */
+	protected function resolverVendaCusto(
+		int $produtoId,
+		string $codigo,
+		string $tipoNorm,
+		float $vlCadastro,
+		float $vlLocDiario,
+		array $precosTabela,
+		array $erpEstoque
+	): array {
+		$venda = $vlCadastro;
+		$fonteVenda = 'cadastro';
+		$byProduto = $precosTabela['by_produto'] ?? [];
+		$byCodigo = $precosTabela['by_codigo'] ?? [];
+		if ($codigo !== '' && isset($byCodigo[$codigo]) && (float)$byCodigo[$codigo] > 0) {
+			$venda = (float)$byCodigo[$codigo];
+			$fonteVenda = 'tabela';
+		} elseif (isset($byProduto[$produtoId]) && (float)$byProduto[$produtoId] > 0) {
+			$venda = (float)$byProduto[$produtoId];
+			$fonteVenda = 'tabela';
+		}
+		$custo = 0.0;
+		$fonteCusto = 'estimado';
+		if ($codigo !== '' && isset($erpEstoque[$codigo])) {
+			$erpRow = $erpEstoque[$codigo];
+			if ((float)($erpRow['custo'] ?? 0) > 0) {
+				$custo = (float)$erpRow['custo'];
+				$fonteCusto = 'erp';
+			}
+			if ($fonteVenda !== 'tabela' && (float)($erpRow['venda'] ?? 0) > 0) {
+				$venda = (float)$erpRow['venda'];
+				$fonteVenda = 'erp';
+			}
+		}
+		if ($tipoNorm === 'loc' && $vlLocDiario > 0) {
+			$custo = $vlLocDiario;
+			$fonteCusto = 'cadastro';
+		} elseif ($custo <= 0 && $venda > 0 && $tipoNorm !== 'lic') {
+			$custo = round($venda * (1 - (self::MARGEM_ESTIMADA_PCT / 100)), 2);
+			$fonteCusto = 'estimado_margem';
+		}
+
+		return [
+			'venda' => $venda,
+			'custo' => $custo,
+			'fonte_venda' => $fonteVenda,
+			'fonte_custo' => $fonteCusto,
+		];
 	}
 
 	/**

@@ -368,18 +368,32 @@
 	}
 
 	function bindRecalc() {
-		var sel = '[id^="prec-"], #prec-operacao, input[name="regime"]';
-		document.querySelectorAll(sel).forEach(function (el) {
-			if (el.type === 'radio') {
-				el.addEventListener('change', function () {
-					if (el.name === 'regime') trocarRegime(el.value);
-					else recalcularTudo();
-				});
-			} else {
-				el.addEventListener('change', recalcularTudo);
-				el.addEventListener('input', recalcularTudo);
+		if (global.__PGM_PRECIFIC_DELEGATED__) {
+			return;
+		}
+		document.addEventListener('change', function (e) {
+			var el = e.target;
+			if (!el || !el.id) {
+				return;
+			}
+			if (el.id === 'prec-produto-base') {
+				return;
+			}
+			if (el.name === 'regime') {
+				trocarRegime(el.value);
+				return;
+			}
+			if (el.id.indexOf('prec-') === 0 || el.id === 'prec-operacao') {
+				recalcularTudo();
 			}
 		});
+		document.addEventListener('input', function (e) {
+			var el = e.target;
+			if (el && el.id && el.id.indexOf('prec-') === 0 && el.id !== 'prec-produto-base') {
+				recalcularTudo();
+			}
+		});
+		global.__PGM_PRECIFIC_DELEGATED__ = true;
 	}
 
 	function setVal(id, val) {
@@ -412,7 +426,11 @@
 
 	function aplicarDadosProduto(p) {
 		if (!p) return;
-		if (p.custo_fmt) setVal('prec-custo', p.custo_fmt);
+		var custoFmt = p.custo_fmt;
+		if ((!custoFmt || p2num(custoFmt) <= 0) && p.venda > 0) {
+			custoFmt = (p.venda * 0.7).toFixed(2).replace('.', ',');
+		}
+		if (custoFmt) setVal('prec-custo', custoFmt);
 		if (p.frete_fmt) setVal('prec-frete', p.frete_fmt);
 		if (p.margem_lucro_pct !== undefined) {
 			setVal('prec-margem', String(p.margem_lucro_pct).replace('.', ','));
@@ -465,6 +483,42 @@
 		}
 	}
 
+	function bootProdutoSelect() {
+		var sel = document.getElementById('prec-produto-base');
+		if (!sel || sel.getAttribute('data-pgm-prec-bound') === '1') {
+			return;
+		}
+		sel.setAttribute('data-pgm-prec-bound', '1');
+		sel.addEventListener('change', function () {
+			var id = sel.value;
+			if (id === '0') {
+				var info = document.getElementById('prec-produto-info');
+				if (info) info.style.display = 'none';
+				var hid0 = document.getElementById('precificacao-produto-id');
+				if (hid0) hid0.value = '0';
+				aplicarDadosEmpresa(global.PGM_PREC_EMPRESA || {});
+				return;
+			}
+			var produtos = global.PGM_PREC_PRODUTOS || {};
+			var row = produtos[id] || produtos[parseInt(id, 10)];
+			if (row) aplicarDadosProduto(row);
+		});
+	}
+
+	function bootPrecificacaoPage(empresaCtx) {
+		bindRecalc();
+		bootProdutoSelect();
+		if (empresaCtx) aplicarDadosEmpresa(empresaCtx);
+		var sel = document.getElementById('prec-produto-base');
+		if (sel && sel.value !== '0') {
+			var produtos = global.PGM_PREC_PRODUTOS || {};
+			var row = produtos[sel.value] || produtos[parseInt(sel.value, 10)];
+			if (row) aplicarDadosProduto(row);
+		} else {
+			recalcularTudo();
+		}
+	}
+
 	global.PgmPrecificacao = {
 		recalcularTudo: recalcularTudo,
 		trocarRegime: trocarRegime,
@@ -474,10 +528,12 @@
 		aplicarDadosProduto: aplicarDadosProduto,
 		aplicarAoProduto: aplicarAoProduto,
 		num2BRL: num2BRL,
-		init: function (empresaCtx) {
-			bindRecalc();
-			if (empresaCtx) aplicarDadosEmpresa(empresaCtx);
-			recalcularTudo();
-		}
+		boot: bootPrecificacaoPage,
+		init: bootPrecificacaoPage
+	};
+
+	global.pgmPrecificacaoBoot = function () {
+		if (!global.PgmPrecificacao) return;
+		global.PgmPrecificacao.boot(global.PGM_PREC_EMPRESA || {});
 	};
 })(typeof window !== 'undefined' ? window : this);
