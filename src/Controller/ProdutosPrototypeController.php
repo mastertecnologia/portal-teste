@@ -193,12 +193,12 @@ class ProdutosPrototypeController extends AppController {
 			return $this->estoque();
 		}
 		if ($page === 'novo') {
-			return $this->redirect(['controller' => 'Produtos', 'action' => 'add']);
+			$set += $this->buildNovoProdutoPayload();
+			$this->set($set);
+
+			return $this->render('produto_novo');
 		}
 		$prodId = (int)$this->request->getQuery('id', 0);
-		if ($prodId > 0 && $page === 'detalhe') {
-			return $this->redirect(['controller' => 'Produtos', 'action' => 'edit', $prodId]);
-		}
 		if (in_array($page, ['estoque-log', 'inventario', 'inv-historico'], true)) {
 			return $this->redirect(['controller' => 'Produtos', 'action' => 'estoque']);
 		}
@@ -715,10 +715,170 @@ class ProdutosPrototypeController extends AppController {
 	 * @return array<string,mixed>
 	 */
 	protected function buildPrecificacaoPayload(): array {
-		return (new ProdutosPrecificacaoBuilder($this->Produtos))->buildPayload(
+		$payload = (new ProdutosPrecificacaoBuilder($this->Produtos))->buildPayload(
 			(int)$this->Auth->user('idempresa'),
 			$this->request->getQueryParams()
 		);
+		$payload['precificDadosUrl'] = $this->precificacaoDadosUrl();
+
+		return $payload;
+	}
+
+	protected function precificacaoDadosUrl(): string {
+		return \Cake\Routing\Router::url([
+			'controller' => 'ProdutosPrototype',
+			'action' => 'precificacaoDados',
+		], true);
+	}
+
+	/**
+	 * GET JSON — preço/custo reais do produto (cadastro + tabela + ERP).
+	 */
+	public function precificacaoDados() {
+		$this->request->allowMethod(['get']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$prodId = (int)$this->request->getQuery('produto_id', 0);
+		if ($prodId <= 0) {
+			return $this->response->withType('application/json')
+				->withStringBody(json_encode(['ok' => false, 'error' => 'produto_id obrigatório'], JSON_UNESCAPED_UNICODE));
+		}
+		try {
+			$precific = new ProdutosPrecificacaoBuilder($this->Produtos);
+			$precosBuilder = new ProdutosPrecosPrototypeBuilder($this->Produtos);
+			$lista = $precosBuilder->buildLista($empresa, $this->request->getQueryParams());
+			$tabelaId = (int)($lista['precosTabelaAtivaId'] ?? 0);
+			$row = $precosBuilder->resolveProdutoPrecificacao($empresa, $prodId, $tabelaId);
+			if ($row === null) {
+				return $this->response->withType('application/json')
+					->withStringBody(json_encode(['ok' => false, 'error' => __('Produto não encontrado.')], JSON_UNESCAPED_UNICODE));
+			}
+			$ctx = $precific->getEmpresaContext($empresa);
+
+			return $this->response->withType('application/json')
+				->withStringBody(json_encode([
+					'ok' => true,
+					'produto' => $precific->produtoParaJson($row, $ctx),
+					'empresa' => $precific->empresaParaJson($ctx),
+					'tabela_id' => $tabelaId,
+				], JSON_UNESCAPED_UNICODE));
+		} catch (\Throwable $e) {
+			Log::error('ProdutosPrototype::precificacaoDados: ' . $e->getMessage());
+
+			return $this->response->withType('application/json')
+				->withStringBody(json_encode(['ok' => false, 'error' => $e->getMessage()], JSON_UNESCAPED_UNICODE));
+		}
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	protected function buildNovoProdutoPayload(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$precosBuilder = new ProdutosPrecosPrototypeBuilder($this->Produtos);
+		$lista = $precosBuilder->buildLista($empresa);
+		$tabelas = $lista['precosTabelas'] ?? [];
+		$ultimoCodigo = '';
+		try {
+			$last = $this->Produtos->find()
+				->where(['Produtos.idempresa' => $empresa])
+				->order(['Produtos.id' => 'DESC'])
+				->first();
+			if ($last !== null) {
+				$ultimoCodigo = (string)$last->get('codigo');
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return [
+			'novoCodigoSugerido' => $this->sugerirProximoCodigo($ultimoCodigo),
+			'novoTabelas' => $tabelas,
+			'novoTabelaAtivaId' => (int)($lista['precosTabelaAtivaId'] ?? 0),
+		];
+	}
+
+	protected function sugerirProximoCodigo(string $ultimo): string {
+		if (preg_match('/^([A-Za-z]+)-(\d+)$/', $ultimo, $m)) {
+			return $m[1] . '-' . str_pad((string)((int)$m[2] + 1), strlen($m[2]), '0', STR_PAD_LEFT);
+		}
+		if (preg_match('/^(\d+)$/', $ultimo, $m)) {
+			return (string)((int)$m[1] + 1);
+		}
+
+		return 'PRD-001';
+	}
+
+	/**
+	 * POST — cadastro de produto (protótipo pg-produto-novo).
+	 */
+	public function produtoSave() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$data = $this->request->getData();
+		$tipo = (string)($data['tipo'] ?? 'prod');
+		if (!in_array($tipo, ['prod', 'serv', 'lic', 'loc'], true)) {
+			$tipo = 'prod';
+		}
+		$codigo = trim((string)($data['codigo'] ?? ''));
+		$descricao = trim((string)($data['descricao'] ?? ''));
+		if ($codigo === '' || $descricao === '') {
+			$this->Flash->error(__('Informe código e nome do produto.'));
+			return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'novo']);
+		}
+		$vl = $this->parseMoedaBr((string)($data['vlunitario'] ?? '0'));
+		$custo = $this->parseMoedaBr((string)($data['custo_aquisicao'] ?? '0'));
+		try {
+			$dup = $this->Produtos->find()
+				->where(['Produtos.idempresa' => $empresa, 'Produtos.codigo' => $codigo])
+				->count();
+			if ($dup > 0) {
+				$this->Flash->error(__('Já existe um produto com este código.'));
+				return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'novo']);
+			}
+			$entity = $this->Produtos->newEntity([
+				'idempresa' => $empresa,
+				'codigo' => $codigo,
+				'descricao' => $descricao,
+				'tipo' => $tipo,
+				'unidade' => (string)($data['unidade'] ?? 'un'),
+				'ativo' => (int)($data['ativo'] ?? 1) === 1 ? 1 : 0,
+				'vlunitario' => $vl > 0 ? $vl : 0,
+				'estoque_atual' => $this->parseMoedaBr((string)($data['estoque_atual'] ?? '0')),
+			]);
+			if ($tipo === 'loc' && $custo > 0) {
+				$entity->set('vllocdiario', $custo);
+			}
+			if (!$this->Produtos->save($entity)) {
+				$this->Flash->error(__('Não foi possível salvar o produto.'));
+				return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'novo']);
+			}
+			$prodId = (int)$entity->get('id');
+			$this->Flash->success(__('Produto {0} cadastrado.', $codigo));
+
+			return $this->redirect([
+				'controller' => 'ProdutosPrototype',
+				'action' => 'view',
+				'detalhe',
+				'?' => ['id' => $prodId, 'novo' => '1'],
+			]);
+		} catch (\Throwable $e) {
+			Log::error('ProdutosPrototype::produtoSave: ' . $e->getMessage());
+			$this->Flash->error(__('Erro ao salvar: {0}', $e->getMessage()));
+
+			return $this->redirect(['controller' => 'ProdutosPrototype', 'action' => 'view', 'novo']);
+		}
+	}
+
+	protected function parseMoedaBr(string $raw): float {
+		$s = trim(str_replace(['R$', ' '], '', $raw));
+		if ($s === '') {
+			return 0.0;
+		}
+		if (strpos($s, ',') !== false) {
+			$s = str_replace('.', '', $s);
+			$s = str_replace(',', '.', $s);
+		}
+
+		return is_numeric($s) ? (float)$s : 0.0;
 	}
 
 	/**

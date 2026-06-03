@@ -26,7 +26,7 @@ $f = (array)($prodFiltros ?? ['q' => '', 'tipo' => '', 'ativo' => '']);
 		['label' => __('Estoque ERP'), 'url' => ['controller' => 'Produtos', 'action' => 'estoque'], 'class' => 'btn btn-ghost btn-sm'],
 		['label' => __('Estoque'), 'url' => ['controller' => 'ProdutosPrototype', 'action' => 'estoque'], 'class' => 'btn btn-ghost btn-sm'],
 		['label' => __('Tabela de preços'), 'url' => ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'], 'class' => 'btn btn-ghost btn-sm'],
-		['label' => '+ ' . __('Novo produto'), 'url' => ['controller' => 'Produtos', 'action' => 'add'], 'class' => 'btn btn-primary'],
+		['label' => '+ ' . __('Novo produto'), 'url' => ['controller' => 'ProdutosPrototype', 'action' => 'view', 'novo'], 'class' => 'btn btn-primary', 'data-turbo' => 'false'],
 	],
 ]) ?>
 

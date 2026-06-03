@@ -8,12 +8,14 @@
  * @var int $precificProdutoId
  * @var array<string,string> $precificInicial
  * @var int $precificTabelaAtivaId
+ * @var string $precificDadosUrl
  */
 $ini = $precificInicial;
 $nav = $this->ErpPrototype->navLinkOpts();
 $urlPrecos = ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'];
 $urlHist = ['controller' => 'ProdutosPrototype', 'action' => 'view', 'historico-precos'];
-$jsSim = $this->Url->build('/js/pgm-precificacao-simulador.js') . '?v=20260604';
+$jsSim = $this->Url->build('/js/pgm-precificacao-simulador.js') . '?v=20260605';
+$urlDados = $precificDadosUrl ?? $this->Url->build(['controller' => 'ProdutosPrototype', 'action' => 'precificacaoDados'], true);
 $urlAplicar = ['controller' => 'ProdutosPrototype', 'action' => 'precificacaoAplicar'];
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
@@ -94,7 +96,7 @@ $urlAplicar = ['controller' => 'ProdutosPrototype', 'action' => 'precificacaoApl
 		<div class="field">
 			<label><?= h(__('Receita bruta · 12 meses (RBT12)')) ?></label>
 			<input type="text" id="prec-rbt12" value="<?= h((string)($ini['rbt12'] ?? 'R$ 1.420.000,00')) ?>"/>
-			<div style="font-size:11px;color:var(--text-muted);margin-top:4px;"><?= h(__('Base para definição da faixa do Simples ou aplicação do limite de R$ 5M no Presumido')) ?></div>
+			<div id="prec-rbt12-fonte" style="font-size:11px;color:var(--text-muted);margin-top:4px;"><?= h(__('Base para faixa do Simples (padrão R$ 1,42M se faturamento 12m &lt; R$ 180 mil).')) ?></div>
 		</div>
 	</div>
 	<div id="prec-simples-config">
@@ -192,7 +194,7 @@ $urlAplicar = ['controller' => 'ProdutosPrototype', 'action' => 'precificacaoApl
 		</div>
 		<div style="background:var(--bg-surface);padding:12px 14px;border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center;">
 			<span style="font-size:12px;color:var(--text-muted);font-weight:600;"><?= h(__('CUSTO TOTAL DO PRODUTO')) ?></span>
-			<strong id="prec-custo-total" style="font-size:18px;font-variant-numeric:tabular-nums;">R$ 1.050,00</strong>
+			<strong id="prec-custo-total" style="font-size:18px;font-variant-numeric:tabular-nums;">R$ 0,00</strong>
 		</div>
 	</div>
 	<div class="card">
@@ -333,6 +335,7 @@ $urlAplicar = ['controller' => 'ProdutosPrototype', 'action' => 'precificacaoApl
 <script>
 window.PGM_PREC_PRODUTOS = <?= $precificProdutosJson ?: '{}' ?>;
 window.PGM_PREC_EMPRESA = <?= $precificEmpresaJson ?: '{}' ?>;
+window.PGM_PRECIFIC_DADOS_URL = <?= json_encode($urlDados, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_UNESCAPED_SLASHES) ?>;
 </script>
 <script src="<?= h($jsSim) ?>"></script>
 <script>

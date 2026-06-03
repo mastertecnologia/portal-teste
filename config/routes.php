@@ -786,6 +786,14 @@ Router::scope("/", function ($routes) {
         "controller" => "ProdutosPrototype",
         "action" => "apiAtualizarCampo",
     ]);
+    $routes->connect("/produtos-prototype/precificacao-dados", [
+        "controller" => "ProdutosPrototype",
+        "action" => "precificacaoDados",
+    ]);
+    $routes->connect("/produtos-prototype/produto-save", [
+        "controller" => "ProdutosPrototype",
+        "action" => "produtoSave",
+    ]);
     $routes->connect("/produtos-prototype/:page", [
         "controller" => "ProdutosPrototype",
         "action" => "view",

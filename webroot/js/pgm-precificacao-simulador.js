@@ -430,9 +430,53 @@
 		}
 	}
 
+	function carregarProdutoDb(id) {
+		var url = global.PGM_PRECIFIC_DADOS_URL;
+		if (!url || !id || id === '0') {
+			return;
+		}
+		var info = document.getElementById('prec-produto-info');
+		if (info) {
+			info.textContent = 'Carregando dados do banco…';
+			info.style.display = 'block';
+		}
+		fetch(url + (url.indexOf('?') >= 0 ? '&' : '?') + 'produto_id=' + encodeURIComponent(id), {
+			credentials: 'same-origin',
+			headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+		})
+			.then(function (r) { return r.json(); })
+			.then(function (data) {
+				if (!data || !data.ok) {
+					if (info) {
+						info.textContent = (data && data.error) ? data.error : 'Não foi possível carregar o produto.';
+					}
+					return;
+				}
+				if (data.empresa) {
+					aplicarDadosEmpresa(data.empresa);
+				}
+				if (data.produto) {
+					global.PGM_PREC_PRODUTOS = global.PGM_PREC_PRODUTOS || {};
+					global.PGM_PREC_PRODUTOS[data.produto.id] = data.produto;
+					global.PGM_PREC_PRODUTOS[String(data.produto.id)] = data.produto;
+					aplicarDadosProduto(data.produto);
+					if (parseFloat(data.produto.venda) <= 0 && info) {
+						info.textContent += ' · Cadastre o preço em Produtos ou na tabela vigente.';
+					}
+				}
+			})
+			.catch(function () {
+				if (info) info.textContent = 'Erro de rede ao buscar preço do produto.';
+			});
+	}
+
 	function aplicarDadosEmpresa(emp) {
 		if (!emp) return;
 		if (emp.rbt12_fmt) setVal('prec-rbt12', emp.rbt12_fmt);
+		var fonteEl = document.getElementById('prec-rbt12-fonte');
+		if (fonteEl && emp.fonte_rbt12 === 'faturamento_12m') {
+			fonteEl.textContent = 'Fonte: faturamento acumulado dos últimos 12 meses (tabela Faturamento).';
+		}
 		if (emp.operacao) setVal('prec-operacao', emp.operacao);
 		if (emp.anexo) setVal('prec-anexo', emp.anexo);
 		if (emp.fator_r !== undefined) setVal('prec-fator-r', String(emp.fator_r));
@@ -523,9 +567,7 @@
 				aplicarDadosEmpresa(global.PGM_PREC_EMPRESA || {});
 				return;
 			}
-			var produtos = global.PGM_PREC_PRODUTOS || {};
-			var row = produtos[id] || produtos[parseInt(id, 10)];
-			if (row) aplicarDadosProduto(row);
+			carregarProdutoDb(id);
 		});
 	}
 
@@ -535,15 +577,16 @@
 		if (empresaCtx) aplicarDadosEmpresa(empresaCtx);
 		var sel = document.getElementById('prec-produto-base');
 		if (sel && sel.value !== '0') {
-			var produtos = global.PGM_PREC_PRODUTOS || {};
-			var row = produtos[sel.value] || produtos[parseInt(sel.value, 10)];
-			if (row) aplicarDadosProduto(row);
+			carregarProdutoDb(sel.value);
 		} else {
 			recalcularTudo();
 		}
 	}
 
+	global.PgmPrecificacao.carregarProdutoDb = carregarProdutoDb;
+
 	global.PgmPrecificacao = {
+		carregarProdutoDb: carregarProdutoDb,
 		recalcularTudo: recalcularTudo,
 		trocarRegime: trocarRegime,
 		alternarTributos: alternarTributos,

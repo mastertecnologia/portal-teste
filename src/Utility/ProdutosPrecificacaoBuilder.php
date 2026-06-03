@@ -27,6 +27,13 @@ class ProdutosPrecificacaoBuilder {
 	 * @param array<string,mixed> $query
 	 * @return array<string,mixed>
 	 */
+	/**
+	 * @return array<string,mixed>
+	 */
+	public function getEmpresaContext(int $empresaId): array {
+		return $this->loadEmpresaContext($empresaId);
+	}
+
 	public function buildPayload(int $empresaId, array $query = []): array {
 		$prodId = (int)($query['produto_id'] ?? 0);
 		$empresaCtx = $this->loadEmpresaContext($empresaId);
@@ -162,7 +169,7 @@ class ProdutosPrecificacaoBuilder {
 		}
 
 		$rbt12 = $this->estimarRbt12($empresaId);
-		if ($rbt12 > 0) {
+		if ($rbt12 >= 180000) {
 			$ctx['rbt12'] = $rbt12;
 			$ctx['rbt12_fmt'] = $this->fmtMoedaBrl($rbt12);
 			$ctx['fonte_rbt12'] = 'faturamento_12m';
@@ -328,5 +335,62 @@ class ProdutosPrecificacaoBuilder {
 
 	protected function fmtPct(float $v): string {
 		return number_format($v, 2, ',', '.');
+	}
+
+	/**
+	 * Payload JSON para o simulador (dados do banco / tabela / ERP).
+	 *
+	 * @param array<string,mixed> $row Retorno de ProdutosPrecosPrototypeBuilder::resolveProdutoPrecificacao
+	 * @return array<string,mixed>
+	 */
+	public function produtoParaJson(array $row, ?array $empresaCtx = null): array {
+		$tipoNorm = $this->normalizarTipo($row['tipo'] ?? 'serv');
+		$venda = (float)($row['venda'] ?? 0);
+		$custo = (float)($row['custo'] ?? 0);
+		$margem = $row['margem'] ?? null;
+		$operacao = $this->operacaoPorTipo($tipoNorm);
+		$ctx = $empresaCtx ?? ['anexo' => 'III', 'regime_ui' => 'simples'];
+
+		return [
+			'id' => (int)($row['id'] ?? 0),
+			'codigo' => (string)($row['codigo'] ?? ''),
+			'descricao' => (string)($row['descricao'] ?? ''),
+			'tipo' => $tipoNorm,
+			'tipo_label' => $this->labelTipo($tipoNorm),
+			'custo' => $custo,
+			'venda' => $venda,
+			'margem' => $margem,
+			'fonte_custo' => (string)($row['fonte_custo'] ?? 'estimado'),
+			'fonte_venda' => (string)($row['fonte_venda'] ?? 'cadastro'),
+			'tem_custo' => $custo > 0,
+			'custo_fmt' => $this->fmtMoeda($custo),
+			'venda_fmt' => $this->fmtMoeda($venda),
+			'frete_fmt' => '0,00',
+			'margem_lucro_pct' => $margem !== null && $margem > 0 ? round((float)$margem, 2) : 20.0,
+			'margem_fmt' => $margem !== null ? number_format((float)$margem, 0, ',', '.') . '%' : '—',
+			'operacao' => $operacao,
+			'anexo' => $this->anexoPorOperacao($operacao, $ctx),
+			'regime' => (string)($ctx['regime_ui'] ?? 'simples'),
+			'vlunitario_bd' => $venda,
+		];
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	public function empresaParaJson(array $empresaCtx): array {
+		return [
+			'rbt12_fmt' => (string)($empresaCtx['rbt12_fmt'] ?? ''),
+			'rbt12' => (float)($empresaCtx['rbt12'] ?? 0),
+			'fonte_rbt12' => (string)($empresaCtx['fonte_rbt12'] ?? 'padrao'),
+			'regime_ui' => (string)($empresaCtx['regime_ui'] ?? 'simples'),
+			'operacao' => (string)($empresaCtx['operacao'] ?? 'servico'),
+			'anexo' => (string)($empresaCtx['anexo'] ?? 'III'),
+			'fator_r' => (int)($empresaCtx['fator_r'] ?? 32),
+			'pres_irpj' => (int)($empresaCtx['pres_irpj'] ?? 32),
+			'pres_csll' => (int)($empresaCtx['pres_csll'] ?? 32),
+			'margem_real' => (int)($empresaCtx['margem_real'] ?? 18),
+			'creditos_pct' => (int)($empresaCtx['creditos_pct'] ?? 35),
+		];
 	}
 }

@@ -1,44 +1,46 @@
 <?php
 /**
- * Detalhe resumido do produto (protótipo).
+ * Detalhe do produto — fluxo para preços e precificação.
  *
- * @var \App\View\AppView $this
  * @var array<string,mixed>|null $produto
  * @var int $produtoId
  */
 $H = $this->ErpPrototype;
+$nav = $H->navLinkOpts();
 $p = $produto ?? null;
+$qPrec = $p !== null ? ['produto_id' => (int)$p['id']] : [];
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
 	<div>
-		<div style="font-size:11px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;"><?= h(__('Cadastros')) ?></div>
-		<h1 style="font-size:22px;font-weight:600;margin:0;">📦 <?= h(__('Produto')) ?></h1>
+		<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">
+			← <?= $this->Html->link(__('Produtos'), ['controller' => 'ProdutosPrototype', 'action' => 'lista'], array_merge($nav, ['style' => 'color:var(--teal);'])) ?>
+			› <?= h(__('Detalhe')) ?>
+		</div>
+		<h1 style="font-size:22px;font-weight:600;margin:0;">📦 <?= $p !== null ? h((string)$p['codigo']) . ' · ' . h((string)$p['descricao']) : h(__('Produto')) ?></h1>
 	</div>
-	<div style="display:flex;gap:8px;">
-		<?= $this->Html->link('← ' . __('Lista'), ['controller' => 'ProdutosPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
+	<div style="display:flex;gap:8px;flex-wrap:wrap;">
+		<?= $this->Html->link('← ' . __('Lista'), ['controller' => 'ProdutosPrototype', 'action' => 'lista'], array_merge($nav, ['class' => 'btn btn-ghost btn-sm'])) ?>
 		<?php if ($p !== null) : ?>
-			<?= $this->Html->link(__('Editar (clássico)'), ['controller' => 'Produtos', 'action' => 'edit', (int)$p['id']], ['class' => 'btn btn-primary btn-sm']) ?>
+			<?= $this->Html->link('📋 ' . __('Tabela de preços'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'], array_merge($nav, ['class' => 'btn btn-ghost btn-sm'])) ?>
+			<?= $this->Html->link('🧮 ' . __('Centro de cálculo'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precificacao', '?' => $qPrec], array_merge($nav, ['class' => 'btn btn-primary btn-sm'])) ?>
+			<?= $this->Html->link('📈 ' . __('Ajustar preço'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'preco-ajuste', '?' => ['id' => (int)$p['id']]], array_merge($nav, ['class' => 'btn btn-ghost btn-sm'])) ?>
 		<?php endif; ?>
 	</div>
 </div>
 
 <?php if ($p === null) : ?>
-	<div class="alert-box alert-amber"><?= h(__('Produto não encontrado no escopo da empresa (id={0}).', $produtoId)) ?></div>
+	<div class="alert-box alert-amber"><?= h(__('Produto não encontrado (id={0}).', $produtoId)) ?></div>
 <?php else : ?>
+	<?php if (!empty($this->request->getQuery('novo'))) : ?>
+		<div class="alert-box alert-teal" style="margin-bottom:14px;"><?= h(__('Produto cadastrado. Defina o preço na tabela ou abra o Centro de Cálculo.')) ?></div>
+	<?php endif; ?>
 	<div class="card" style="padding:16px;">
-		<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+		<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
 			<div><div class="mu" style="font-size:10px;text-transform:uppercase;"><?= h(__('Código')) ?></div><strong style="font-family:monospace;"><?= h((string)$p['codigo']) ?></strong></div>
 			<div><div class="mu" style="font-size:10px;text-transform:uppercase;"><?= h(__('Tipo')) ?></div><?= h((string)$p['tipo']) ?></div>
-			<div><div class="mu" style="font-size:10px;text-transform:uppercase;"><?= h(__('Preço')) ?></div><strong><?= h($H->brl((float)$p['preco'])) ?></strong></div>
+			<div><div class="mu" style="font-size:10px;text-transform:uppercase;"><?= h(__('Preço (cadastro)')) ?></div><strong><?= h($H->brl((float)$p['preco'])) ?></strong></div>
 			<div><div class="mu" style="font-size:10px;text-transform:uppercase;"><?= h(__('Estoque')) ?></div><?= number_format((float)$p['estoque'], 2, ',', '.') ?></div>
 			<div><div class="mu" style="font-size:10px;text-transform:uppercase;"><?= h(__('Status')) ?></div><?= $H->badge($p['ativo'] ? __('Ativo') : __('Inativo'), $p['ativo'] ? 'paga' : 'arq') ?></div>
 		</div>
-		<div style="margin-top:14px;">
-			<div class="mu" style="font-size:10px;text-transform:uppercase;margin-bottom:4px;"><?= h(__('Descrição')) ?></div>
-			<div><?= h((string)$p['descricao']) ?></div>
-		</div>
-	</div>
-	<div class="alert-box alert-blue" style="margin-top:14px;">
-		<?= h(__('Tela completa de edição fiscal/estoque permanece no módulo Produtos clássico até a migração total do mockup.')) ?>
 	</div>
 <?php endif; ?>
